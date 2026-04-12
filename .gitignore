@@ -1,0 +1,15 @@
+target/
+*.class
+*.jar
+*.war
+*.ear
+.idea/
+*.iml
+.DS_Store
+.env
+*.log
+*.env
+
+# Never commit secrets
+application-prod.properties
+application-local.properties
