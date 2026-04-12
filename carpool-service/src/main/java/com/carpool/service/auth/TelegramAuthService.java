@@ -172,6 +172,7 @@ public class TelegramAuthService {
     }
 
     // TEMPORARY — remove before production
+    // Add this method temporarily in TelegramAuthService para may way mag-generate ng test token
     public AuthResponse authenticateTestUser(Long telegramId, String name) {
         User user = userRepository.findByTelegramId(telegramId)
                 .orElseGet(() -> userRepository.save(User.builder()
