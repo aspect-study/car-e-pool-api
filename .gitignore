@@ -1,15 +1,20 @@
+# Local dev credentials — never commit
+application-local.properties
+
+# Compiled output
 target/
 *.class
 *.jar
 *.war
 *.ear
+
+# IDE files
 .idea/
 *.iml
 .DS_Store
-.env
-*.log
-*.env
 
-# Never commit secrets
-application-prod.properties
-application-local.properties
+# Logs
+*.log
+
+# Environment files with actual secrets
+.env
