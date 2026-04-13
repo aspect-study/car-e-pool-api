@@ -5,6 +5,10 @@ import com.carpool.service.dto.request.SuggestHubRequest;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.hub.HubService;
 import com.carpool.web.security.AuthenticatedUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +26,9 @@ public class HubController {
 
     private final HubService hubService;
 
+    @Operation(summary = "Get all active hubs",
+            description = "Returns all admin-approved hubs ordered by area then name. " +
+                    "Cached for 60 minutes. Public endpoint — no token required.")
     /**
      * GET /api/v1/hubs
      * Public — returns all active hubs (cached 60 min).
@@ -31,6 +38,9 @@ public class HubController {
         return ResponseEntity.ok(ApiResponse.ok(hubService.getAllActiveHubs()));
     }
 
+    @Operation(summary = "Search hubs by keyword",
+            description = "Autocomplete search against hub name and area. " +
+                    "Cached per keyword for 5 minutes. Public endpoint.")
     /**
      * GET /api/v1/hubs/search?q=BGC
      * Public — autocomplete for hub name/area (cached 5 min).
@@ -41,6 +51,11 @@ public class HubController {
         return ResponseEntity.ok(ApiResponse.ok(hubService.searchHubs(q)));
     }
 
+    @Operation(summary = "Suggest a new hub",
+            description = "Driver suggests a pickup/dropoff location not yet in the system. " +
+                    "Saved as PENDING and usable immediately on the current ride. " +
+                    "Admin must approve before it appears in the public hub list.",
+            security = @SecurityRequirement(name = "bearerAuth"))
     /**
      * POST /api/v1/hubs/suggest
      * Authenticated — driver suggests a new hub not yet in the system.
@@ -56,6 +71,8 @@ public class HubController {
 
     // ── Admin endpoints ───────────────────────────────────────────────────────
 
+    @Operation(summary = "[Admin] Get pending hub suggestions",
+            security = @SecurityRequirement(name = "bearerAuth"))
     /**
      * GET /api/v1/hubs/pending
      * Admin only — list all pending hub suggestions.
@@ -66,6 +83,8 @@ public class HubController {
         return ResponseEntity.ok(ApiResponse.ok(hubService.getPendingHubs()));
     }
 
+    @Operation(summary = "[Admin] Approve a pending hub",
+            security = @SecurityRequirement(name = "bearerAuth"))
     /**
      * PATCH /api/v1/hubs/{id}/approve?code=BGC_HIGHSTREET
      * Admin only — approve a pending hub.
@@ -78,6 +97,8 @@ public class HubController {
         return ResponseEntity.ok(ApiResponse.ok(hubService.approveHub(id, code)));
     }
 
+    @Operation(summary = "[Admin] Reject a pending hub",
+            security = @SecurityRequirement(name = "bearerAuth"))
     /**
      * PATCH /api/v1/hubs/{id}/reject
      * Admin only — reject a pending hub.

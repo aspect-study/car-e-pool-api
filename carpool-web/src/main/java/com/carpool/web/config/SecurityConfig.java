@@ -56,6 +56,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,  "/api/v1/hubs/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
 
+                        // Swagger UI — local only (disabled in prod via properties)
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )

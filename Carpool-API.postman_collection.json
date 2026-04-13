@@ -1,0 +1,348 @@
+{
+  "info": {
+    "name": "Carpool API",
+    "description": "Complete Postman collection for Carpool REST API.\n\n**Setup:**\n1. Set collection variable `baseUrl` to `http://localhost:8080`\n2. Run 'Test Login' request first — token auto-saves to `authToken` variable\n3. All protected requests use `authToken` automatically",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",   "value": "http://localhost:8080", "type": "string" },
+    { "key": "authToken", "value": "", "type": "string" },
+    { "key": "rideId",    "value": "", "type": "string" },
+    { "key": "bookingId", "value": "", "type": "string" },
+    { "key": "hubId",     "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{authToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Test Login (Dev Only)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var res = pm.response.json();",
+                "if (res.success && res.data && res.data.accessToken) {",
+                "    pm.collectionVariables.set('authToken', res.data.accessToken);",
+                "    console.log('Token saved. User: ' + res.data.user.fullName);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/test-login?telegramId=123456&name=Juan%20dela%20Cruz",
+            "description": "DEV ONLY — generates JWT without Telegram verification. Auto-saves token to collection variable."
+          }
+        },
+        {
+          "name": "Telegram Login (Production)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 123456789,\n  \"firstName\": \"Juan\",\n  \"lastName\": \"dela Cruz\",\n  \"username\": \"juandelacruz\",\n  \"photoUrl\": \"https://t.me/i/userpic/320/juan.jpg\",\n  \"authDate\": 1700000000,\n  \"hash\": \"<hash_from_telegram_widget>\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/auth/telegram"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hubs",
+      "item": [
+        {
+          "name": "Get All Active Hubs",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/hubs",
+            "description": "Public — no token required. Returns all 31 seeded hubs."
+          }
+        },
+        {
+          "name": "Search Hubs",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hubs/search?q=BGC",
+              "query": [{ "key": "q", "value": "BGC" }]
+            }
+          }
+        },
+        {
+          "name": "Suggest Hub",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var res = pm.response.json();",
+                "if (res.success) pm.collectionVariables.set('hubId', res.data.id);"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Wilcon Depot Sucat\",\n  \"area\": \"Parañaque\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/hubs/suggest"
+          }
+        },
+        {
+          "name": "[Admin] Get Pending Hubs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/hubs/pending"
+          }
+        },
+        {
+          "name": "[Admin] Approve Hub",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hubs/{{hubId}}/approve?code=WILCON_SUCAT",
+              "query": [{ "key": "code", "value": "WILCON_SUCAT" }]
+            }
+          }
+        },
+        {
+          "name": "[Admin] Reject Hub",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/hubs/{{hubId}}/reject"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/users/me"
+          }
+        },
+        {
+          "name": "Update My Role → DRIVER",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"DRIVER\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/users/me/role"
+          }
+        },
+        {
+          "name": "Update My Role → BOTH",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"BOTH\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/users/me/role"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rides",
+      "item": [
+        {
+          "name": "Create Ride (DRAFT)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var res = pm.response.json();",
+                "if (res.success) {",
+                "    pm.collectionVariables.set('rideId', res.data.id);",
+                "    console.log('Ride created, id=' + res.data.id + ' status=' + res.data.status);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"originHubId\": 21,\n  \"destinationHubId\": 15,\n  \"direction\": \"HOME_TO_WORK\",\n  \"departureTime\": \"2026-05-01T07:00:00\",\n  \"totalSeats\": 3,\n  \"contributionAmount\": 150.00,\n  \"notes\": \"Meet at 7-Eleven entrance, text me when near\",\n  \"waypoints\": [\n    { \"hubId\": 13, \"sequenceOrder\": 1, \"isPickup\": true, \"isDropoff\": false },\n    { \"hubId\": 12, \"sequenceOrder\": 2, \"isPickup\": true, \"isDropoff\": true }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/v1/rides",
+            "description": "originHubId=21 (Ayala MRT), destinationHubId=15 (BGC High Street). Update hub IDs based on your seeded data."
+          }
+        },
+        {
+          "name": "Publish Ride (DRAFT → ACTIVE)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/status"
+          }
+        },
+        {
+          "name": "Search Rides",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rides?from=21&to=15",
+              "query": [
+                { "key": "from", "value": "21", "description": "Ayala MRT hub id" },
+                { "key": "to",   "value": "15", "description": "BGC High Street hub id" }
+              ]
+            },
+            "description": "Returns ACTIVE rides for the given route including waypoint matches."
+          }
+        },
+        {
+          "name": "Get Ride Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}"
+          }
+        },
+        {
+          "name": "Get My Rides (Driver)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/rides/mine"
+          }
+        },
+        {
+          "name": "Cancel Ride",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/status"
+          }
+        },
+        {
+          "name": "Complete Ride",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Book a Seat",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var res = pm.response.json();",
+                "if (res.success) {",
+                "    pm.collectionVariables.set('bookingId', res.data.id);",
+                "    console.log('Booked! id=' + res.data.id + ' status=' + res.data.status);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seatsReserved\": 1,\n  \"pickupWaypointId\": null,\n  \"dropoffWaypointId\": null\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/bookings"
+          }
+        },
+        {
+          "name": "Get My Bookings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/bookings/mine"
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Record Cash Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amountPaid\": 150.00,\n  \"paymentMethod\": \"CASH\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/payment"
+          }
+        },
+        {
+          "name": "Record Partial Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amountPaid\": 100.00,\n  \"paymentMethod\": \"GCASH\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/payment"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Actuator Health",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health"
+          }
+        },
+        {
+          "name": "Actuator Info",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/info"
+          }
+        }
+      ]
+    }
+  ]
+}

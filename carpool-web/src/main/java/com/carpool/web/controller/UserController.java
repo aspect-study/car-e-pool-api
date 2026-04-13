@@ -5,6 +5,9 @@ import com.carpool.service.dto.request.UpdateRoleRequest;
 import com.carpool.service.dto.response.UserResponse;
 import com.carpool.service.user.UserService;
 import com.carpool.web.security.AuthenticatedUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +17,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "User profile and role management")
 public class UserController {
 
     private final UserService userService;
 
+    @Operation(summary = "Get my profile",
+            description = "Returns the currently authenticated user's profile. " +
+                    "Cached for 10 minutes.",
+            security = @SecurityRequirement(name = "bearerAuth"))
     /**
      * GET /api/v1/users/me
      * Returns the current authenticated user's profile.
@@ -30,6 +38,15 @@ public class UserController {
                 ApiResponse.ok(userService.getUserById(currentUser.getUserId())));
     }
 
+    @Operation(summary = "Update my role",
+            description = """
+                    Upgrade or downgrade your role.
+                    
+                    - `PASSENGER` — can only book rides (default)
+                    - `DRIVER` — can only offer rides
+                    - `BOTH` — can offer and book rides
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth"))
     /**
      * PATCH /api/v1/users/me/role
      * Allows a user to upgrade their role (e.g. PASSENGER → DRIVER).
