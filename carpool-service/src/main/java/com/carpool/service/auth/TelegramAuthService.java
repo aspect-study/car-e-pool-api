@@ -171,17 +171,4 @@ public class TelegramAuthService {
         return userRepository.save(user);
     }
 
-    // TEMPORARY — remove before production
-    // Add this method temporarily in TelegramAuthService para may way mag-generate ng test token
-    public AuthResponse authenticateTestUser(Long telegramId, String name) {
-        User user = userRepository.findByTelegramId(telegramId)
-                .orElseGet(() -> userRepository.save(User.builder()
-                        .telegramId(telegramId)
-                        .fullName(name)
-                        .build()));
-        String token = jwtService.generateToken(
-                user.getId(), user.getTelegramId(), user.getRole().name());
-        return new AuthResponse(token, "Bearer",
-                jwtService.getExpirationMs(), mapper.toUserResponse(user));
-    }
 }

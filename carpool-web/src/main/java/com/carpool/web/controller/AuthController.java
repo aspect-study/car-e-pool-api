@@ -30,13 +30,4 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(auth));
     }
 
-    // TEMPORARY — remove before production
-    // Add this method temporarily in TelegramAuthService para may way mag-generate ng test token
-    @PostMapping("/test-login")
-    public ResponseEntity<ApiResponse<AuthResponse>> testLogin(
-            @RequestParam Long telegramId,
-            @RequestParam String name) {
-        return ResponseEntity.ok(ApiResponse.ok(
-                telegramAuthService.authenticateTestUser(telegramId, name)));
-    }
 }

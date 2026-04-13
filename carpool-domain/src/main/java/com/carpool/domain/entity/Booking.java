@@ -49,7 +49,7 @@ public class Booking extends BaseEntity {
 
     @Column(name = "seats_reserved", nullable = false)
     @Builder.Default
-    private Short seatsReserved = 1;
+    private Integer seatsReserved = 1;
 
     /**
      * NULL = board at ride's origin hub.
