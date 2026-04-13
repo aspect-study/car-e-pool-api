@@ -37,7 +37,7 @@ public class RideWaypoint {
     private Hub hub;
 
     @Column(name = "sequence_order", nullable = false)
-    private Short sequenceOrder;
+    private Integer sequenceOrder;
 
     @Column(name = "is_pickup", nullable = false)
     @Builder.Default

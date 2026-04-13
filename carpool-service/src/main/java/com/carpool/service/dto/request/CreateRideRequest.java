@@ -26,7 +26,7 @@ public record CreateRideRequest(
         @NotNull(message = "totalSeats is required")
         @Min(value = 1, message = "totalSeats must be at least 1")
         @Max(value = 8, message = "totalSeats cannot exceed 8")
-        Short totalSeats,
+        Integer totalSeats,
 
         @NotNull(message = "contributionAmount is required")
         @DecimalMin(value = "0.00", message = "contributionAmount cannot be negative")

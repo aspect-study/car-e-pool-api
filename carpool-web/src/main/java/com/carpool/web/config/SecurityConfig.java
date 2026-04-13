@@ -53,7 +53,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/telegram").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/test-login").permitAll()
                         .requestMatchers(HttpMethod.GET,  "/api/v1/hubs/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
 

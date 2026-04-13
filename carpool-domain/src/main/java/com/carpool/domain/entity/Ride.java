@@ -62,10 +62,10 @@ public class Ride extends BaseEntity {
     private LocalDateTime departureTime;
 
     @Column(name = "total_seats", nullable = false)
-    private Short totalSeats;
+    private Integer totalSeats;
 
     @Column(name = "available_seats", nullable = false)
-    private Short availableSeats;
+    private Integer availableSeats;
 
     @Column(name = "contribution_amount", nullable = false, precision = 8, scale = 2)
     @Builder.Default

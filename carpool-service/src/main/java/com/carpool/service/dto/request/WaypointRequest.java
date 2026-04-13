@@ -10,7 +10,7 @@ public record WaypointRequest(
 
         @NotNull(message = "sequenceOrder is required")
         @Min(value = 1, message = "sequenceOrder must be >= 1")
-        Short sequenceOrder,
+        Integer sequenceOrder,
 
         // Defaults to true if not provided — most stops are both pickup and dropoff
         Boolean isPickup,

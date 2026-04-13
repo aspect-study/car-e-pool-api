@@ -106,7 +106,7 @@ public class BookingService {
                 .build();
 
         // ── 9. Decrement available seats ─────────────────────────────────
-        short updatedSeats = (short) (ride.getAvailableSeats() - request.seatsReserved());
+        int updatedSeats = (ride.getAvailableSeats() - request.seatsReserved());
         ride.setAvailableSeats(updatedSeats);
 
         // ── 10. Transition ride to FULL if no seats remain ───────────────
@@ -154,7 +154,7 @@ public class BookingService {
         Ride ride = rideRepository.findByIdWithLock(booking.getRide().getId())
                 .orElseThrow(() -> new RideNotFoundException(booking.getRide().getId()));
 
-        short restoredSeats = (short) (ride.getAvailableSeats() + booking.getSeatsReserved());
+        int restoredSeats = (ride.getAvailableSeats() + booking.getSeatsReserved());
         ride.setAvailableSeats(restoredSeats);
 
         // Reopen ride if it was FULL and seats are now available

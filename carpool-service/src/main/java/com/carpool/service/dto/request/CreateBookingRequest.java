@@ -9,7 +9,7 @@ public record CreateBookingRequest(
         @NotNull(message = "seatsReserved is required")
         @Min(value = 1, message = "seatsReserved must be at least 1")
         @Max(value = 4, message = "Cannot reserve more than 4 seats at once")
-        Short seatsReserved,
+        Integer seatsReserved,
 
         // NULL = board at ride's origin hub
         Long pickupWaypointId,
