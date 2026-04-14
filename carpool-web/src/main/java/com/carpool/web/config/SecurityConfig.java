@@ -64,6 +64,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Static files — test pages
+                        .requestMatchers("/telegram-login-test.html").permitAll()
+
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
