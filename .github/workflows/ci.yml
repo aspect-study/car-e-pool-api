@@ -22,8 +22,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build and run tests
-        run: mvn clean verify -DskipTests=false
+      - name: Build and run unit tests
+        # Excludes @Tag("integration") tests — those require a local MySQL instance
+        run: mvn clean verify -DskipTests=false -Dgroups="!integration"
 
       - name: Publish test results
         uses: actions/upload-artifact@v4
