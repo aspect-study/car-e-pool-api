@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carpool API — Telegram Login Test</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 560px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1F4E79;
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: #595959;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1F4E79;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .login-area {
+            background: #f8fafc;
+            border: 2px dashed #cdd8e3;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .login-hint {
+            font-size: 13px;
+            color: #888;
+            margin-top: 12px;
+        }
+
+        .result-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .result-box.success { border-left: 4px solid #1E5E3E; background: #E2F0D9; }
+        .result-box.error   { border-left: 4px solid #C00; background: #FDE8E8; }
+        .result-box.info    { border-left: 4px solid #2E75B6; background: #D6E4F0; }
+
+        .result-box h3 {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .result-box.success h3 { color: #1E5E3E; }
+        .result-box.error h3   { color: #C00; }
+        .result-box.info h3    { color: #1F4E79; }
+
+        pre {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.04);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+
+        .token-display {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #1E5E3E;
+            word-break: break-all;
+            background: rgba(0,0,0,0.04);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+
+        .step-badge {
+            display: inline-block;
+            background: #1F4E79;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 20px;
+            margin-right: 6px;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #595959;
+            margin-bottom: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+            flex-shrink: 0;
+        }
+
+        .dot.green  { background: #1E5E3E; }
+        .dot.red    { background: #C00; }
+        .dot.yellow { background: #FFC000; }
+
+        .copy-btn {
+            margin-top: 8px;
+            padding: 6px 14px;
+            background: #1F4E79;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover { background: #2E75B6; }
+
+        footer {
+            text-align: center;
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+
+    <h1>🚗 Carpool API</h1>
+    <p class="subtitle">Telegram Login Test — Local Development Only</p>
+
+    <!-- Step 1: Login -->
+    <div class="section-label"><span class="step-badge">1</span> Login with Telegram</div>
+    <div class="login-area">
+        <script
+                src="https://telegram.org/js/telegram-widget.js?22"
+                data-telegram-login="car_e_poolPH_bot"
+                data-size="large"
+                data-onauth="onTelegramAuth(user)"
+                data-request-access="write">
+        </script>
+        <p class="login-hint">Click the button above to authenticate with your Telegram account.</p>
+    </div>
+
+    <!-- Step 2: Telegram Data -->
+    <div id="telegram-result" class="result-box info" style="display:none">
+        <h3>✅ Telegram Auth Data Received</h3>
+        <p style="font-size:12px; color:#595959;">Sending to API for verification...</p>
+        <pre id="telegram-data"></pre>
+    </div>
+
+    <!-- Step 3: API Response -->
+    <div id="api-result" class="result-box" style="display:none">
+        <h3 id="api-result-title"></h3>
+
+        <div id="success-section" style="display:none">
+            <div class="status-row"><div class="dot green"></div> Hash verified by server</div>
+            <div class="status-row"><div class="dot green"></div> User created/updated in database</div>
+            <div class="status-row"><div class="dot green"></div> JWT token issued</div>
+
+            <div style="margin-top:12px; font-size:12px; color:#595959; font-weight:bold;">Your JWT Token:</div>
+            <div class="token-display" id="jwt-token"></div>
+            <button class="copy-btn" onclick="copyToken()">Copy Token</button>
+
+            <div style="margin-top:12px; font-size:12px; color:#595959; font-weight:bold;">Full API Response:</div>
+            <pre id="api-data"></pre>
+        </div>
+
+        <div id="error-section" style="display:none">
+            <pre id="error-data"></pre>
+        </div>
+    </div>
+
+    <!-- Step 4: Test Protected Endpoint -->
+    <div id="protected-section" style="display:none">
+        <div class="section-label"><span class="step-badge">2</span> Test Protected Endpoint</div>
+        <div class="result-box info" style="display:block">
+            <h3>GET /api/v1/users/me</h3>
+            <p style="font-size:12px; color:#595959; margin-bottom:8px;">
+                Using the JWT above to call a protected endpoint.
+            </p>
+            <pre id="me-data">Calling...</pre>
+        </div>
+    </div>
+
+    <footer>
+        Carpool API v1.0 &nbsp;|&nbsp; Local: http://localhost:8080 &nbsp;|&nbsp; DEV ONLY
+    </footer>
+</div>
+
+<script>
+    const API_BASE = '';
+    let jwtToken = null;
+
+    async function onTelegramAuth(user) {
+        // Show telegram data
+        document.getElementById('telegram-result').style.display = 'block';
+        document.getElementById('telegram-data').textContent = JSON.stringify(user, null, 2);
+
+        // Map Telegram widget fields to our API request format
+        const payload = {
+            id:        user.id,
+            firstName: user.first_name,
+            lastName:  user.last_name   || null,
+            username:  user.username    || null,
+            photoUrl:  user.photo_url   || null,
+            authDate:  user.auth_date,
+            hash:      user.hash
+        };
+
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/auth/telegram`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json',
+                           'ngrok-skip-browser-warning': 'true'
+                },
+                body:    JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            const resultBox = document.getElementById('api-result');
+            resultBox.style.display = 'block';
+
+            if (data.success) {
+                resultBox.className = 'result-box success';
+                document.getElementById('api-result-title').textContent = '✅ Authentication Successful';
+                document.getElementById('success-section').style.display = 'block';
+                document.getElementById('error-section').style.display  = 'none';
+
+                jwtToken = data.data.accessToken;
+                document.getElementById('jwt-token').textContent = jwtToken;
+                document.getElementById('api-data').textContent  = JSON.stringify(data.data.user, null, 2);
+
+                // Immediately test a protected endpoint
+                testProtectedEndpoint();
+
+            } else {
+                resultBox.className = 'result-box error';
+                document.getElementById('api-result-title').textContent = '❌ Authentication Failed';
+                document.getElementById('success-section').style.display = 'none';
+                document.getElementById('error-section').style.display  = 'block';
+                document.getElementById('error-data').textContent = JSON.stringify(data.error, null, 2);
+            }
+
+        } catch (err) {
+            const resultBox = document.getElementById('api-result');
+            resultBox.style.display  = 'block';
+            resultBox.className      = 'result-box error';
+            document.getElementById('api-result-title').textContent = '❌ Network Error';
+            document.getElementById('success-section').style.display = 'none';
+            document.getElementById('error-section').style.display  = 'block';
+            document.getElementById('error-data').textContent =
+                'Could not reach API at ' + API_BASE + '\n\n' + err.message +
+                '\n\nMake sure the Spring Boot app is running on port 8080.';
+        }
+    }
+
+    async function testProtectedEndpoint() {
+        document.getElementById('protected-section').style.display = 'block';
+
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/users/me`, {
+                headers: { 'Authorization': 'Bearer ' + jwtToken,
+                           'ngrok-skip-browser-warning': 'true'
+                }
+            });
+            const data = await response.json();
+            document.getElementById('me-data').textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+            document.getElementById('me-data').textContent = 'Error: ' + err.message;
+        }
+    }
+
+    function copyToken() {
+        if (jwtToken) {
+            navigator.clipboard.writeText(jwtToken).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Token', 2000);
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
