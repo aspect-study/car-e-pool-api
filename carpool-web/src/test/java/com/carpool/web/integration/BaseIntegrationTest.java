@@ -1,14 +1,23 @@
 package com.carpool.web.integration;
 
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 /**
  * Base class for integration tests.
- * Uses the existing local MySQL instance (docker-compose).
- * Requires: docker-compose up mysql -d (already running)
+ * Tagged as "integration" — excluded from CI, run locally only.
+ *
+ * Requires: docker-compose up mysql -d (MySQL must be running)
+ *
+ * To run locally:
+ *   mvn test -pl carpool-web
+ *
+ * To skip integration tests:
+ *   mvn test -pl carpool-web -Dgroups="!integration"
  */
+@Tag("integration")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @TestPropertySource(properties = {
