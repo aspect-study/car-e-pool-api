@@ -1,5 +1,5 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:25-jdk-alpine AS builder
 
 WORKDIR /build
 
@@ -28,7 +28,7 @@ RUN mvn clean package -pl carpool-web -am -DskipTests -q
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 # Use JRE-only alpine image — significantly smaller than JDK
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 
