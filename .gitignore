@@ -17,4 +17,5 @@ target/
 *.log
 
 # Environment files with actual secrets
+.documents/
 .env
