@@ -210,8 +210,18 @@ public class BookingService {
     public List<BookingResponse> getMyBookings(Long passengerUserId) {
         return bookingRepository.findByPassengerIdAndStatusInOrderByCreatedAtDesc(
                         passengerUserId,
-                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING,
-                                BookingStatus.COMPLETED, BookingStatus.CANCELLED_BY_PASSENGER,
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING))
+                .stream()
+                .map(mapper::toBookingResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getMyPastBookings(Long passengerUserId) {
+        return bookingRepository.findByPassengerIdAndStatusInOrderByCreatedAtDesc(
+                        passengerUserId,
+                        List.of(BookingStatus.COMPLETED,
+                                BookingStatus.CANCELLED_BY_PASSENGER,
                                 BookingStatus.CANCELLED_BY_DRIVER))
                 .stream()
                 .map(mapper::toBookingResponse)
@@ -233,5 +243,22 @@ public class BookingService {
                 .orElseThrow(() -> new InvalidRideStateException(
                         "Waypoint " + waypointId + " does not belong to ride " + ride.getId()
                         + " (" + label + ")"));
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getBookingsForDriver(Long driverUserId) {
+        return bookingRepository.findByDriverIdAndStatusIn(
+                        driverUserId,
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING))
+                .stream()
+                .map(mapper::toBookingResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BookingResponse getBookingById(Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .map(mapper::toBookingResponse)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
     }
 }

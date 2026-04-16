@@ -10,6 +10,7 @@ import java.time.Instant;
 public record BookingResponse(
         Long id,
         Long rideId,
+        RideResponse ride,
         UserResponse passenger,
         Integer seatsReserved,
         WaypointResponse pickupWaypoint,    // null = ride's origin

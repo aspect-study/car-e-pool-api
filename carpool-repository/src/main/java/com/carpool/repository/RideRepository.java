@@ -94,4 +94,30 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
         WHERE r.id = :id
         """)
     Optional<Ride> findByIdWithWaypoints(@Param("id") Long id);
+
+    @Query("""
+    SELECT r FROM Ride r
+    WHERE r.direction = :direction
+      AND r.status IN :statuses
+      AND r.departureTime > :now
+    ORDER BY r.departureTime ASC
+    """)
+    List<Ride> findActiveByDirection(
+            @Param("direction") RideDirection direction,
+            @Param("statuses")  List<RideStatus> statuses,
+            @Param("now")       LocalDateTime now);
+
+    @Query("""
+    SELECT r FROM Ride r
+    WHERE r.direction = :direction
+      AND r.status IN :statuses
+      AND r.departureTime >= :from
+      AND r.departureTime <= :to
+    ORDER BY r.departureTime ASC
+    """)
+    List<Ride> findActiveByDirectionAndTimeRange(
+            @Param("direction") RideDirection direction,
+            @Param("statuses")  List<RideStatus> statuses,
+            @Param("from")      LocalDateTime from,
+            @Param("to")        LocalDateTime to);
 }
