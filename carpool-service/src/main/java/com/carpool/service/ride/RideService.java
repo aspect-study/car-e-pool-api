@@ -2,6 +2,8 @@ package com.carpool.service.ride;
 
 import com.carpool.common.exception.*;
 import com.carpool.domain.entity.*;
+import com.carpool.domain.enums.BookingStatus;
+import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.HubRepository;
 import com.carpool.repository.BookingRepository;
@@ -42,6 +44,18 @@ public class RideService {
 
         if (!driver.canDrive()) {
             throw new InsufficientRoleException("DRIVER");
+        }
+
+        // Validate: driver can only have one active ride at a time
+        boolean hasActiveRide = !rideRepository
+                .findByDriverIdAndStatusInOrderByDepartureTimeDesc(
+                        driverUserId,
+                        List.of(RideStatus.ACTIVE, RideStatus.FULL))
+                .isEmpty();
+
+        if (hasActiveRide) {
+            throw new InvalidRideStateException(
+                    "You already have an active ride. Cancel or complete it first before posting a new one.");
         }
 
         Hub origin = hubRepository.findById(request.originHubId())
@@ -112,7 +126,13 @@ public class RideService {
 
         // Publish events for state transitions that affect passengers
         if (request.status() == RideStatus.CANCELLED) {
-            log.info("Ride cancelled: id={} by driverId={}", rideId, requestingUserId);
+            // Cancel all active bookings on this ride
+            List<Booking> activeBookings = bookingRepository.findActiveBookingsForRide(rideId);
+            activeBookings.forEach(b -> {
+                b.setStatus(BookingStatus.CANCELLED_BY_DRIVER);
+                bookingRepository.save(b);
+            });
+            log.info("Cancelled {} bookings for rideId={}", activeBookings.size(), rideId);
             eventPublisher.publishEvent(new RideEvents.RideCancelledEvent(saved));
         } else if (request.status() == RideStatus.COMPLETED) {
             log.info("Ride completed: id={} by driverId={}", rideId, requestingUserId);
@@ -187,5 +207,19 @@ public class RideService {
             throw new InvalidRideStateException(
                     "Cannot transition ride from " + current + " to " + requested);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<RideResponse> getRidesByDirection(RideDirection direction, Long excludeUserId,
+                                                  LocalDateTime from, LocalDateTime to) {
+        return rideRepository.findActiveByDirectionAndTimeRange(
+                        direction,
+                        List.of(RideStatus.ACTIVE),
+                        from,
+                        to)
+                .stream()
+                .filter(r -> !r.getDriver().getId().equals(excludeUserId))
+                .map(mapper::toRideResponse)
+                .toList();
     }
 }

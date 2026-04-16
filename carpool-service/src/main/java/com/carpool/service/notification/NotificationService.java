@@ -200,6 +200,8 @@ public class NotificationService {
             return;
         }
 
+        log.info("Sending Telegram notification to chatId={}", chatId);
+
         String url = "https://api.telegram.org/bot" + botToken + "/sendMessage";
 
         Map<String, Object> body = Map.of(

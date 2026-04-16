@@ -44,4 +44,30 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
           AND b.status IN ('PENDING', 'CONFIRMED')
         """)
     Integer sumReservedSeats(@Param("rideId") Long rideId);
+
+    /**
+     * Driver's view — all bookings on a specific ride.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    WHERE b.ride.id = :rideId
+      AND b.status IN :statuses
+    ORDER BY b.createdAt DESC
+    """)
+    List<Booking> findByRideIdAndStatusIn(
+            @Param("rideId")   Long rideId,
+            @Param("statuses") List<BookingStatus> statuses);
+
+    /**
+     * All active bookings across all rides posted by this driver.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    WHERE b.ride.driver.id = :driverId
+      AND b.status IN :statuses
+    ORDER BY b.ride.departureTime ASC, b.createdAt DESC
+    """)
+    List<Booking> findByDriverIdAndStatusIn(
+            @Param("driverId") Long driverId,
+            @Param("statuses") List<BookingStatus> statuses);
 }

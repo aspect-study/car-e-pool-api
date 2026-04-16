@@ -22,6 +22,11 @@
             <artifactId>carpool-service</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.carpool</groupId>
+            <artifactId>carpool-bot</artifactId>
+        </dependency>
+
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
