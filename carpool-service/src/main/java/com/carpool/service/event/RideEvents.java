@@ -37,4 +37,10 @@ public final class RideEvents {
      * Triggers: notify all passengers (ride done, please settle payment).
      */
     public record RideCompletedEvent(Ride ride) {}
+
+    /**
+     * Published when system auto-expires a ride past its departure time.
+     * Triggers: notify booked passengers (ride expired, not driver-cancelled).
+     */
+    public record RideExpiredEvent(Ride ride) {}
 }
