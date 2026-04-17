@@ -136,6 +136,15 @@ public class RideService {
             eventPublisher.publishEvent(new RideEvents.RideCancelledEvent(saved));
         } else if (request.status() == RideStatus.COMPLETED) {
             log.info("Ride completed: id={} by driverId={}", rideId, requestingUserId);
+
+            // Update all confirmed bookings to COMPLETED
+            List<Booking> activeBookings = bookingRepository.findActiveBookingsForRide(rideId);
+            activeBookings.forEach(b -> {
+                b.setStatus(BookingStatus.COMPLETED);
+                bookingRepository.save(b);
+            });
+            log.info("Completed {} bookings for rideId={}", activeBookings.size(), rideId);
+
             eventPublisher.publishEvent(new RideEvents.RideCompletedEvent(saved));
         }
 
