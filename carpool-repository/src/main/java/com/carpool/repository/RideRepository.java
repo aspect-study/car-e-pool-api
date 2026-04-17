@@ -120,4 +120,15 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("statuses")  List<RideStatus> statuses,
             @Param("from")      LocalDateTime from,
             @Param("to")        LocalDateTime to);
+
+    /**
+     * Finds rides that are still ACTIVE or FULL but departure time has already passed.
+     * Used by scheduler to auto-expire stale rides.
+     */
+    @Query("""
+    SELECT r FROM Ride r
+    WHERE r.status IN ('ACTIVE', 'FULL')
+      AND r.departureTime < :cutoff
+    """)
+    List<Ride> findStaleActiveRides(@Param("cutoff") LocalDateTime cutoff);
 }

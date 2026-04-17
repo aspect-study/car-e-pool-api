@@ -16,7 +16,11 @@ import java.util.List;
 
 /**
  * Utility class for building Telegram SendMessage objects.
- * Centralizes message formatting — keeps handlers clean.
+ * Uses HTML parse mode throughout — safer than Markdown for usernames
+ * and special characters.
+ *
+ * HTML tags supported: <b>, <i>, <u>, <code>, <pre>
+ * Special chars to escape: & → &amp;  < → &lt;  > → &gt;
  */
 public class BotMessageBuilder {
 
@@ -25,13 +29,34 @@ public class BotMessageBuilder {
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
 
+    // ── Menu button shortcut ──────────────────────────────────────────────
+
+    public static InlineKeyboardRow menuButtonRow() {
+        return new InlineKeyboardRow(
+                InlineKeyboardButton.builder()
+                        .text("🏠 Menu")
+                        .callbackData("MAIN_MENU")
+                        .build());
+    }
+
     // ── Simple text messages ──────────────────────────────────────────────
 
     public static SendMessage text(Long chatId, String text) {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
-                .parseMode("Markdown")
+                .parseMode("HTML")
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboard(List.of(menuButtonRow()))
+                        .build())
+                .build();
+    }
+
+    public static SendMessage textNoMenu(Long chatId, String text) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
                 .build();
     }
 
@@ -39,8 +64,19 @@ public class BotMessageBuilder {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
-                .parseMode("Markdown")
+                .parseMode("HTML")
                 .replyMarkup(ReplyKeyboardRemove.builder().removeKeyboard(true).build())
+                .build();
+    }
+
+    public static SendMessage textWithBackButton(Long chatId, String text) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboard(List.of(menuButtonRow()))
+                        .build())
                 .build();
     }
 
@@ -54,7 +90,7 @@ public class BotMessageBuilder {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(prompt)
-                .parseMode("Markdown")
+                .parseMode("HTML")
                 .replyMarkup(ReplyKeyboardMarkup.builder()
                         .keyboard(List.of(row))
                         .resizeKeyboard(true)
@@ -72,16 +108,14 @@ public class BotMessageBuilder {
             case OTHER        -> "🚗";
         };
 
-        // Seats: available vs total
         String seatsInfo = ride.availableSeats() + " of " + ride.totalSeats() + " seats available";
 
-        // Driver contact
         String driverHandle = ride.driver().telegramHandle() != null
-                ? " (@" + ride.driver().telegramHandle() + ")"
+                ? " (@" + escape(ride.driver().telegramHandle()) + ")"
                 : "";
 
-        // Posted how long ago
-        long minutesAgo = java.time.Duration.between(ride.createdAt(), java.time.Instant.now()).toMinutes();
+        long minutesAgo = java.time.Duration.between(
+                ride.createdAt(), java.time.Instant.now()).toMinutes();
         String postedAgo;
         if (minutesAgo < 60) {
             postedAgo = minutesAgo + "m ago";
@@ -91,28 +125,25 @@ public class BotMessageBuilder {
             postedAgo = (minutesAgo / 1440) + "d ago";
         }
 
-        // Total contribution for 1 seat (base), note about multiple seats
-        String contributionInfo = String.format("₱%.2f / seat", ride.contributionAmount());
-
         return String.format(
-                "%s *%s → %s*\n" +
+                "%s <b>%s → %s</b>\n" +
                         "🕐 %s\n" +
                         "🪑 %s\n" +
-                        "💵 %s\n" +
+                        "💵 ₱%.2f / seat\n" +
                         "👤 %s%s\n" +
                         "🕓 Posted %s" +
                         "%s",
                 directionEmoji,
-                ride.originHub().name(),
-                ride.destinationHub().name(),
+                escape(ride.originHub().name()),
+                escape(ride.destinationHub().name()),
                 ride.departureTime().atZone(MANILA).format(DISPLAY_FMT),
                 seatsInfo,
-                contributionInfo,
-                ride.driver().fullName(),
+                ride.contributionAmount(),
+                escape(ride.driver().fullName()),
                 driverHandle,
                 postedAgo,
                 ride.notes() != null && !ride.notes().isBlank()
-                        ? "\n📝 " + ride.notes()
+                        ? "\n📝 " + escape(ride.notes())
                         : "");
     }
 
@@ -120,22 +151,12 @@ public class BotMessageBuilder {
 
     public static SendMessage rideList(Long chatId, List<RideResponse> rides, String header) {
         if (rides.isEmpty()) {
-            var rows = List.of(
-                    List.of(InlineKeyboardButton.builder()
-                            .text("🏠 Back to Menu")
-                            .callbackData("MAIN_MENU")
-                            .build())
-            );
             return SendMessage.builder()
                     .chatId(chatId)
-                    .text(header + "\n\n_No rides found._")
-                    .parseMode("Markdown")
+                    .text(header + "\n\n<i>No rides found.</i>")
+                    .parseMode("HTML")
                     .replyMarkup(InlineKeyboardMarkup.builder()
-                            .keyboard(List.of(new InlineKeyboardRow(
-                                    InlineKeyboardButton.builder()
-                                            .text("🏠 Back to Menu")
-                                            .callbackData("MAIN_MENU")
-                                            .build())))
+                            .keyboard(List.of(menuButtonRow()))
                             .build())
                     .build();
         }
@@ -145,10 +166,10 @@ public class BotMessageBuilder {
 
         for (int i = 0; i < rides.size(); i++) {
             RideResponse ride = rides.get(i);
-            sb.append(String.format("*%d.* %s → %s | 🕐 %s | 🪑 %d | ₱%.2f\n",
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ₱%.2f\n",
                     i + 1,
-                    ride.originHub().name(),
-                    ride.destinationHub().name(),
+                    escape(ride.originHub().name()),
+                    escape(ride.destinationHub().name()),
                     ride.departureTime().atZone(MANILA).format(
                             DateTimeFormatter.ofPattern("MMM d h:mma")),
                     ride.availableSeats(),
@@ -160,11 +181,15 @@ public class BotMessageBuilder {
                     .build()));
         }
 
+        keyboardRows.add(menuButtonRow());
+
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(sb.toString())
-                .parseMode("Markdown")
-                .replyMarkup(InlineKeyboardMarkup.builder().keyboard(keyboardRows).build())
+                .parseMode("HTML")
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboard(keyboardRows)
+                        .build())
                 .build();
     }
 
@@ -180,6 +205,17 @@ public class BotMessageBuilder {
                 .build();
     }
 
+    public static InlineKeyboardMarkup inlineButtonsWithMenu(
+            List<List<InlineKeyboardButton>> rows) {
+        List<InlineKeyboardRow> keyboardRows = new ArrayList<>(rows.stream()
+                .map(InlineKeyboardRow::new)
+                .toList());
+        keyboardRows.add(menuButtonRow());
+        return InlineKeyboardMarkup.builder()
+                .keyboard(keyboardRows)
+                .build();
+    }
+
     public static InlineKeyboardButton button(String text, String callbackData) {
         return InlineKeyboardButton.builder()
                 .text(text)
@@ -187,20 +223,15 @@ public class BotMessageBuilder {
                 .build();
     }
 
-    private BotMessageBuilder() {}
+    // ── HTML escape helper ────────────────────────────────────────────────
 
-    public static SendMessage textWithBackButton(Long chatId, String text) {
-        return SendMessage.builder()
-                .chatId(chatId)
-                .text(text)
-                .parseMode("Markdown")
-                .replyMarkup(InlineKeyboardMarkup.builder()
-                        .keyboard(List.of(new InlineKeyboardRow(
-                                InlineKeyboardButton.builder()
-                                        .text("🏠 Menu")
-                                        .callbackData("MAIN_MENU")
-                                        .build())))
-                        .build())
-                .build();
+    public static String escape(String text) {
+        if (text == null) return "";
+        return text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
+
+    private BotMessageBuilder() {}
 }

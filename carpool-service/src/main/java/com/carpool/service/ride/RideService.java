@@ -197,10 +197,11 @@ public class RideService {
     private void validateStatusTransition(RideStatus current, RideStatus requested) {
         boolean valid = switch (requested) {
             case ACTIVE    -> current == RideStatus.DRAFT;
+            case DEPARTED  -> current == RideStatus.ACTIVE || current == RideStatus.FULL;
             case CANCELLED -> current == RideStatus.ACTIVE || current == RideStatus.FULL
-                              || current == RideStatus.DRAFT;
-            case COMPLETED -> current == RideStatus.ACTIVE || current == RideStatus.FULL;
-            default -> false; // DRAFT and FULL are set by system, not driver
+                    || current == RideStatus.DRAFT;
+            case COMPLETED -> current == RideStatus.DEPARTED;
+            default        -> false;
         };
 
         if (!valid) {
@@ -221,5 +222,30 @@ public class RideService {
                 .filter(r -> !r.getDriver().getId().equals(excludeUserId))
                 .map(mapper::toRideResponse)
                 .toList();
+    }
+
+    /**
+     * Expires rides whose departure time has passed but are still ACTIVE or FULL.
+     * Called by scheduler every 30 minutes.
+     */
+    @Transactional
+    public void expireStaleRides() {
+        // 15-minute buffer — gives driver time to tap Start Ride
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(15);
+        List<Ride> staleRides = rideRepository.findStaleActiveRides(cutoff);
+
+        if (staleRides.isEmpty()) {
+            log.debug("No stale rides to auto-depart");
+            return;
+        }
+
+        for (Ride ride : staleRides) {
+            ride.setStatus(RideStatus.DEPARTED);
+            rideRepository.save(ride);
+            log.info("Auto-departed stale ride: id={} departureTime={}",
+                    ride.getId(), ride.getDepartureTime());
+        }
+
+        log.info("Auto-departed {} stale rides", staleRides.size());
     }
 }

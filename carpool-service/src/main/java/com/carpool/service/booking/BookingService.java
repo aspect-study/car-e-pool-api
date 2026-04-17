@@ -74,7 +74,7 @@ public class BookingService {
         }
 
         // ── 4. Prevent duplicate bookings ────────────────────────────────
-        if (bookingRepository.existsByRideIdAndPassengerId(rideId, passengerUserId)) {
+        if (bookingRepository.existsActiveByRideIdAndPassengerId(rideId, passengerUserId)) {
             throw new DuplicateBookingException(rideId);
         }
 
@@ -146,6 +146,13 @@ public class BookingService {
                 && booking.getStatus() != BookingStatus.PENDING) {
             throw new InvalidRideStateException(
                     "Cannot cancel booking with status: " + booking.getStatus());
+        }
+
+        // Cannot cancel once ride has departed
+        if (booking.getRide().getStatus() == RideStatus.DEPARTED
+                || booking.getRide().getStatus() == RideStatus.COMPLETED) {
+            throw new InvalidRideStateException(
+                    "Cannot cancel booking — ride has already started.");
         }
 
         booking.setStatus(BookingStatus.CANCELLED_BY_PASSENGER);
@@ -260,5 +267,15 @@ public class BookingService {
         return bookingRepository.findById(bookingId)
                 .map(mapper::toBookingResponse)
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getBookingsByRideId(Long rideId) {
+        return bookingRepository.findByRideIdAndStatusIn(
+                        rideId,
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING))
+                .stream()
+                .map(mapper::toBookingResponse)
+                .toList();
     }
 }
