@@ -459,30 +459,16 @@ public class MessageHandler {
     }
 
     private void showMyBookings(Long chatId, Long carpoolUserId, CarpoolBot bot) {
-        List<BookingResponse> driverBookings = bookingService.getBookingsForDriver(carpoolUserId);
-        List<BookingResponse> myBookings     = bookingService.getMyBookings(carpoolUserId);
-        List<BookingResponse> pastBookings   = bookingService.getMyPastBookings(carpoolUserId);
+        List<BookingResponse> myBookings   = bookingService.getMyBookings(carpoolUserId);
+        List<BookingResponse> pastBookings = bookingService.getMyPastBookings(carpoolUserId);
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("📜 <b>My Bookings</b>\n\n");
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        if (!driverBookings.isEmpty()) {
-            sb.append("🚗 <b>Passengers on Your Ride</b>\n\n");
-            for (int i = 0; i < driverBookings.size(); i++) {
-                BookingResponse b = driverBookings.get(i);
-                sb.append(String.format("<b>%d.</b> %s%s | 🪑 %d | ₱%.2f\n",
-                        i + 1,
-                        BotMessageBuilder.escape(b.passenger().fullName()),
-                        b.passenger().telegramHandle() != null
-                                ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")" : "",
-                        b.seatsReserved(),
-                        b.contributionDue()));
-            }
-            sb.append("\n");
-        }
-
-        if (!myBookings.isEmpty()) {
-            sb.append("📜 <b>My Active Bookings</b>\n\n");
+        if (myBookings.isEmpty()) {
+            sb.append("<i>No active bookings.</i>");
+        } else {
+            sb.append("<b>Active</b>\n");
             for (int i = 0; i < myBookings.size(); i++) {
                 BookingResponse b = myBookings.get(i);
                 sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ₱%.2f\n",
@@ -495,15 +481,10 @@ public class MessageHandler {
                         b.contributionDue()));
 
                 rows.add(List.of(InlineKeyboardButton.builder()
-                        .text("View Booking #" + (i + 1))
+                        .text("View #" + (i + 1))
                         .callbackData("VIEW_BOOKING:" + b.id())
                         .build()));
             }
-            sb.append("\n");
-        }
-
-        if (driverBookings.isEmpty() && myBookings.isEmpty()) {
-            sb.append("📜 <b>My Bookings</b>\n\n<i>No active bookings.</i>");
         }
 
         if (!pastBookings.isEmpty()) {
