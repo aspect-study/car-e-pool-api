@@ -75,6 +75,19 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
 
     public void send(SendMessage message) {
         try {
+            if (message.getText() == null || message.getText().isBlank()) {
+                log.warn("Attempted to send empty message to chatId={} — skipped",
+                        message.getChatId());
+                return;
+            }
+
+            // Telegram limit is 4096 chars — truncate if needed
+            if (message.getText().length() > 4096) {
+                log.warn("Message too long ({} chars) for chatId={} — truncating",
+                        message.getText().length(), message.getChatId());
+                message.setText(message.getText().substring(0, 4090) + "\n...");
+            }
+
             getClient().execute(message);
         } catch (TelegramApiException e) {
             log.error("Failed to send message to chatId={}: {}",
