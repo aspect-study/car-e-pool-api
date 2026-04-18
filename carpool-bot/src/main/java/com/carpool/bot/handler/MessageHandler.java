@@ -176,8 +176,7 @@ public class MessageHandler {
                             BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE"),
-                            BotMessageBuilder.button("📜 My Bookings",  "MY_BOOKINGS")
+                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                     )
             )
                     : List.of(
@@ -189,8 +188,7 @@ public class MessageHandler {
                             BotMessageBuilder.button("❌ Cancel Ride",   "CANCEL_RIDE:"  + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE"),
-                            BotMessageBuilder.button("📜 My Bookings",  "MY_BOOKINGS")
+                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE")
                     )
             );
 
@@ -214,13 +212,24 @@ public class MessageHandler {
         String dirLabel = direction == RideDirection.HOME_TO_WORK
                 ? "🏠 Home → Work" : "🏢 Work → Home";
 
-        var rows = List.of(
+        List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
+
+        var rows = myBookings.isEmpty()
+                ? List.of(
+                List.of(
+                        BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
+                        BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                )
+        )
+                : List.of(
                 List.of(
                         BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
                         BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                 ),
                 List.of(
-                        BotMessageBuilder.button("📜 My Bookings", "MY_BOOKINGS")
+                        BotMessageBuilder.button(
+                                "📜 My Bookings (" + myBookings.size() + ")",
+                                "MY_BOOKINGS")
                 )
         );
 
@@ -246,7 +255,10 @@ public class MessageHandler {
         bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId,
                 "🕐 <b>When is your departure time?</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
-                        "Example: <code>04/16 07:30</code>\n\n" +
+                        "Example: <code>" +
+                        LocalDateTime.now().plusHours(1)
+                                .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                        "</code>\n\n" +
                         "Type /cancel to abort."));
     }
 
@@ -274,7 +286,10 @@ public class MessageHandler {
         } catch (DateTimeParseException e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Invalid format. Please use <code>MM/DD HH:MM</code>\n" +
-                            "Example: <code>04/16 07:30</code>"));
+                            "Example: <code>" +
+                            LocalDateTime.now().plusHours(1)
+                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                            "</code>"));
         }
     }
 
@@ -481,7 +496,12 @@ public class MessageHandler {
                         b.contributionDue()));
 
                 rows.add(List.of(InlineKeyboardButton.builder()
-                        .text("View #" + (i + 1))
+                        .text(String.format("🔍 %s → %s | %s",
+                                b.ride().originHub().name(),
+                                b.ride().destinationHub().name(),
+                                b.ride().departureTime()
+                                        .atZone(ZoneId.of("Asia/Manila"))
+                                        .format(DateTimeFormatter.ofPattern("MMM d h:mma"))))
                         .callbackData("VIEW_BOOKING:" + b.id())
                         .build()));
             }

@@ -94,6 +94,7 @@ public class CallbackHandler {
             case "CANCEL_BOOKING"    -> handleCancelBooking(chatId, entityId, carpoolUserId, bot);
             case "DEPART_RIDE"   -> handleDepartRide(chatId, entityId, carpoolUserId, bot);
             case "COMPLETE_RIDE" -> handleCompleteRide(chatId, entityId, carpoolUserId, bot);
+            case "VIEW_DRIVER_BOOKING" -> handleViewDriverBooking(chatId, entityId, carpoolUserId, bot);
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
                 bot.send(BotMessageBuilder.text(chatId, "⚠️ Unknown action."));
@@ -130,8 +131,7 @@ public class CallbackHandler {
                             BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE"),
-                            BotMessageBuilder.button("📜 My Bookings",  "MY_BOOKINGS")
+                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                     )
             )
                     : List.of(
@@ -143,8 +143,7 @@ public class CallbackHandler {
                             BotMessageBuilder.button("❌ Cancel Ride",   "CANCEL_RIDE:"  + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE"),
-                            BotMessageBuilder.button("📜 My Bookings",  "MY_BOOKINGS")
+                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE")
                     )
             );
 
@@ -159,10 +158,23 @@ public class CallbackHandler {
 
     private void handleStartPostRide(Long chatId, Long carpoolUserId,
                                      UserState state, CarpoolBot bot) {
+        // Direction is required — ask if not yet set in state
+        if (state.getDirection() == null) {
+            bot.send(BotMessageBuilder.directionSelector(chatId,
+                    "🚗 <b>Post a Ride</b>\n\nWhich direction is this ride?"));
+            stateManager.save(chatId, state
+                    .withCarpoolUserId(carpoolUserId)
+                    .withFlow(BotFlow.POST_RIDE_DIRECTION));
+            return;
+        }
+
         bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId,
                 "🕐 <b>When is your departure time?</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
-                        "Example: <code>04/16 07:30</code>\n\n" +
+                        "Example: <code>" +
+                        LocalDateTime.now().plusHours(1)
+                                .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                        "</code>\n\n" +
                         "Type /cancel to abort."));
         stateManager.save(chatId, state
                 .withCarpoolUserId(carpoolUserId)
@@ -445,7 +457,12 @@ public class CallbackHandler {
                         b.contributionDue()));
 
                 rows.add(List.of(InlineKeyboardButton.builder()
-                        .text("View #" + (i + 1))
+                        .text(String.format("🔍 %s → %s | %s",
+                                b.ride().originHub().name(),
+                                b.ride().destinationHub().name(),
+                                b.ride().departureTime()
+                                        .atZone(ZoneId.of("Asia/Manila"))
+                                        .format(DateTimeFormatter.ofPattern("MMM d h:mma"))))
                         .callbackData("VIEW_BOOKING:" + b.id())
                         .build()));
             }
@@ -598,6 +615,8 @@ public class CallbackHandler {
         }
 
         StringBuilder sb = new StringBuilder("📋 <b>Passengers on your ride</b>\n\n");
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
         for (int i = 0; i < bookings.size(); i++) {
             BookingResponse b = bookings.get(i);
             sb.append(String.format("<b>%d.</b> %s%s | 🪑 %d seat(s) | ₱%.2f\n",
@@ -607,14 +626,21 @@ public class CallbackHandler {
                             ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")" : "",
                     b.seatsReserved(),
                     b.contributionDue()));
+
+            rows.add(List.of(InlineKeyboardButton.builder()
+                    .text("View #" + (i + 1) + " — " + b.passenger().fullName())
+                    .callbackData("VIEW_DRIVER_BOOKING:" + b.id())
+                    .build()));
         }
+
+        rows.add(List.of(BotMessageBuilder.menuButtonRow().get(0)));
 
         bot.send(SendMessage.builder()
                 .chatId(chatId)
                 .text(sb.toString())
                 .parseMode("HTML")
                 .replyMarkup(InlineKeyboardMarkup.builder()
-                        .keyboard(List.of(BotMessageBuilder.menuButtonRow()))
+                        .keyboard(rows.stream().map(InlineKeyboardRow::new).toList())
                         .build())
                 .build());
     }
@@ -632,7 +658,11 @@ public class CallbackHandler {
                             BotMessageBuilder.escape(original.originHub().name()) + " → " +
                             BotMessageBuilder.escape(original.destinationHub().name()) + "</b>\n\n" +
                             "🕐 <b>What time is your departure?</b>\n" +
-                            "Format: <code>MM/DD HH:MM</code>\n\n" +
+                            "Format: <code>MM/DD HH:MM</code>\n" +
+                            "Example: <code>" +
+                            LocalDateTime.now().plusHours(1)
+                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                            "</code>\n\n" +
                             "Type /cancel to abort."));
 
             stateManager.save(chatId, state
@@ -681,5 +711,55 @@ public class CallbackHandler {
                 .parseMode("HTML")
                 .replyMarkup(BotMessageBuilder.inlineButtons(rows))
                 .build();
+    }
+
+    private void handleViewDriverBooking(Long chatId, Long bookingId,
+                                         Long carpoolUserId, CarpoolBot bot) {
+        try {
+            BookingResponse b = bookingService.getBookingById(bookingId);
+
+            String pickup  = b.pickupWaypoint()  != null
+                    ? b.pickupWaypoint().hub().name()
+                    : b.ride().originHub().name();
+            String dropoff = b.dropoffWaypoint() != null
+                    ? b.dropoffWaypoint().hub().name()
+                    : b.ride().destinationHub().name();
+
+            String detail = String.format(
+                    "👤 <b>Passenger Details</b>\n\n" +
+                            "Name: <b>%s</b>%s\n" +
+                            "🚏 Pickup: <b>%s</b>\n" +
+                            "🏁 Dropoff: <b>%s</b>\n" +
+                            "🪑 Seats: %d\n" +
+                            "💵 Contribution: ₱%.2f\n" +
+                            "📊 Status: %s",
+                    BotMessageBuilder.escape(b.passenger().fullName()),
+                    b.passenger().telegramHandle() != null
+                            ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")" : "",
+                    BotMessageBuilder.escape(pickup),
+                    BotMessageBuilder.escape(dropoff),
+                    b.seatsReserved(),
+                    b.contributionDue(),
+                    b.status().name());
+
+            var rows = List.of(List.of(
+                    InlineKeyboardButton.builder()
+                            .text("◀️ Back to Bookings")
+                            .callbackData("RIDE_BOOKINGS:0")
+                            .build()
+            ));
+
+            bot.send(SendMessage.builder()
+                    .chatId(chatId)
+                    .text(detail)
+                    .parseMode("HTML")
+                    .replyMarkup(InlineKeyboardMarkup.builder()
+                            .keyboard(rows.stream().map(InlineKeyboardRow::new).toList())
+                            .build())
+                    .build());
+
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load booking details."));
+        }
     }
 }
