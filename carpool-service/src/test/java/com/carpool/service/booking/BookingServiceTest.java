@@ -24,7 +24,6 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -35,10 +34,10 @@ import static org.mockito.Mockito.*;
 @DisplayName("BookingService")
 class BookingServiceTest {
 
-    @Mock private BookingRepository    bookingRepository;
-    @Mock private RideRepository       rideRepository;
-    @Mock private UserRepository       userRepository;
-    @Mock private EntityMapper         mapper;
+    @Mock private BookingRepository         bookingRepository;
+    @Mock private RideRepository            rideRepository;
+    @Mock private UserRepository            userRepository;
+    @Mock private EntityMapper              mapper;
     @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
@@ -94,23 +93,19 @@ class BookingServiceTest {
         @Test
         @DisplayName("should confirm booking and decrement available seats")
         void shouldConfirmBookingAndDecrementSeats() {
-            // Arrange
             var request = new CreateBookingRequest(1, null, null);
 
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
-            when(bookingRepository.existsByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
+            when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
             when(userRepository.findById(2L)).thenReturn(Optional.of(passenger));
             when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
             when(mapper.toBookingResponse(any())).thenReturn(mock(BookingResponse.class));
 
-            // Act
             bookingService.createBooking(100L, request, 2L);
 
-            // Assert — available seats decremented
             assertThat(ride.getAvailableSeats()).isEqualTo(2);
-            assertThat(ride.getStatus()).isEqualTo(RideStatus.ACTIVE); // still active, 2 seats left
+            assertThat(ride.getStatus()).isEqualTo(RideStatus.ACTIVE);
 
-            // Verify booking was saved
             ArgumentCaptor<Booking> bookingCaptor = ArgumentCaptor.forClass(Booking.class);
             verify(bookingRepository).save(bookingCaptor.capture());
 
@@ -119,27 +114,23 @@ class BookingServiceTest {
             assertThat(saved.getSeatsReserved()).isEqualTo(1);
             assertThat(saved.getContributionDue()).isEqualByComparingTo("150.00");
 
-            // Verify BookingConfirmedEvent was published
             verify(eventPublisher).publishEvent(any(RideEvents.BookingConfirmedEvent.class));
         }
 
         @Test
         @DisplayName("should transition ride to FULL when last seat is booked")
         void shouldTransitionRideToFullWhenLastSeatBooked() {
-            // Arrange — only 1 seat left
             ride.setAvailableSeats(1);
             var request = new CreateBookingRequest(1, null, null);
 
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
-            when(bookingRepository.existsByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
+            when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
             when(userRepository.findById(2L)).thenReturn(Optional.of(passenger));
             when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
             when(mapper.toBookingResponse(any())).thenReturn(mock(BookingResponse.class));
 
-            // Act
             bookingService.createBooking(100L, request, 2L);
 
-            // Assert — ride transitions to FULL
             assertThat(ride.getAvailableSeats()).isEqualTo(0);
             assertThat(ride.getStatus()).isEqualTo(RideStatus.FULL);
         }
@@ -147,19 +138,16 @@ class BookingServiceTest {
         @Test
         @DisplayName("should calculate contribution correctly for multiple seats")
         void shouldCalculateContributionForMultipleSeats() {
-            // Arrange — passenger books 2 seats at ₱150 each = ₱300 due
             var request = new CreateBookingRequest(2, null, null);
 
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
-            when(bookingRepository.existsByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
+            when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
             when(userRepository.findById(2L)).thenReturn(Optional.of(passenger));
             when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
             when(mapper.toBookingResponse(any())).thenReturn(mock(BookingResponse.class));
 
-            // Act
             bookingService.createBooking(100L, request, 2L);
 
-            // Assert contribution = seats × rate
             ArgumentCaptor<Booking> captor = ArgumentCaptor.forClass(Booking.class);
             verify(bookingRepository).save(captor.capture());
             assertThat(captor.getValue().getContributionDue())
@@ -192,7 +180,6 @@ class BookingServiceTest {
         @Test
         @DisplayName("should throw RideFullException when requested seats exceed available")
         void shouldThrowWhenInsufficientSeats() {
-            // Arrange — only 1 seat left, passenger wants 2
             ride.setAvailableSeats(1);
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
 
@@ -207,7 +194,7 @@ class BookingServiceTest {
         @DisplayName("should throw DuplicateBookingException when passenger already booked")
         void shouldThrowOnDuplicateBooking() {
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
-            when(bookingRepository.existsByRideIdAndPassengerId(100L, 2L)).thenReturn(true);
+            when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 2L)).thenReturn(true);
 
             assertThatThrownBy(() ->
                     bookingService.createBooking(100L,
@@ -218,13 +205,12 @@ class BookingServiceTest {
         @Test
         @DisplayName("should throw InvalidRideStateException when driver tries to book own ride")
         void shouldThrowWhenDriverBooksOwnRide() {
-            // Arrange — driver (id=1) tries to book their own ride
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
-            when(bookingRepository.existsByRideIdAndPassengerId(100L, 1L)).thenReturn(false);
+            when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 1L)).thenReturn(false);
 
             assertThatThrownBy(() ->
                     bookingService.createBooking(100L,
-                            new CreateBookingRequest(1, null, null), 1L)) // driverId = 1
+                            new CreateBookingRequest(1, null, null), 1L))
                     .isInstanceOf(InvalidRideStateException.class)
                     .hasMessageContaining("own ride");
         }
@@ -253,7 +239,7 @@ class BookingServiceTest {
         @Test
         @DisplayName("should cancel booking and restore seats to ride")
         void shouldCancelAndRestoreSeats() {
-            ride.setAvailableSeats(2); // 1 seat was taken by this booking
+            ride.setAvailableSeats(2);
 
             when(bookingRepository.findById(500L)).thenReturn(Optional.of(confirmedBooking));
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
@@ -262,7 +248,6 @@ class BookingServiceTest {
 
             bookingService.cancelBooking(500L, 2L);
 
-            // Seat restored
             assertThat(ride.getAvailableSeats()).isEqualTo(3);
             assertThat(confirmedBooking.getStatus())
                     .isEqualTo(BookingStatus.CANCELLED_BY_PASSENGER);
@@ -281,7 +266,6 @@ class BookingServiceTest {
 
             bookingService.cancelBooking(500L, 2L);
 
-            // Ride re-opened
             assertThat(ride.getStatus()).isEqualTo(RideStatus.ACTIVE);
             assertThat(ride.getAvailableSeats()).isEqualTo(1);
         }
@@ -291,7 +275,6 @@ class BookingServiceTest {
         void shouldThrowWhenNotOwner() {
             when(bookingRepository.findById(500L)).thenReturn(Optional.of(confirmedBooking));
 
-            // User 99 is not the passenger (id=2)
             assertThatThrownBy(() -> bookingService.cancelBooking(500L, 99L))
                     .isInstanceOf(NotBookingOwnerException.class);
         }
@@ -304,6 +287,17 @@ class BookingServiceTest {
 
             assertThatThrownBy(() -> bookingService.cancelBooking(500L, 2L))
                     .isInstanceOf(InvalidRideStateException.class);
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when ride has already departed")
+        void shouldThrowWhenRideDeparted() {
+            ride.setStatus(RideStatus.DEPARTED);
+            when(bookingRepository.findById(500L)).thenReturn(Optional.of(confirmedBooking));
+
+            assertThatThrownBy(() -> bookingService.cancelBooking(500L, 2L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("already started");
         }
     }
 
@@ -367,7 +361,6 @@ class BookingServiceTest {
             when(bookingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(mapper.toBookingResponse(any())).thenReturn(mock(BookingResponse.class));
 
-            // Second payment of 100 — total becomes 150 = fully paid
             bookingService.updatePayment(500L,
                     new UpdatePaymentRequest(new BigDecimal("100.00"), PaymentMethod.GCASH), 2L);
 

@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -198,10 +199,13 @@ class RideServiceTest {
         }
 
         @Test
-        @DisplayName("should transition ACTIVE → COMPLETED and publish event")
+        @DisplayName("should transition DEPARTED → COMPLETED and publish event")
         void shouldCompleteActiveRideAndPublishEvent() {
+            activeRide.setStatus(RideStatus.DEPARTED); // must be DEPARTED first
+
             when(rideRepository.findById(100L)).thenReturn(Optional.of(activeRide));
             when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(bookingRepository.findActiveBookingsForRide(100L)).thenReturn(List.of());
             when(mapper.toRideResponse(any())).thenReturn(mock(RideResponse.class));
 
             rideService.updateRideStatus(100L,
