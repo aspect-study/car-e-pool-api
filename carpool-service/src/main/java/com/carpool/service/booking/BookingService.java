@@ -94,15 +94,17 @@ public class BookingService {
         BigDecimal contributionDue = ride.getContributionAmount()
                 .multiply(BigDecimal.valueOf(request.seatsReserved()));
 
-        // ── 8. Insert booking ────────────────────────────────────────────
+        // ── 8. Insert booking as PENDING — awaiting driver approval ──────
         Booking booking = Booking.builder()
                 .ride(ride)
                 .passenger(passenger)
                 .seatsReserved(request.seatsReserved())
                 .pickupWaypoint(pickupWaypoint)
                 .dropoffWaypoint(dropoffWaypoint)
-                .status(BookingStatus.CONFIRMED)
+                .status(BookingStatus.PENDING)
                 .contributionDue(contributionDue)
+                .passengerMessage(request.passengerMessage())
+                .expiresAt(java.time.Instant.now().plus(20, java.time.temporal.ChronoUnit.MINUTES))
                 .build();
 
         // ── 9. Decrement available seats ─────────────────────────────────
@@ -124,7 +126,8 @@ public class BookingService {
 
         // ── 11. Async: notify driver and passenger ───────────────────────
         // Fired after transaction commits to avoid notifying on rollback
-        eventPublisher.publishEvent(new RideEvents.BookingConfirmedEvent(saved));
+        // Notify driver of new booking request — passenger awaits approval
+        eventPublisher.publishEvent(new RideEvents.BookingRequestedEvent(saved));
 
         return mapper.toBookingResponse(saved);
     }
@@ -213,6 +216,101 @@ public class BookingService {
         return mapper.toBookingResponse(bookingRepository.save(booking));
     }
 
+    /**
+     * Driver accepts a pending booking request.
+     * Transitions PENDING → CONFIRMED.
+     */
+    @Transactional
+    public BookingResponse acceptBooking(Long bookingId, Long driverUserId) {
+        Booking booking = bookingRepository.findByIdWithDetails(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+        // Verify caller is the ride's driver
+        if (!booking.getRide().getDriver().getId().equals(driverUserId)) {
+            throw new NotBookingOwnerException();
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new InvalidRideStateException(
+                    "Cannot accept booking with status: " + booking.getStatus());
+        }
+
+        booking.setStatus(BookingStatus.CONFIRMED);
+        Booking saved = bookingRepository.save(booking);
+
+        log.info("Booking accepted: bookingId={} rideId={} passengerId={}",
+                bookingId, booking.getRide().getId(), booking.getPassenger().getId());
+
+        eventPublisher.publishEvent(new RideEvents.BookingConfirmedEvent(saved));
+
+        return mapper.toBookingResponse(saved);
+    }
+
+    /**
+     * Driver declines a pending booking request.
+     * Transitions PENDING → DECLINED and restores seats.
+     */
+    @Transactional
+    public BookingResponse declineBooking(Long bookingId, Long driverUserId) {
+        Booking booking = bookingRepository.findByIdWithDetails(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+        // Verify caller is the ride's driver
+        if (!booking.getRide().getDriver().getId().equals(driverUserId)) {
+            throw new NotBookingOwnerException();
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new InvalidRideStateException(
+                    "Cannot decline booking with status: " + booking.getStatus());
+        }
+
+        booking.setStatus(BookingStatus.DECLINED);
+
+        // Restore seats using pessimistic lock
+        Ride ride = rideRepository.findByIdWithLock(booking.getRide().getId())
+                .orElseThrow(() -> new RideNotFoundException(booking.getRide().getId()));
+
+        int restoredSeats = ride.getAvailableSeats() + booking.getSeatsReserved();
+        ride.setAvailableSeats(restoredSeats);
+
+        if (ride.getStatus() == RideStatus.FULL) {
+            ride.setStatus(RideStatus.ACTIVE);
+            log.info("Ride {} re-opened to ACTIVE after booking declined", ride.getId());
+        }
+
+        rideRepository.save(ride);
+        Booking saved = bookingRepository.save(booking);
+
+        log.info("Booking declined: bookingId={} rideId={} passengerId={}",
+                bookingId, booking.getRide().getId(), booking.getPassenger().getId());
+
+        eventPublisher.publishEvent(new RideEvents.BookingDeclinedEvent(saved));
+
+        return mapper.toBookingResponse(saved);
+    }
+
+    /**
+     * Get pending booking requests for a driver's active ride.
+     */
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getPendingRequestsForDriver(Long driverUserId) {
+        return bookingRepository.findByDriverIdAndStatusIn(
+                        driverUserId,
+                        List.of(BookingStatus.PENDING))
+                .stream()
+                .map(mapper::toBookingResponse)
+                .toList();
+    }
+
+    /**
+     * Count pending requests for driver — used for badge on main menu.
+     */
+    @Transactional(readOnly = true)
+    public long countPendingRequestsForDriver(Long driverUserId) {
+        return bookingRepository.countPendingByDriverId(driverUserId);
+    }
+
     @Transactional(readOnly = true)
     public List<BookingResponse> getMyBookings(Long passengerUserId) {
         return bookingRepository.findByPassengerIdAndStatusInOrderByCreatedAtDesc(
@@ -229,7 +327,9 @@ public class BookingService {
                         passengerUserId,
                         List.of(BookingStatus.COMPLETED,
                                 BookingStatus.CANCELLED_BY_PASSENGER,
-                                BookingStatus.CANCELLED_BY_DRIVER))
+                                BookingStatus.CANCELLED_BY_DRIVER,
+                                BookingStatus.DECLINED,
+                                BookingStatus.TIMED_OUT))
                 .stream()
                 .map(mapper::toBookingResponse)
                 .toList();

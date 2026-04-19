@@ -172,6 +172,170 @@ public class NotificationService {
         }
     }
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingRequested(RideEvents.BookingRequestedEvent event) {
+        Booking booking = bookingRepository.findByIdWithDetails(event.booking().getId())
+                .orElse(null);
+        if (booking == null) {
+            log.error("Booking not found for notification: id={}", event.booking().getId());
+            return;
+        }
+
+        Ride ride   = booking.getRide();
+        User driver = ride.getDriver();
+        User pax    = booking.getPassenger();
+
+        // Notify driver with Accept/Decline buttons
+        sendTelegramMessageWithButtons(driver.getTelegramId(),
+                buildDriverBookingRequestMessage(booking),
+                List.of(
+                        List.of(
+                                Map.of("text", "✅ Accept",
+                                        "callback_data", "ACCEPT_BOOKING:" + booking.getId()),
+                                Map.of("text", "❌ Decline",
+                                        "callback_data", "DECLINE_BOOKING:" + booking.getId())
+                        ),
+                        List.of(
+                                Map.of("text", "🏠 Go to Menu",
+                                        "callback_data", "MAIN_MENU")
+                        )
+                ));
+
+        // Notify passenger — request sent, awaiting approval
+        sendAndRecord(pax, NotificationTypes.BOOKING_CONFIRMED,
+                buildPassengerRequestSentMessage(booking),
+                Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
+
+        // Record notification for driver
+        Notification notification = Notification.builder()
+                .user(driver)
+                .type(NotificationTypes.BOOKING_RECEIVED)
+                .payload(new HashMap<>(Map.of(
+                        "bookingId", booking.getId(),
+                        "rideId", ride.getId(),
+                        "passengerName", pax.getFullName())))
+                .status(NotificationStatus.SENT)
+                .sentAt(Instant.now())
+                .build();
+        notificationRepository.save(notification);
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingDeclined(RideEvents.BookingDeclinedEvent event) {
+        Booking booking = bookingRepository.findByIdWithDetails(event.booking().getId())
+                .orElse(null);
+        if (booking == null) return;
+
+        Ride ride = booking.getRide();
+        User pax  = booking.getPassenger();
+
+        String msg = String.format(
+                "❌ <b>Booking Request Declined</b>\n\n" +
+                        "Unfortunately, the driver has declined your booking request.\n\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n\n" +
+                        "Please look for another available ride.",
+                escape(ride.getOriginHub().getName()),
+                escape(ride.getDestinationHub().getName()),
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
+
+        sendAndRecord(pax, NotificationTypes.BOOKING_CANCELLED_BY_DRIVER, msg,
+                Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingTimedOut(RideEvents.BookingTimedOutEvent event) {
+        Booking booking = bookingRepository.findByIdWithDetails(event.booking().getId())
+                .orElse(null);
+        if (booking == null) return;
+
+        Ride ride = booking.getRide();
+        User pax  = booking.getPassenger();
+
+        String msg = String.format(
+                "⏰ <b>Booking Request Expired</b>\n\n" +
+                        "Your booking request was not responded to by the driver.\n\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n\n" +
+                        "Please look for another available ride.",
+                escape(ride.getOriginHub().getName()),
+                escape(ride.getDestinationHub().getName()),
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
+
+        sendAndRecord(pax, NotificationTypes.BOOKING_CANCELLED_BY_DRIVER, msg,
+                Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingReminder(RideEvents.BookingReminderEvent event) {
+        Booking booking = bookingRepository.findByIdWithDetails(event.booking().getId())
+                .orElse(null);
+        if (booking == null) return;
+
+        Ride ride   = booking.getRide();
+        User driver = ride.getDriver();
+        User pax    = booking.getPassenger();
+
+        String paxHandle = pax.getTelegramHandle() != null
+                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                : "";
+
+        // Compute remaining minutes
+        long remainingMinutes = java.time.Duration.between(
+                Instant.now(), booking.getExpiresAt()).toMinutes();
+
+        String msg = String.format(
+                "⏰ <b>Reminder %d/3 — Pending Booking Request</b>\n\n" +
+                        "👤 <b>%s</b>%s is waiting for your response.\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n" +
+                        "🪑 %d seat(s) | 💵 ₱%.2f\n\n" +
+                        "⚠️ Auto-declines in ~%d minutes if no response.",
+                event.reminderNumber(),
+                escape(pax.getFullName()),
+                paxHandle,
+                escape(ride.getOriginHub().getName()),
+                escape(ride.getDestinationHub().getName()),
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
+                booking.getSeatsReserved(),
+                booking.getContributionDue(),
+                Math.max(0, remainingMinutes));
+
+        sendTelegramMessageWithButtons(driver.getTelegramId(), msg,
+                List.of(
+                        List.of(
+                                Map.of("text", "✅ Accept",
+                                        "callback_data", "ACCEPT_BOOKING:" + booking.getId()),
+                                Map.of("text", "❌ Decline",
+                                        "callback_data", "DECLINE_BOOKING:" + booking.getId())
+                        ),
+                        List.of(
+                                Map.of("text", "🏠 Go to Menu",
+                                        "callback_data", "MAIN_MENU")
+                        )
+                ));
+
+        // Record reminder notification
+        Notification notification = Notification.builder()
+                .user(driver)
+                .type(NotificationTypes.BOOKING_RECEIVED)
+                .payload(new HashMap<>(Map.of(
+                        "bookingId", booking.getId(),
+                        "reminderNumber", event.reminderNumber())))
+                .status(NotificationStatus.SENT)
+                .sentAt(Instant.now())
+                .build();
+        notificationRepository.save(notification);
+    }
+
     // ── Core send + record ────────────────────────────────────────────────────
 
     private void sendAndRecord(User recipient, String type, String message,
@@ -307,6 +471,96 @@ public class NotificationService {
                 ride.getNotes() != null
                         ? "📝 Note: " + escape(ride.getNotes())
                         : "");
+    }
+
+    private void sendTelegramMessageWithButtons(Long chatId, String text,
+                                                List<List<Map<String, String>>> keyboard) {
+        if (botToken == null || botToken.isBlank()) {
+            log.warn("Telegram bot token not configured — skipping message to chatId={}", chatId);
+            return;
+        }
+
+        String url = "https://api.telegram.org/bot" + botToken + "/sendMessage";
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("chat_id",    chatId);
+        body.put("text",       text);
+        body.put("parse_mode", "HTML");
+        body.put("reply_markup", Map.of("inline_keyboard", keyboard));
+
+        try {
+            restClient.post()
+                    .uri(url)
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception e) {
+            log.error("Failed to send Telegram message with buttons to chatId={}: {}",
+                    chatId, e.getMessage());
+        }
+    }
+
+    private String buildDriverBookingRequestMessage(Booking booking) {
+        Ride ride = booking.getRide();
+        User pax  = booking.getPassenger();
+
+        String paxHandle = pax.getTelegramHandle() != null
+                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                : "";
+
+        String pickupPoint = booking.getPickupWaypoint() != null
+                ? booking.getPickupWaypoint().getHub().getName()
+                : ride.getOriginHub().getName();
+
+        long expiresInMinutes = java.time.Duration.between(
+                Instant.now(), booking.getExpiresAt()).toMinutes();
+
+        return String.format(
+                "🔔 <b>New Booking Request</b>\n\n" +
+                        "👤 <b>%s</b>%s\n" +
+                        "🚏 Pickup at: <b>%s</b>\n" +
+                        "🪑 Seats: %d | 💵 ₱%.2f\n" +
+                        "%s\n" +
+                        "⏰ Expires in %d minutes",
+                escape(pax.getFullName()),
+                paxHandle,
+                escape(pickupPoint),
+                booking.getSeatsReserved(),
+                booking.getContributionDue(),
+                booking.getPassengerMessage() != null
+                        ? "💬 \"" + escape(booking.getPassengerMessage()) + "\"\n"
+                        : "",
+                Math.max(0, expiresInMinutes));
+    }
+
+    private String buildPassengerRequestSentMessage(Booking booking) {
+        Ride ride   = booking.getRide();
+        User driver = ride.getDriver();
+
+        String driverHandle = driver.getTelegramHandle() != null
+                ? " (@" + escape(driver.getTelegramHandle()) + ")"
+                : "";
+
+        long expiresInMinutes = java.time.Duration.between(
+                Instant.now(), booking.getExpiresAt()).toMinutes();
+
+        return String.format(
+                "⏳ <b>Booking Request Sent!</b>\n\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n" +
+                        "🪑 Seats: %d | 💵 ₱%.2f\n" +
+                        "👤 Driver: <b>%s</b>%s\n\n" +
+                        "Waiting for driver approval.\n" +
+                        "⏰ Auto-declines in %d minutes if no response.",
+                escape(ride.getOriginHub().getName()),
+                escape(ride.getDestinationHub().getName()),
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
+                booking.getSeatsReserved(),
+                booking.getContributionDue(),
+                escape(driver.getFullName()),
+                driverHandle,
+                Math.max(0, expiresInMinutes));
     }
 
     // ── HTML escape ───────────────────────────────────────────────────────────

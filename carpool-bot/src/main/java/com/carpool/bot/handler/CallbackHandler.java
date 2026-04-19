@@ -15,6 +15,7 @@ import com.carpool.service.dto.request.CreateRideRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.BookingResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,8 @@ public class CallbackHandler {
     private final UserRepository userRepository;
     private final RideService    rideService;
     private final BookingService bookingService;
+    private final PostRideHelper postRideHelper;
+    private final DriverNoteService driverNoteService;
 
     public void handle(CallbackQuery callback, CarpoolBot bot) {
         Long chatId     = callback.getMessage().getChatId();
@@ -75,28 +78,38 @@ public class CallbackHandler {
         }
 
         switch (action) {
-            case "MAIN_MENU"         -> handleMainMenu(chatId, carpoolUserId, state, bot);
-            case "POST_RIDE"         -> handleStartPostRide(chatId, carpoolUserId, state, bot);
-            case "FIND_RIDE"         -> handleStartFindRide(chatId, carpoolUserId, state, bot);
-            case "CONFIRM_POST_RIDE" -> handleConfirmPostRide(chatId, carpoolUserId, state, bot);
-            case "CANCEL_POST_RIDE"  -> handleCancelPostRide(chatId, bot);
-            case "VIEW_RIDE"         -> handleViewRide(chatId, entityId, carpoolUserId, state, bot);
-            case "BOOK_RIDE"         -> handleBookRide(chatId, entityId, carpoolUserId, bot);
-            case "CANCEL_RIDE"         -> handleCancelRide(chatId, entityId, carpoolUserId, bot);
-            case "CONFIRM_CANCEL_RIDE" -> executeCancelRide(chatId, entityId, carpoolUserId, bot);
-            case "RIDE_BOOKINGS"     -> handleDriverBookings(chatId, carpoolUserId, bot);
-            case "MY_BOOKINGS"       -> handleMyBookings(chatId, carpoolUserId, bot);
-            case "REPOST_RIDE"       -> handleRepostRide(chatId, entityId, carpoolUserId, state, bot);
-            case "VIEW_BOOKING"      -> handleViewBooking(chatId, entityId, carpoolUserId, state, bot);
-            case "PAST_BOOKINGS"     -> handlePastBookings(chatId, carpoolUserId, bot);
-            case "DRIVER_BOOKINGS"   -> handleDriverBookings(chatId, carpoolUserId, bot);
-            case "TIME"              -> handleTimeSelection(chatId, payload, carpoolUserId, state, bot);
-            case "CANCEL_BOOKING"    -> handleCancelBooking(chatId, entityId, carpoolUserId, bot);
-            case "DEPART_RIDE"   -> handleDepartRide(chatId, entityId, carpoolUserId, bot);
-            case "COMPLETE_RIDE" -> handleCompleteRide(chatId, entityId, carpoolUserId, bot);
-            case "VIEW_DRIVER_BOOKING" -> handleViewDriverBooking(chatId, entityId, carpoolUserId, bot);
-            case "SKIP_NOTES" -> handleSkipNotes(chatId, carpoolUserId, state, bot);
-            case "DIRECTION" -> handleDirectionCallback(chatId, payload, carpoolUserId, state, bot);
+            case "MAIN_MENU"            -> handleMainMenu(chatId, carpoolUserId, state, bot);
+            case "POST_RIDE"            -> handleStartPostRide(chatId, carpoolUserId, state, bot);
+            case "FIND_RIDE"            -> handleStartFindRide(chatId, carpoolUserId, state, bot);
+            case "CONFIRM_POST_RIDE"    -> handleConfirmPostRide(chatId, carpoolUserId, state, bot);
+            case "CANCEL_POST_RIDE"     -> handleCancelPostRide(chatId, bot);
+            case "VIEW_RIDE"            -> handleViewRide(chatId, entityId, carpoolUserId, state, bot);
+            case "BOOK_RIDE"            -> handleBookRide(chatId, entityId, carpoolUserId, bot);
+            case "CANCEL_RIDE"          -> handleCancelRide(chatId, entityId, carpoolUserId, bot);
+            case "CONFIRM_CANCEL_RIDE"  -> executeCancelRide(chatId, entityId, carpoolUserId, bot);
+            case "RIDE_BOOKINGS"        -> handleDriverBookings(chatId, carpoolUserId, bot);
+            case "MY_BOOKINGS"          -> handleMyBookings(chatId, carpoolUserId, bot);
+            case "REPOST_RIDE"          -> handleRepostRide(chatId, entityId, carpoolUserId, state, bot);
+            case "VIEW_BOOKING"         -> handleViewBooking(chatId, entityId, carpoolUserId, state, bot);
+            case "PAST_BOOKINGS"        -> handlePastBookings(chatId, carpoolUserId, bot);
+            case "DRIVER_BOOKINGS"      -> handleDriverBookings(chatId, carpoolUserId, bot);
+            case "TIME"                 -> handleTimeSelection(chatId, payload, carpoolUserId, state, bot);
+            case "CANCEL_BOOKING"       -> handleCancelBooking(chatId, entityId, carpoolUserId, bot);
+            case "DEPART_RIDE"          -> handleDepartRide(chatId, entityId, carpoolUserId, bot);
+            case "COMPLETE_RIDE"        -> handleCompleteRide(chatId, entityId, carpoolUserId, bot);
+            case "VIEW_DRIVER_BOOKING"  -> handleViewDriverBooking(chatId, entityId, carpoolUserId, bot);
+            case "DIRECTION"            -> handleDirectionCallback(chatId, payload, carpoolUserId, state, bot);
+            case "NOTE_PREVIEW"         -> handleNotePreview(chatId, entityId, carpoolUserId, state, bot);
+            case "NOTE_APPLY"           -> handleNoteApply(chatId, entityId, carpoolUserId, state, bot);
+            case "NOTE_WRITE"           -> handleNoteWrite(chatId, carpoolUserId, state, bot);
+            case "NOTE_CHOOSE_OTHER"    -> handleNoteChooseOther(chatId, carpoolUserId, state, bot);
+            case "SKIP_NOTES"           -> handleSkipNotes(chatId, carpoolUserId, state, bot);
+            case "ACCEPT_BOOKING"       -> handleAcceptBooking(chatId, entityId, carpoolUserId, bot);
+            case "DECLINE_BOOKING"      -> handleDeclineBooking(chatId, entityId, carpoolUserId, bot);
+            case "PENDING_REQUESTS"     -> handlePendingRequests(chatId, carpoolUserId, bot);
+            case "VIEW_PENDING"         -> handleViewPendingRequest(chatId, entityId, carpoolUserId, bot);
+            case "BOOK_NOW"             -> executeBooking(chatId, entityId, carpoolUserId, null, bot);
+
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
                 bot.send(BotMessageBuilder.text(chatId, "⚠️ Unknown action."));
@@ -126,6 +139,9 @@ public class CallbackHandler {
                     BotMessageBuilder.formatRideCard(active) +
                     "\n\nWhat would you like to do?";
 
+            // After getting active ride, check pending count
+            long pendingCount = bookingService.countPendingRequestsForDriver(carpoolUserId);
+
             var rows = active.status().name().equals("DEPARTED")
                     ? List.of(
                     List.of(
@@ -136,16 +152,30 @@ public class CallbackHandler {
                             BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                     )
             )
-                    : List.of(
+                    : pendingCount > 0
+                      ? List.of(
                     List.of(
                             BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
                             BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("❌ Cancel Ride",   "CANCEL_RIDE:"  + active.id())
+                            BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS"),
+                            BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE")
+                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                    )
+            )
+                      : List.of(
+                    List.of(
+                            BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
+                            BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                     )
             );
 
@@ -331,16 +361,39 @@ public class CallbackHandler {
 
     private void handleBookRide(Long chatId, Long rideId, Long carpoolUserId,
                                 CarpoolBot bot) {
+        // Save selected ride ID then ask for optional message
+        UserState updated = stateManager.get(chatId);
+        if (updated == null) updated = UserState.initial(carpoolUserId);
+
+        stateManager.save(chatId, updated
+                .withSelectedRideId(rideId)
+                .withFlow(BotFlow.BOOKING_MESSAGE));
+
+        bot.send(sendWithInline(chatId,
+                "💬 <b>Any message for the driver?</b>\n\n" +
+                        "<i>e.g. \"Please wait at gate 2\", \"I have extra luggage\"</i>",
+                List.of(List.of(
+                        BotMessageBuilder.button("⏭️ Skip", "BOOK_NOW:" + rideId),
+                        BotMessageBuilder.button("❌ Cancel", "MAIN_MENU")
+                ))));
+    }
+
+    private void executeBooking(Long chatId, Long rideId, Long carpoolUserId,
+                                String passengerMessage, CarpoolBot bot) {
         try {
-            bookingService.createBooking(rideId, new CreateBookingRequest(1, null, null),
+            bookingService.createBooking(rideId,
+                    new CreateBookingRequest(1, null, null, passengerMessage),
                     carpoolUserId);
+
             bot.send(BotMessageBuilder.text(chatId,
-                    "✅ <b>Booking Confirmed!</b>\n\n" +
-                            "Your seat has been reserved. The driver has been notified.\n\n" +
-                            "Tap 📜 My Bookings to view your booking details."));
+                    "⏳ <b>Booking Request Sent!</b>\n\n" +
+                            "Waiting for the driver to accept your request.\n" +
+                            "You'll be notified once the driver responds.\n\n" +
+                            "Tap 📜 My Bookings to track your request."));
 
         } catch (Exception e) {
-            log.error("Booking failed: rideId={} userId={} error={}", rideId, carpoolUserId, e.getMessage());
+            log.error("Booking failed: rideId={} userId={} error={}",
+                    rideId, carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not book this ride: " +
                             BotMessageBuilder.escape(e.getMessage())));
@@ -684,6 +737,139 @@ public class CallbackHandler {
         }
     }
 
+    // ── Pending booking approval ──────────────────────────────────────
+
+    private void handleAcceptBooking(Long chatId, Long bookingId,
+                                     Long carpoolUserId, CarpoolBot bot) {
+        try {
+            bookingService.acceptBooking(bookingId, carpoolUserId);
+            bot.send(BotMessageBuilder.text(chatId,
+                    "✅ <b>Booking Accepted!</b>\n\n" +
+                            "The passenger has been notified and their seat is confirmed."));
+        } catch (Exception e) {
+            log.error("Accept booking failed: bookingId={} userId={} error={}",
+                    bookingId, carpoolUserId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not accept booking: " +
+                            BotMessageBuilder.escape(e.getMessage())));
+        }
+    }
+
+    private void handleDeclineBooking(Long chatId, Long bookingId,
+                                      Long carpoolUserId, CarpoolBot bot) {
+        try {
+            bookingService.declineBooking(bookingId, carpoolUserId);
+            bot.send(BotMessageBuilder.text(chatId,
+                    "❌ <b>Booking Declined</b>\n\n" +
+                            "The passenger has been notified and their seat has been released."));
+        } catch (Exception e) {
+            log.error("Decline booking failed: bookingId={} userId={} error={}",
+                    bookingId, carpoolUserId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not decline booking: " +
+                            BotMessageBuilder.escape(e.getMessage())));
+        }
+    }
+
+    private void handlePendingRequests(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+        List<BookingResponse> pending = bookingService.getPendingRequestsForDriver(carpoolUserId);
+
+        if (pending.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⏳ <b>Pending Requests</b>\n\n<i>No pending booking requests.</i>"));
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("⏳ <b>Pending Requests (")
+                .append(pending.size())
+                .append(")</b>\n\n");
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (int i = 0; i < pending.size(); i++) {
+            BookingResponse b = pending.get(i);
+
+            // Compute remaining minutes
+            long remainingMinutes = b.expiresAt() != null
+                    ? java.time.Duration.between(
+                    java.time.Instant.now(), b.expiresAt()).toMinutes()
+                    : 0;
+
+            sb.append(String.format(
+                    "<b>%d.</b> %s | 🪑 %d | ₱%.2f | ⏰ %d min\n",
+                    i + 1,
+                    BotMessageBuilder.escape(b.passenger().fullName()),
+                    b.seatsReserved(),
+                    b.contributionDue(),
+                    Math.max(0, remainingMinutes)));
+
+            rows.add(List.of(InlineKeyboardButton.builder()
+                    .text("View #" + (i + 1) + " — " + b.passenger().fullName())
+                    .callbackData("VIEW_PENDING:" + b.id())
+                    .build()));
+        }
+
+        rows.add(List.of(BotMessageBuilder.menuButtonRow().get(0)));
+
+        bot.send(SendMessage.builder()
+                .chatId(chatId)
+                .text(sb.toString())
+                .parseMode("HTML")
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboard(rows.stream().map(InlineKeyboardRow::new).toList())
+                        .build())
+                .build());
+    }
+
+    private void handleViewPendingRequest(Long chatId, Long bookingId,
+                                          Long carpoolUserId, CarpoolBot bot) {
+        try {
+            BookingResponse b = bookingService.getBookingById(bookingId);
+
+            long remainingMinutes = b.expiresAt() != null
+                    ? java.time.Duration.between(
+                    java.time.Instant.now(), b.expiresAt()).toMinutes()
+                    : 0;
+
+            String paxHandle = b.passenger().telegramHandle() != null
+                    ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                    : "";
+
+            String detail = String.format(
+                    "🔔 <b>Booking Request</b>\n\n" +
+                            "👤 <b>%s</b>%s\n" +
+                            "🪑 Seats: %d\n" +
+                            "💵 Contribution: ₱%.2f\n" +
+                            "%s" +
+                            "⏰ Expires in: %d minutes",
+                    BotMessageBuilder.escape(b.passenger().fullName()),
+                    paxHandle,
+                    b.seatsReserved(),
+                    b.contributionDue(),
+                    b.passengerMessage() != null
+                            ? "💬 Message: \"" +
+                            BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
+                            : "",
+                    Math.max(0, remainingMinutes));
+
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("✅ Accept", "ACCEPT_BOOKING:" + bookingId),
+                            BotMessageBuilder.button("❌ Decline", "DECLINE_BOOKING:" + bookingId)
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("◀️ Back to Pending", "PENDING_REQUESTS")
+                    )
+            );
+
+            bot.send(sendWithInline(chatId, detail, rows));
+
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not load booking request."));
+        }
+    }
+
     // ── Cancel booking ────────────────────────────────────────────────────
 
     private void handleCancelBooking(Long chatId, Long bookingId,
@@ -765,36 +951,95 @@ public class CallbackHandler {
         }
     }
 
+    // ── Driver notes ──────────────────────────────────────────────────────
+
+    /**
+     * Show preview of selected note with action buttons.
+     */
+    private void handleNotePreview(Long chatId, Long noteId, Long carpoolUserId,
+                                   UserState state, CarpoolBot bot) {
+        try {
+            com.carpool.domain.entity.DriverNote note = driverNoteService.getById(noteId);
+
+            stateManager.save(chatId, state.withSelectedNoteId(noteId));
+
+            var rows = List.of(
+                    List.of(BotMessageBuilder.button("✅ Use this", "NOTE_APPLY:" + noteId)),
+                    List.of(
+                            BotMessageBuilder.button("🔄 Other notes", "NOTE_CHOOSE_OTHER"),
+                            BotMessageBuilder.button("✏️ Write new",   "NOTE_WRITE")
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
+                            BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+                    )
+            );
+
+            bot.send(sendWithInline(chatId,
+                    "📌 <b>Selected reminder:</b>\n\n" +
+                            "\"" + BotMessageBuilder.escape(note.getContent()) + "\"",
+                    rows));
+
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load note. Please try again."));
+        }
+    }
+
+    /**
+     * Apply selected note — mark as used, save to state, proceed to confirmation.
+     */
+    private void handleNoteApply(Long chatId, Long noteId, Long carpoolUserId,
+                                 UserState state, CarpoolBot bot) {
+        try {
+            com.carpool.domain.entity.DriverNote note = driverNoteService.markUsed(noteId);
+
+            UserState updated = state
+                    .withNotes(note.getContent())
+                    .withSelectedNoteId(null)
+                    .withFlow(BotFlow.POST_RIDE_CONFIRM);
+            stateManager.save(chatId, updated);
+
+            postRideHelper.showConfirmation(chatId, updated, bot);
+
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not apply note. Please try again."));
+        }
+    }
+
+    /**
+     * Driver chose to write a new custom note.
+     */
+    private void handleNoteWrite(Long chatId, Long carpoolUserId,
+                                 UserState state, CarpoolBot bot) {
+        stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_NOTES_WRITE));
+
+        bot.send(sendWithInline(chatId,
+                "✏️ <b>Type your reminder for passengers:</b>",
+                List.of(List.of(
+                        BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
+                        BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+                ))));
+    }
+
+    /**
+     * Driver wants to choose a different note — show notes list again.
+     */
+    private void handleNoteChooseOther(Long chatId, Long carpoolUserId,
+                                       UserState state, CarpoolBot bot) {
+        postRideHelper.showNotesPrompt(chatId, carpoolUserId, state.withSelectedNoteId(null), bot);
+    }
+
+    /**
+     * Driver skipped notes — proceed to confirmation with no note.
+     */
     private void handleSkipNotes(Long chatId, Long carpoolUserId,
                                  UserState state, CarpoolBot bot) {
-        UserState updated = state.withNotes(null).withFlow(BotFlow.POST_RIDE_CONFIRM);
+        UserState updated = state
+                .withNotes(null)
+                .withFlow(BotFlow.POST_RIDE_CONFIRM);
         stateManager.save(chatId, updated);
 
-        String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
-                ? "🏠 Home → Work" : "🏢 Work → Home";
-
-        String confirmMsg = String.format(
-                "📋 <b>Review Your Ride</b>\n\n" +
-                        "Direction: %s\n" +
-                        "📍 Start: <b>%s</b>\n" +
-                        "🏁 End: <b>%s</b>\n" +
-                        "🕐 Departure: <b>%s</b>\n" +
-                        "🪑 Seats available: <b>%d</b>\n" +
-                        "💵 Contribution: <b>₱%s / seat</b>\n\n" +
-                        "Looks good? Post this ride?",
-                dirLabel,
-                BotMessageBuilder.escape(state.getOriginHubName()),
-                BotMessageBuilder.escape(state.getDestinationHubName()),
-                state.getDepartureTime().format(DateTimeFormatter.ofPattern("MMM d 'at' h:mm a")),
-                state.getSeats(),
-                state.getContribution().toPlainString());
-
-        var rows = List.of(List.of(
-                BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE"),
-                BotMessageBuilder.button("❌ Cancel",    "CANCEL_POST_RIDE")
-        ));
-
-        bot.send(sendWithInline(chatId, confirmMsg, rows));
+        postRideHelper.showConfirmation(chatId, updated, bot);  // ← CORRECT
     }
 
     private void handleDirectionCallback(Long chatId, String payload, Long carpoolUserId,

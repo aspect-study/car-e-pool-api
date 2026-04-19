@@ -107,4 +107,58 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     List<Booking> findCancelledByDriverBookingsForRide(@Param("rideId") Long rideId);
 
+    /**
+     * Find all PENDING bookings for a specific ride.
+     * Used by driver to see pending requests.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.passenger
+    WHERE b.ride.id = :rideId
+      AND b.status = 'PENDING'
+    ORDER BY b.createdAt ASC
+    """)
+    List<Booking> findPendingByRideId(@Param("rideId") Long rideId);
+
+    /**
+     * Find PENDING bookings that need a reminder — reminder_count < 3
+     * and the next reminder interval has passed.
+     * Reminder schedule: 5 min, 10 min, 15 min after creation.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.ride r
+    JOIN FETCH r.driver
+    JOIN FETCH b.passenger
+    WHERE b.status = 'PENDING'
+      AND b.reminderCount < 3
+      AND b.expiresAt > :now
+    """)
+    List<Booking> findPendingNeedingReminder(@Param("now") java.time.Instant now);
+
+    /**
+     * Find PENDING bookings that have exceeded their expiry time
+     * and have already received 3 reminders — ready for auto-decline.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.ride r
+    JOIN FETCH r.driver
+    JOIN FETCH b.passenger
+    WHERE b.status = 'PENDING'
+      AND b.reminderCount >= 3
+      AND b.expiresAt < :now
+    """)
+    List<Booking> findExpiredPendingBookings(@Param("now") java.time.Instant now);
+
+    /**
+     * Count pending requests for a driver's active ride.
+     * Used to show badge on driver's main menu.
+     */
+    @Query("""
+    SELECT COUNT(b) FROM Booking b
+    WHERE b.ride.driver.id = :driverId
+      AND b.status = 'PENDING'
+    """)
+    long countPendingByDriverId(@Param("driverId") Long driverId);
 }

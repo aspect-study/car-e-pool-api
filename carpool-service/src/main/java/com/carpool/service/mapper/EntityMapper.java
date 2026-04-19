@@ -24,7 +24,9 @@ public interface EntityMapper {
     @Mapping(target = "waypoints", source = "waypoints")
     RideResponse toRideResponse(Ride ride);
 
-    @Mapping(target = "rideId", source = "ride.id")
-    @Mapping(target = "ride",   source = "ride")
+    @Mapping(target = "rideId",          source = "ride.id")
+    @Mapping(target = "ride",            source = "ride")
+    @Mapping(target = "passengerMessage", source = "passengerMessage")
+    @Mapping(target = "expiresAt",        source = "expiresAt")
     BookingResponse toBookingResponse(Booking booking);
 }

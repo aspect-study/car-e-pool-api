@@ -43,4 +43,28 @@ public final class RideEvents {
      * Triggers: notify booked passengers (ride expired, not driver-cancelled).
      */
     public record RideExpiredEvent(Ride ride) {}
+
+    /**
+     * Published when a passenger submits a booking request.
+     * Triggers: notify driver (new pending request — accept or decline).
+     */
+    public record BookingRequestedEvent(Booking booking) {}
+
+    /**
+     * Published when a driver declines a booking request.
+     * Triggers: notify passenger (request declined, seats restored).
+     */
+    public record BookingDeclinedEvent(Booking booking) {}
+
+    /**
+     * Published when a pending booking is auto-declined after 3 reminders.
+     * Triggers: notify passenger (request timed out).
+     */
+    public record BookingTimedOutEvent(Booking booking) {}
+
+    /**
+     * Published when driver reminder is sent for a pending booking.
+     * Triggers: remind driver of pending request.
+     */
+    public record BookingReminderEvent(Booking booking, int reminderNumber) {}
 }

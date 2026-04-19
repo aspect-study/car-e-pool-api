@@ -1,0 +1,2 @@
+ALTER TABLE bookings
+    MODIFY COLUMN reminder_count INT NOT NULL DEFAULT 0;

@@ -44,14 +44,18 @@ public class UserState {
     private final Long selectedRideId;
     private final Long selectedBookingId;
 
-    // ── Repost state ──────────────────────────────────────────────────────
-    // Stores last posted ride ID for quick repost feature
-    private final Long lastPostedRideId;
-
     // ── Search time range ─────────────────────────────────────────────
     // User's preferred departure time window for ride search
     private final LocalDateTime searchFrom;
     private final LocalDateTime searchTo;
+
+    // ── Repost state ──────────────────────────────────────────────────
+    // Stores last posted ride ID for quick repost feature
+    private final Long lastPostedRideId;
+
+    // ── Driver notes state ────────────────────────────────────────────
+    // Stores selected note ID during notes preview step
+    private final Long selectedNoteId;
 
     public static UserState initial(Long carpoolUserId) {
         return UserState.builder()
