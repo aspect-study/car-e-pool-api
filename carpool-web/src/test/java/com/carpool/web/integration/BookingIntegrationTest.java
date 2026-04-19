@@ -90,7 +90,7 @@ class BookingIntegrationTest extends BaseIntegrationTest {
         // Act
         BookingResponse response = bookingService.createBooking(
                 ride.getId(),
-                new CreateBookingRequest(1, null, null),
+                new CreateBookingRequest(1, null, null, null),
                 passenger1.getId());
 
         // Assert — booking persisted
@@ -127,13 +127,13 @@ class BookingIntegrationTest extends BaseIntegrationTest {
         // First booking — succeeds, ride stays ACTIVE (2 seats remain)
         bookingService.createBooking(
                 multiSeatRide.getId(),
-                new CreateBookingRequest(1, null, null),
+                new CreateBookingRequest(1, null, null, null),
                 passenger1.getId());
 
         // Second booking by same passenger — must throw DuplicateBookingException
         assertThatThrownBy(() -> bookingService.createBooking(
                 multiSeatRide.getId(),
-                new CreateBookingRequest(1, null, null),
+                new CreateBookingRequest(1, null, null, null),
                 passenger1.getId()))
                 .isInstanceOf(DuplicateBookingException.class);
     }
@@ -176,7 +176,7 @@ class BookingIntegrationTest extends BaseIntegrationTest {
                     startLatch.await(); // wait for all threads to be ready
                     bookingService.createBooking(
                             ride.getId(),
-                            new CreateBookingRequest(1, null, null),
+                            new CreateBookingRequest(1, null, null, null),
                             passengerId);
                     successCount.incrementAndGet();
                 } catch (RideFullException | com.carpool.common.exception.InvalidRideStateException e) {

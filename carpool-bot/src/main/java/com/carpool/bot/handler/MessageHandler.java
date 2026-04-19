@@ -11,9 +11,11 @@ import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.booking.BookingService;
+import com.carpool.service.dto.request.CreateBookingRequest;
 import com.carpool.service.dto.response.BookingResponse;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +46,7 @@ public class MessageHandler {
     private final RideService    rideService;
     private final HubMatcher     hubMatcher;
     private final BookingService bookingService;
+    private final DriverNoteService driverNoteService;
 
     private static final DateTimeFormatter ETD_FMT =
             DateTimeFormatter.ofPattern("MM/dd HH:mm");
@@ -116,9 +119,11 @@ public class MessageHandler {
             case POST_RIDE_ORIGIN         -> handlePostRideOrigin(chatId, text, state, bot);
             case POST_RIDE_DESTINATION    -> handlePostRideDestination(chatId, text, state, bot);
             case POST_RIDE_SEATS          -> handlePostRideSeats(chatId, text, state, bot);
-            case POST_RIDE_CONTRIBUTION   -> handlePostRideContribution(chatId, text, state, bot);
+            case POST_RIDE_CONTRIBUTION   -> handlePostRideContribution(chatId, text, state, bot, carpoolUserId);
             case POST_RIDE_NOTES          -> handlePostRideNotes(chatId, text, state, bot);
             case SEARCH_SELECT_TIME       -> handleCustomTimeInput(chatId, text, state, carpoolUserId, bot);
+            case POST_RIDE_NOTES_WRITE    -> handlePostRideNotesWrite(chatId, text, state, bot, carpoolUserId);
+            case BOOKING_MESSAGE          -> handleBookingMessage(chatId, text, state, carpoolUserId, bot);
             default                       -> showMainMenu(chatId, carpoolUserId, state, bot);
         }
     }
@@ -363,7 +368,8 @@ public class MessageHandler {
         }
     }
 
-    private void handlePostRideContribution(Long chatId, String text, UserState state, CarpoolBot bot) {
+    private void handlePostRideContribution(Long chatId, String text, UserState state,
+                                            CarpoolBot bot, Long carpoolUserId) {
         try {
             BigDecimal amount = new BigDecimal(text.trim());
             if (amount.compareTo(BigDecimal.ZERO) < 0) {
@@ -376,11 +382,9 @@ public class MessageHandler {
                     .withContribution(amount)
                     .withFlow(BotFlow.POST_RIDE_NOTES));
 
-            bot.send(BotMessageBuilder.textWithCancelAndSkip(chatId,
-                    "✅ Contribution: <b>₱" + amount + " / seat</b>\n\n" +
-                            "📝 <b>Any reminders for your passengers?</b>\n" +
-                            "<i>e.g. exact pickup spot, stops along the way, what to bring</i>",
-                    "SKIP_NOTES"));
+            bot.send(BotMessageBuilder.textNoMenu(chatId,
+                    "✅ Contribution: <b>₱" + amount + " / seat</b>"));
+            showNotesPrompt(chatId, carpoolUserId, state.withContribution(amount), bot);
 
         } catch (NumberFormatException e) {
             bot.send(BotMessageBuilder.textWithCancel(chatId,
@@ -389,38 +393,92 @@ public class MessageHandler {
     }
 
     private void handlePostRideNotes(Long chatId, String text, UserState state, CarpoolBot bot) {
-        String notes = text.equalsIgnoreCase("skip") ? null : text;
-
+        // Fallback — user typed directly instead of tapping a button
+        // Treat as custom note, proceed to confirmation without saving to DB
+        String notes = text.trim();
         UserState updated = state.withNotes(notes).withFlow(BotFlow.POST_RIDE_CONFIRM);
         stateManager.save(chatId, updated);
+        showConfirmation(chatId, updated, bot);
+    }
 
-        String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
-                ? "🏠 Home → Work" : "🏢 Work → Home";
+    /**
+     * Shows notes selection prompt with saved notes as buttons.
+     * Called after contribution step and when driver taps "Choose other note".
+     */
+    void showNotesPrompt(Long chatId, Long carpoolUserId, UserState state, CarpoolBot bot) {
+        List<com.carpool.domain.entity.DriverNote> savedNotes =
+                driverNoteService.getNotes(carpoolUserId);
 
-        String confirmMsg = String.format(
-                "📋 <b>Review Your Ride</b>\n\n" +
-                        "Direction: %s\n" +
-                        "📍 Start: <b>%s</b>\n" +
-                        "🏁 End: <b>%s</b>\n" +
-                        "🕐 Departure: <b>%s</b>\n" +
-                        "🪑 Seats available: <b>%d</b>\n" +
-                        "💵 Contribution: <b>₱%s / seat</b>\n" +
-                        "%s\n\n" +
-                        "Looks good? Post this ride?",
-                dirLabel,
-                BotMessageBuilder.escape(state.getOriginHubName()),
-                BotMessageBuilder.escape(state.getDestinationHubName()),
-                state.getDepartureTime().format(DateTimeFormatter.ofPattern("MMM d 'at' h:mm a")),
-                state.getSeats(),
-                state.getContribution().toPlainString(),
-                notes != null ? "📝 Notes: " + BotMessageBuilder.escape(notes) : "");
+        stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_NOTES));
 
-        var rows = List.of(List.of(
-                BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE"),
-                BotMessageBuilder.button("❌ Cancel",    "CANCEL_POST_RIDE")
-        ));
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        bot.send(sendWithInline(chatId, confirmMsg, rows));
+        if (!savedNotes.isEmpty()) {
+            // Add each saved note as a button — 1 per row for readability
+            for (com.carpool.domain.entity.DriverNote note : savedNotes) {
+                String label = note.getContent().length() > 45
+                        ? "📌 " + note.getContent().substring(0, 42) + "..."
+                        : "📌 " + note.getContent();
+                rows.add(List.of(BotMessageBuilder.button(label,
+                        "NOTE_PREVIEW:" + note.getId())));
+            }
+            rows.add(List.of(BotMessageBuilder.button("✏️ Write new note", "NOTE_WRITE")));
+            rows.add(List.of(
+                    BotMessageBuilder.button("⏭️ Skip", "SKIP_NOTES"),
+                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+            ));
+
+            bot.send(sendWithInline(chatId,
+                    "📝 <b>Any reminders for your passengers?</b>\n\n" +
+                            "Tap a recent note or write a new one:",
+                    rows));
+        } else {
+            // No saved notes — show simple prompt
+            rows.add(List.of(BotMessageBuilder.button("✏️ Write a note", "NOTE_WRITE")));
+            rows.add(List.of(
+                    BotMessageBuilder.button("⏭️ Skip", "SKIP_NOTES"),
+                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+            ));
+
+            bot.send(sendWithInline(chatId,
+                    "📝 <b>Any reminders for your passengers?</b>\n\n" +
+                            "<i>e.g. exact pickup spot, stops along the way, what to bring</i>",
+                    rows));
+        }
+    }
+
+    private void handleBookingMessage(Long chatId, String text,
+                                      UserState state, Long carpoolUserId,
+                                      CarpoolBot bot) {
+        Long rideId = state.getSelectedRideId();
+        if (rideId == null) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Session expired. Please try booking again."));
+            stateManager.reset(chatId);
+            return;
+        }
+
+        String message = text.trim();
+        stateManager.save(chatId, state.withFlow(BotFlow.IDLE));
+
+        try {
+            bookingService.createBooking(rideId,
+                    new CreateBookingRequest(1, null, null, message),
+                    carpoolUserId);
+
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⏳ <b>Booking Request Sent!</b>\n\n" +
+                            "Waiting for the driver to accept your request.\n" +
+                            "You'll be notified once the driver responds.\n\n" +
+                            "Tap 📜 My Bookings to track your request."));
+
+        } catch (Exception e) {
+            log.error("Booking failed: rideId={} userId={} error={}",
+                    rideId, carpoolUserId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not book this ride: " +
+                            BotMessageBuilder.escape(e.getMessage())));
+        }
     }
 
     // ── Find ride flow ────────────────────────────────────────────────────
@@ -551,6 +609,55 @@ public class MessageHandler {
                     "⚠️ Invalid format. Please use <code>HH:MM</code>\n" +
                             "Example: <code>07:30</code>"));
         }
+    }
+
+    /**
+     * Handles custom note text input — saves to DB then proceeds to confirmation.
+     */
+    private void handlePostRideNotesWrite(Long chatId, String text,
+                                          UserState state, CarpoolBot bot,
+                                          Long carpoolUserId) {
+        String notes = text.trim();
+
+        // Save to DB — saveOrUpdate handles dedup + LRU replacement
+        driverNoteService.saveOrUpdate(carpoolUserId, notes);
+
+        UserState updated = state.withNotes(notes).withFlow(BotFlow.POST_RIDE_CONFIRM);
+        stateManager.save(chatId, updated);
+
+        showConfirmation(chatId, updated, bot);
+    }
+
+    private void showConfirmation(Long chatId, UserState state, CarpoolBot bot) {
+        String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? "🏠 Home → Work" : "🏢 Work → Home";
+
+        String confirmMsg = String.format(
+                "📋 <b>Review Your Ride</b>\n\n" +
+                        "Direction: %s\n" +
+                        "📍 Start: <b>%s</b>\n" +
+                        "🏁 End: <b>%s</b>\n" +
+                        "🕐 Departure: <b>%s</b>\n" +
+                        "🪑 Seats available: <b>%d</b>\n" +
+                        "💵 Contribution: <b>₱%s / seat</b>\n" +
+                        "%s\n\n" +
+                        "Looks good? Post this ride?",
+                dirLabel,
+                BotMessageBuilder.escape(state.getOriginHubName()),
+                BotMessageBuilder.escape(state.getDestinationHubName()),
+                state.getDepartureTime().format(DateTimeFormatter.ofPattern("MMM d 'at' h:mm a")),
+                state.getSeats(),
+                state.getContribution().toPlainString(),
+                state.getNotes() != null
+                        ? "📝 Notes: " + BotMessageBuilder.escape(state.getNotes())
+                        : "");
+
+        var rows = List.of(List.of(
+                BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE"),
+                BotMessageBuilder.button("❌ Cancel",    "CANCEL_POST_RIDE")
+        ));
+
+        bot.send(sendWithInline(chatId, confirmMsg, rows));
     }
 
     // ── Helper ────────────────────────────────────────────────────────────

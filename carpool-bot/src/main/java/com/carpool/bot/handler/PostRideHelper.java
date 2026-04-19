@@ -1,0 +1,111 @@
+package com.carpool.bot.handler;
+
+import com.carpool.bot.CarpoolBot;
+import com.carpool.bot.state.BotFlow;
+import com.carpool.bot.state.StateManager;
+import com.carpool.bot.state.UserState;
+import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.domain.entity.DriverNote;
+import com.carpool.domain.enums.RideDirection;
+import com.carpool.service.note.DriverNoteService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Shared helper for Post Ride flow — used by both MessageHandler and CallbackHandler.
+ * Avoids circular dependency between the two handlers.
+ */
+@Component
+@RequiredArgsConstructor
+public class PostRideHelper {
+
+    private final StateManager      stateManager;
+    private final DriverNoteService driverNoteService;
+
+    public void showConfirmation(Long chatId, UserState state, CarpoolBot bot) {
+        String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? "🏠 Home → Work" : "🏢 Work → Home";
+
+        String confirmMsg = String.format(
+                "📋 <b>Review Your Ride</b>\n\n" +
+                        "Direction: %s\n" +
+                        "📍 Start: <b>%s</b>\n" +
+                        "🏁 End: <b>%s</b>\n" +
+                        "🕐 Departure: <b>%s</b>\n" +
+                        "🪑 Seats available: <b>%d</b>\n" +
+                        "💵 Contribution: <b>₱%s / seat</b>\n" +
+                        "%s\n\n" +
+                        "Looks good? Post this ride?",
+                dirLabel,
+                BotMessageBuilder.escape(state.getOriginHubName()),
+                BotMessageBuilder.escape(state.getDestinationHubName()),
+                state.getDepartureTime().format(DateTimeFormatter.ofPattern("MMM d 'at' h:mm a")),
+                state.getSeats(),
+                state.getContribution().toPlainString(),
+                state.getNotes() != null
+                        ? "📝 Notes: " + BotMessageBuilder.escape(state.getNotes())
+                        : "");
+
+        var rows = List.of(List.of(
+                BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE"),
+                BotMessageBuilder.button("❌ Cancel",    "CANCEL_POST_RIDE")
+        ));
+
+        bot.send(sendWithInline(chatId, confirmMsg, rows));
+    }
+
+    public void showNotesPrompt(Long chatId, Long carpoolUserId,
+                                UserState state, CarpoolBot bot) {
+        List<DriverNote> savedNotes = driverNoteService.getNotes(carpoolUserId);
+
+        stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_NOTES));
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        if (!savedNotes.isEmpty()) {
+            for (DriverNote note : savedNotes) {
+                String label = note.getContent().length() > 45
+                        ? "📌 " + note.getContent().substring(0, 42) + "..."
+                        : "📌 " + note.getContent();
+                rows.add(List.of(BotMessageBuilder.button(label,
+                        "NOTE_PREVIEW:" + note.getId())));
+            }
+            rows.add(List.of(BotMessageBuilder.button("✏️ Write new note", "NOTE_WRITE")));
+            rows.add(List.of(
+                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
+                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+            ));
+
+            bot.send(sendWithInline(chatId,
+                    "📝 <b>Any reminders for your passengers?</b>\n\n" +
+                            "Tap a recent note or write a new one:", rows));
+        } else {
+            rows.add(List.of(BotMessageBuilder.button("✏️ Write a note", "NOTE_WRITE")));
+            rows.add(List.of(
+                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
+                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+            ));
+
+            bot.send(sendWithInline(chatId,
+                    "📝 <b>Any reminders for your passengers?</b>\n\n" +
+                            "<i>e.g. exact pickup spot, stops along the way, what to bring</i>",
+                    rows));
+        }
+    }
+
+    private SendMessage sendWithInline(Long chatId, String text,
+                                       List<List<InlineKeyboardButton>> rows) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
+                .replyMarkup(BotMessageBuilder.inlineButtons(rows))
+                .build();
+    }
+}

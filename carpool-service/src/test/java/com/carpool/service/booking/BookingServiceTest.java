@@ -93,7 +93,7 @@ class BookingServiceTest {
         @Test
         @DisplayName("should confirm booking and decrement available seats")
         void shouldConfirmBookingAndDecrementSeats() {
-            var request = new CreateBookingRequest(1, null, null);
+            var request = new CreateBookingRequest(1, null, null, null);
 
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
             when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
@@ -121,7 +121,7 @@ class BookingServiceTest {
         @DisplayName("should transition ride to FULL when last seat is booked")
         void shouldTransitionRideToFullWhenLastSeatBooked() {
             ride.setAvailableSeats(1);
-            var request = new CreateBookingRequest(1, null, null);
+            var request = new CreateBookingRequest(1, null, null, null);
 
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
             when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
@@ -138,7 +138,7 @@ class BookingServiceTest {
         @Test
         @DisplayName("should calculate contribution correctly for multiple seats")
         void shouldCalculateContributionForMultipleSeats() {
-            var request = new CreateBookingRequest(2, null, null);
+            var request = new CreateBookingRequest(2, null, null, null);
 
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(ride));
             when(bookingRepository.existsActiveByRideIdAndPassengerId(100L, 2L)).thenReturn(false);
@@ -161,7 +161,7 @@ class BookingServiceTest {
 
             assertThatThrownBy(() ->
                     bookingService.createBooking(999L,
-                            new CreateBookingRequest(1, null, null), 2L))
+                            new CreateBookingRequest(1, null, null, null), 2L))
                     .isInstanceOf(RideNotFoundException.class);
         }
 
@@ -173,7 +173,7 @@ class BookingServiceTest {
 
             assertThatThrownBy(() ->
                     bookingService.createBooking(100L,
-                            new CreateBookingRequest(1, null, null), 2L))
+                            new CreateBookingRequest(1, null, null, null), 2L))
                     .isInstanceOf(InvalidRideStateException.class);
         }
 
@@ -185,7 +185,7 @@ class BookingServiceTest {
 
             assertThatThrownBy(() ->
                     bookingService.createBooking(100L,
-                            new CreateBookingRequest(2, null, null), 2L))
+                            new CreateBookingRequest(2, null, null, null), 2L))
                     .isInstanceOf(RideFullException.class)
                     .hasMessageContaining("100");
         }
@@ -198,7 +198,7 @@ class BookingServiceTest {
 
             assertThatThrownBy(() ->
                     bookingService.createBooking(100L,
-                            new CreateBookingRequest(1, null, null), 2L))
+                            new CreateBookingRequest(1, null, null, null), 2L))
                     .isInstanceOf(DuplicateBookingException.class);
         }
 
@@ -210,7 +210,7 @@ class BookingServiceTest {
 
             assertThatThrownBy(() ->
                     bookingService.createBooking(100L,
-                            new CreateBookingRequest(1, null, null), 1L))
+                            new CreateBookingRequest(1, null, null, null), 1L))
                     .isInstanceOf(InvalidRideStateException.class)
                     .hasMessageContaining("own ride");
         }

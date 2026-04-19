@@ -97,4 +97,35 @@ public class Booking extends BaseEntity {
      */
     @Column(name = "payment_reference", length = 100)
     private String paymentReference;
+
+    // ── Pending approval ─────────────────────────────────────────────────────
+
+    /**
+     * Optional message from passenger to driver — shown during approval.
+     * NULL = no message.
+     */
+    @Column(name = "passenger_message", length = 800)
+    private String passengerMessage;
+
+    /**
+     * Optional reason from driver when declining.
+     * NULL = no reason given (MVP: button-only decline).
+     */
+    @Column(name = "decline_reason", length = 255)
+    private String declineReason;
+
+    /**
+     * Number of reminders sent to driver (0-3).
+     * When reaches 3 and expires_at has passed → auto TIMED_OUT.
+     */
+    @Column(name = "reminder_count", nullable = false)
+    @Builder.Default
+    private int reminderCount = 0;
+
+    /**
+     * Auto-decline deadline — set at booking creation time.
+     * Scheduler checks this to auto-decline unresponded bookings.
+     */
+    @Column(name = "expires_at")
+    private java.time.Instant expiresAt;
 }

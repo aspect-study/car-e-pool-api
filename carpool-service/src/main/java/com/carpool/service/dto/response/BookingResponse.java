@@ -20,5 +20,7 @@ public record BookingResponse(
         BigDecimal contributionPaid,
         PaymentMethod paymentMethod,
         PaymentStatus paymentStatus,
-        Instant createdAt
+        Instant createdAt,
+        String passengerMessage,            // optional message from passenger to driver
+        Instant expiresAt                   // auto-decline deadline for pending bookings
 ) {}
