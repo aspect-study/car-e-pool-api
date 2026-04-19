@@ -95,6 +95,8 @@ public class CallbackHandler {
             case "DEPART_RIDE"   -> handleDepartRide(chatId, entityId, carpoolUserId, bot);
             case "COMPLETE_RIDE" -> handleCompleteRide(chatId, entityId, carpoolUserId, bot);
             case "VIEW_DRIVER_BOOKING" -> handleViewDriverBooking(chatId, entityId, carpoolUserId, bot);
+            case "SKIP_NOTES" -> handleSkipNotes(chatId, carpoolUserId, state, bot);
+            case "DIRECTION" -> handleDirectionCallback(chatId, payload, carpoolUserId, state, bot);
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
                 bot.send(BotMessageBuilder.text(chatId, "⚠️ Unknown action."));
@@ -150,7 +152,7 @@ public class CallbackHandler {
             bot.send(sendWithInline(chatId, msg, rows));
         } else {
             bot.send(BotMessageBuilder.directionSelector(chatId,
-                    "👋 What would you like to do?"));
+                    "👋 Where are you headed today?"));
         }
     }
 
@@ -169,13 +171,13 @@ public class CallbackHandler {
         }
 
         bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId,
-                "🕐 <b>When is your departure time?</b>\n\n" +
+                "🕐 <b>What time are you leaving?</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
                         LocalDateTime.now().plusHours(1)
                                 .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
                         "</code>\n\n" +
-                        "Type /cancel to abort."));
+                        "Type /cancel to go back."));
         stateManager.save(chatId, state
                 .withCarpoolUserId(carpoolUserId)
                 .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
@@ -657,7 +659,7 @@ public class CallbackHandler {
                             "Previous ride: <b>" +
                             BotMessageBuilder.escape(original.originHub().name()) + " → " +
                             BotMessageBuilder.escape(original.destinationHub().name()) + "</b>\n\n" +
-                            "🕐 <b>What time is your departure?</b>\n" +
+                            "🕐 <b>What time are you leaving?</b>\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
                             LocalDateTime.now().plusHours(1)
@@ -761,5 +763,128 @@ public class CallbackHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load booking details."));
         }
+    }
+
+    private void handleSkipNotes(Long chatId, Long carpoolUserId,
+                                 UserState state, CarpoolBot bot) {
+        UserState updated = state.withNotes(null).withFlow(BotFlow.POST_RIDE_CONFIRM);
+        stateManager.save(chatId, updated);
+
+        String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? "🏠 Home → Work" : "🏢 Work → Home";
+
+        String confirmMsg = String.format(
+                "📋 <b>Review Your Ride</b>\n\n" +
+                        "Direction: %s\n" +
+                        "📍 Start: <b>%s</b>\n" +
+                        "🏁 End: <b>%s</b>\n" +
+                        "🕐 Departure: <b>%s</b>\n" +
+                        "🪑 Seats available: <b>%d</b>\n" +
+                        "💵 Contribution: <b>₱%s / seat</b>\n\n" +
+                        "Looks good? Post this ride?",
+                dirLabel,
+                BotMessageBuilder.escape(state.getOriginHubName()),
+                BotMessageBuilder.escape(state.getDestinationHubName()),
+                state.getDepartureTime().format(DateTimeFormatter.ofPattern("MMM d 'at' h:mm a")),
+                state.getSeats(),
+                state.getContribution().toPlainString());
+
+        var rows = List.of(List.of(
+                BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE"),
+                BotMessageBuilder.button("❌ Cancel",    "CANCEL_POST_RIDE")
+        ));
+
+        bot.send(sendWithInline(chatId, confirmMsg, rows));
+    }
+
+    private void handleDirectionCallback(Long chatId, String payload, Long carpoolUserId,
+                                         UserState state, CarpoolBot bot) {
+        RideDirection direction = payload.equals("HOME_TO_WORK")
+                ? RideDirection.HOME_TO_WORK
+                : RideDirection.WORK_TO_HOME;
+
+        // Route based on current flow
+        if (state.getFlow() == BotFlow.POST_RIDE_DIRECTION) {
+            UserState updated = state
+                    .withDirection(direction)
+                    .withCarpoolUserId(carpoolUserId)
+                    .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME);
+            stateManager.save(chatId, updated);
+
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "🕐 <b>What time are you leaving?</b>\n\n" +
+                            "Format: <code>MM/DD HH:MM</code>\n" +
+                            "Example: <code>" +
+                            LocalDateTime.now().plusHours(1)
+                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                            "</code>"));
+            return;
+        }
+
+        if (state.getFlow() == BotFlow.SEARCH_SELECT_DIRECTION) {
+            UserState updated = state
+                    .withDirection(direction)
+                    .withCarpoolUserId(carpoolUserId)
+                    .withFlow(BotFlow.SEARCH_SELECT_TIME);
+            stateManager.save(chatId, updated);
+            askForTimeWindow(chatId, bot);
+            return;
+        }
+
+        // Default — direction selected from main menu
+        handleDirectionSelected(chatId, carpoolUserId, direction, state, bot);
+    }
+
+    private void askForTimeWindow(Long chatId, CarpoolBot bot) {
+        var rows = List.of(
+                List.of(
+                        BotMessageBuilder.button("🌅 Early Morning (5-7 AM)", "TIME:EARLY_MORNING"),
+                        BotMessageBuilder.button("☀️ Morning (7-9 AM)",       "TIME:MORNING")
+                ),
+                List.of(
+                        BotMessageBuilder.button("🌤️ Mid Morning (9-11 AM)", "TIME:MID_MORNING"),
+                        BotMessageBuilder.button("🌇 Afternoon (3-7 PM)",     "TIME:AFTERNOON")
+                ),
+                List.of(
+                        BotMessageBuilder.button("🕛 Custom Time",            "TIME:CUSTOM"),
+                        BotMessageBuilder.button("🔍 Show All Today",         "TIME:ALL_TODAY")
+                )
+        );
+        bot.send(sendWithInline(chatId,
+                "🕐 <b>When do you want to leave?</b>\n\nSelect a time window:", rows));
+    }
+
+    private void handleDirectionSelected(Long chatId, Long carpoolUserId,
+                                         RideDirection direction, UserState state,
+                                         CarpoolBot bot) {
+        UserState updated = state.withDirection(direction).withCarpoolUserId(carpoolUserId);
+        stateManager.save(chatId, updated);
+
+        String dirLabel = direction == RideDirection.HOME_TO_WORK
+                ? "🏠 Home → Work" : "🏢 Work → Home";
+
+        List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
+
+        var rows = myBookings.isEmpty()
+                ? List.of(
+                List.of(
+                        BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
+                        BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                )
+        )
+                : List.of(
+                List.of(
+                        BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
+                        BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                ),
+                List.of(
+                        BotMessageBuilder.button(
+                                "📜 My Bookings (" + myBookings.size() + ")",
+                                "MY_BOOKINGS")
+                )
+        );
+
+        bot.send(sendWithInline(chatId,
+                "Direction: <b>" + dirLabel + "</b>\n\nWhat would you like to do?", rows));
     }
 }

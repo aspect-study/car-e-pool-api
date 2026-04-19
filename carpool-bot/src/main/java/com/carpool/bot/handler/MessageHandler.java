@@ -197,7 +197,7 @@ public class MessageHandler {
         } else {
             bot.send(BotMessageBuilder.directionSelector(chatId,
                     "👋 Welcome to <b>" + BotMessageBuilder.escape(botConfig.getCommunityName()) + "</b>!\n\n" +
-                            "Are you going <b>Home to Work</b> or <b>Work to Home</b> today?"));
+                            "Where are you headed today?"));
         }
     }
 
@@ -253,13 +253,12 @@ public class MessageHandler {
     private void askForEtd(Long chatId, UserState state, CarpoolBot bot) {
         stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
         bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId,
-                "🕐 <b>When is your departure time?</b>\n\n" +
+                "🕐 <b>What time are you leaving?</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
                         LocalDateTime.now().plusHours(1)
                                 .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
-                        "</code>\n\n" +
-                        "Type /cancel to abort."));
+                        "</code>"));
     }
 
     private void handlePostRideEtd(Long chatId, String text, UserState state, CarpoolBot bot) {
@@ -269,8 +268,8 @@ public class MessageHandler {
                     DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
 
             if (etd.isBefore(LocalDateTime.now())) {
-                bot.send(BotMessageBuilder.text(chatId,
-                        "⚠️ Departure time must be in the future. Try again:"));
+                bot.send(BotMessageBuilder.textWithCancel(chatId,
+                        "⚠️ That time has already passed. Please enter a future departure time:"));
                 return;
             }
 
@@ -278,13 +277,13 @@ public class MessageHandler {
                     .withDepartureTime(etd)
                     .withFlow(BotFlow.POST_RIDE_ORIGIN));
 
-            bot.send(BotMessageBuilder.text(chatId,
-                    "📍 <b>Where will you pick up passengers?</b>\n\n" +
-                            "Type a landmark name (e.g. <code>SM Southmall</code>, <code>BF Resort</code>)\n\n" +
-                            "Type /cancel to abort."));
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "📍 <b>Where does your ride start?</b>\n\n" +
+                            "Type a nearby landmark as your pickup point.\n" +
+                            "Example: <code>SM Southmall</code>"));
 
         } catch (DateTimeParseException e) {
-            bot.send(BotMessageBuilder.text(chatId,
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "⚠️ Invalid format. Please use <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
                             LocalDateTime.now().plusHours(1)
@@ -296,10 +295,9 @@ public class MessageHandler {
     private void handlePostRideOrigin(Long chatId, String text, UserState state, CarpoolBot bot) {
         Optional<HubResponse> hub = hubMatcher.match(text);
         if (hub.isEmpty()) {
-            bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Couldn't find a hub matching <b>\"" +
-                            BotMessageBuilder.escape(text) + "\"</b>.\n" +
-                            "Try a different landmark name:"));
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
+                            "Try a more specific name or nearby landmark:"));
             return;
         }
 
@@ -308,20 +306,19 @@ public class MessageHandler {
                 .withOriginHubName(hub.get().name())
                 .withFlow(BotFlow.POST_RIDE_DESTINATION));
 
-        bot.send(BotMessageBuilder.text(chatId,
-                "✅ Pickup: <b>" + BotMessageBuilder.escape(hub.get().name()) + "</b>\n\n" +
-                        "🏁 <b>Where is your final destination?</b>\n\n" +
-                        "Type a landmark name (e.g. <code>BGC High Street</code>, <code>Ayala MRT</code>)\n\n" +
-                        "Type /cancel to abort."));
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "✅ Start point: <b>" + BotMessageBuilder.escape(hub.get().name()) + "</b>\n\n" +
+                        "🏁 <b>Where does your ride end?</b>\n\n" +
+                        "Type a nearby landmark as your drop-off point.\n" +
+                        "Example: <code>BGC High Street</code>"));
     }
 
     private void handlePostRideDestination(Long chatId, String text, UserState state, CarpoolBot bot) {
         Optional<HubResponse> hub = hubMatcher.match(text);
         if (hub.isEmpty()) {
-            bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Couldn't find a hub matching <b>\"" +
-                            BotMessageBuilder.escape(text) + "\"</b>.\n" +
-                            "Try a different landmark name:"));
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
+                            "Try a more specific name or nearby landmark:"));
             return;
         }
 
@@ -336,9 +333,9 @@ public class MessageHandler {
                 .withDestinationHubName(hub.get().name())
                 .withFlow(BotFlow.POST_RIDE_SEATS));
 
-        bot.send(BotMessageBuilder.text(chatId,
-                "✅ Destination: <b>" + BotMessageBuilder.escape(hub.get().name()) + "</b>\n\n" +
-                        "🪑 <b>How many passenger slots are available?</b> (1-8)"));
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "✅ End point: <b>" + BotMessageBuilder.escape(hub.get().name()) + "</b>\n\n" +
+                        "🪑 <b>How many passengers can you take?</b> (1-8)"));
     }
 
     private void handlePostRideSeats(Long chatId, String text, UserState state, CarpoolBot bot) {
@@ -355,9 +352,10 @@ public class MessageHandler {
                     .withFlow(BotFlow.POST_RIDE_CONTRIBUTION));
 
             bot.send(BotMessageBuilder.text(chatId,
-                    "✅ Slots: <b>" + seats + "</b>\n\n" +
-                            "💵 <b>Contribution per seat?</b> (Enter 0 for free)\n" +
-                            "Example: <code>50</code> or <code>0</code>"));
+                    "✅ Passenger slots: <b>" + seats + "</b>\n\n" +
+                            "💵 <b>How much is the contribution per seat?</b>\n" +
+                            "Enter <code>0</code> if it's a free ride.\n" +
+                            "Example: <code>50</code>"));
 
         } catch (NumberFormatException e) {
             bot.send(BotMessageBuilder.text(chatId,
@@ -369,7 +367,7 @@ public class MessageHandler {
         try {
             BigDecimal amount = new BigDecimal(text.trim());
             if (amount.compareTo(BigDecimal.ZERO) < 0) {
-                bot.send(BotMessageBuilder.text(chatId,
+                bot.send(BotMessageBuilder.textWithCancel(chatId,
                         "⚠️ Contribution cannot be negative:"));
                 return;
             }
@@ -378,15 +376,15 @@ public class MessageHandler {
                     .withContribution(amount)
                     .withFlow(BotFlow.POST_RIDE_NOTES));
 
-            bot.send(BotMessageBuilder.text(chatId,
+            bot.send(BotMessageBuilder.textWithCancelAndSkip(chatId,
                     "✅ Contribution: <b>₱" + amount + " / seat</b>\n\n" +
-                            "📝 <b>Any notes for passengers?</b>\n" +
-                            "<i>(e.g. stops, landmarks, instructions)</i>\n\n" +
-                            "Type <code>skip</code> if none."));
+                            "📝 <b>Any reminders for your passengers?</b>\n" +
+                            "<i>e.g. exact pickup spot, stops along the way, what to bring</i>",
+                    "SKIP_NOTES"));
 
         } catch (NumberFormatException e) {
-            bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Please enter a valid amount (e.g. <code>50</code> or <code>0</code>):"));
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please enter a valid amount (e.g. <code>100</code> or <code>0</code>):"));
         }
     }
 
@@ -400,15 +398,15 @@ public class MessageHandler {
                 ? "🏠 Home → Work" : "🏢 Work → Home";
 
         String confirmMsg = String.format(
-                "📋 <b>Confirm Your Ride</b>\n\n" +
+                "📋 <b>Review Your Ride</b>\n\n" +
                         "Direction: %s\n" +
-                        "📍 From: <b>%s</b>\n" +
-                        "🏁 To: <b>%s</b>\n" +
+                        "📍 Start: <b>%s</b>\n" +
+                        "🏁 End: <b>%s</b>\n" +
                         "🕐 Departure: <b>%s</b>\n" +
-                        "🪑 Slots: <b>%d</b>\n" +
+                        "🪑 Seats available: <b>%d</b>\n" +
                         "💵 Contribution: <b>₱%s / seat</b>\n" +
                         "%s\n\n" +
-                        "Post this ride?",
+                        "Looks good? Post this ride?",
                 dirLabel,
                 BotMessageBuilder.escape(state.getOriginHubName()),
                 BotMessageBuilder.escape(state.getDestinationHubName()),
