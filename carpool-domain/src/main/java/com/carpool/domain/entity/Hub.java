@@ -4,6 +4,9 @@ import com.carpool.domain.enums.HubStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents a pickup/dropoff landmark.
  * ACTIVE hubs are admin-approved and visible to all users.
@@ -47,4 +50,7 @@ public class Hub extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
     private HubStatus status = HubStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "hub", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<HubAlias> aliases = new ArrayList<>();
 }

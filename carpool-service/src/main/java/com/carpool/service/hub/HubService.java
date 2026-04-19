@@ -130,4 +130,28 @@ public class HubService {
                 saved.getId(), saved.getName(), saved.getArea(), userId);
         return mapper.toHubResponse(saved);
     }
+
+    /**
+     * Get hub by ID — used by HubMatcher after alias lookup.
+     */
+    @Cacheable(value = "hubs", key = "'id-' + #hubId")
+    @Transactional(readOnly = true)
+    public HubResponse getHubById(Long hubId) {
+        return hubRepository.findById(hubId)
+                .map(mapper::toHubResponse)
+                .orElseThrow(() -> new HubNotFoundException(hubId));
+    }
+
+    /**
+     * All active hubs for Levenshtein fuzzy matching.
+     * Same cache as getAllActiveHubs.
+     */
+    @Cacheable(value = "hubs", key = "'all-active'")
+    @Transactional(readOnly = true)
+    public List<HubResponse> getAllHubs() {
+        return hubRepository.findByStatusOrderByAreaAscNameAsc(HubStatus.ACTIVE)
+                .stream()
+                .map(mapper::toHubResponse)
+                .toList();
+    }
 }

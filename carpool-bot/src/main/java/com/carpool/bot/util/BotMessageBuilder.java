@@ -83,19 +83,24 @@ public class BotMessageBuilder {
     // ── Direction selector ────────────────────────────────────────────────
 
     public static SendMessage directionSelector(Long chatId, String prompt) {
-        KeyboardRow row = new KeyboardRow();
-        row.add("🏠 Home to Work");
-        row.add("🏢 Work to Home");
+        var rows = List.of(
+                List.of(
+                        InlineKeyboardButton.builder()
+                                .text("🏠 Home to Work")
+                                .callbackData("DIRECTION:HOME_TO_WORK")
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text("🏢 Work to Home")
+                                .callbackData("DIRECTION:WORK_TO_HOME")
+                                .build()
+                )
+        );
 
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(prompt)
                 .parseMode("HTML")
-                .replyMarkup(ReplyKeyboardMarkup.builder()
-                        .keyboard(List.of(row))
-                        .resizeKeyboard(true)
-                        .oneTimeKeyboard(true)
-                        .build())
+                .replyMarkup(inlineButtons(rows))
                 .build();
     }
 
@@ -231,6 +236,48 @@ public class BotMessageBuilder {
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
+    }
+
+    /**
+     * Send a flow message with a Cancel button at the bottom.
+     */
+    public static SendMessage textWithCancel(Long chatId, String text) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboard(List.of(
+                                new InlineKeyboardRow(InlineKeyboardButton.builder()
+                                        .text("❌ Cancel")
+                                        .callbackData("CANCEL_POST_RIDE")
+                                        .build())))
+                        .build())
+                .build();
+    }
+
+    /**
+     * Send a flow message with Cancel + Skip buttons.
+     * Used for optional fields like notes.
+     */
+    public static SendMessage textWithCancelAndSkip(Long chatId, String text, String skipCallback) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboard(List.of(
+                                new InlineKeyboardRow(
+                                        InlineKeyboardButton.builder()
+                                                .text("⏭️ Skip")
+                                                .callbackData(skipCallback)
+                                                .build(),
+                                        InlineKeyboardButton.builder()
+                                                .text("❌ Cancel")
+                                                .callbackData("CANCEL_POST_RIDE")
+                                                .build())))
+                        .build())
+                .build();
     }
 
     private BotMessageBuilder() {}
