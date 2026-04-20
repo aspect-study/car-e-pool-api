@@ -147,8 +147,20 @@ public class NotificationService {
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
 
         for (Booking booking : cancelledBookings) {
-            sendAndRecord(booking.getPassenger(), NotificationTypes.RIDE_CANCELLED, msg,
-                    Map.of("rideId", ride.getId()));
+            String pickup = booking.getPickupWaypoint() != null
+                    ? booking.getPickupWaypoint().getHub().getName()
+                    : ride.getOriginHub().getName();
+
+            String personalMsg = msg + String.format(
+                    "\n\n📋 <b>Your Booking</b>\n" +
+                            "🚏 Pickup: <b>%s</b>\n" +
+                            "🪑 Seats: %d | 💵 ₱%.2f",
+                    escape(pickup),
+                    booking.getSeatsReserved(),
+                    booking.getContributionDue());
+
+            sendAndRecord(booking.getPassenger(), NotificationTypes.RIDE_CANCELLED, personalMsg,
+                    Map.of("rideId", ride.getId(), "bookingId", booking.getId()));
         }
 
         log.info("Ride cancellation notifications sent to {} passengers for rideId={}",
