@@ -12,6 +12,7 @@ import com.carpool.repository.UserRepository;
 import com.carpool.service.dto.request.CreateRideRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.request.WaypointRequest;
+import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.event.RideEvents;
 import com.carpool.service.mapper.EntityMapper;
@@ -300,5 +301,12 @@ public class RideService {
         }
 
         log.info("Auto-completed {} stale departed rides", departedRides.size());
+    }
+
+    @Transactional(readOnly = true)
+    public HubResponse getHubById(Long hubId) {
+        return hubRepository.findById(hubId)
+                .map(mapper::toHubResponse)
+                .orElseThrow(() -> new HubNotFoundException(hubId));
     }
 }

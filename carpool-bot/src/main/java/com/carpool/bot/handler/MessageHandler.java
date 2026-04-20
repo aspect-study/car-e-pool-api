@@ -271,7 +271,7 @@ public class MessageHandler {
 
     private void askForEtd(Long chatId, UserState state, CarpoolBot bot) {
         stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
-        bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId,
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "🕐 <b>What time are you leaving?</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
@@ -314,9 +314,23 @@ public class MessageHandler {
     private void handlePostRideOrigin(Long chatId, String text, UserState state, CarpoolBot bot) {
         Optional<HubResponse> hub = hubMatcher.match(text);
         if (hub.isEmpty()) {
-            bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
-                            "Try a more specific name or nearby landmark:"));
+            List<HubResponse> suggestions = hubMatcher.suggest(text);
+            if (!suggestions.isEmpty()) {
+                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+                for (HubResponse s : suggestions) {
+                    rows.add(List.of(BotMessageBuilder.button(
+                            s.name(), "HUB_ORIGIN:" + s.id())));
+                }
+                rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "CANCEL_POST_RIDE")));
+                bot.send(sendWithInline(chatId,
+                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
+                                "Did you mean one of these?",
+                        rows));
+            } else {
+                bot.send(BotMessageBuilder.textWithCancel(chatId,
+                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
+                                "Try a more specific name or nearby landmark:"));
+            }
             return;
         }
 
@@ -335,9 +349,23 @@ public class MessageHandler {
     private void handlePostRideDestination(Long chatId, String text, UserState state, CarpoolBot bot) {
         Optional<HubResponse> hub = hubMatcher.match(text);
         if (hub.isEmpty()) {
-            bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
-                            "Try a more specific name or nearby landmark:"));
+            List<HubResponse> suggestions = hubMatcher.suggest(text);
+            if (!suggestions.isEmpty()) {
+                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+                for (HubResponse s : suggestions) {
+                    rows.add(List.of(BotMessageBuilder.button(
+                            s.name(), "HUB_DEST:" + s.id())));
+                }
+                rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "CANCEL_POST_RIDE")));
+                bot.send(sendWithInline(chatId,
+                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
+                                "Did you mean one of these?",
+                        rows));
+            } else {
+                bot.send(BotMessageBuilder.textWithCancel(chatId,
+                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
+                                "Try a more specific name or nearby landmark:"));
+            }
             return;
         }
 
