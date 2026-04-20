@@ -113,6 +113,8 @@ public class CallbackHandler {
             case "PENDING_REQUESTS"     -> handlePendingRequests(chatId, carpoolUserId, bot);
             case "VIEW_PENDING"         -> handleViewPendingRequest(chatId, entityId, carpoolUserId, bot);
             case "BOOK_NOW"             -> executeBooking(chatId, entityId, carpoolUserId, null, bot);
+            case "HUB_ORIGIN"           -> handleHubOriginSelected(chatId, entityId, carpoolUserId, state, bot);
+            case "HUB_DEST"             -> handleHubDestSelected(chatId, entityId, carpoolUserId, state, bot);
 
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
@@ -201,14 +203,13 @@ public class CallbackHandler {
             return;
         }
 
-        bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId,
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "🕐 <b>What time are you leaving?</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
                         LocalDateTime.now().plusHours(1)
                                 .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
-                        "</code>\n\n" +
-                        "Type /cancel to go back."));
+                        "</code>"));
         stateManager.save(chatId, state
                 .withCarpoolUserId(carpoolUserId)
                 .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
@@ -429,6 +430,54 @@ public class CallbackHandler {
         }
     }
 
+    // ── Hub suggestions ───────────────────────────────────────────────
+
+    private void handleHubOriginSelected(Long chatId, Long hubId, Long carpoolUserId,
+                                         UserState state, CarpoolBot bot) {
+        try {
+            var hub = rideService.getHubById(hubId);
+
+            UserState updated = state
+                    .withOriginHubId(hub.id())
+                    .withOriginHubName(hub.name())
+                    .withFlow(BotFlow.POST_RIDE_DESTINATION);
+            stateManager.save(chatId, updated);
+
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "✅ Start point: <b>" + BotMessageBuilder.escape(hub.name()) + "</b>\n\n" +
+                            "🏁 <b>Where does your ride end?</b>\n\n" +
+                            "Type a nearby landmark as your drop-off point.\n" +
+                            "Example: <code>BGC High Street</code>"));
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load hub. Please try again."));
+        }
+    }
+
+    private void handleHubDestSelected(Long chatId, Long hubId, Long carpoolUserId,
+                                       UserState state, CarpoolBot bot) {
+        try {
+            var hub = rideService.getHubById(hubId);
+
+            if (hub.id().equals(state.getOriginHubId())) {
+                bot.send(BotMessageBuilder.text(chatId,
+                        "⚠️ Destination cannot be the same as pickup. Try again:"));
+                return;
+            }
+
+            UserState updated = state
+                    .withDestinationHubId(hub.id())
+                    .withDestinationHubName(hub.name())
+                    .withFlow(BotFlow.POST_RIDE_SEATS);
+            stateManager.save(chatId, updated);
+
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "✅ End point: <b>" + BotMessageBuilder.escape(hub.name()) + "</b>\n\n" +
+                            "🪑 <b>How many passengers can you take?</b> (1-8)"));
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load hub. Please try again."));
+        }
+    }
+
     // ── Cancel ride ───────────────────────────────────────────────────────
 
     private void handleCancelRide(Long chatId, Long rideId, Long carpoolUserId, CarpoolBot bot) {
@@ -436,19 +485,42 @@ public class CallbackHandler {
             List<BookingResponse> activeBookings = bookingService.getBookingsByRideId(rideId);
 
             if (!activeBookings.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("⚠️ <b>Are you sure you want to cancel?</b>\n\n");
+                sb.append("The following passengers will be notified:\n\n");
+
+                for (int i = 0; i < activeBookings.size(); i++) {
+                    BookingResponse b = activeBookings.get(i);
+                    String statusIcon = b.status() == BookingStatus.PENDING ? "⏳" : "✅";
+                    String paxHandle = b.passenger().telegramHandle() != null
+                            ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                            : "";
+
+                    sb.append(String.format("<b>%d.</b> %s %s%s\n",
+                            i + 1,
+                            statusIcon,
+                            BotMessageBuilder.escape(b.passenger().fullName()),
+                            paxHandle));
+
+                    if (b.passengerMessage() != null) {
+                        sb.append(String.format(
+                                "    💬 \"%s\"\n",
+                                BotMessageBuilder.escape(b.passengerMessage())));
+                    }
+
+                    sb.append(String.format("    🪑 %d seat(s) | 💵 ₱%.2f\n",
+                            b.seatsReserved(),
+                            b.contributionDue()));
+                }
+
+                sb.append("\n⚠️ This cannot be undone.");
+
                 var rows = List.of(List.of(
-                        BotMessageBuilder.button(
-                                "⚠️ Yes, Cancel Ride", "CONFIRM_CANCEL_RIDE:" + rideId),
-                        BotMessageBuilder.button(
-                                "◀️ Keep Ride", "MAIN_MENU")
+                        BotMessageBuilder.button("⚠️ Yes, Cancel Ride", "CONFIRM_CANCEL_RIDE:" + rideId),
+                        BotMessageBuilder.button("◀️ Keep Ride",         "MAIN_MENU")
                 ));
 
-                bot.send(sendWithInline(chatId,
-                        "⚠️ <b>Are you sure?</b>\n\n" +
-                                "Your ride has <b>" + activeBookings.size() + " active passenger(s)</b>.\n\n" +
-                                "Cancelling will notify all passengers and remove their bookings.\n\n" +
-                                "This cannot be undone.",
-                        rows));
+                bot.send(sendWithInline(chatId, sb.toString(), rows));
                 return;
             }
 
@@ -811,7 +883,7 @@ public class CallbackHandler {
         try {
             RideResponse original = rideService.getRideById(rideId);
 
-            bot.send(BotMessageBuilder.text(chatId,
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "🔄 <b>Repost Ride</b>\n\n" +
                             "Previous ride: <b>" +
                             BotMessageBuilder.escape(original.originHub().name()) + " → " +
@@ -821,8 +893,7 @@ public class CallbackHandler {
                             "Example: <code>" +
                             LocalDateTime.now().plusHours(1)
                                     .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
-                            "</code>\n\n" +
-                            "Type /cancel to abort."));
+                            "</code>"));
 
             stateManager.save(chatId, state
                     .withOriginHubId(original.originHub().id())
