@@ -15,6 +15,7 @@ import com.carpool.service.dto.request.CreateBookingRequest;
 import com.carpool.service.dto.response.BookingResponse;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.hub.HubService;
 import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class MessageHandler {
     private final BookingService bookingService;
     private final DriverNoteService driverNoteService;
     private final PostRideHelper    postRideHelper;
+    private final HubService hubService;
 
     private static final DateTimeFormatter ETD_FMT =
             DateTimeFormatter.ofPattern("MM/dd HH:mm");
@@ -312,77 +314,109 @@ public class MessageHandler {
     }
 
     private void handlePostRideOrigin(Long chatId, String text, UserState state, CarpoolBot bot) {
-        Optional<HubResponse> hub = hubMatcher.match(text);
-        if (hub.isEmpty()) {
-            List<HubResponse> suggestions = hubMatcher.suggest(text);
-            if (!suggestions.isEmpty()) {
-                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-                for (HubResponse s : suggestions) {
-                    rows.add(List.of(BotMessageBuilder.button(
-                            s.name(), "HUB_ORIGIN:" + s.id())));
-                }
-                rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "CANCEL_POST_RIDE")));
-                bot.send(sendWithInline(chatId,
-                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
-                                "Did you mean one of these?",
-                        rows));
-            } else {
-                bot.send(BotMessageBuilder.textWithCancel(chatId,
-                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
-                                "Try a more specific name or nearby landmark:"));
-            }
+        // Minimum 3 characters required
+        if (text.trim().length() < 3) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please type at least 3 characters to search.\n\n" +
+                            "Example: <code>BGC</code> or <code>Southmall</code>"));
             return;
         }
 
-        stateManager.save(chatId, state
-                .withOriginHubId(hub.get().id())
-                .withOriginHubName(hub.get().name())
-                .withFlow(BotFlow.POST_RIDE_DESTINATION));
+        List<HubResponse> suggestions = hubMatcher.suggest(text);
 
-        bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "✅ Start point: <b>" + BotMessageBuilder.escape(hub.get().name()) + "</b>\n\n" +
-                        "🏁 <b>Where does your ride end?</b>\n\n" +
-                        "Type a nearby landmark as your drop-off point.\n" +
-                        "Example: <code>BGC High Street</code>"));
+        if (suggestions.isEmpty()) {
+            // No match — show recent hubs as fallback
+            List<HubResponse> recentHubs = hubService.getRecentHubsForUser(
+                    state.getCarpoolUserId());
+
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            if (!recentHubs.isEmpty()) {
+                for (HubResponse h : recentHubs) {
+                    rows.add(List.of(BotMessageBuilder.button(
+                            "🕐 " + h.name(), "HUB_ORIGIN:" + h.id())));
+                }
+            }
+            rows.add(List.of(BotMessageBuilder.button("✏️ Try different name", "RETYPE_ORIGIN")));
+
+            bot.send(sendWithInline(chatId,
+                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
+                            (recentHubs.isEmpty()
+                                    ? "Try a more specific name or nearby landmark:"
+                                    : "Here are your recent locations:"),
+                    rows));
+            return;
+        }
+
+        // Show matched suggestions
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (HubResponse s : suggestions) {
+            rows.add(List.of(BotMessageBuilder.button(s.name(), "HUB_ORIGIN:" + s.id())));
+        }
+        rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_ORIGIN")));
+
+        bot.send(sendWithInline(chatId,
+                "📍 <b>Select your start point:</b>\n\n" +
+                        "Results for \"" + BotMessageBuilder.escape(text) + "\":",
+                rows));
     }
 
     private void handlePostRideDestination(Long chatId, String text, UserState state, CarpoolBot bot) {
-        Optional<HubResponse> hub = hubMatcher.match(text);
-        if (hub.isEmpty()) {
-            List<HubResponse> suggestions = hubMatcher.suggest(text);
-            if (!suggestions.isEmpty()) {
-                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-                for (HubResponse s : suggestions) {
-                    rows.add(List.of(BotMessageBuilder.button(
-                            s.name(), "HUB_DEST:" + s.id())));
-                }
-                rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "CANCEL_POST_RIDE")));
-                bot.send(sendWithInline(chatId,
-                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
-                                "Did you mean one of these?",
-                        rows));
-            } else {
-                bot.send(BotMessageBuilder.textWithCancel(chatId,
-                        "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b> in our hub list.\n\n" +
-                                "Try a more specific name or nearby landmark:"));
-            }
+        // Minimum 3 characters required
+        if (text.trim().length() < 3) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please type at least 3 characters to search.\n\n" +
+                            "Example: <code>BGC</code> or <code>Alabang</code>"));
             return;
         }
 
-        if (hub.get().id().equals(state.getOriginHubId())) {
-            bot.send(BotMessageBuilder.text(chatId,
+        List<HubResponse> suggestions = hubMatcher.suggest(text);
+
+        if (suggestions.isEmpty()) {
+            // No match — show recent hubs as fallback
+            List<HubResponse> recentHubs = hubService.getRecentHubsForUser(
+                    state.getCarpoolUserId());
+
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            if (!recentHubs.isEmpty()) {
+                for (HubResponse h : recentHubs) {
+                    rows.add(List.of(BotMessageBuilder.button(
+                            "🕐 " + h.name(), "HUB_DEST:" + h.id())));
+                }
+            }
+            rows.add(List.of(BotMessageBuilder.button("✏️ Try different name", "RETYPE_DEST")));
+
+            bot.send(sendWithInline(chatId,
+                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
+                            (recentHubs.isEmpty()
+                                    ? "Try a more specific name or nearby landmark:"
+                                    : "Here are your recent locations:"),
+                    rows));
+            return;
+        }
+
+        // Show matched suggestions
+        if (suggestions.stream().anyMatch(s -> s.id().equals(state.getOriginHubId()))) {
+            suggestions = suggestions.stream()
+                    .filter(s -> !s.id().equals(state.getOriginHubId()))
+                    .toList();
+        }
+
+        if (suggestions.isEmpty()) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "⚠️ Destination cannot be the same as pickup. Try again:"));
             return;
         }
 
-        stateManager.save(chatId, state
-                .withDestinationHubId(hub.get().id())
-                .withDestinationHubName(hub.get().name())
-                .withFlow(BotFlow.POST_RIDE_SEATS));
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (HubResponse s : suggestions) {
+            rows.add(List.of(BotMessageBuilder.button(s.name(), "HUB_DEST:" + s.id())));
+        }
+        rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_DEST")));
 
-        bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "✅ End point: <b>" + BotMessageBuilder.escape(hub.get().name()) + "</b>\n\n" +
-                        "🪑 <b>How many passengers can you take?</b> (1-8)"));
+        bot.send(sendWithInline(chatId,
+                "🏁 <b>Select your end point:</b>\n\n" +
+                        "Results for \"" + BotMessageBuilder.escape(text) + "\":",
+                rows));
     }
 
     private void handlePostRideSeats(Long chatId, String text, UserState state, CarpoolBot bot) {

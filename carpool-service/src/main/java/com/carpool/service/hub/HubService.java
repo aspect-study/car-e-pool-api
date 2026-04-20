@@ -154,4 +154,29 @@ public class HubService {
                 .map(mapper::toHubResponse)
                 .toList();
     }
+
+    /**
+     * Get recently used hubs for a user — combines driver and passenger history.
+     * Used for quick picks in bot hub selection flow.
+     * Not cached — must reflect latest activity.
+     */
+    @Transactional(readOnly = true)
+    public List<HubResponse> getRecentHubsForUser(Long userId) {
+        // Get hubs from both driver and passenger history
+        List<Hub> driverHubs    = hubRepository.findRecentHubsByDriverId(userId);
+        List<Hub> passengerHubs = hubRepository.findRecentHubsByPassengerId(userId);
+
+        // Combine, deduplicate by ID, limit to 5
+        return java.util.stream.Stream.concat(
+                        driverHubs.stream(),
+                        passengerHubs.stream())
+                .collect(java.util.LinkedHashMap<Long, Hub>::new,
+                        (map, hub) -> map.putIfAbsent(hub.getId(), hub),
+                        java.util.LinkedHashMap::putAll)
+                .values()
+                .stream()
+                .map(mapper::toHubResponse)
+                .limit(5)
+                .toList();
+    }
 }
