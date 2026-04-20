@@ -174,6 +174,8 @@ public class MessageHandler {
                     BotMessageBuilder.formatRideCard(active) +
                     "\n\nWhat would you like to do?";
 
+            long pendingCount = bookingService.countPendingRequestsForDriver(carpoolUserId);
+
             var rows = active.status().name().equals("DEPARTED")
                     ? List.of(
                     List.of(
@@ -184,16 +186,30 @@ public class MessageHandler {
                             BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                     )
             )
-                    : List.of(
+                    : pendingCount > 0
+                      ? List.of(
                     List.of(
                             BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
                             BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("❌ Cancel Ride",   "CANCEL_RIDE:"  + active.id())
+                            BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS"),
+                            BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
                     ),
                     List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride",  "FIND_RIDE")
+                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                    )
+            )
+                      : List.of(
+                    List.of(
+                            BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
+                            BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                     )
             );
 
