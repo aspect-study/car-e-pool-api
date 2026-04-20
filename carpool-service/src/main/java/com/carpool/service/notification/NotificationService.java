@@ -93,17 +93,29 @@ public class NotificationService {
         User driver = booking.getRide().getDriver();
         User pax    = booking.getPassenger();
 
+        String paxHandle = pax.getTelegramHandle() != null
+                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                : "";
+
         String msg = String.format(
                 "🚫 <b>Booking Cancelled</b>\n\n" +
-                        "<b>%s</b> has cancelled their booking on your ride.\n" +
+                        "👤 <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
-                        "🕐 %s\n\n" +
+                        "🕐 %s\n" +
+                        "🪑 %d seat(s) | 💵 ₱%.2f\n" +
+                        "%s\n\n" +
                         "Seat(s) have been freed up.",
                 escape(pax.getFullName()),
+                paxHandle,
                 escape(booking.getRide().getOriginHub().getName()),
                 escape(booking.getRide().getDestinationHub().getName()),
                 TIME_FMT.format(booking.getRide().getDepartureTime()
-                        .atZone(ZoneId.of("Asia/Manila"))));
+                        .atZone(ZoneId.of("Asia/Manila"))),
+                booking.getSeatsReserved(),
+                booking.getContributionDue(),
+                booking.getCancellationReason() != null
+                        ? "📝 Reason: <i>" + escape(booking.getCancellationReason()) + "</i>"
+                        : "");
 
         sendAndRecord(driver, NotificationTypes.BOOKING_CANCELLED_BY_PASSENGER, msg,
                 Map.of("bookingId", booking.getId(), "passengerName", pax.getFullName()));
@@ -226,15 +238,28 @@ public class NotificationService {
         Ride ride = booking.getRide();
         User pax  = booking.getPassenger();
 
+        String driverHandle = ride.getDriver().getTelegramHandle() != null
+                ? " (@" + escape(ride.getDriver().getTelegramHandle()) + ")"
+                : "";
+
         String msg = String.format(
                 "❌ <b>Booking Request Declined</b>\n\n" +
-                        "Unfortunately, the driver has declined your booking request.\n\n" +
+                        "👤 Driver: <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
-                        "🕐 %s\n\n" +
+                        "🕐 %s\n" +
+                        "🪑 %d seat(s) | 💵 ₱%.2f\n" +
+                        "%s\n\n" +
                         "Please look for another available ride.",
+                escape(ride.getDriver().getFullName()),
+                driverHandle,
                 escape(ride.getOriginHub().getName()),
                 escape(ride.getDestinationHub().getName()),
-                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
+                booking.getSeatsReserved(),
+                booking.getContributionDue(),
+                booking.getCancellationReason() != null
+                        ? "📝 Reason: <i>" + escape(booking.getCancellationReason()) + "</i>"
+                        : "");
 
         sendAndRecord(pax, NotificationTypes.BOOKING_CANCELLED_BY_DRIVER, msg,
                 Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
