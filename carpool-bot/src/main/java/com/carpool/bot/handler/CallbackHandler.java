@@ -151,9 +151,6 @@ public class CallbackHandler {
                     List.of(
                             BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
                             BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
                     )
             )
                     : pendingCount > 0
@@ -276,6 +273,20 @@ public class CallbackHandler {
 
     private void handleStartFindRide(Long chatId, Long carpoolUserId,
                                      UserState state, CarpoolBot bot) {
+        // Driver with active ride cannot find a ride as passenger
+        long activeRideCount = rideService.getMyRides(carpoolUserId).stream()
+                .filter(r -> r.status().name().equals("ACTIVE")
+                        || r.status().name().equals("FULL")
+                        || r.status().name().equals("DEPARTED"))
+                .count();
+
+        if (activeRideCount > 0) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ <b>You have an active ride posted.</b>\n\n" +
+                            "Please cancel or complete your ride first before looking for a ride as a passenger."));
+            return;
+        }
+
         bot.send(BotMessageBuilder.directionSelector(chatId,
                 "🔍 <b>Find a Ride</b>\n\nWhich direction are you looking for?"));
         stateManager.save(chatId, state

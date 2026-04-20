@@ -58,6 +58,18 @@ public class RideService {
                     "You already have an active ride. Cancel or complete it first before posting a new one.");
         }
 
+        // Prevent posting a ride if user has an active booking as passenger
+        boolean hasActiveBooking = !bookingRepository
+                .findByPassengerIdAndStatusInOrderByCreatedAtDesc(
+                        driverUserId,
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING))
+                .isEmpty();
+
+        if (hasActiveBooking) {
+            throw new InvalidRideStateException(
+                    "You have an active booking as a passenger. Cancel it first before posting a ride.");
+        }
+
         Hub origin = hubRepository.findById(request.originHubId())
                 .orElseThrow(() -> new HubNotFoundException(request.originHubId()));
 
