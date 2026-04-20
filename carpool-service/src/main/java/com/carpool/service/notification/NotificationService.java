@@ -285,10 +285,12 @@ public class NotificationService {
                 .orElse(null);
         if (booking == null) return;
 
-        Ride ride = booking.getRide();
-        User pax  = booking.getPassenger();
+        Ride ride   = booking.getRide();
+        User pax    = booking.getPassenger();
+        User driver = ride.getDriver();
 
-        String msg = String.format(
+        // Notify passenger — request expired
+        String paxMsg = String.format(
                 "⏰ <b>Booking Request Expired</b>\n\n" +
                         "Your booking request was not responded to by the driver.\n\n" +
                         "📍 %s → %s\n" +
@@ -298,8 +300,35 @@ public class NotificationService {
                 escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
 
-        sendAndRecord(pax, NotificationTypes.BOOKING_CANCELLED_BY_DRIVER, msg,
+        sendAndRecord(pax, NotificationTypes.BOOKING_TIMED_OUT, paxMsg,
                 Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
+
+        // Notify driver — pending request auto-declined
+        String paxHandle = pax.getTelegramHandle() != null
+                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                : "";
+
+        String driverMsg = String.format(
+                "⏰ <b>Booking Request Expired</b>\n\n" +
+                        "The booking request from <b>%s</b>%s has expired " +
+                        "because you did not respond in time.\n\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n" +
+                        "🪑 %d seat(s) | 💵 ₱%.2f\n\n" +
+                        "The seat(s) have been released back to your ride.",
+                escape(pax.getFullName()),
+                paxHandle,
+                escape(ride.getOriginHub().getName()),
+                escape(ride.getDestinationHub().getName()),
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
+                booking.getSeatsReserved(),
+                booking.getContributionDue());
+
+        sendAndRecord(driver, NotificationTypes.BOOKING_RECEIVED, driverMsg,
+                Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
+
+        log.info("Booking timed out notifications sent: bookingId={} passengerId={} driverId={}",
+                booking.getId(), pax.getId(), driver.getId());
     }
 
     @Async
