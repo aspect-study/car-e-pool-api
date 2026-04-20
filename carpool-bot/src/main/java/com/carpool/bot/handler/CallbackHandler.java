@@ -115,7 +115,8 @@ public class CallbackHandler {
             case "BOOK_NOW"             -> executeBooking(chatId, entityId, carpoolUserId, null, bot);
             case "HUB_ORIGIN"           -> handleHubOriginSelected(chatId, entityId, carpoolUserId, state, bot);
             case "HUB_DEST"             -> handleHubDestSelected(chatId, entityId, carpoolUserId, state, bot);
-
+            case "RETYPE_ORIGIN"        -> handleRetypeOrigin(chatId, carpoolUserId, state, bot);
+            case "RETYPE_DEST"          -> handleRetypeDest(chatId, carpoolUserId, state, bot);
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
                 bot.send(BotMessageBuilder.text(chatId, "⚠️ Unknown action."));
@@ -476,6 +477,24 @@ public class CallbackHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load hub. Please try again."));
         }
+    }
+
+    private void handleRetypeOrigin(Long chatId, Long carpoolUserId,
+                                    UserState state, CarpoolBot bot) {
+        stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_ORIGIN));
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "📍 <b>Where does your ride start?</b>\n\n" +
+                        "Type a nearby landmark as your pickup point.\n" +
+                        "Example: <code>SM Southmall</code>"));
+    }
+
+    private void handleRetypeDest(Long chatId, Long carpoolUserId,
+                                  UserState state, CarpoolBot bot) {
+        stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DESTINATION));
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "🏁 <b>Where does your ride end?</b>\n\n" +
+                        "Type a nearby landmark as your drop-off point.\n" +
+                        "Example: <code>BGC High Street</code>"));
     }
 
     // ── Cancel ride ───────────────────────────────────────────────────────

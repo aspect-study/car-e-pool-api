@@ -39,4 +39,44 @@ public interface HubRepository extends JpaRepository<Hub, Long> {
         ORDER BY h.area ASC, h.name ASC
         """)
     List<Hub> searchActive(@Param("keyword") String keyword);
+
+    /**
+     * Get recently used hubs by user as driver — top 5 distinct hubs.
+     */
+    @Query(value = """
+    SELECT DISTINCT h.* FROM hubs h
+    WHERE h.id IN (
+        SELECT origin_hub_id FROM rides
+        WHERE driver_id = :userId
+        AND status NOT IN ('DRAFT', 'CANCELLED')
+        UNION
+        SELECT destination_hub_id FROM rides
+        WHERE driver_id = :userId
+        AND status NOT IN ('DRAFT', 'CANCELLED')
+    )
+    ORDER BY h.name ASC
+    LIMIT 5
+    """, nativeQuery = true)
+    List<Hub> findRecentHubsByDriverId(@Param("userId") Long userId);
+
+    /**
+     * Get recently used hubs by user as passenger — top 5 distinct hubs.
+     */
+    @Query(value = """
+    SELECT DISTINCT h.* FROM hubs h
+    WHERE h.id IN (
+        SELECT r.origin_hub_id FROM bookings b
+        JOIN rides r ON b.ride_id = r.id
+        WHERE b.passenger_id = :userId
+        AND b.status NOT IN ('CANCELLED_BY_PASSENGER', 'CANCELLED_BY_DRIVER')
+        UNION
+        SELECT r.destination_hub_id FROM bookings b
+        JOIN rides r ON b.ride_id = r.id
+        WHERE b.passenger_id = :userId
+        AND b.status NOT IN ('CANCELLED_BY_PASSENGER', 'CANCELLED_BY_DRIVER')
+    )
+    ORDER BY h.name ASC
+    LIMIT 5
+    """, nativeQuery = true)
+    List<Hub> findRecentHubsByPassengerId(@Param("userId") Long userId);
 }

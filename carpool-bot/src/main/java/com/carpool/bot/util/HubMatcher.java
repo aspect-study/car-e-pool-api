@@ -29,7 +29,7 @@ public class HubMatcher {
     private final HubService         hubService;
     private final HubAliasRepository hubAliasRepository;
 
-    private static final int MAX_SUGGESTIONS = 5;
+    private static final int MAX_SUGGESTIONS = 10;
     private static final int MAX_LEVENSHTEIN = 2;
 
     /**
@@ -38,6 +38,9 @@ public class HubMatcher {
      */
     public Optional<HubResponse> match(String input) {
         if (input == null || input.isBlank()) return Optional.empty();
+
+        // Minimum 3 characters required — single/double char input is too ambiguous
+        if (input.trim().length() < 3) return Optional.empty();
 
         String normalized = input.trim().toLowerCase();
 
@@ -86,6 +89,9 @@ public class HubMatcher {
      */
     public List<HubResponse> suggest(String input) {
         if (input == null || input.isBlank()) return List.of();
+
+        // Minimum 3 characters required
+        if (input.trim().length() < 3) return List.of();
 
         String normalized = input.trim().toLowerCase();
         List<HubResponse> all = hubService.getAllHubs();
