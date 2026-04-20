@@ -246,7 +246,7 @@ class BookingServiceTest {
             when(bookingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(mapper.toBookingResponse(any())).thenReturn(mock(BookingResponse.class));
 
-            bookingService.cancelBooking(500L, 2L);
+            bookingService.cancelBooking(500L, 2L, null);
 
             assertThat(ride.getAvailableSeats()).isEqualTo(3);
             assertThat(confirmedBooking.getStatus())
@@ -264,7 +264,7 @@ class BookingServiceTest {
             when(bookingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(mapper.toBookingResponse(any())).thenReturn(mock(BookingResponse.class));
 
-            bookingService.cancelBooking(500L, 2L);
+            bookingService.cancelBooking(500L, 2L, null);
 
             assertThat(ride.getStatus()).isEqualTo(RideStatus.ACTIVE);
             assertThat(ride.getAvailableSeats()).isEqualTo(1);
@@ -275,7 +275,7 @@ class BookingServiceTest {
         void shouldThrowWhenNotOwner() {
             when(bookingRepository.findById(500L)).thenReturn(Optional.of(confirmedBooking));
 
-            assertThatThrownBy(() -> bookingService.cancelBooking(500L, 99L))
+            assertThatThrownBy(() -> bookingService.cancelBooking(500L, 99L, null))
                     .isInstanceOf(NotBookingOwnerException.class);
         }
 
@@ -285,7 +285,7 @@ class BookingServiceTest {
             confirmedBooking.setStatus(BookingStatus.CANCELLED_BY_PASSENGER);
             when(bookingRepository.findById(500L)).thenReturn(Optional.of(confirmedBooking));
 
-            assertThatThrownBy(() -> bookingService.cancelBooking(500L, 2L))
+            assertThatThrownBy(() -> bookingService.cancelBooking(500L, 2L, null))
                     .isInstanceOf(InvalidRideStateException.class);
         }
 
@@ -295,7 +295,7 @@ class BookingServiceTest {
             ride.setStatus(RideStatus.DEPARTED);
             when(bookingRepository.findById(500L)).thenReturn(Optional.of(confirmedBooking));
 
-            assertThatThrownBy(() -> bookingService.cancelBooking(500L, 2L))
+            assertThatThrownBy(() -> bookingService.cancelBooking(500L, 2L, null))
                     .isInstanceOf(InvalidRideStateException.class)
                     .hasMessageContaining("already started");
         }
