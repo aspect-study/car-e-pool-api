@@ -27,6 +27,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -513,8 +515,10 @@ public class CallbackHandler {
                                 .format(DateTimeFormatter.ofPattern("MMM d h:mma")),
                         b.contributionDue()));
 
+                String statusPrefix = b.status() == BookingStatus.PENDING ? "⏳ " : "🔍 ";
                 rows.add(List.of(InlineKeyboardButton.builder()
-                        .text(String.format("🔍 %s → %s | %s",
+                        .text(String.format("%s%s → %s | %s",
+                                statusPrefix,
                                 b.ride().originHub().name(),
                                 b.ride().destinationHub().name(),
                                 b.ride().departureTime()
@@ -549,10 +553,12 @@ public class CallbackHandler {
 
             String statusLabel = switch (b.status().name()) {
                 case "CONFIRMED"              -> "✅ Confirmed";
-                case "PENDING"                -> "⏳ Pending";
+                case "PENDING"                -> "⏳ Waiting for driver approval";
                 case "CANCELLED_BY_PASSENGER" -> "❌ Cancelled by you";
                 case "CANCELLED_BY_DRIVER"    -> "❌ Cancelled by driver";
                 case "COMPLETED"              -> "🏁 Completed";
+                case "DECLINED"               -> "❌ Declined by driver";
+                case "TIMED_OUT"              -> "⏰ Expired — driver did not respond";
                 default                       -> b.status().name();
             };
 
@@ -563,6 +569,14 @@ public class CallbackHandler {
                     ? b.dropoffWaypoint().hub().name()
                     : b.ride().destinationHub().name();
 
+            // Build expiry info for PENDING bookings
+            String expiryInfo = "";
+            if (b.status() == BookingStatus.PENDING && b.expiresAt() != null) {
+                long remainingMinutes = Duration.between(
+                        Instant.now(), b.expiresAt()).toMinutes();
+                expiryInfo = "\n⏰ Auto-declines in: " + Math.max(0, remainingMinutes) + " minutes";
+            }
+
             String detail = String.format(
                     "📋 <b>Booking Details</b>\n\n" +
                             "🚗 %s → %s\n" +
@@ -572,7 +586,8 @@ public class CallbackHandler {
                             "🪑 Seats: %d\n" +
                             "💵 Contribution: ₱%.2f\n" +
                             "👤 Driver: %s%s\n" +
-                            "📊 Status: %s",
+                            "%s" +
+                            "📊 Status: %s%s",
                     BotMessageBuilder.escape(b.ride().originHub().name()),
                     BotMessageBuilder.escape(b.ride().destinationHub().name()),
                     b.ride().departureTime()
@@ -585,7 +600,11 @@ public class CallbackHandler {
                     BotMessageBuilder.escape(b.ride().driver().fullName()),
                     b.ride().driver().telegramHandle() != null
                             ? " (@" + BotMessageBuilder.escape(b.ride().driver().telegramHandle()) + ")" : "",
-                    statusLabel);
+                    b.passengerMessage() != null
+                            ? "💬 Your message: \"" + BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
+                            : "",
+                    statusLabel,
+                    expiryInfo);
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
@@ -637,6 +656,8 @@ public class CallbackHandler {
                 case "CANCELLED_BY_PASSENGER" -> "❌ You cancelled";
                 case "CANCELLED_BY_DRIVER"    -> "❌ Driver cancelled";
                 case "COMPLETED"              -> "🏁 Completed";
+                case "DECLINED"               -> "❌ Declined by driver";
+                case "TIMED_OUT"              -> "⏰ Expired";
                 default                       -> b.status().name();
             };
             sb.append(String.format("<b>%d.</b> %s → %s | %s\n",
