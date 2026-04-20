@@ -117,6 +117,11 @@ public class CallbackHandler {
             case "HUB_DEST"             -> handleHubDestSelected(chatId, entityId, carpoolUserId, state, bot);
             case "RETYPE_ORIGIN"        -> handleRetypeOrigin(chatId, carpoolUserId, state, bot);
             case "RETYPE_DEST"          -> handleRetypeDest(chatId, carpoolUserId, state, bot);
+            case "SEARCH_FILTER"        -> handleSearchFilter(chatId, carpoolUserId, state, bot);
+            case "APPLY_FILTER"         -> handleApplyFilter(chatId, parts, carpoolUserId, state, bot);
+            case "RESET_FILTER"         -> handleResetFilter(chatId, carpoolUserId, state, bot);
+            case "RIDE_PAGE"            -> handleRidePage(chatId, payload, carpoolUserId, state, bot);
+            case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
                 bot.send(BotMessageBuilder.text(chatId, "⚠️ Unknown action."));
@@ -339,18 +344,60 @@ public class CallbackHandler {
         }
 
         List<RideResponse> rides = rideService.getRidesByDirection(
-                state.getDirection(), carpoolUserId, from, to);
+                state.getDirection(), carpoolUserId, from, to,
+                state.getFilterMaxPrice(),
+                state.getFilterMinSeats(),
+                state.getFilterSortBy());
 
         String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
                 ? "🏠 Home → Work" : "🏢 Work → Home";
 
-        stateManager.save(chatId, state
+        // Build filter summary
+        String filterSummary = buildFilterSummary(state);
+
+        UserState updated = state
                 .withSearchFrom(from)
                 .withSearchTo(to)
-                .withFlow(BotFlow.SEARCH_RESULTS));
+                .withSearchPage(0)
+                .withFlow(BotFlow.SEARCH_RESULTS);
+        stateManager.save(chatId, updated);
 
-        bot.send(BotMessageBuilder.rideList(chatId, rides,
-                "🔍 <b>Available Rides — " + dirLabel + "</b>"));
+        if (rides.isEmpty()) {
+            var rows = List.of(List.of(
+                    BotMessageBuilder.button("🔧 Filter & Sort", "SEARCH_FILTER"),
+                    BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
+            ));
+            bot.send(sendWithInline(chatId,
+                    "🔍 <b>No rides found — " + dirLabel + "</b>\n\n" +
+                            "Try adjusting your filters or check back later.",
+                    rows));
+            return;
+        }
+
+        bot.send(BotMessageBuilder.paginatedRideList(
+                chatId, rides,
+                "🔍 <b>Available Rides — " + dirLabel + "</b>",
+                0, filterSummary));
+    }
+
+    private String buildFilterSummary(UserState state) {
+        List<String> parts = new ArrayList<>();
+
+        if (state.getFilterSortBy() != null) {
+            parts.add(switch (state.getFilterSortBy()) {
+                case "CHEAPEST"   -> "💰 Cheapest first";
+                case "MOST_SEATS" -> "🪑 Most seats first";
+                default           -> "🕐 Earliest first";
+            });
+        }
+        if (state.getFilterMinSeats() != null) {
+            parts.add("🪑 " + state.getFilterMinSeats() + "+ seats");
+        }
+        if (state.getFilterMaxPrice() != null) {
+            parts.add("💵 Max ₱" + state.getFilterMaxPrice().toPlainString());
+        }
+
+        return parts.isEmpty() ? "" : "<i>Filters: " + String.join(" | ", parts) + "</i>";
     }
 
     // ── View ride detail ──────────────────────────────────────────────────
@@ -1423,5 +1470,134 @@ public class CallbackHandler {
 
         bot.send(sendWithInline(chatId,
                 "Direction: <b>" + dirLabel + "</b>\n\nWhat would you like to do?", rows));
+    }
+
+    // ── Search filter ─────────────────────────────────────────────────
+
+    private void handleSearchFilter(Long chatId, Long carpoolUserId,
+                                    UserState state, CarpoolBot bot) {
+        stateManager.save(chatId, state.withFlow(BotFlow.SEARCH_FILTER));
+
+        // Highlight current selections
+        String sortBy   = state.getFilterSortBy()   != null ? state.getFilterSortBy()   : "EARLIEST";
+        Integer minSeats = state.getFilterMinSeats();
+        java.math.BigDecimal maxPrice = state.getFilterMaxPrice();
+
+        String earliestLabel  = sortBy.equals("EARLIEST")   ? "✅ 🕐 Earliest"   : "🕐 Earliest";
+        String cheapestLabel  = sortBy.equals("CHEAPEST")   ? "✅ 💰 Cheapest"   : "💰 Cheapest";
+        String mostSeatsLabel = sortBy.equals("MOST_SEATS") ? "✅ 🪑 Most Seats" : "🪑 Most Seats";
+
+        String seats1Label = Integer.valueOf(1).equals(minSeats) ? "✅ 1+" : "1+";
+        String seats2Label = Integer.valueOf(2).equals(minSeats) ? "✅ 2+" : "2+";
+        String seats3Label = Integer.valueOf(3).equals(minSeats) ? "✅ 3+" : "3+";
+        String seatsAnyLabel = minSeats == null ? "✅ Any" : "Any";
+
+        String price50Label  = java.math.BigDecimal.valueOf(50).equals(maxPrice)  ? "✅ ₱50"  : "₱50";
+        String price100Label = java.math.BigDecimal.valueOf(100).equals(maxPrice) ? "✅ ₱100" : "₱100";
+        String price150Label = java.math.BigDecimal.valueOf(150).equals(maxPrice) ? "✅ ₱150" : "₱150";
+        String priceAnyLabel = maxPrice == null ? "✅ Any" : "Any";
+
+        var rows = List.of(
+                List.of(BotMessageBuilder.button("── Sort By ──", "NOOP")),
+                List.of(
+                        BotMessageBuilder.button(earliestLabel,  "APPLY_FILTER:SORT:EARLIEST"),
+                        BotMessageBuilder.button(cheapestLabel,  "APPLY_FILTER:SORT:CHEAPEST"),
+                        BotMessageBuilder.button(mostSeatsLabel, "APPLY_FILTER:SORT:MOST_SEATS")
+                ),
+                List.of(BotMessageBuilder.button("── Min Seats ──", "NOOP")),
+                List.of(
+                        BotMessageBuilder.button(seats1Label,   "APPLY_FILTER:SEATS:1"),
+                        BotMessageBuilder.button(seats2Label,   "APPLY_FILTER:SEATS:2"),
+                        BotMessageBuilder.button(seats3Label,   "APPLY_FILTER:SEATS:3"),
+                        BotMessageBuilder.button(seatsAnyLabel, "APPLY_FILTER:SEATS:ANY")
+                ),
+                List.of(BotMessageBuilder.button("── Max Price ──", "NOOP")),
+                List.of(
+                        BotMessageBuilder.button(price50Label,  "APPLY_FILTER:PRICE:50"),
+                        BotMessageBuilder.button(price100Label, "APPLY_FILTER:PRICE:100"),
+                        BotMessageBuilder.button(price150Label, "APPLY_FILTER:PRICE:150"),
+                        BotMessageBuilder.button(priceAnyLabel, "APPLY_FILTER:PRICE:ANY")
+                ),
+                List.of(
+                        BotMessageBuilder.button("✅ Show Rides", "APPLY_FILTER:SHOW:NOW"),
+                        BotMessageBuilder.button("🔄 Reset",      "RESET_FILTER"),
+                        BotMessageBuilder.button("◀️ Back",       "MAIN_MENU")
+                )
+        );
+
+        bot.send(sendWithInline(chatId, "🔧 <b>Filter & Sort</b>", rows));
+    }
+
+    private void handleApplyFilter(Long chatId, String[] parts, Long carpoolUserId,
+                                   UserState state, CarpoolBot bot) {
+        if (parts.length < 3) return;
+
+        String filterType  = parts[1]; // SORT, SEATS, PRICE, SHOW
+        String filterValue = parts[2]; // EARLIEST, 1, 50, NOW, etc.
+
+        UserState updated = switch (filterType) {
+            case "SORT"  -> state.withFilterSortBy(filterValue);
+            case "SEATS" -> state.withFilterMinSeats(
+                    filterValue.equals("ANY") ? null : Integer.parseInt(filterValue));
+            case "PRICE" -> state.withFilterMaxPrice(
+                    filterValue.equals("ANY") ? null
+                            : new java.math.BigDecimal(filterValue));
+            default      -> state;
+        };
+
+        stateManager.save(chatId, updated);
+
+        // SHOW:NOW — apply filters and show results
+        if (filterType.equals("SHOW")) {
+            showFilteredRides(chatId, carpoolUserId, updated,
+                    updated.getSearchFrom(), updated.getSearchTo(), bot);
+            return;
+        }
+
+        // Otherwise re-show filter screen with updated selections
+        handleSearchFilter(chatId, carpoolUserId, updated, bot);
+    }
+
+    private void handleResetFilter(Long chatId, Long carpoolUserId,
+                                   UserState state, CarpoolBot bot) {
+        UserState reset = state
+                .withFilterSortBy(null)
+                .withFilterMinSeats(null)
+                .withFilterMaxPrice(null)
+                .withSearchPage(0);
+        stateManager.save(chatId, reset);
+        handleSearchFilter(chatId, carpoolUserId, reset, bot);
+    }
+
+    private void handleRidePage(Long chatId, String payload, Long carpoolUserId,
+                                UserState state, CarpoolBot bot) {
+        int page;
+        try {
+            page = Integer.parseInt(payload);
+        } catch (NumberFormatException e) {
+            page = 0;
+        }
+
+        stateManager.save(chatId, state.withSearchPage(page));
+
+        // Re-fetch rides with current filters
+        List<RideResponse> rides = rideService.getRidesByDirection(
+                state.getDirection(),
+                carpoolUserId,
+                state.getSearchFrom(),
+                state.getSearchTo(),
+                state.getFilterMaxPrice(),
+                state.getFilterMinSeats(),
+                state.getFilterSortBy());
+
+        String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? "🏠 Home → Work" : "🏢 Work → Home";
+
+        String filterSummary = buildFilterSummary(state);
+
+        bot.send(BotMessageBuilder.paginatedRideList(
+                chatId, rides,
+                "🔍 <b>Available Rides — " + dirLabel + "</b>",
+                page, filterSummary));
     }
 }

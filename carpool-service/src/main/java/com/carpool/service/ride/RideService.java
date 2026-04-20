@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Slf4j
 @Service
@@ -234,7 +236,9 @@ public class RideService {
 
     @Transactional(readOnly = true)
     public List<RideResponse> getRidesByDirection(RideDirection direction, Long excludeUserId,
-                                                  LocalDateTime from, LocalDateTime to) {
+                                                  LocalDateTime from, LocalDateTime to,
+                                                  BigDecimal maxPrice, Integer minSeats,
+                                                  String sortBy) {
         return rideRepository.findActiveByDirectionAndTimeRange(
                         direction,
                         List.of(RideStatus.ACTIVE),
@@ -242,8 +246,25 @@ public class RideService {
                         to)
                 .stream()
                 .filter(r -> !r.getDriver().getId().equals(excludeUserId))
+                // Filter by max price
+                .filter(r -> maxPrice == null
+                        || r.getContributionAmount().compareTo(maxPrice) <= 0)
+                // Filter by min seats
+                .filter(r -> minSeats == null
+                        || r.getAvailableSeats() >= minSeats)
                 .map(mapper::toRideResponse)
+                // Sort
+                .sorted(getComparator(sortBy))
                 .toList();
+    }
+
+    private Comparator<RideResponse> getComparator(String sortBy) {
+        if (sortBy == null) return Comparator.comparing(RideResponse::departureTime);
+        return switch (sortBy) {
+            case "CHEAPEST"    -> Comparator.comparing(RideResponse::contributionAmount);
+            case "MOST_SEATS"  -> Comparator.comparing(RideResponse::availableSeats).reversed();
+            default            -> Comparator.comparing(RideResponse::departureTime);
+        };
     }
 
     /**
