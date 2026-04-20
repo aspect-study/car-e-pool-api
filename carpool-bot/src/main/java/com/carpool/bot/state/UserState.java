@@ -63,4 +63,15 @@ public class UserState {
                 .carpoolUserId(carpoolUserId)
                 .build();
     }
+
+    // ── Search filters ────────────────────────────────────────────────
+    // Applied when user taps "Filter & Sort" on search results
+    private final BigDecimal filterMaxPrice;   // null = any price
+    private final Integer    filterMinSeats;   // null = any, 1/2/3
+    private final String     filterSortBy;     // EARLIEST, CHEAPEST, MOST_SEATS — default EARLIEST
+
+    // ── Pagination state ──────────────────────────────────────────────
+    // Current page in search results (0-indexed)
+    @Builder.Default
+    private final int searchPage = 0;
 }

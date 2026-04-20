@@ -23,11 +23,12 @@ public enum BotFlow {
     // ── Driver: Manage active ride ────────────────────────────────────────
     MANAGE_RIDE,
 
-    // ── Passenger: Search rides ───────────────────────────────────────────
+    // ── Passenger: Search rides ───────────────────────────────────────────────
     SEARCH_SELECT_DIRECTION,
     SEARCH_SELECT_TIME,
     SEARCH_RESULTS,
     SEARCH_VIEW_RIDE,
+    SEARCH_FILTER,              // user is on filter & sort screen
 
     // ── Passenger: My bookings ────────────────────────────────────────────
     MY_BOOKINGS

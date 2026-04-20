@@ -628,7 +628,10 @@ public class MessageHandler {
             LocalDateTime to   = from.plusHours(2);
 
             List<RideResponse> rides = rideService.getRidesByDirection(
-                    state.getDirection(), carpoolUserId, from, to);
+                    state.getDirection(), carpoolUserId, from, to,
+                    state.getFilterMaxPrice(),
+                    state.getFilterMinSeats(),
+                    state.getFilterSortBy());
 
             String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
                     ? "🏠 Home → Work" : "🏢 Work → Home";

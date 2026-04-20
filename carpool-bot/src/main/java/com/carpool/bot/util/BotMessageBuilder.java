@@ -280,5 +280,96 @@ public class BotMessageBuilder {
                 .build();
     }
 
+    /**
+     * Paginated ride list — shows 5 rides per page with prev/next buttons.
+     */
+    public static SendMessage paginatedRideList(Long chatId, List<RideResponse> allRides,
+                                                String header, int page,
+                                                String filterSummary) {
+        int pageSize   = 5;
+        int totalPages = (int) Math.ceil((double) allRides.size() / pageSize);
+        int safePage   = Math.max(0, Math.min(page, totalPages - 1));
+        int fromIdx    = safePage * pageSize;
+        int toIdx      = Math.min(fromIdx + pageSize, allRides.size());
+
+        List<RideResponse> pageRides = allRides.subList(fromIdx, toIdx);
+
+        StringBuilder sb = new StringBuilder(header);
+        sb.append(" <b>(").append(allRides.size()).append(" found)</b>");
+
+        if (filterSummary != null && !filterSummary.isBlank()) {
+            sb.append("\n").append(filterSummary);
+        }
+
+        sb.append(" — Page ").append(safePage + 1).append("/").append(Math.max(1, totalPages));
+        sb.append("\n\n");
+
+        for (int i = 0; i < pageRides.size(); i++) {
+            RideResponse ride = pageRides.get(i);
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ₱%.2f\n",
+                    fromIdx + i + 1,
+                    escape(ride.originHub().name()),
+                    escape(ride.destinationHub().name()),
+                    ride.departureTime().atZone(MANILA).format(
+                            DateTimeFormatter.ofPattern("MMM d h:mma")),
+                    ride.availableSeats(),
+                    ride.contributionAmount()));
+        }
+
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+
+        // View buttons
+        for (int i = 0; i < pageRides.size(); i++) {
+            rows.add(new InlineKeyboardRow(InlineKeyboardButton.builder()
+                    .text("View #" + (fromIdx + i + 1))
+                    .callbackData("VIEW_RIDE:" + pageRides.get(i).id())
+                    .build()));
+        }
+
+        // Pagination controls
+        List<InlineKeyboardButton> navButtons = new ArrayList<>();
+        if (safePage > 0) {
+            navButtons.add(InlineKeyboardButton.builder()
+                    .text("◀️ Prev")
+                    .callbackData("RIDE_PAGE:" + (safePage - 1))
+                    .build());
+        }
+        if (totalPages > 1) {
+            navButtons.add(InlineKeyboardButton.builder()
+                    .text("📄 " + (safePage + 1) + "/" + totalPages)
+                    .callbackData("NOOP")
+                    .build());
+        }
+        if (safePage < totalPages - 1) {
+            navButtons.add(InlineKeyboardButton.builder()
+                    .text("Next ▶️")
+                    .callbackData("RIDE_PAGE:" + (safePage + 1))
+                    .build());
+        }
+        if (!navButtons.isEmpty()) {
+            rows.add(new InlineKeyboardRow(navButtons));
+        }
+
+        // Filter + menu buttons
+        rows.add(new InlineKeyboardRow(
+                InlineKeyboardButton.builder()
+                        .text("🔧 Filter & Sort")
+                        .callbackData("SEARCH_FILTER")
+                        .build(),
+                InlineKeyboardButton.builder()
+                        .text("🏠 Menu")
+                        .callbackData("MAIN_MENU")
+                        .build()));
+
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(sb.toString())
+                .parseMode("HTML")
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboard(rows)
+                        .build())
+                .build();
+    }
+
     private BotMessageBuilder() {}
 }
