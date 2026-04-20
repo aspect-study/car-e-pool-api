@@ -1079,22 +1079,49 @@ public class CallbackHandler {
                     ? b.dropoffWaypoint().hub().name()
                     : b.ride().destinationHub().name();
 
+            String statusLabel = switch (b.status().name()) {
+                case "CONFIRMED"              -> "✅ Confirmed";
+                case "PENDING"                -> "⏳ Awaiting your approval";
+                case "CANCELLED_BY_PASSENGER" -> "❌ Cancelled by passenger";
+                case "COMPLETED"              -> "🏁 Completed";
+                default                       -> b.status().name();
+            };
+
+            String paymentLabel = switch (b.paymentStatus().name()) {
+                case "PAID"           -> "✅ Paid";
+                case "PARTIALLY_PAID" -> "⚠️ Partially paid";
+                default               -> "❌ Unpaid";
+            };
+
             String detail = String.format(
                     "👤 <b>Passenger Details</b>\n\n" +
                             "Name: <b>%s</b>%s\n" +
+                            "📍 Route: %s → %s\n" +
+                            "🕐 Departure: %s\n" +
                             "🚏 Pickup: <b>%s</b>\n" +
                             "🏁 Dropoff: <b>%s</b>\n" +
                             "🪑 Seats: %d\n" +
                             "💵 Contribution: ₱%.2f\n" +
+                            "💳 Payment: %s\n" +
+                            "%s" +
                             "📊 Status: %s",
                     BotMessageBuilder.escape(b.passenger().fullName()),
                     b.passenger().telegramHandle() != null
                             ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")" : "",
+                    BotMessageBuilder.escape(b.ride().originHub().name()),
+                    BotMessageBuilder.escape(b.ride().destinationHub().name()),
+                    b.ride().departureTime()
+                            .atZone(ZoneId.of("Asia/Manila"))
+                            .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a")),
                     BotMessageBuilder.escape(pickup),
                     BotMessageBuilder.escape(dropoff),
                     b.seatsReserved(),
                     b.contributionDue(),
-                    b.status().name());
+                    paymentLabel,
+                    b.passengerMessage() != null
+                            ? "💬 Message: \"" + BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
+                            : "",
+                    statusLabel);
 
             var rows = List.of(List.of(
                     InlineKeyboardButton.builder()
