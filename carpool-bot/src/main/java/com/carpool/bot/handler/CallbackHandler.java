@@ -273,7 +273,7 @@ public class CallbackHandler {
 
     private void handleStartFindRide(Long chatId, Long carpoolUserId,
                                      UserState state, CarpoolBot bot) {
-        // Driver with active ride cannot find a ride as passenger
+        // Driver with active ride cannot find a ride
         long activeRideCount = rideService.getMyRides(carpoolUserId).stream()
                 .filter(r -> r.status().name().equals("ACTIVE")
                         || r.status().name().equals("FULL")
@@ -284,6 +284,15 @@ public class CallbackHandler {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ <b>You have an active ride posted.</b>\n\n" +
                             "Please cancel or complete your ride first before looking for a ride as a passenger."));
+            return;
+        }
+
+        // If direction already set from main menu — skip direction selection
+        if (state.getDirection() != null) {
+            stateManager.save(chatId, state
+                    .withCarpoolUserId(carpoolUserId)
+                    .withFlow(BotFlow.SEARCH_SELECT_TIME));
+            askForTimeWindow(chatId, bot);
             return;
         }
 
