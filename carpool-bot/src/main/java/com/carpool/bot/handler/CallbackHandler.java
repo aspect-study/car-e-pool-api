@@ -389,11 +389,16 @@ public class CallbackHandler {
                     new CreateBookingRequest(1, null, null, passengerMessage),
                     carpoolUserId);
 
-            bot.send(BotMessageBuilder.text(chatId,
+            bot.send(sendWithInline(chatId,
                     "⏳ <b>Booking Request Sent!</b>\n\n" +
                             "Waiting for the driver to accept your request.\n" +
-                            "You'll be notified once the driver responds.\n\n" +
-                            "Tap 📜 My Bookings to track your request."));
+                            "You'll be notified once the driver responds.",
+                    List.of(
+                            List.of(
+                                    BotMessageBuilder.button("📜 My Bookings", "MY_BOOKINGS"),
+                                    BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU")
+                            )
+                    )));
 
         } catch (Exception e) {
             log.error("Booking failed: rideId={} userId={} error={}",
@@ -531,7 +536,7 @@ public class CallbackHandler {
 
         if (!pastBookings.isEmpty()) {
             rows.add(List.of(InlineKeyboardButton.builder()
-                    .text("📂 Past Bookings (" + pastBookings.size() + ")")
+                    .text("📂 Booking History (" + pastBookings.size() + ")")
                     .callbackData("PAST_BOOKINGS")
                     .build()));
         }
@@ -645,11 +650,11 @@ public class CallbackHandler {
 
         if (past.isEmpty()) {
             bot.send(BotMessageBuilder.text(chatId,
-                    "📂 <b>Past Bookings</b>\n\n<i>No past bookings.</i>"));
+                    "📂 <b>Booking History</b>\n\n<i>No booking history yet.</i>"));
             return;
         }
 
-        StringBuilder sb = new StringBuilder("📂 <b>Past Bookings</b>\n\n");
+        StringBuilder sb = new StringBuilder("📂 <b>Booking History</b>\n\n");
         for (int i = 0; i < past.size(); i++) {
             BookingResponse b = past.get(i);
             String statusLabel = switch (b.status().name()) {
@@ -692,23 +697,79 @@ public class CallbackHandler {
             return;
         }
 
-        StringBuilder sb = new StringBuilder("📋 <b>Passengers on your ride</b>\n\n");
+        // Separate confirmed and pending
+        List<BookingResponse> confirmed = bookings.stream()
+                .filter(b -> b.status() == BookingStatus.CONFIRMED)
+                .toList();
+        List<BookingResponse> pending = bookings.stream()
+                .filter(b -> b.status() == BookingStatus.PENDING)
+                .toList();
+
+        StringBuilder sb = new StringBuilder("📋 <b>Ride Bookings</b>\n\n");
+
+        // Summary line
+        sb.append(String.format("✅ Confirmed: <b>%d</b>  ⏳ Pending: <b>%d</b>\n\n",
+                confirmed.size(), pending.size()));
+
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        int index = 1;
 
-        for (int i = 0; i < bookings.size(); i++) {
-            BookingResponse b = bookings.get(i);
-            sb.append(String.format("<b>%d.</b> %s%s | 🪑 %d seat(s) | ₱%.2f\n",
-                    i + 1,
-                    BotMessageBuilder.escape(b.passenger().fullName()),
-                    b.passenger().telegramHandle() != null
-                            ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")" : "",
-                    b.seatsReserved(),
-                    b.contributionDue()));
+        // Confirmed section
+        if (!confirmed.isEmpty()) {
+            sb.append("─── <b>Confirmed</b> ───\n");
+            for (BookingResponse b : confirmed) {
+                String paxHandle = b.passenger().telegramHandle() != null
+                        ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                        : "";
+                String pickup = b.pickupWaypoint() != null
+                        ? b.pickupWaypoint().hub().name()
+                        : b.ride().originHub().name();
 
-            rows.add(List.of(InlineKeyboardButton.builder()
-                    .text("View #" + (i + 1) + " — " + b.passenger().fullName())
-                    .callbackData("VIEW_DRIVER_BOOKING:" + b.id())
-                    .build()));
+                sb.append(String.format("<b>%d.</b> %s%s\n" +
+                                "    🚏 %s | 🪑 %d | ₱%.2f\n",
+                        index,
+                        BotMessageBuilder.escape(b.passenger().fullName()),
+                        paxHandle,
+                        BotMessageBuilder.escape(pickup),
+                        b.seatsReserved(),
+                        b.contributionDue()));
+
+                rows.add(List.of(InlineKeyboardButton.builder()
+                        .text("✅ #" + index + " — " + b.passenger().fullName())
+                        .callbackData("VIEW_DRIVER_BOOKING:" + b.id())
+                        .build()));
+                index++;
+            }
+            sb.append("\n");
+        }
+
+        // Pending section
+        if (!pending.isEmpty()) {
+            sb.append("─── <b>Pending Approval</b> ───\n");
+            for (BookingResponse b : pending) {
+                String paxHandle = b.passenger().telegramHandle() != null
+                        ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                        : "";
+                long remainingMinutes = b.expiresAt() != null
+                        ? java.time.Duration.between(
+                        java.time.Instant.now(), b.expiresAt()).toMinutes()
+                        : 0;
+
+                sb.append(String.format("<b>%d.</b> %s%s\n" +
+                                "    🪑 %d | ₱%.2f | ⏰ %d min\n",
+                        index,
+                        BotMessageBuilder.escape(b.passenger().fullName()),
+                        paxHandle,
+                        b.seatsReserved(),
+                        b.contributionDue(),
+                        Math.max(0, remainingMinutes)));
+
+                rows.add(List.of(InlineKeyboardButton.builder()
+                        .text("⏳ #" + index + " — " + b.passenger().fullName())
+                        .callbackData("VIEW_PENDING:" + b.id())
+                        .build()));
+                index++;
+            }
         }
 
         rows.add(List.of(BotMessageBuilder.menuButtonRow().get(0)));

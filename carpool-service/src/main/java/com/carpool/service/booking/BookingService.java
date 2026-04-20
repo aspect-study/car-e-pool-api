@@ -361,6 +361,10 @@ public class BookingService {
                         List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING))
                 .stream()
                 .map(mapper::toBookingResponse)
+                // Only show bookings for active rides
+                .filter(b -> b.ride().status() == RideStatus.ACTIVE
+                        || b.ride().status() == com.carpool.domain.enums.RideStatus.FULL
+                        || b.ride().status() == com.carpool.domain.enums.RideStatus.DEPARTED)
                 .toList();
     }
 

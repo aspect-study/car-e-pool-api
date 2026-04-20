@@ -257,4 +257,36 @@ public class RideService {
 
         log.info("Auto-departed {} stale rides", staleRides.size());
     }
+
+    /**
+     * Auto-completes rides that have been DEPARTED for 2+ hours.
+     * Transitions DEPARTED → COMPLETED and marks all bookings as COMPLETED.
+     */
+    @Transactional
+    public void completeStaleRides() {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(2);
+        List<Ride> departedRides = rideRepository
+                .findByStatusAndDepartureTimeBefore(RideStatus.DEPARTED, cutoff);
+
+        if (departedRides.isEmpty()) {
+            log.debug("No stale departed rides to auto-complete");
+            return;
+        }
+
+        for (Ride ride : departedRides) {
+            ride.setStatus(RideStatus.COMPLETED);
+            rideRepository.save(ride);
+
+            List<Booking> activeBookings = bookingRepository.findActiveBookingsForRide(ride.getId());
+            activeBookings.forEach(b -> {
+                b.setStatus(BookingStatus.COMPLETED);
+                bookingRepository.save(b);
+            });
+
+            log.info("Auto-completed stale ride: id={} departureTime={}",
+                    ride.getId(), ride.getDepartureTime());
+        }
+
+        log.info("Auto-completed {} stale departed rides", departedRides.size());
+    }
 }
