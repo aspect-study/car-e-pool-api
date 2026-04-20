@@ -131,4 +131,6 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
       AND r.departureTime < :cutoff
     """)
     List<Ride> findStaleActiveRides(@Param("cutoff") LocalDateTime cutoff);
+
+    List<Ride> findByStatusAndDepartureTimeBefore(RideStatus status, LocalDateTime cutoff);
 }

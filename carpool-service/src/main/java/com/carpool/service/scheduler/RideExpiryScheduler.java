@@ -27,4 +27,5 @@ public class RideExpiryScheduler {
         log.debug("Running ride expiry check...");
         rideService.expireStaleRides();
     }
+
 }
