@@ -108,11 +108,11 @@ public class Booking extends BaseEntity {
     private String passengerMessage;
 
     /**
-     * Optional reason from driver when declining.
-     * NULL = no reason given (MVP: button-only decline).
+     * Reason for cancellation or decline.
+     * Set by driver when declining, or by passenger when cancelling.
      */
     @Column(name = "decline_reason", length = 255)
-    private String declineReason;
+    private String cancellationReason;
 
     /**
      * Number of reminders sent to driver (0-3).

@@ -68,20 +68,18 @@ public class NotificationService {
             return;
         }
 
-        Ride ride   = booking.getRide();
-        User driver = ride.getDriver();
-        User pax    = booking.getPassenger();
+        Ride ride = booking.getRide();
+        User pax  = booking.getPassenger();
 
-        sendAndRecord(driver, NotificationTypes.BOOKING_RECEIVED,
-                buildDriverBookingMessage(booking),
-                Map.of("bookingId", booking.getId(), "rideId", ride.getId(),
-                        "passengerName", pax.getFullName(),
-                        "seats", booking.getSeatsReserved()));
-
+        // Notify passenger only — driver already knows (they just accepted)
         sendAndRecord(pax, NotificationTypes.BOOKING_CONFIRMED,
                 buildPassengerConfirmationMessage(booking),
-                Map.of("bookingId", booking.getId(), "rideId", ride.getId(),
+                Map.of("bookingId", booking.getId(),
+                        "rideId",    ride.getId(),
                         "contribution", booking.getContributionDue()));
+
+        log.info("Booking confirmed notification sent to passenger: bookingId={} passengerId={}",
+                booking.getId(), pax.getId());
     }
 
     @Async
@@ -202,11 +200,6 @@ public class NotificationService {
                                         "callback_data", "MAIN_MENU")
                         )
                 ));
-
-        // Notify passenger — request sent, awaiting approval
-        sendAndRecord(pax, NotificationTypes.BOOKING_CONFIRMED,
-                buildPassengerRequestSentMessage(booking),
-                Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
 
         // Record notification for driver
         Notification notification = Notification.builder()

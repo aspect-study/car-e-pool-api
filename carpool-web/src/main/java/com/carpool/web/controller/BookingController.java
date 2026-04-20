@@ -84,7 +84,7 @@ public class BookingController {
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
 
-        BookingResponse booking = bookingService.cancelBooking(id, currentUser.getUserId());
+        BookingResponse booking = bookingService.cancelBooking(id, currentUser.getUserId(), null);
         return ResponseEntity.ok(ApiResponse.ok(booking));
     }
 
