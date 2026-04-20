@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -134,7 +135,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
       AND b.reminderCount < 3
       AND b.expiresAt > :now
     """)
-    List<Booking> findPendingNeedingReminder(@Param("now") java.time.Instant now);
+    List<Booking> findPendingNeedingReminder(@Param("now") Instant now);
 
     /**
      * Find PENDING bookings that have exceeded their expiry time
@@ -146,10 +147,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     JOIN FETCH r.driver
     JOIN FETCH b.passenger
     WHERE b.status = 'PENDING'
-      AND b.reminderCount >= 3
       AND b.expiresAt < :now
     """)
-    List<Booking> findExpiredPendingBookings(@Param("now") java.time.Instant now);
+    List<Booking> findExpiredPendingBookings(@Param("now") Instant now);
 
     /**
      * Count pending requests for a driver's active ride.

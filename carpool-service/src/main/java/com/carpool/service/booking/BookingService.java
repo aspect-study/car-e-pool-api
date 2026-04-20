@@ -137,7 +137,7 @@ public class BookingService {
      * Restores seats to the ride — transitions FULL → ACTIVE if seats freed.
      */
     @Transactional
-    public BookingResponse cancelBooking(Long bookingId, Long passengerUserId) {
+    public BookingResponse cancelBooking(Long bookingId, Long passengerUserId, String reason) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
 
@@ -159,6 +159,7 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CANCELLED_BY_PASSENGER);
+        booking.setCancellationReason(reason);
 
         // Restore seats using pessimistic lock on the ride
         Ride ride = rideRepository.findByIdWithLock(booking.getRide().getId())
@@ -251,7 +252,7 @@ public class BookingService {
      * Transitions PENDING → DECLINED and restores seats.
      */
     @Transactional
-    public BookingResponse declineBooking(Long bookingId, Long driverUserId) {
+    public BookingResponse declineBooking(Long bookingId, Long driverUserId, String reason) {
         Booking booking = bookingRepository.findByIdWithDetails(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
 
@@ -266,6 +267,7 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.DECLINED);
+        booking.setCancellationReason(reason);
 
         // Restore seats using pessimistic lock
         Ride ride = rideRepository.findByIdWithLock(booking.getRide().getId())

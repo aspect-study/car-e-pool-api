@@ -95,6 +95,7 @@ public class CallbackHandler {
             case "DRIVER_BOOKINGS"      -> handleDriverBookings(chatId, carpoolUserId, bot);
             case "TIME"                 -> handleTimeSelection(chatId, payload, carpoolUserId, state, bot);
             case "CANCEL_BOOKING"       -> handleCancelBooking(chatId, entityId, carpoolUserId, bot);
+            case "CANCEL_BOOKING_REASON" -> handleCancelBookingWithReason(chatId, parts, carpoolUserId, bot);
             case "DEPART_RIDE"          -> handleDepartRide(chatId, entityId, carpoolUserId, bot);
             case "COMPLETE_RIDE"        -> handleCompleteRide(chatId, entityId, carpoolUserId, bot);
             case "VIEW_DRIVER_BOOKING"  -> handleViewDriverBooking(chatId, entityId, carpoolUserId, bot);
@@ -106,6 +107,7 @@ public class CallbackHandler {
             case "SKIP_NOTES"           -> handleSkipNotes(chatId, carpoolUserId, state, bot);
             case "ACCEPT_BOOKING"       -> handleAcceptBooking(chatId, entityId, carpoolUserId, bot);
             case "DECLINE_BOOKING"      -> handleDeclineBooking(chatId, entityId, carpoolUserId, bot);
+            case "DECLINE_BOOKING_REASON" -> handleDeclineBookingWithReason(chatId, parts, carpoolUserId, bot);
             case "PENDING_REQUESTS"     -> handlePendingRequests(chatId, carpoolUserId, bot);
             case "VIEW_PENDING"         -> handleViewPendingRequest(chatId, entityId, carpoolUserId, bot);
             case "BOOK_NOW"             -> executeBooking(chatId, entityId, carpoolUserId, null, bot);
@@ -757,8 +759,43 @@ public class CallbackHandler {
 
     private void handleDeclineBooking(Long chatId, Long bookingId,
                                       Long carpoolUserId, CarpoolBot bot) {
+        var rows = List.of(
+                List.of(BotMessageBuilder.button("🚗 Fully booked already", "DECLINE_BOOKING_REASON:" + bookingId + ":FULL")),
+                List.of(BotMessageBuilder.button("📍 Route change",          "DECLINE_BOOKING_REASON:" + bookingId + ":ROUTE_CHANGE")),
+                List.of(BotMessageBuilder.button("🔧 Vehicle issue",         "DECLINE_BOOKING_REASON:" + bookingId + ":VEHICLE_ISSUE")),
+                List.of(BotMessageBuilder.button("❌ Other reason",           "DECLINE_BOOKING_REASON:" + bookingId + ":OTHER")),
+                List.of(BotMessageBuilder.button("◀️ Back",                  "VIEW_PENDING:" + bookingId))
+        );
+
+        bot.send(sendWithInline(chatId,
+                "❓ <b>Why are you declining this request?</b>", rows));
+    }
+
+    private void handleDeclineBookingWithReason(Long chatId, String[] parts,
+                                                Long carpoolUserId, CarpoolBot bot) {
+        if (parts.length < 3) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Invalid decline request."));
+            return;
+        }
+
+        Long bookingId;
         try {
-            bookingService.declineBooking(bookingId, carpoolUserId);
+            bookingId = Long.parseLong(parts[1]);
+        } catch (NumberFormatException e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Invalid booking ID."));
+            return;
+        }
+
+        String reasonCode = parts[2];
+        String reason = switch (reasonCode) {
+            case "FULL"          -> "Already fully booked";
+            case "ROUTE_CHANGE"  -> "Route change";
+            case "VEHICLE_ISSUE" -> "Vehicle issue";
+            default              -> "Other reason";
+        };
+
+        try {
+            bookingService.declineBooking(bookingId, carpoolUserId, reason);
             bot.send(BotMessageBuilder.text(chatId,
                     "❌ <b>Booking Declined</b>\n\n" +
                             "The passenger has been notified and their seat has been released."));
@@ -874,8 +911,44 @@ public class CallbackHandler {
 
     private void handleCancelBooking(Long chatId, Long bookingId,
                                      Long carpoolUserId, CarpoolBot bot) {
+        var rows = List.of(
+                List.of(BotMessageBuilder.button("🔄 Found another ride", "CANCEL_BOOKING_REASON:" + bookingId + ":FOUND_OTHER")),
+                List.of(BotMessageBuilder.button("📅 Change of plans",    "CANCEL_BOOKING_REASON:" + bookingId + ":CHANGE_PLANS")),
+                List.of(BotMessageBuilder.button("⏰ Running late",        "CANCEL_BOOKING_REASON:" + bookingId + ":RUNNING_LATE")),
+                List.of(BotMessageBuilder.button("❌ Other reason",        "CANCEL_BOOKING_REASON:" + bookingId + ":OTHER")),
+                List.of(BotMessageBuilder.button("◀️ Back",               "VIEW_BOOKING:" + bookingId))
+        );
+
+        bot.send(sendWithInline(chatId,
+                "❓ <b>Why are you cancelling?</b>", rows));
+    }
+
+    private void handleCancelBookingWithReason(Long chatId, String[] parts,
+                                               Long carpoolUserId, CarpoolBot bot) {
+        // parts[0] = CANCEL_BOOKING_REASON, parts[1] = bookingId, parts[2] = reason
+        if (parts.length < 3) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Invalid cancel request."));
+            return;
+        }
+
+        Long bookingId;
         try {
-            bookingService.cancelBooking(bookingId, carpoolUserId);
+            bookingId = Long.parseLong(parts[1]);
+        } catch (NumberFormatException e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Invalid booking ID."));
+            return;
+        }
+
+        String reasonCode = parts[2];
+        String reason = switch (reasonCode) {
+            case "FOUND_OTHER"  -> "Found another ride";
+            case "CHANGE_PLANS" -> "Change of plans";
+            case "RUNNING_LATE" -> "Running late";
+            default             -> "Other reason";
+        };
+
+        try {
+            bookingService.cancelBooking(bookingId, carpoolUserId, reason);
             stateManager.reset(chatId);
             bot.send(BotMessageBuilder.text(chatId,
                     "✅ <b>Booking Cancelled</b>\n\n" +
