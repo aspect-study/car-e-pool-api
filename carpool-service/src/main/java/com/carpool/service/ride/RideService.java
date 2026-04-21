@@ -126,6 +126,11 @@ public class RideService {
     @Transactional
     public RideResponse updateRideStatus(Long rideId, UpdateRideStatusRequest request,
                                          Long requestingUserId) {
+        return updateRideStatus(rideId, request, requestingUserId, null);
+    }
+
+    public RideResponse updateRideStatus(Long rideId, UpdateRideStatusRequest request,
+                                         Long requestingUserId, String cancellationReason) {
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RideNotFoundException(rideId));
 
@@ -148,7 +153,7 @@ public class RideService {
                 bookingRepository.save(b);
             });
             log.info("Cancelled {} bookings for rideId={}", activeBookings.size(), rideId);
-            eventPublisher.publishEvent(new RideEvents.RideCancelledEvent(saved));
+            eventPublisher.publishEvent(new RideEvents.RideCancelledEvent(saved, cancellationReason));
         } else if (request.status() == RideStatus.COMPLETED) {
             log.info("Ride completed: id={} by driverId={}", rideId, requestingUserId);
 

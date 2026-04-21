@@ -135,16 +135,26 @@ public class NotificationService {
         }
 
         Ride ride = cancelledBookings.get(0).getRide();
+        User driver = ride.getDriver();
+        String driverHandle = driver.getTelegramHandle() != null
+                ? " (@" + escape(driver.getTelegramHandle()) + ")"
+                : "";
 
         String msg = String.format(
                 "⚠️ <b>Ride Cancelled</b>\n\n" +
-                        "Unfortunately, the driver has cancelled the following ride:\n\n" +
+                        "👤 Driver: <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
-                        "🕐 %s\n\n" +
+                        "🕐 %s\n" +
+                        "%s\n\n" +
                         "Please look for another carpool or arrange alternative transport.",
+                escape(driver.getFullName()),
+                driverHandle,
                 escape(ride.getOriginHub().getName()),
                 escape(ride.getDestinationHub().getName()),
-                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
+                event.reason() != null
+                        ? "📝 Reason: <i>" + escape(event.reason()) + "</i>"
+                        : "");
 
         for (Booking booking : cancelledBookings) {
             String pickup = booking.getPickupWaypoint() != null
