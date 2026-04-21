@@ -133,4 +133,30 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
     List<Ride> findStaleActiveRides(@Param("cutoff") LocalDateTime cutoff);
 
     List<Ride> findByStatusAndDepartureTimeBefore(RideStatus status, LocalDateTime cutoff);
+
+    /**
+     * Count rides by driver and status — used for profile stats.
+     */
+    @Query("SELECT COUNT(r) FROM Ride r WHERE r.driver.id = :driverId AND r.status = :status")
+    int countByDriverIdAndStatus(@Param("driverId") Long driverId,
+                                 @Param("status") RideStatus status);
+
+    /**
+     * Count total rides posted by driver — all statuses.
+     */
+    @Query("SELECT COUNT(r) FROM Ride r WHERE r.driver.id = :driverId")
+    int countByDriverId(@Param("driverId") Long driverId);
+
+    /**
+     * Sum of seats reserved on completed bookings for driver's rides.
+     * Represents total passengers served.
+     */
+    @Query("""
+    SELECT COALESCE(SUM(b.seatsReserved), 0)
+    FROM Booking b
+    JOIN b.ride r
+    WHERE r.driver.id = :driverId
+      AND b.status = 'COMPLETED'
+    """)
+    int sumPassengersServedByDriverId(@Param("driverId") Long driverId);
 }

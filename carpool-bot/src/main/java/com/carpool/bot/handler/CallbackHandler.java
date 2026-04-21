@@ -16,6 +16,7 @@ import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.BookingResponse;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.note.DriverNoteService;
+import com.carpool.service.profile.ProfileService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ public class CallbackHandler {
     private final BookingService bookingService;
     private final PostRideHelper postRideHelper;
     private final DriverNoteService driverNoteService;
+    private final ProfileService profileService;
 
     public void handle(CallbackQuery callback, CarpoolBot bot) {
         Long chatId     = callback.getMessage().getChatId();
@@ -122,6 +124,7 @@ public class CallbackHandler {
             case "RESET_FILTER"         -> handleResetFilter(chatId, carpoolUserId, state, bot);
             case "RIDE_PAGE"            -> handleRidePage(chatId, payload, carpoolUserId, state, bot);
             case "MY_RIDES"             -> showMyRides(chatId, carpoolUserId, bot);
+            case "MY_PROFILE"           -> handleMyProfile(chatId, carpoolUserId, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
@@ -218,6 +221,10 @@ public class CallbackHandler {
                         BotMessageBuilder.button("🚗 My Rides", "MY_RIDES")
                 ));
             }
+
+            rows.add(List.of(
+                    BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
+            ));
 
             bot.send(sendWithInline(chatId, prompt, rows));
         }
@@ -1739,5 +1746,72 @@ public class CallbackHandler {
                 .build()));
 
         bot.send(sendWithInline(chatId, sb.toString(), rows));
+    }
+
+    // ── Profile ───────────────────────────────────────────────────────
+
+    private void handleMyProfile(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+        try {
+            com.carpool.service.dto.response.ProfileStatsResponse stats =
+                    profileService.getProfileStats(carpoolUserId);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("👤 <b>My Profile</b>\n\n");
+
+            // Basic info
+            sb.append(String.format("<b>%s</b>%s\n",
+                    BotMessageBuilder.escape(stats.fullName()),
+                    stats.telegramHandle() != null
+                            ? " (@" + BotMessageBuilder.escape(stats.telegramHandle()) + ")"
+                            : ""));
+            sb.append(stats.roleLabel()).append("\n");
+            sb.append("📅 Member since: ").append(stats.memberSince()).append("\n");
+
+            // Driver stats
+            if (stats.driverRidesPosted() != null) {
+                sb.append("\n🏆 <b>Driver Stats</b>\n");
+                if (stats.driverCompletionRate() != null) {
+                    sb.append(String.format("⭐ %d%% Completion Rate\n",
+                            stats.driverCompletionRate()));
+                }
+                sb.append(String.format("🚗 Rides posted: %d\n", stats.driverRidesPosted()));
+                sb.append(String.format("✅ Completed: %d\n",    stats.driverCompleted()));
+                sb.append(String.format("👥 Passengers served: %d\n", stats.driverPassengersServed()));
+                if (stats.driverCancelled() > 0) {
+                    sb.append(String.format("❌ Cancelled: %d\n", stats.driverCancelled()));
+                }
+            }
+
+            // Passenger stats
+            if (stats.passengerBookingsMade() != null) {
+                sb.append("\n🧳 <b>Passenger Stats</b>\n");
+                if (stats.passengerCompletionRate() != null) {
+                    sb.append(String.format("⭐ %d%% Completion Rate\n",
+                            stats.passengerCompletionRate()));
+                }
+                sb.append(String.format("📦 Bookings made: %d\n",  stats.passengerBookingsMade()));
+                sb.append(String.format("✅ Completed: %d\n",       stats.passengerCompleted()));
+                if (stats.passengerCancelledByMe() > 0) {
+                    sb.append(String.format("❌ Cancelled by me: %d\n", stats.passengerCancelledByMe()));
+                }
+            }
+
+            // New member — no stats yet
+            if (stats.driverRidesPosted() == null && stats.passengerBookingsMade() == null) {
+                sb.append("\n<i>No activity yet. Post or book a ride to get started!</i>");
+            }
+
+            var rows = List.of(List.of(
+                    BotMessageBuilder.button("🔄 Refresh", "MY_PROFILE"),
+                    BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
+            ));
+
+            bot.send(sendWithInline(chatId, sb.toString(), rows));
+
+        } catch (Exception e) {
+            log.error("Failed to load profile for userId={}: {}", carpoolUserId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not load profile. Please try again."));
+        }
     }
 }
