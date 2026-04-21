@@ -129,6 +129,7 @@ public class RideService {
         return updateRideStatus(rideId, request, requestingUserId, null);
     }
 
+    @Transactional
     public RideResponse updateRideStatus(Long rideId, UpdateRideStatusRequest request,
                                          Long requestingUserId, String cancellationReason) {
         Ride ride = rideRepository.findById(rideId)
