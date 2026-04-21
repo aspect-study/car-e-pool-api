@@ -30,7 +30,7 @@ public final class RideEvents {
      * Published when a driver cancels an entire ride.
      * Triggers: notify ALL confirmed passengers (ride cancelled).
      */
-    public record RideCancelledEvent(Ride ride) {}
+    public record RideCancelledEvent(Ride ride, String reason) {}
 
     /**
      * Published when a driver marks a ride as completed.

@@ -88,7 +88,7 @@ public class CallbackHandler {
             case "VIEW_RIDE"            -> handleViewRide(chatId, entityId, carpoolUserId, state, bot);
             case "BOOK_RIDE"            -> handleBookRide(chatId, entityId, carpoolUserId, bot);
             case "CANCEL_RIDE"          -> handleCancelRide(chatId, entityId, carpoolUserId, bot);
-            case "CONFIRM_CANCEL_RIDE"  -> executeCancelRide(chatId, entityId, carpoolUserId, bot);
+            case "CONFIRM_CANCEL_RIDE"  -> handleConfirmCancelRide(chatId, parts, carpoolUserId, bot);
             case "RIDE_BOOKINGS"        -> handleDriverBookings(chatId, carpoolUserId, bot);
             case "MY_BOOKINGS"          -> handleMyBookings(chatId, carpoolUserId, bot);
             case "REPOST_RIDE"          -> handleRepostRide(chatId, entityId, carpoolUserId, state, bot);
@@ -590,16 +590,19 @@ public class CallbackHandler {
 
                 sb.append("\n⚠️ This cannot be undone.");
 
-                var rows = List.of(List.of(
-                        BotMessageBuilder.button("⚠️ Yes, Cancel Ride", "CONFIRM_CANCEL_RIDE:" + rideId),
-                        BotMessageBuilder.button("◀️ Keep Ride",         "MAIN_MENU")
-                ));
+                var rows = List.of(
+                        List.of(BotMessageBuilder.button("🔧 Vehicle issue",   "CONFIRM_CANCEL_RIDE:" + rideId + ":VEHICLE_ISSUE")),
+                        List.of(BotMessageBuilder.button("📍 Route change",    "CONFIRM_CANCEL_RIDE:" + rideId + ":ROUTE_CHANGE")),
+                        List.of(BotMessageBuilder.button("🏠 Personal reason", "CONFIRM_CANCEL_RIDE:" + rideId + ":PERSONAL")),
+                        List.of(BotMessageBuilder.button("❌ Other reason",     "CONFIRM_CANCEL_RIDE:" + rideId + ":OTHER")),
+                        List.of(BotMessageBuilder.button("◀️ Keep Ride",       "MAIN_MENU"))
+                );
 
                 bot.send(sendWithInline(chatId, sb.toString(), rows));
                 return;
             }
 
-            executeCancelRide(chatId, rideId, carpoolUserId, bot);
+            executeCancelRide(chatId, rideId, carpoolUserId, null, bot);
 
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
@@ -608,10 +611,37 @@ public class CallbackHandler {
         }
     }
 
-    private void executeCancelRide(Long chatId, Long rideId, Long carpoolUserId, CarpoolBot bot) {
+    private void handleConfirmCancelRide(Long chatId, String[] parts,
+                                         Long carpoolUserId, CarpoolBot bot) {
+        if (parts.length < 3) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Invalid cancel request."));
+            return;
+        }
+
+        Long rideId;
+        try {
+            rideId = Long.parseLong(parts[1]);
+        } catch (NumberFormatException e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Invalid ride ID."));
+            return;
+        }
+
+        String reasonCode = parts[2];
+        String reason = switch (reasonCode) {
+            case "VEHICLE_ISSUE" -> "Vehicle issue";
+            case "ROUTE_CHANGE"  -> "Route change";
+            case "PERSONAL"      -> "Personal reason";
+            default              -> "Other reason";
+        };
+
+        executeCancelRide(chatId, rideId, carpoolUserId, reason, bot);
+    }
+
+    private void executeCancelRide(Long chatId, Long rideId, Long carpoolUserId,
+                                   String reason, CarpoolBot bot) {
         try {
             rideService.updateRideStatus(rideId,
-                    new UpdateRideStatusRequest(RideStatus.CANCELLED), carpoolUserId);
+                    new UpdateRideStatusRequest(RideStatus.CANCELLED), carpoolUserId, reason);
             stateManager.reset(chatId);
             bot.send(BotMessageBuilder.text(chatId,
                     "✅ Ride cancelled. All passengers have been notified."));
