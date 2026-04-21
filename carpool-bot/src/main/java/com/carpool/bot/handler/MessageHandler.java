@@ -274,7 +274,7 @@ public class MessageHandler {
     private void askForEtd(Long chatId, UserState state, CarpoolBot bot) {
         stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
         bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "🕐 <b>What time are you leaving?</b>\n\n" +
+                "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
                         LocalDateTime.now().plusHours(1)
@@ -561,7 +561,65 @@ public class MessageHandler {
 
     private void showMyRides(Long chatId, Long carpoolUserId, CarpoolBot bot) {
         List<RideResponse> rides = rideService.getMyRides(carpoolUserId);
-        bot.send(BotMessageBuilder.rideList(chatId, rides, "🚗 <b>My Rides</b>"));
+
+        if (rides.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "🚗 <b>My Rides</b>\n\n<i>No past rides yet.</i>"));
+            return;
+        }
+
+        // Show last 10 COMPLETED or CANCELLED rides only — these have repost buttons
+        List<RideResponse> recent = rides.stream()
+                .filter(r -> r.status().name().equals("COMPLETED")
+                        || r.status().name().equals("CANCELLED"))
+                .limit(10)
+                .toList();
+
+        if (recent.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "🚗 <b>My Rides</b>\n\n<i>No completed or cancelled rides yet.</i>"));
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("🚗 <b>My Rides</b>\n\n");
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (int i = 0; i < recent.size(); i++) {
+            RideResponse r = recent.get(i);
+            String dirEmoji = r.direction() == com.carpool.domain.enums.RideDirection.HOME_TO_WORK
+                    ? "🏠" : "🏢";
+            String statusLabel = switch (r.status().name()) {
+                case "COMPLETED" -> "🏁";
+                case "CANCELLED" -> "❌";
+                default          -> "📋";
+            };
+
+            sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ₱%.2f\n",
+                    i + 1,
+                    dirEmoji,
+                    BotMessageBuilder.escape(r.originHub().name()),
+                    BotMessageBuilder.escape(r.destinationHub().name()),
+                    statusLabel,
+                    r.departureTime()
+                            .atZone(java.time.ZoneId.of("Asia/Manila"))
+                            .format(DateTimeFormatter.ofPattern("MMM d h:mma")),
+                    r.contributionAmount()));
+
+            rows.add(List.of(InlineKeyboardButton.builder()
+                    .text(String.format("🔄 #%d — %s → %s",
+                            i + 1,
+                            r.originHub().name(),
+                            r.destinationHub().name()))
+                    .callbackData("REPOST_RIDE:" + r.id())
+                    .build()));
+        }
+
+        rows.add(List.of(InlineKeyboardButton.builder()
+                .text("🏠 Menu")
+                .callbackData("MAIN_MENU")
+                .build()));
+
+        bot.send(sendWithInline(chatId, sb.toString(), rows));
     }
 
     private void showMyBookings(Long chatId, Long carpoolUserId, CarpoolBot bot) {
