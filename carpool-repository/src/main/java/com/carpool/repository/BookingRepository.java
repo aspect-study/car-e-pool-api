@@ -161,4 +161,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
       AND b.status = 'PENDING'
     """)
     long countPendingByDriverId(@Param("driverId") Long driverId);
+
+    /**
+     * Count bookings by passenger and status — used for profile stats.
+     */
+    @Query("""
+    SELECT COUNT(b) FROM Booking b
+    WHERE b.passenger.id = :passengerId
+      AND b.status = :status
+    """)
+    int countByPassengerIdAndStatus(@Param("passengerId") Long passengerId,
+                                    @Param("status") BookingStatus status);
+
+    /**
+     * Count total bookings made by passenger — all statuses.
+     */
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.passenger.id = :passengerId")
+    int countByPassengerId(@Param("passengerId") Long passengerId);
 }
