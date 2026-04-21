@@ -210,7 +210,7 @@ public class CallbackHandler {
         }
 
         bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "🕐 <b>What time are you leaving?</b>\n\n" +
+                "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
                         LocalDateTime.now().plusHours(1)
@@ -949,19 +949,11 @@ public class CallbackHandler {
         try {
             RideResponse original = rideService.getRideById(rideId);
 
-            bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "🔄 <b>Repost Ride</b>\n\n" +
-                            "Previous ride: <b>" +
-                            BotMessageBuilder.escape(original.originHub().name()) + " → " +
-                            BotMessageBuilder.escape(original.destinationHub().name()) + "</b>\n\n" +
-                            "🕐 <b>What time are you leaving?</b>\n" +
-                            "Format: <code>MM/DD HH:MM</code>\n" +
-                            "Example: <code>" +
-                            LocalDateTime.now().plusHours(1)
-                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
-                            "</code>"));
+            // Auto-detect direction from original ride — no need to ask
+            String dirLabel = original.direction() == RideDirection.HOME_TO_WORK
+                    ? "🏠 Home → Work" : "🏢 Work → Home";
 
-            stateManager.save(chatId, state
+            UserState updated = state
                     .withOriginHubId(original.originHub().id())
                     .withOriginHubName(original.originHub().name())
                     .withDestinationHubId(original.destinationHub().id())
@@ -970,7 +962,22 @@ public class CallbackHandler {
                     .withSeats(original.totalSeats())
                     .withContribution(original.contributionAmount())
                     .withNotes(original.notes())
-                    .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
+                    .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME);
+            stateManager.save(chatId, updated);
+
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "🔄 <b>Repost Ride</b>\n\n" +
+                            "Direction: <b>" + dirLabel + "</b>\n" +
+                            "📍 <b>" + BotMessageBuilder.escape(original.originHub().name()) +
+                            " → " + BotMessageBuilder.escape(original.destinationHub().name()) + "</b>\n" +
+                            "🪑 " + original.totalSeats() + " seats | " +
+                            "💵 ₱" + original.contributionAmount().toPlainString() + "/seat\n\n" +
+                            "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
+                            "Format: <code>MM/DD HH:MM</code>\n" +
+                            "Example: <code>" +
+                            LocalDateTime.now().plusHours(1)
+                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                            "</code>"));
 
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
@@ -1396,7 +1403,7 @@ public class CallbackHandler {
             stateManager.save(chatId, updated);
 
             bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "🕐 <b>What time are you leaving?</b>\n\n" +
+                    "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
                             LocalDateTime.now().plusHours(1)
