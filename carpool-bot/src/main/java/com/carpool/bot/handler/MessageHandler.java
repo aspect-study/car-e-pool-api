@@ -216,9 +216,36 @@ public class MessageHandler {
             bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId, msg));
             bot.send(sendWithInline(chatId, "Choose an action:", rows));
         } else {
-            bot.send(BotMessageBuilder.directionSelector(chatId,
-                    "👋 Welcome to <b>" + BotMessageBuilder.escape(botConfig.getCommunityName()) + "</b>!\n\n" +
-                            "Where are you headed today?"));
+            List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
+            boolean hasPastRides = rideService.getMyRides(carpoolUserId).stream()
+                    .anyMatch(r -> r.status().name().equals("COMPLETED")
+                            || r.status().name().equals("CANCELLED"));
+
+            String prompt = (!myBookings.isEmpty() && hasPastRides)
+                    ? "👋 What would you like to do?"
+                    : "👋 Welcome to <b>" + BotMessageBuilder.escape(botConfig.getCommunityName()) +
+                      "</b>!\n\nWhere are you headed today?";
+
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            rows.add(List.of(
+                    BotMessageBuilder.button("🏠 Home to Work", "DIRECTION:HOME_TO_WORK"),
+                    BotMessageBuilder.button("🏢 Work to Home", "DIRECTION:WORK_TO_HOME")
+            ));
+
+            if (!myBookings.isEmpty()) {
+                rows.add(List.of(
+                        BotMessageBuilder.button(
+                                "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS")
+                ));
+            }
+
+            if (hasPastRides) {
+                rows.add(List.of(
+                        BotMessageBuilder.button("🚗 My Rides", "MY_RIDES")
+                ));
+            }
+
+            bot.send(sendWithInline(chatId, prompt, rows));
         }
     }
 
