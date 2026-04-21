@@ -121,6 +121,7 @@ public class CallbackHandler {
             case "APPLY_FILTER"         -> handleApplyFilter(chatId, parts, carpoolUserId, state, bot);
             case "RESET_FILTER"         -> handleResetFilter(chatId, carpoolUserId, state, bot);
             case "RIDE_PAGE"            -> handleRidePage(chatId, payload, carpoolUserId, state, bot);
+            case "MY_RIDES"             -> showMyRides(chatId, carpoolUserId, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
@@ -190,8 +191,16 @@ public class CallbackHandler {
 
             bot.send(sendWithInline(chatId, msg, rows));
         } else {
-            bot.send(BotMessageBuilder.directionSelector(chatId,
-                    "👋 Where are you headed today?"));
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("🏠 Home to Work", "DIRECTION:HOME_TO_WORK"),
+                            BotMessageBuilder.button("🏢 Work to Home", "DIRECTION:WORK_TO_HOME")
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("🚗 My Rides", "MY_RIDES")
+                    )
+            );
+            bot.send(sendWithInline(chatId, "👋 Where are you headed today?", rows));
         }
     }
 
@@ -642,10 +651,14 @@ public class CallbackHandler {
             rideService.updateRideStatus(rideId,
                     new UpdateRideStatusRequest(RideStatus.COMPLETED), carpoolUserId);
             stateManager.reset(chatId);
-            bot.send(BotMessageBuilder.text(chatId,
+            bot.send(sendWithInline(chatId,
                     "✅ <b>Ride Completed!</b>\n\n" +
                             "Thank you for driving! All passengers have been notified.\n\n" +
-                            "Please collect contributions from your passengers."));
+                            "Please collect contributions from your passengers.",
+                    List.of(List.of(
+                            BotMessageBuilder.button("🚗 My Rides", "MY_RIDES"),
+                            BotMessageBuilder.button("🏠 Menu",     "MAIN_MENU")
+                    ))));
 
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
@@ -1606,5 +1619,67 @@ public class CallbackHandler {
                 chatId, rides,
                 "🔍 <b>Available Rides — " + dirLabel + "</b>",
                 page, filterSummary));
+    }
+
+    private void showMyRides(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+        // Delegate to MessageHandler logic — reuse via service layer
+        List<RideResponse> rides = rideService.getMyRides(carpoolUserId);
+
+        if (rides.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "🚗 <b>My Rides</b>\n\n<i>No past rides yet.</i>"));
+            return;
+        }
+
+        List<RideResponse> recent = rides.stream()
+                .filter(r -> r.status().name().equals("COMPLETED")
+                        || r.status().name().equals("CANCELLED"))
+                .limit(10)
+                .toList();
+
+        if (recent.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "🚗 <b>My Rides</b>\n\n<i>No completed or cancelled rides yet.</i>"));
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("🚗 <b>My Rides</b>\n\n");
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (int i = 0; i < recent.size(); i++) {
+            RideResponse r = recent.get(i);
+            String dirEmoji = r.direction() == RideDirection.HOME_TO_WORK ? "🏠" : "🏢";
+            String statusLabel = switch (r.status().name()) {
+                case "COMPLETED" -> "🏁";
+                case "CANCELLED" -> "❌";
+                default          -> "📋";
+            };
+
+            sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ₱%.2f\n",
+                    i + 1,
+                    dirEmoji,
+                    BotMessageBuilder.escape(r.originHub().name()),
+                    BotMessageBuilder.escape(r.destinationHub().name()),
+                    statusLabel,
+                    r.departureTime()
+                            .atZone(ZoneId.of("Asia/Manila"))
+                            .format(DateTimeFormatter.ofPattern("MMM d h:mma")),
+                    r.contributionAmount()));
+
+            rows.add(List.of(InlineKeyboardButton.builder()
+                    .text(String.format("🔄 #%d — %s → %s",
+                            i + 1,
+                            r.originHub().name(),
+                            r.destinationHub().name()))
+                    .callbackData("REPOST_RIDE:" + r.id())
+                    .build()));
+        }
+
+        rows.add(List.of(InlineKeyboardButton.builder()
+                .text("🏠 Menu")
+                .callbackData("MAIN_MENU")
+                .build()));
+
+        bot.send(sendWithInline(chatId, sb.toString(), rows));
     }
 }
