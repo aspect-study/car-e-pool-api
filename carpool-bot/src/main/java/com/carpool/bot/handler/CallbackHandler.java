@@ -962,7 +962,7 @@ public class CallbackHandler {
         try {
             RideResponse original = rideService.getRideById(rideId);
 
-            // Auto-detect direction from original ride — no need to ask
+            // Auto-detect direction from original ride
             String dirLabel = original.direction() == RideDirection.HOME_TO_WORK
                     ? "🏠 Home → Work" : "🏢 Work → Home";
 
@@ -978,13 +978,22 @@ public class CallbackHandler {
                     .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME);
             stateManager.save(chatId, updated);
 
+            String notesLine = original.notes() != null && !original.notes().isBlank()
+                    ? "📝 Notes: " + BotMessageBuilder.escape(original.notes()) + "\n\n"
+                    : "";
+
             bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "🔄 <b>Repost Ride</b>\n\n" +
+                    "🔄 <b>Review Ride to Repost</b>\n\n" +
                             "Direction: <b>" + dirLabel + "</b>\n" +
-                            "📍 <b>" + BotMessageBuilder.escape(original.originHub().name()) +
-                            " → " + BotMessageBuilder.escape(original.destinationHub().name()) + "</b>\n" +
-                            "🪑 " + original.totalSeats() + " seats | " +
-                            "💵 ₱" + original.contributionAmount().toPlainString() + "/seat\n\n" +
+                            "📍 <b>" +
+                            BotMessageBuilder.escape(original.originHub().name()) +
+                            " → " +
+                            BotMessageBuilder.escape(original.destinationHub().name()) +
+                            "</b>\n" +
+                            "🪑 " + original.totalSeats() + " seat(s)\n" +
+                            "💵 ₱" + original.contributionAmount().toPlainString() + " / seat\n" +
+                            notesLine +
+                            "<i>Only the departure time will be updated.</i>\n\n" +
                             "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
@@ -994,7 +1003,7 @@ public class CallbackHandler {
 
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Could not load previous ride for repost."));
+                    "⚠️ Could not load ride details for repost."));
         }
     }
 

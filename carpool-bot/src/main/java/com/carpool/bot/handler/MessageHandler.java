@@ -294,6 +294,17 @@ public class MessageHandler {
                 return;
             }
 
+            // Repost flow — origin and destination already set, skip hub selection
+            if (state.getOriginHubId() != null && state.getDestinationHubId() != null) {
+                UserState updated = state
+                        .withDepartureTime(etd)
+                        .withFlow(BotFlow.POST_RIDE_CONFIRM);
+                stateManager.save(chatId, updated);
+                postRideHelper.showConfirmation(chatId, updated, bot);
+                return;
+            }
+
+            // Normal post ride flow — ask for origin hub
             stateManager.save(chatId, state
                     .withDepartureTime(etd)
                     .withFlow(BotFlow.POST_RIDE_ORIGIN));
