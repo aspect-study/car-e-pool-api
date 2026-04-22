@@ -15,8 +15,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import com.carpool.common.response.PagedResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -74,12 +76,17 @@ public class BookingController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403", description = "Not the ride owner")
     @GetMapping("/rides/{rideId}/bookings")
-    public ResponseEntity<ApiResponse<List<BookingResponse>>> getRideBookings(
+    public ResponseEntity<ApiResponse<PagedResponse<BookingResponse>>> getRideBookings(
             @PathVariable Long rideId,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
 
-        return ResponseEntity.ok(
-                ApiResponse.ok(bookingService.getBookingsByRideId(rideId)));
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50),
+                Sort.by("createdAt").ascending());
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                bookingService.getBookingsByRideId(rideId, pageable)));
     }
 
     /**
@@ -94,11 +101,16 @@ public class BookingController {
                     """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/bookings/mine")
-    public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookings(
+    public ResponseEntity<ApiResponse<PagedResponse<BookingResponse>>> getMyBookings(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
 
-        return ResponseEntity.ok(
-                ApiResponse.ok(bookingService.getMyBookings(currentUser.getUserId())));
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50),
+                Sort.by("createdAt").descending());
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                bookingService.getMyBookings(currentUser.getUserId(), pageable)));
     }
 
     /**

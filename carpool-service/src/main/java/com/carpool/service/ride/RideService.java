@@ -22,6 +22,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import com.carpool.common.response.PagedResponse;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -182,18 +186,36 @@ public class RideService {
     }
 
     @Transactional(readOnly = true)
-    public List<RideResponse> searchRides(Long fromHubId, Long toHubId) {
-        // Validate hubs exist before querying — better error message
+    public PagedResponse<RideResponse> searchRides(Long fromHubId, Long toHubId,
+                                                   Pageable pageable) {
         if (!hubRepository.existsById(fromHubId)) throw new HubNotFoundException(fromHubId);
         if (!hubRepository.existsById(toHubId))   throw new HubNotFoundException(toHubId);
         if (fromHubId.equals(toHubId))             throw new SameHubException();
 
-        return rideRepository.searchAvailable(fromHubId, toHubId, LocalDateTime.now())
-                .stream()
-                .map(mapper::toRideResponse)
-                .toList();
+        Page<RideResponse> page = rideRepository
+                .searchAvailablePaged(fromHubId, toHubId, LocalDateTime.now(), pageable)
+                .map(mapper::toRideResponse);
+
+        return PagedResponse.of(page);
     }
 
+    @Transactional(readOnly = true)
+    public PagedResponse<RideResponse> getMyRides(Long driverUserId, Pageable pageable) {
+        Page<RideResponse> page = rideRepository
+                .findByDriverIdAndStatusInOrderByDepartureTimeDesc(
+                        driverUserId,
+                        List.of(RideStatus.DRAFT, RideStatus.ACTIVE,
+                                RideStatus.FULL, RideStatus.COMPLETED, RideStatus.CANCELLED),
+                        pageable)
+                .map(mapper::toRideResponse);
+
+        return PagedResponse.of(page);
+    }
+
+    /**
+     * Unpaged version — used internally by bot and schedulers.
+     * Not exposed via REST.
+     */
     @Transactional(readOnly = true)
     public List<RideResponse> getMyRides(Long driverUserId) {
         return rideRepository.findByDriverIdAndStatusInOrderByDepartureTimeDesc(
@@ -241,25 +263,66 @@ public class RideService {
     }
 
     @Transactional(readOnly = true)
+    public PagedResponse<RideResponse> getRidesByDirection(RideDirection direction,
+                                                           Long excludeUserId,
+                                                           LocalDateTime from,
+                                                           LocalDateTime to,
+                                                           BigDecimal maxPrice,
+                                                           Integer minSeats,
+                                                           String sortBy,
+                                                           Pageable pageable) {
+        // Filter in-memory — sort/filter logic too complex for DB query
+        // Acceptable at current scale (20-50 active rides max at any time)
+        List<RideResponse> filtered = rideRepository
+                .findActiveByDirectionAndTimeRange(
+                        direction, List.of(RideStatus.ACTIVE), from, to)
+                .stream()
+                .filter(r -> !r.getDriver().getId().equals(excludeUserId))
+                .filter(r -> maxPrice == null
+                        || r.getContributionAmount().compareTo(maxPrice) <= 0)
+                .filter(r -> minSeats == null
+                        || r.getAvailableSeats() >= minSeats)
+                .map(mapper::toRideResponse)
+                .sorted(getComparator(sortBy))
+                .toList();
+
+        // Manual slice for pagination
+        int pageNum  = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int fromIdx  = Math.min(pageNum * pageSize, filtered.size());
+        int toIdx    = Math.min(fromIdx + pageSize, filtered.size());
+
+        List<RideResponse> content    = filtered.subList(fromIdx, toIdx);
+        boolean            isLast     = toIdx >= filtered.size();
+        int                totalPages = (int) Math.ceil((double) filtered.size() / pageSize);
+
+        return new PagedResponse<>(
+                content,
+                pageNum,
+                pageSize,
+                filtered.size(),
+                totalPages,
+                isLast);
+    }
+
+    /**
+     * Unpaged version — used internally by bot.
+     * Not exposed via REST.
+     */
+    @Transactional(readOnly = true)
     public List<RideResponse> getRidesByDirection(RideDirection direction, Long excludeUserId,
                                                   LocalDateTime from, LocalDateTime to,
                                                   BigDecimal maxPrice, Integer minSeats,
                                                   String sortBy) {
         return rideRepository.findActiveByDirectionAndTimeRange(
-                        direction,
-                        List.of(RideStatus.ACTIVE),
-                        from,
-                        to)
+                        direction, List.of(RideStatus.ACTIVE), from, to)
                 .stream()
                 .filter(r -> !r.getDriver().getId().equals(excludeUserId))
-                // Filter by max price
                 .filter(r -> maxPrice == null
                         || r.getContributionAmount().compareTo(maxPrice) <= 0)
-                // Filter by min seats
                 .filter(r -> minSeats == null
                         || r.getAvailableSeats() >= minSeats)
                 .map(mapper::toRideResponse)
-                // Sort
                 .sorted(getComparator(sortBy))
                 .toList();
     }

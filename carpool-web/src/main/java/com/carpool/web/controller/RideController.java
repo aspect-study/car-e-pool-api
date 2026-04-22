@@ -18,6 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.carpool.common.response.PagedResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,11 +77,17 @@ public class RideController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "List of available rides")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RideResponse>>> searchRides(
+    public ResponseEntity<ApiResponse<PagedResponse<RideResponse>>> searchRides(
             @RequestParam Long from,
-            @RequestParam Long to) {
+            @RequestParam Long to,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        return ResponseEntity.ok(ApiResponse.ok(rideService.searchRides(from, to)));
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50),
+                Sort.by("departureTime").ascending());
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                rideService.searchRides(from, to, pageable)));
     }
 
     /**
@@ -102,14 +113,18 @@ public class RideController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "Filtered and sorted list of rides")
     @GetMapping("/direction")
-    public ResponseEntity<ApiResponse<List<RideResponse>>> getRidesByDirection(
+    public ResponseEntity<ApiResponse<PagedResponse<RideResponse>>> getRidesByDirection(
             @RequestParam RideDirection direction,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @RequestParam(required = false) BigDecimal maxShare,
             @RequestParam(required = false) Integer minSeats,
             @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
 
         return ResponseEntity.ok(ApiResponse.ok(
                 rideService.getRidesByDirection(
@@ -118,7 +133,8 @@ public class RideController {
                         from, to,
                         maxShare,
                         minSeats,
-                        sortBy)));
+                        sortBy,
+                        pageable)));
     }
 
     /**
@@ -132,11 +148,16 @@ public class RideController {
                     """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/mine")
-    public ResponseEntity<ApiResponse<List<RideResponse>>> getMyRides(
+    public ResponseEntity<ApiResponse<PagedResponse<RideResponse>>> getMyRides(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
 
-        return ResponseEntity.ok(
-                ApiResponse.ok(rideService.getMyRides(currentUser.getUserId())));
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50),
+                Sort.by("departureTime").descending());
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                rideService.getMyRides(currentUser.getUserId(), pageable)));
     }
 
     /**

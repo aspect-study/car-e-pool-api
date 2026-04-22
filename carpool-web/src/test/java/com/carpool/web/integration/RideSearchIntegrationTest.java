@@ -10,6 +10,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import com.carpool.common.response.PagedResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -64,7 +68,7 @@ class RideSearchIntegrationTest extends BaseIntegrationTest {
 
         // Act
         List<RideResponse> results = rideService.searchRides(
-                ayalaMrt.getId(), bgcHighStreet.getId());
+                ayalaMrt.getId(), bgcHighStreet.getId(), defaultPageable()).content();
 
         // Assert
         assertThat(results).hasSize(1);
@@ -81,7 +85,7 @@ class RideSearchIntegrationTest extends BaseIntegrationTest {
         // Act — passenger searches Ayala MRT → SM Aura
         // SM Aura is a waypoint, not the destination — should still be found
         List<RideResponse> results = rideService.searchRides(
-                ayalaMrt.getId(), smAura.getId());
+                ayalaMrt.getId(), smAura.getId(), defaultPageable()).content();
 
         // Assert — ride is found even though SM Aura is a waypoint, not destination
         assertThat(results).hasSize(1);
@@ -96,7 +100,7 @@ class RideSearchIntegrationTest extends BaseIntegrationTest {
 
         // Act — passenger searches for Filinvest which has nothing to do with this ride
         List<RideResponse> results = rideService.searchRides(
-                ayalaMrt.getId(), filinvest.getId());
+                ayalaMrt.getId(), filinvest.getId(), defaultPageable()).content();
 
         // Assert
         assertThat(results).isEmpty();
@@ -120,7 +124,7 @@ class RideSearchIntegrationTest extends BaseIntegrationTest {
 
         // Act
         List<RideResponse> results = rideService.searchRides(
-                ayalaMrt.getId(), bgcHighStreet.getId());
+                ayalaMrt.getId(), bgcHighStreet.getId(), defaultPageable()).content();
 
         // Assert — DRAFT rides are invisible to passengers
         assertThat(results).isEmpty();
@@ -144,13 +148,17 @@ class RideSearchIntegrationTest extends BaseIntegrationTest {
 
         // Act
         List<RideResponse> results = rideService.searchRides(
-                ayalaMrt.getId(), bgcHighStreet.getId());
+                ayalaMrt.getId(), bgcHighStreet.getId(), defaultPageable()).content();
 
         // Assert — expired rides filtered out
         assertThat(results).isEmpty();
     }
 
     // ── Helper ───────────────────────────────────────────────────────────────
+
+    private Pageable defaultPageable() {
+        return PageRequest.of(0, 10, Sort.by("departureTime").ascending());
+    }
 
     private Ride createActiveRide(Hub origin, Hub destination, List<Hub> waypointHubs) {
         Ride ride = Ride.builder()

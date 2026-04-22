@@ -2,6 +2,7 @@ package com.carpool.repository;
 
 import com.carpool.domain.entity.Booking;
 import com.carpool.domain.enums.BookingStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -178,4 +179,28 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      */
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.passenger.id = :passengerId")
     int countByPassengerId(@Param("passengerId") Long passengerId);
+
+    /**
+     * Paginated version — passenger's active bookings.
+     * Used by REST API only — bot uses unpaged version.
+     */
+    Page<Booking> findByPassengerIdAndStatusInOrderByCreatedAtDesc(
+            Long passengerId,
+            List<BookingStatus> statuses,
+            org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Paginated version — bookings for a specific ride.
+     * Used by REST API only — bot uses unpaged version.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    WHERE b.ride.id = :rideId
+      AND b.status IN :statuses
+    ORDER BY b.createdAt DESC
+    """)
+    Page<Booking> findByRideIdAndStatusIn(
+            @Param("rideId")   Long rideId,
+            @Param("statuses") List<BookingStatus> statuses,
+            org.springframework.data.domain.Pageable pageable);
 }
