@@ -66,10 +66,12 @@ public class BookingController {
      */
     @Operation(summary = "Get bookings for a ride",
             description = """
-                    Driver views all bookings on their ride.
-                    Returns CONFIRMED and PENDING bookings only.
-                    Ordered by creation date ascending.
-                    """,
+                Driver views all bookings on their ride.
+                Returns CONFIRMED and PENDING bookings only.
+                Ordered by creation date ascending.
+                
+                **Pagination:** `page` (default 0), `size` (default 10, max 50)
+                """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "List of bookings for the ride")
@@ -95,10 +97,12 @@ public class BookingController {
      */
     @Operation(summary = "Get my bookings",
             description = """
-                    Returns all bookings made by the authenticated passenger.
-                    Includes all statuses (PENDING, CONFIRMED, COMPLETED, CANCELLED, etc.)
-                    ordered by creation date descending.
-                    """,
+                Returns all bookings made by the authenticated passenger.
+                Includes all statuses (PENDING, CONFIRMED, COMPLETED, CANCELLED, etc.)
+                ordered by creation date descending.
+                
+                **Pagination:** `page` (default 0), `size` (default 10, max 50)
+                """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/bookings/mine")
     public ResponseEntity<ApiResponse<PagedResponse<BookingResponse>>> getMyBookings(

@@ -69,10 +69,12 @@ public class RideController {
      */
     @Operation(summary = "Search available rides by hub",
             description = """
-                    Search ACTIVE rides by origin and destination hub ID.
-                    Results include rides where the hub appears as a waypoint.
-                    Ordered by departure time ascending.
-                    """,
+                Search ACTIVE rides by origin and destination hub ID.
+                Results include rides where the hub appears as a waypoint.
+                Ordered by departure time ascending.
+                
+                **Pagination:** `page` (default 0), `size` (default 10, max 50)
+                """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "List of available rides")
@@ -97,18 +99,20 @@ public class RideController {
      */
     @Operation(summary = "Search rides by direction",
             description = """
-                    Search ACTIVE rides by direction and time window.
-                    Supports filtering and sorting — mirrors the bot's Find a Ride flow.
-                    
-                    **Direction values:** `HOME_TO_WORK`, `WORK_TO_HOME`
-                    
-                    **Sort values:**
-                    - `EARLIEST` — by departure time ascending (default)
-                    - `CHEAPEST` — by gas share ascending
-                    - `MOST_SEATS` — by available seats descending
-                    
-                    Driver's own rides are excluded from results.
-                    """,
+                Search ACTIVE rides by direction and time window.
+                Supports filtering and sorting — mirrors the bot's Find a Ride flow.
+                
+                **Direction values:** `HOME_TO_WORK`, `WORK_TO_HOME`
+                
+                **Sort values:**
+                - `EARLIEST` — by departure time ascending (default)
+                - `CHEAPEST` — by gas share ascending
+                - `MOST_SEATS` — by available seats descending
+                
+                Driver's own rides are excluded from results.
+                
+                **Pagination:** `page` (default 0), `size` (default 10, max 50)
+                """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "Filtered and sorted list of rides")
@@ -143,9 +147,11 @@ public class RideController {
      */
     @Operation(summary = "Get my offered rides",
             description = """
-                    Returns all rides offered by the authenticated driver.
-                    All statuses included, ordered by departure time descending.
-                    """,
+                Returns all rides offered by the authenticated driver.
+                All statuses included, ordered by departure time descending.
+                
+                **Pagination:** `page` (default 0), `size` (default 10, max 50)
+                """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/mine")
     public ResponseEntity<ApiResponse<PagedResponse<RideResponse>>> getMyRides(
