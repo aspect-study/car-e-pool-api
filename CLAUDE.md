@@ -305,7 +305,8 @@ Never use:
 - Max price -> use: Max share
 - Pay -> use: Settle share
 
-Status: Full replacement of existing commercial terms in bot message strings is PENDING (in progress).
+Status: COMPLETED (Apr 22, 2026) -- All commercial terms replaced across:
+  BotMessageBuilder, MessageHandler, PostRideHelper, CallbackHandler, NotificationService.
 
 ---
 
@@ -346,8 +347,8 @@ All exceptions use clear, non-technical messages:
 
 ### Pending Work
 
-Priority 1 (In Progress):
-- Replace ALL commercial terms with LTFRB-compliant language across all bot message strings
+Priority 1 (COMPLETED Apr 22, 2026):
+- LTFRB compliance -- all commercial terms replaced with cost-sharing language
 
 Priority 2 (Quality):
 - RideService unit tests (expireStaleRides, getRidesByDirection, completeStaleRides)
@@ -375,3 +376,4 @@ Priority 4 (Tech Debt):
 | Apr 19, 2026 | Hub aliases migration, HubMatcher fuzzy search, UX improvements |
 | Apr 20, 2026 | Booking approval flow, scheduler, filter + pagination, profile view |
 | Apr 21, 2026 | Cancel with reason, repost ride, context-aware menu, LTFRB compliance, CLAUDE.md |
+| Apr 22, 2026 | LTFRB compliance completed, CLAUDE.md updated |
