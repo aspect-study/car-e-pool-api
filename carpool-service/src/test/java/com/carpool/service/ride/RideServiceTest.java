@@ -126,7 +126,7 @@ class RideServiceTest {
 
             assertThatThrownBy(() -> rideService.createRide(request, 2L))
                     .isInstanceOf(InsufficientRoleException.class)
-                    .hasMessageContaining("DRIVER");
+                    .hasMessageContaining("permission");
         }
 
         @Test
@@ -258,6 +258,320 @@ class RideServiceTest {
             assertThatThrownBy(() -> rideService.updateRideStatus(999L,
                     new UpdateRideStatusRequest(RideStatus.CANCELLED), 1L))
                     .isInstanceOf(RideNotFoundException.class);
+        }
+    }
+
+    // ── expireStaleRides ──────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("expireStaleRides()")
+    class ExpireStaleRides {
+
+        @Test
+        @DisplayName("should auto-depart stale ACTIVE rides past departure + 15 min buffer")
+        void shouldAutoDepartStaleRides() {
+            Ride staleRide = Ride.builder()
+                    .id(200L).driver(driver)
+                    .originHub(originHub).destinationHub(destinationHub)
+                    .direction(RideDirection.HOME_TO_WORK)
+                    .departureTime(LocalDateTime.now().minusMinutes(20)) // past + 15 min buffer
+                    .totalSeats(3).availableSeats(3)
+                    .status(RideStatus.ACTIVE)
+                    .build();
+
+            when(rideRepository.findStaleActiveRides(any())).thenReturn(List.of(staleRide));
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            rideService.expireStaleRides();
+
+            assertThat(staleRide.getStatus()).isEqualTo(RideStatus.DEPARTED);
+            verify(rideRepository).save(staleRide);
+        }
+
+        @Test
+        @DisplayName("should do nothing when no stale rides exist")
+        void shouldDoNothingWhenNoStaleRides() {
+            when(rideRepository.findStaleActiveRides(any())).thenReturn(List.of());
+
+            rideService.expireStaleRides();
+
+            verify(rideRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("should auto-depart multiple stale rides")
+        void shouldAutoDepartMultipleStaleRides() {
+            Ride staleRide1 = Ride.builder()
+                    .id(201L).driver(driver)
+                    .originHub(originHub).destinationHub(destinationHub)
+                    .direction(RideDirection.HOME_TO_WORK)
+                    .departureTime(LocalDateTime.now().minusMinutes(30))
+                    .totalSeats(3).availableSeats(2)
+                    .status(RideStatus.ACTIVE)
+                    .build();
+
+            Ride staleRide2 = Ride.builder()
+                    .id(202L).driver(driver)
+                    .originHub(originHub).destinationHub(destinationHub)
+                    .direction(RideDirection.WORK_TO_HOME)
+                    .departureTime(LocalDateTime.now().minusMinutes(60))
+                    .totalSeats(4).availableSeats(1)
+                    .status(RideStatus.FULL)
+                    .build();
+
+            when(rideRepository.findStaleActiveRides(any())).thenReturn(List.of(staleRide1, staleRide2));
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            rideService.expireStaleRides();
+
+            assertThat(staleRide1.getStatus()).isEqualTo(RideStatus.DEPARTED);
+            assertThat(staleRide2.getStatus()).isEqualTo(RideStatus.DEPARTED);
+            verify(rideRepository, times(2)).save(any());
+        }
+    }
+
+// ── completeStaleRides ────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("completeStaleRides()")
+    class CompleteStaleRides {
+
+        @Test
+        @DisplayName("should auto-complete DEPARTED rides older than 2 hours")
+        void shouldAutoCompleteStaleRides() {
+            Ride departedRide = Ride.builder()
+                    .id(300L).driver(driver)
+                    .originHub(originHub).destinationHub(destinationHub)
+                    .direction(RideDirection.HOME_TO_WORK)
+                    .departureTime(LocalDateTime.now().minusHours(3))
+                    .totalSeats(3).availableSeats(1)
+                    .status(RideStatus.DEPARTED)
+                    .build();
+
+            Booking confirmedBooking = Booking.builder()
+                    .id(50L).ride(departedRide)
+                    .passenger(User.builder().id(2L).build())
+                    .seatsReserved(2)
+                    .status(BookingStatus.CONFIRMED)
+                    .build();
+
+            when(rideRepository.findByStatusAndDepartureTimeBefore(
+                    eq(RideStatus.DEPARTED), any())).thenReturn(List.of(departedRide));
+            when(bookingRepository.findActiveBookingsForRide(300L))
+                    .thenReturn(List.of(confirmedBooking));
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(bookingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            rideService.completeStaleRides();
+
+            assertThat(departedRide.getStatus()).isEqualTo(RideStatus.COMPLETED);
+            assertThat(confirmedBooking.getStatus()).isEqualTo(BookingStatus.COMPLETED);
+            verify(rideRepository).save(departedRide);
+            verify(bookingRepository).save(confirmedBooking);
+        }
+
+        @Test
+        @DisplayName("should do nothing when no stale departed rides")
+        void shouldDoNothingWhenNoStaleDepartedRides() {
+            when(rideRepository.findByStatusAndDepartureTimeBefore(
+                    eq(RideStatus.DEPARTED), any())).thenReturn(List.of());
+
+            rideService.completeStaleRides();
+
+            verify(rideRepository, never()).save(any());
+            verify(bookingRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("should complete ride even when no bookings exist")
+        void shouldCompleteRideWithNoBookings() {
+            Ride departedRide = Ride.builder()
+                    .id(301L).driver(driver)
+                    .originHub(originHub).destinationHub(destinationHub)
+                    .direction(RideDirection.HOME_TO_WORK)
+                    .departureTime(LocalDateTime.now().minusHours(3))
+                    .totalSeats(3).availableSeats(3)
+                    .status(RideStatus.DEPARTED)
+                    .build();
+
+            when(rideRepository.findByStatusAndDepartureTimeBefore(
+                    eq(RideStatus.DEPARTED), any())).thenReturn(List.of(departedRide));
+            when(bookingRepository.findActiveBookingsForRide(301L)).thenReturn(List.of());
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            rideService.completeStaleRides();
+
+            assertThat(departedRide.getStatus()).isEqualTo(RideStatus.COMPLETED);
+            verify(rideRepository).save(departedRide);
+            verify(bookingRepository, never()).save(any());
+        }
+    }
+
+// ── getRidesByDirection ───────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("getRidesByDirection()")
+    class GetRidesByDirection {
+
+        private Ride makeRide(Long id, BigDecimal contribution, int availableSeats,
+                              LocalDateTime departureTime) {
+            return Ride.builder()
+                    .id(id).driver(driver)
+                    .originHub(originHub).destinationHub(destinationHub)
+                    .direction(RideDirection.HOME_TO_WORK)
+                    .departureTime(departureTime)
+                    .totalSeats(4).availableSeats(availableSeats)
+                    .contributionAmount(contribution)
+                    .status(RideStatus.ACTIVE)
+                    .build();
+        }
+
+        @Test
+        @DisplayName("should exclude driver's own rides from results")
+        void shouldExcludeDriverOwnRides() {
+            Ride ownRide = makeRide(400L, new BigDecimal("50"), 3,
+                    LocalDateTime.now().plusHours(1));
+
+            when(rideRepository.findActiveByDirectionAndTimeRange(any(), any(), any(), any()))
+                    .thenReturn(List.of(ownRide));
+
+            // driver (id=1) searching — should exclude own ride
+            List<RideResponse> result = rideService.getRidesByDirection(
+                    RideDirection.HOME_TO_WORK, 1L,
+                    LocalDateTime.now(), LocalDateTime.now().plusHours(4),
+                    null, null, null);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("should filter by max share amount")
+        void shouldFilterByMaxPrice() {
+            Ride cheapRide     = makeRide(401L, new BigDecimal("50"),  3, LocalDateTime.now().plusHours(1));
+            Ride expensiveRide = makeRide(402L, new BigDecimal("200"), 3, LocalDateTime.now().plusHours(2));
+
+            when(rideRepository.findActiveByDirectionAndTimeRange(any(), any(), any(), any()))
+                    .thenReturn(List.of(cheapRide, expensiveRide));
+
+            RideResponse cheapResponse = mock(RideResponse.class);
+            when(mapper.toRideResponse(cheapRide)).thenReturn(cheapResponse);
+
+            List<RideResponse> result = rideService.getRidesByDirection(
+                    RideDirection.HOME_TO_WORK, 99L,
+                    LocalDateTime.now(), LocalDateTime.now().plusHours(4),
+                    new BigDecimal("100"), null, null);
+
+            assertThat(result).hasSize(1);
+            verify(mapper, never()).toRideResponse(expensiveRide);
+        }
+
+        @Test
+        @DisplayName("should filter by minimum available seats")
+        void shouldFilterByMinSeats() {
+            Ride fullRide      = makeRide(403L, new BigDecimal("50"), 1, LocalDateTime.now().plusHours(1));
+            Ride availableRide = makeRide(404L, new BigDecimal("50"), 3, LocalDateTime.now().plusHours(2));
+
+            when(rideRepository.findActiveByDirectionAndTimeRange(any(), any(), any(), any()))
+                    .thenReturn(List.of(fullRide, availableRide));
+
+            RideResponse availableResponse = mock(RideResponse.class);
+            when(availableResponse.availableSeats()).thenReturn(3);
+            when(mapper.toRideResponse(availableRide)).thenReturn(availableResponse);
+
+            List<RideResponse> result = rideService.getRidesByDirection(
+                    RideDirection.HOME_TO_WORK, 99L,
+                    LocalDateTime.now(), LocalDateTime.now().plusHours(4),
+                    null, 2, null);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).availableSeats()).isEqualTo(3);
+            verify(mapper, never()).toRideResponse(fullRide);
+        }
+
+        @Test
+        @DisplayName("should sort by earliest departure time by default")
+        void shouldSortByEarliestByDefault() {
+            LocalDateTime early = LocalDateTime.now().plusHours(1);
+            LocalDateTime late  = LocalDateTime.now().plusHours(3);
+
+            Ride lateRide  = makeRide(405L, new BigDecimal("50"), 3, late);
+            Ride earlyRide = makeRide(406L, new BigDecimal("50"), 3, early);
+
+            when(rideRepository.findActiveByDirectionAndTimeRange(any(), any(), any(), any()))
+                    .thenReturn(List.of(lateRide, earlyRide));
+
+            RideResponse lateResponse  = mock(RideResponse.class);
+            RideResponse earlyResponse = mock(RideResponse.class);
+
+            when(lateResponse.departureTime()).thenReturn(late);
+            when(earlyResponse.departureTime()).thenReturn(early);
+
+            when(mapper.toRideResponse(lateRide)).thenReturn(lateResponse);
+            when(mapper.toRideResponse(earlyRide)).thenReturn(earlyResponse);
+
+            List<RideResponse> result = rideService.getRidesByDirection(
+                    RideDirection.HOME_TO_WORK, 99L,
+                    LocalDateTime.now(), LocalDateTime.now().plusHours(4),
+                    null, null, null); // default sort
+
+            assertThat(result.get(0).departureTime()).isEqualTo(early);
+            assertThat(result.get(1).departureTime()).isEqualTo(late);
+        }
+
+        @Test
+        @DisplayName("should sort by cheapest contribution when CHEAPEST sort specified")
+        void shouldSortByCheapest() {
+            Ride expRide   = makeRide(407L, new BigDecimal("150"), 3, LocalDateTime.now().plusHours(1));
+            Ride cheapRide = makeRide(408L, new BigDecimal("50"),  3, LocalDateTime.now().plusHours(2));
+
+            when(rideRepository.findActiveByDirectionAndTimeRange(any(), any(), any(), any()))
+                    .thenReturn(List.of(expRide, cheapRide));
+
+            RideResponse expResponse   = mock(RideResponse.class);
+            RideResponse cheapResponse = mock(RideResponse.class);
+
+            when(expResponse.contributionAmount()).thenReturn(new BigDecimal("150"));
+            when(cheapResponse.contributionAmount()).thenReturn(new BigDecimal("50"));
+
+            when(mapper.toRideResponse(expRide)).thenReturn(expResponse);
+            when(mapper.toRideResponse(cheapRide)).thenReturn(cheapResponse);
+
+            List<RideResponse> result = rideService.getRidesByDirection(
+                    RideDirection.HOME_TO_WORK, 99L,
+                    LocalDateTime.now(), LocalDateTime.now().plusHours(4),
+                    null, null, "CHEAPEST");
+
+            assertThat(result.get(0).contributionAmount())
+                    .isEqualByComparingTo(new BigDecimal("50"));
+            assertThat(result.get(1).contributionAmount())
+                    .isEqualByComparingTo(new BigDecimal("150"));
+        }
+
+        @Test
+        @DisplayName("should sort by most seats when MOST_SEATS sort specified")
+        void shouldSortByMostSeats() {
+            Ride fewSeatsRide  = makeRide(409L, new BigDecimal("50"), 1, LocalDateTime.now().plusHours(1));
+            Ride manySeatsRide = makeRide(410L, new BigDecimal("50"), 4, LocalDateTime.now().plusHours(2));
+
+            when(rideRepository.findActiveByDirectionAndTimeRange(any(), any(), any(), any()))
+                    .thenReturn(List.of(fewSeatsRide, manySeatsRide));
+
+            RideResponse fewResponse  = mock(RideResponse.class);
+            RideResponse manyResponse = mock(RideResponse.class);
+
+            when(fewResponse.availableSeats()).thenReturn(1);
+            when(manyResponse.availableSeats()).thenReturn(4);
+
+            when(mapper.toRideResponse(fewSeatsRide)).thenReturn(fewResponse);
+            when(mapper.toRideResponse(manySeatsRide)).thenReturn(manyResponse);
+
+            List<RideResponse> result = rideService.getRidesByDirection(
+                    RideDirection.HOME_TO_WORK, 99L,
+                    LocalDateTime.now(), LocalDateTime.now().plusHours(4),
+                    null, null, "MOST_SEATS");
+
+            assertThat(result.get(0).availableSeats()).isEqualTo(4);
+            assertThat(result.get(1).availableSeats()).isEqualTo(1);
         }
     }
 }
