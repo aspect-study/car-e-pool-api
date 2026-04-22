@@ -755,14 +755,20 @@ public class CallbackHandler {
             sb.append("<b>Active</b>\n");
             for (int i = 0; i < myBookings.size(); i++) {
                 BookingResponse b = myBookings.get(i);
-                sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ⛽ ₱%.2f share\n",
+                String driverInfo = b.ride().driver().telegramHandle() != null
+                        ? " (@" + BotMessageBuilder.escape(b.ride().driver().telegramHandle()) + ")"
+                        : "";
+
+                sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ⛽ ₱%.2f share\n👤 %s%s\n",
                         i + 1,
                         BotMessageBuilder.escape(b.ride().originHub().name()),
                         BotMessageBuilder.escape(b.ride().destinationHub().name()),
                         b.ride().departureTime()
                                 .atZone(ZoneId.of("Asia/Manila"))
                                 .format(DateTimeFormatter.ofPattern("MMM d h:mma")),
-                        b.contributionDue()));
+                        b.contributionDue(),
+                        BotMessageBuilder.escape(b.ride().driver().fullName()),
+                        driverInfo));
 
                 String statusPrefix = b.status() == BookingStatus.PENDING ? "⏳ " : "🔍 ";
                 rows.add(List.of(InlineKeyboardButton.builder()
