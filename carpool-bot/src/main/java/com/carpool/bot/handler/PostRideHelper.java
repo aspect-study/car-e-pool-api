@@ -32,6 +32,20 @@ public class PostRideHelper {
         String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
                 ? "🏠 Home → Work" : "🏢 Work → Home";
 
+        // Build vehicle line — show pending (just entered) or saved (from DB)
+        String vehicleLine;
+        if (state.getPendingCarModel() != null && state.getPendingPlateNumber() != null) {
+            // Driver just entered new vehicle info in this flow
+            vehicleLine = String.format("🚘 %s%s | 🔢 %s",
+                    state.getPendingCarColor() != null
+                            ? BotMessageBuilder.escape(state.getPendingCarColor()) + " " : "",
+                    BotMessageBuilder.escape(state.getPendingCarModel()),
+                    BotMessageBuilder.escape(state.getPendingPlateNumber()));
+        } else {
+            // No vehicle info in state — will show "Not set" on confirmation
+            vehicleLine = "<i>No vehicle info set</i>";
+        }
+
         String confirmMsg = String.format(
                 "📋 <b>Review Your Ride</b>\n\n" +
                         "Direction: %s\n" +
@@ -40,7 +54,8 @@ public class PostRideHelper {
                         "🕐 Departure: <b>%s</b>\n" +
                         "🪑 Seats available: <b>%d</b>\n" +
                         "⛽ Gas share: <b>₱%s / seat</b>\n" +
-                        "%s\n\n" +
+                        "%s\n" +
+                        "🚘 Vehicle: %s\n\n" +
                         "Looks good? Post this ride?",
                 dirLabel,
                 BotMessageBuilder.escape(state.getOriginHubName()),
@@ -49,8 +64,9 @@ public class PostRideHelper {
                 state.getSeats(),
                 state.getContribution().toPlainString(),
                 state.getNotes() != null
-                        ? "📝 Notes: " + BotMessageBuilder.escape(state.getNotes())
-                        : "");
+                        ? "📝 Notes: " + BotMessageBuilder.escape(state.getNotes()) + "\n"
+                        : "",
+                vehicleLine);
 
         var rows = List.of(List.of(
                 BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE"),

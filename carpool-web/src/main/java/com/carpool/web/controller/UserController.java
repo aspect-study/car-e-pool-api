@@ -4,6 +4,7 @@ import com.carpool.common.response.ApiResponse;
 import com.carpool.service.dto.request.UpdateRoleRequest;
 import com.carpool.service.dto.response.UserResponse;
 import com.carpool.service.user.UserService;
+import com.carpool.service.vehicle.VehicleService;
 import com.carpool.web.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final VehicleService vehicleService;
 
     @Operation(summary = "Get my profile",
             description = "Returns the currently authenticated user's profile. " +
@@ -59,5 +61,38 @@ public class UserController {
 
         return ResponseEntity.ok(
                 ApiResponse.ok(userService.updateRole(currentUser.getUserId(), request)));
+    }
+
+    /**
+     * PATCH /api/v1/users/me/vehicle
+     * Save or update driver's vehicle info.
+     */
+    @Operation(summary = "Update my vehicle info",
+            description = """
+                Save or update the authenticated driver's vehicle information.
+                
+                - `carColor` — optional (e.g. Silver, White)
+                - `carModel` — required (e.g. Toyota Vios)
+                - `plateNumber` — required, unique (e.g. ABC 1234)
+                
+                Plate number is stored in uppercase.
+                Overwrites existing vehicle info — single vehicle per user.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Vehicle info updated")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "409", description = "Plate number already in use")
+    @PatchMapping("/me/vehicle")
+    public ResponseEntity<ApiResponse<UserResponse>> updateMyVehicle(
+            @Valid @RequestBody com.carpool.service.dto.request.UpdateVehicleRequest request,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                vehicleService.updateVehicle(
+                        currentUser.getUserId(),
+                        request.carColor(),
+                        request.carModel(),
+                        request.plateNumber())));
     }
 }

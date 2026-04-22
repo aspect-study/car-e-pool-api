@@ -5,6 +5,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.domain.entity.DriverNote;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
@@ -18,6 +19,7 @@ import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.ride.RideService;
+import com.carpool.service.vehicle.VehicleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -48,6 +50,7 @@ public class CallbackHandler {
     private final PostRideHelper postRideHelper;
     private final DriverNoteService driverNoteService;
     private final ProfileService profileService;
+    private final VehicleService vehicleService;
 
     public void handle(CallbackQuery callback, CarpoolBot bot) {
         Long chatId     = callback.getMessage().getChatId();
@@ -125,6 +128,10 @@ public class CallbackHandler {
             case "RIDE_PAGE"            -> handleRidePage(chatId, payload, carpoolUserId, state, bot);
             case "MY_RIDES"             -> showMyRides(chatId, carpoolUserId, bot);
             case "MY_PROFILE"           -> handleMyProfile(chatId, carpoolUserId, bot);
+            case "VEHICLE_CONFIRM_YES"  -> handleVehicleConfirmYes(chatId, carpoolUserId, state, bot);
+            case "VEHICLE_CONFIRM_SAVE" -> handleVehicleConfirmSave(chatId, carpoolUserId, state, bot);
+            case "VEHICLE_CHANGE"       -> handleVehicleChange(chatId, carpoolUserId, state, bot);
+            case "VEHICLE_REMOVE"       -> handleVehicleRemove(chatId, carpoolUserId, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
@@ -269,7 +276,8 @@ public class CallbackHandler {
                     "⚠️ Session expired. Please start again with /start."));
             return;
         }
-
+        // Check if vehicle confirmation step was skipped — shouldn't happen normally
+        // but guard against session edge cases
         try {
             userRepository.findById(carpoolUserId).ifPresent(user -> {
                 if (user.getRole() == com.carpool.domain.enums.UserRole.PASSENGER) {
@@ -1415,15 +1423,14 @@ public class CallbackHandler {
     private void handleNoteApply(Long chatId, Long noteId, Long carpoolUserId,
                                  UserState state, CarpoolBot bot) {
         try {
-            com.carpool.domain.entity.DriverNote note = driverNoteService.markUsed(noteId);
+            DriverNote note = driverNoteService.markUsed(noteId);
 
             UserState updated = state
                     .withNotes(note.getContent())
-                    .withSelectedNoteId(null)
-                    .withFlow(BotFlow.POST_RIDE_CONFIRM);
+                    .withSelectedNoteId(null);
             stateManager.save(chatId, updated);
 
-            postRideHelper.showConfirmation(chatId, updated, bot);
+            showVehicleConfirmStep(chatId, carpoolUserId, updated, bot);
 
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not apply note. Please try again."));
@@ -1459,11 +1466,55 @@ public class CallbackHandler {
     private void handleSkipNotes(Long chatId, Long carpoolUserId,
                                  UserState state, CarpoolBot bot) {
         UserState updated = state
-                .withNotes(null)
-                .withFlow(BotFlow.POST_RIDE_CONFIRM);
+                .withNotes(null);
         stateManager.save(chatId, updated);
 
-        postRideHelper.showConfirmation(chatId, updated, bot);  // ← CORRECT
+        showVehicleConfirmStep(chatId, carpoolUserId, updated, bot);
+    }
+
+    /**
+     * After notes step — show vehicle confirmation before final ride review.
+     * If driver has saved vehicle → ask to confirm or change.
+     * If no saved vehicle → ask to enter vehicle details.
+     */
+    private void showVehicleConfirmStep(Long chatId, Long carpoolUserId,
+                                        UserState state, CarpoolBot bot) {
+        var userOpt = userRepository.findById(carpoolUserId);
+        if (userOpt.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ User not found."));
+            return;
+        }
+
+        var user = userOpt.get();
+
+        UserState updated = state.withFlow(BotFlow.POST_RIDE_VEHICLE_CONFIRM);
+        stateManager.save(chatId, updated);
+
+        if (user.hasVehicleInfo()) {
+            String vehicleDisplay = String.format("%s%s | 🔢 %s",
+                    user.getCarColor() != null
+                            ? "🎨 " + BotMessageBuilder.escape(user.getCarColor()) + " "
+                            : "",
+                    BotMessageBuilder.escape(user.getCarModel()),
+                    BotMessageBuilder.escape(user.getPlateNumber()));
+
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("✅ Yes, Proceed",  "VEHICLE_CONFIRM_YES"),
+                            BotMessageBuilder.button("📝 Change Vehicle", "VEHICLE_CHANGE")
+                    )
+            );
+
+            bot.send(sendWithInline(chatId,
+                    "🚘 <b>Vehicle Confirmation</b>\n\n" +
+                            "You are currently using:\n" +
+                            "<b>" + vehicleDisplay + "</b>\n\n" +
+                            "Use this for your ride?",
+                    rows));
+        } else {
+            // No saved vehicle — go straight to input
+            handleVehicleChange(chatId, carpoolUserId, updated, bot);
+        }
     }
 
     private void handleDirectionCallback(Long chatId, String payload, Long carpoolUserId,
@@ -1748,6 +1799,103 @@ public class CallbackHandler {
         bot.send(sendWithInline(chatId, sb.toString(), rows));
     }
 
+    // ── Vehicle confirmation flow ─────────────────────────────────────────
+
+    /**
+     * Driver confirmed to use their saved vehicle — skip vehicle input.
+     * Load vehicle from DB into state then proceed to notes.
+     */
+    private void handleVehicleConfirmYes(Long chatId, Long carpoolUserId,
+                                         UserState state, CarpoolBot bot) {
+        var userOpt = userRepository.findById(carpoolUserId);
+        if (userOpt.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ User not found."));
+            return;
+        }
+
+        var user = userOpt.get();
+
+        UserState updated = state
+                .withPendingCarColor(user.getCarColor())
+                .withPendingCarModel(user.getCarModel())
+                .withPendingPlateNumber(user.getPlateNumber())
+                .withFlow(BotFlow.POST_RIDE_CONFIRM);
+        stateManager.save(chatId, updated);
+        postRideHelper.showConfirmation(chatId, updated, bot);
+    }
+
+    /**
+     * Driver saved new vehicle info — persist to DB then proceed to notes.
+     */
+    private void handleVehicleConfirmSave(Long chatId, Long carpoolUserId,
+                                          UserState state, CarpoolBot bot) {
+        if (state.getPendingCarModel() == null || state.getPendingPlateNumber() == null) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Session expired. Please start again with /start."));
+            return;
+        }
+
+        try {
+            vehicleService.updateVehicle(
+                    carpoolUserId,
+                    state.getPendingCarColor() != null ? state.getPendingCarColor() : "",
+                    state.getPendingCarModel(),
+                    state.getPendingPlateNumber());
+
+            UserState updated = state.withFlow(BotFlow.POST_RIDE_CONFIRM);
+            stateManager.save(chatId, updated);
+
+            bot.send(BotMessageBuilder.textNoMenu(chatId,
+                    "✅ Vehicle saved: " +
+                            (state.getPendingCarColor() != null
+                                    ? "🎨 " + BotMessageBuilder.escape(state.getPendingCarColor()) + " "
+                                    : "") +
+                            "🚘 " + BotMessageBuilder.escape(state.getPendingCarModel()) +
+                            " | 🔢 " + BotMessageBuilder.escape(state.getPendingPlateNumber())));
+
+            postRideHelper.showConfirmation(chatId, updated, bot);
+
+        } catch (Exception e) {
+            log.error("Failed to save vehicle for userId={}: {}", carpoolUserId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not save vehicle info. " +
+                            "Plate number may already be in use."));
+        }
+    }
+
+    /**
+     * Driver wants to change vehicle — start vehicle input flow.
+     * Used both from post ride flow and from /vehicle command.
+     */
+    private void handleVehicleChange(Long chatId, Long carpoolUserId,
+                                     UserState state, CarpoolBot bot) {
+        UserState updated = state
+                .withPendingCarColor(null)
+                .withPendingCarModel(null)
+                .withPendingPlateNumber(null)
+                .withFlow(BotFlow.SET_VEHICLE_COLOR);
+        stateManager.save(chatId, updated);
+
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "🎨 <b>What color is your vehicle?</b>\n\n" +
+                        "Example: <code>Silver</code>, <code>White</code>, <code>Black</code>"));
+    }
+
+    /**
+     * Driver removes their vehicle info.
+     */
+    private void handleVehicleRemove(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+        try {
+            vehicleService.clearVehicle(carpoolUserId);
+            bot.send(BotMessageBuilder.text(chatId,
+                    "✅ Vehicle info removed."));
+        } catch (Exception e) {
+            log.error("Failed to remove vehicle for userId={}: {}", carpoolUserId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not remove vehicle info. Please try again."));
+        }
+    }
+
     // ── Profile ───────────────────────────────────────────────────────
 
     private void handleMyProfile(Long chatId, Long carpoolUserId, CarpoolBot bot) {
@@ -1766,6 +1914,20 @@ public class CallbackHandler {
                             : ""));
             sb.append(stats.roleLabel()).append("\n");
             sb.append("📅 Member since: ").append(stats.memberSince()).append("\n");
+
+            // Vehicle info — show for drivers only
+            if (stats.driverRidesPosted() != null || stats.carModel() != null) {
+                if (stats.carModel() != null && stats.plateNumber() != null) {
+                    sb.append(String.format("\n🚘 %s%s\n🔢 %s\n",
+                            stats.carColor() != null
+                                    ? "🎨 " + BotMessageBuilder.escape(stats.carColor()) + " "
+                                    : "",
+                            BotMessageBuilder.escape(stats.carModel()),
+                            BotMessageBuilder.escape(stats.plateNumber())));
+                } else {
+                    sb.append("\n🚘 <i>No vehicle info yet</i>\n");
+                }
+            }
 
             // Driver stats
             if (stats.driverRidesPosted() != null) {
@@ -1801,10 +1963,13 @@ public class CallbackHandler {
                 sb.append("\n<i>No activity yet. Post or book a ride to get started!</i>");
             }
 
-            var rows = List.of(List.of(
-                    BotMessageBuilder.button("🔄 Refresh", "MY_PROFILE"),
-                    BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
-            ));
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("🔄 Refresh",      "MY_PROFILE"),
+                            BotMessageBuilder.button("🚘 My Vehicle",   "VEHICLE_CHANGE"),
+                            BotMessageBuilder.button("🏠 Menu",         "MAIN_MENU")
+                    )
+            );
 
             bot.send(sendWithInline(chatId, sb.toString(), rows));
 
