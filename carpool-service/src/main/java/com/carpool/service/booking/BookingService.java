@@ -22,6 +22,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.carpool.common.response.PagedResponse;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -314,6 +318,23 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
+    public PagedResponse<BookingResponse> getMyBookings(Long passengerUserId,
+                                                        Pageable pageable) {
+        Page<BookingResponse> page = bookingRepository
+                .findByPassengerIdAndStatusInOrderByCreatedAtDesc(
+                        passengerUserId,
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING),
+                        pageable)
+                .map(mapper::toBookingResponse);
+
+        return PagedResponse.of(page);
+    }
+
+    /**
+     * Unpaged version — used internally by bot.
+     * Not exposed via REST.
+     */
+    @Transactional(readOnly = true)
     public List<BookingResponse> getMyBookings(Long passengerUserId) {
         return bookingRepository.findByPassengerIdAndStatusInOrderByCreatedAtDesc(
                         passengerUserId,
@@ -375,6 +396,23 @@ public class BookingService {
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
     }
 
+    @Transactional(readOnly = true)
+    public PagedResponse<BookingResponse> getBookingsByRideId(Long rideId,
+                                                              Pageable pageable) {
+        Page<BookingResponse> page = bookingRepository
+                .findByRideIdAndStatusIn(
+                        rideId,
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING),
+                        pageable)
+                .map(mapper::toBookingResponse);
+
+        return PagedResponse.of(page);
+    }
+
+    /**
+     * Unpaged version — used internally by bot.
+     * Not exposed via REST.
+     */
     @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByRideId(Long rideId) {
         return bookingRepository.findByRideIdAndStatusIn(

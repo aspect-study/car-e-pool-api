@@ -4,6 +4,7 @@ import com.carpool.domain.entity.Ride;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -159,4 +160,34 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
       AND b.status = 'COMPLETED'
     """)
     int sumPassengersServedByDriverId(@Param("driverId") Long driverId);
+
+    /**
+     * Paginated version of searchAvailable — hub-to-hub search.
+     */
+    @Query("""
+    SELECT DISTINCT r FROM Ride r
+    LEFT JOIN r.waypoints wp
+    WHERE r.status = 'ACTIVE'
+      AND r.departureTime > :now
+      AND (r.originHub.id = :fromHubId OR wp.hub.id = :fromHubId)
+      AND (r.destinationHub.id = :toHubId
+        OR EXISTS (
+            SELECT w FROM RideWaypoint w
+            WHERE w.ride = r AND w.hub.id = :toHubId
+        ))
+    ORDER BY r.departureTime ASC
+    """)
+    Page<Ride> searchAvailablePaged(
+            @Param("fromHubId") Long fromHubId,
+            @Param("toHubId")   Long toHubId,
+            @Param("now")       LocalDateTime now,
+            org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Paginated version of driver's own rides.
+     */
+    Page<Ride> findByDriverIdAndStatusInOrderByDepartureTimeDesc(
+            Long driverId,
+            List<RideStatus> statuses,
+            org.springframework.data.domain.Pageable pageable);
 }
