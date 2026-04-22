@@ -29,9 +29,20 @@ public class VehicleService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        user.setCarColor(carColor.trim());
+        String newPlate = plateNumber.trim().toUpperCase();
+
+        // Check if plate is already used by a DIFFERENT user
+        // Same user updating their own plate is allowed
+        userRepository.findByPlateNumber(newPlate).ifPresent(existing -> {
+            if (!existing.getId().equals(userId)) {
+                throw new com.carpool.common.exception.InvalidRideStateException(
+                        "Plate number " + newPlate + " is already registered by another user.");
+            }
+        });
+
+        user.setCarColor(carColor != null ? carColor.trim() : null);
         user.setCarModel(carModel.trim());
-        user.setPlateNumber(plateNumber.trim().toUpperCase());
+        user.setPlateNumber(newPlate);
 
         User saved = userRepository.save(user);
 

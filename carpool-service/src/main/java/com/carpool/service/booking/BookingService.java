@@ -346,13 +346,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<BookingResponse> getMyPastBookings(Long passengerUserId) {
-        return bookingRepository.findByPassengerIdAndStatusInOrderByCreatedAtDesc(
-                        passengerUserId,
-                        List.of(BookingStatus.COMPLETED,
-                                BookingStatus.CANCELLED_BY_PASSENGER,
-                                BookingStatus.CANCELLED_BY_DRIVER,
-                                BookingStatus.DECLINED,
-                                BookingStatus.TIMED_OUT))
+        return bookingRepository.findTop7PastBookingsByPassengerId(passengerUserId)
                 .stream()
                 .map(mapper::toBookingResponse)
                 .toList();
