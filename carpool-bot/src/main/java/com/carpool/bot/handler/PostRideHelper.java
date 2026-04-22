@@ -39,7 +39,7 @@ public class PostRideHelper {
                         "🏁 End: <b>%s</b>\n" +
                         "🕐 Departure: <b>%s</b>\n" +
                         "🪑 Seats available: <b>%d</b>\n" +
-                        "💵 Contribution: <b>₱%s / seat</b>\n" +
+                        "⛽ Gas share: <b>₱%s / seat</b>\n" +
                         "%s\n\n" +
                         "Looks good? Post this ride?",
                 dirLabel,
