@@ -189,6 +189,9 @@ public class MessageHandler {
                     List.of(
                             BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
                             BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
                     )
             )
                     : pendingCount > 0
@@ -203,6 +206,9 @@ public class MessageHandler {
                     ),
                     List.of(
                             BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
                     )
             )
                       : List.of(
@@ -215,6 +221,9 @@ public class MessageHandler {
                     ),
                     List.of(
                             BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
                     )
             );
 
