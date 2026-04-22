@@ -3,6 +3,8 @@ package com.carpool.bot;
 import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.handler.CallbackHandler;
 import com.carpool.bot.handler.MessageHandler;
+import com.carpool.bot.ratelimit.BotRateLimiter;
+import com.carpool.bot.util.BotMessageBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -33,6 +35,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
     private final BotConfig       botConfig;
     private final MessageHandler  messageHandler;
     private final CallbackHandler callbackHandler;
+    private final BotRateLimiter rateLimiter;
 
     // Lazy-initialized to avoid circular dependency
     private TelegramClient telegramClient;
@@ -57,6 +60,18 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
     @Override
     public void consume(Update update) {
         try {
+            // Resolve chatId for rate limiting
+            Long chatId = resolveChatId(update);
+
+            if (chatId != null && !rateLimiter.tryConsume(chatId)) {
+                // Rate limit exceeded — warn user once per interval, then silent ignore
+                if (rateLimiter.shouldWarn(chatId)) {
+                    send(BotMessageBuilder.textNoMenu(chatId,
+                            "⚠️ Too many requests. Please try again later."));
+                }
+                return;
+            }
+
             if (update.hasMessage() && update.getMessage().hasText()) {
                 messageHandler.handle(update.getMessage(), this);
 
@@ -117,5 +132,19 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
         } catch (TelegramApiException e) {
             log.error("Failed to answer callback: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Resolves chatId from any update type.
+     * Returns null for update types without a chat context.
+     */
+    private Long resolveChatId(Update update) {
+        if (update.hasMessage()) {
+            return update.getMessage().getChatId();
+        }
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getMessage().getChatId();
+        }
+        return null;
     }
 }
