@@ -399,4 +399,16 @@ public class RideService {
                 .map(mapper::toHubResponse)
                 .orElseThrow(() -> new HubNotFoundException(hubId));
     }
+
+    /**
+     * Returns last 3 completed or cancelled rides for repost feature.
+     * DB-level limit — safe for large datasets.
+     */
+    @Transactional(readOnly = true)
+    public List<RideResponse> getRecentRidesForRepost(Long driverUserId) {
+        return rideRepository.findTop3CompletedOrCancelledByDriverId(driverUserId)
+                .stream()
+                .map(mapper::toRideResponse)
+                .toList();
+    }
 }

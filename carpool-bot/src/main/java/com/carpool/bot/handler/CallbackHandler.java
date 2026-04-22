@@ -234,7 +234,7 @@ public class CallbackHandler {
 
             if (hasPastRides) {
                 rows.add(List.of(
-                        BotMessageBuilder.button("🚗 My Rides", "MY_RIDES")
+                        BotMessageBuilder.button("🔄 Repost a Ride", "MY_RIDES")
                 ));
             }
 
@@ -970,11 +970,10 @@ public class CallbackHandler {
                         : b.ride().originHub().name();
 
                 sb.append(String.format("<b>%d.</b> %s%s\n" +
-                                "    🚏 %s | 🪑 %d | ⛽ ₱%.2f share\n",
+                                "    🪑 %d | ⛽ ₱%.2f share\n",
                         index,
                         BotMessageBuilder.escape(b.passenger().fullName()),
                         paxHandle,
-                        BotMessageBuilder.escape(pickup),
                         b.seatsReserved(),
                         b.contributionDue()));
 
@@ -1320,13 +1319,6 @@ public class CallbackHandler {
         try {
             BookingResponse b = bookingService.getBookingById(bookingId);
 
-            String pickup  = b.pickupWaypoint()  != null
-                    ? b.pickupWaypoint().hub().name()
-                    : b.ride().originHub().name();
-            String dropoff = b.dropoffWaypoint() != null
-                    ? b.dropoffWaypoint().hub().name()
-                    : b.ride().destinationHub().name();
-
             String statusLabel = switch (b.status().name()) {
                 case "CONFIRMED"              -> "✅ Confirmed";
                 case "PENDING"                -> "⏳ Awaiting your approval";
@@ -1344,30 +1336,19 @@ public class CallbackHandler {
             String detail = String.format(
                     "👤 <b>Passenger Details</b>\n\n" +
                             "Name: <b>%s</b>%s\n" +
-                            "📍 Route: %s → %s\n" +
-                            "🕐 Departure: %s\n" +
-                            "🚏 Pickup: <b>%s</b>\n" +
-                            "🏁 Dropoff: <b>%s</b>\n" +
                             "🪑 Seats: %d\n" +
-                            "⛽ Suggested share: ₱%.2f\n" +
-                            "💳 Share settlement: %s\n" +
+                            "⛽ Share: ₱%.2f\n" +
+                            "💳 Settlement: %s\n" +
                             "%s" +
                             "📊 Status: %s",
                     BotMessageBuilder.escape(b.passenger().fullName()),
                     b.passenger().telegramHandle() != null
                             ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")" : "",
-                    BotMessageBuilder.escape(b.ride().originHub().name()),
-                    BotMessageBuilder.escape(b.ride().destinationHub().name()),
-                    b.ride().departureTime()
-                            .atZone(ZoneId.of("Asia/Manila"))
-                            .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a")),
-                    BotMessageBuilder.escape(pickup),
-                    BotMessageBuilder.escape(dropoff),
                     b.seatsReserved(),
                     b.contributionDue(),
                     paymentLabel,
                     b.passengerMessage() != null
-                            ? "💬 Message: \"" + BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
+                            ? "💬 Passenger's note: \"" + BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
                             : "",
                     statusLabel);
 
@@ -1748,7 +1729,7 @@ public class CallbackHandler {
 
     private void showMyRides(Long chatId, Long carpoolUserId, CarpoolBot bot) {
         // Delegate to MessageHandler logic — reuse via service layer
-        List<RideResponse> rides = rideService.getMyRides(carpoolUserId);
+        List<RideResponse> rides = rideService.getRecentRidesForRepost(carpoolUserId);
 
         if (rides.isEmpty()) {
             bot.send(BotMessageBuilder.text(chatId,
@@ -1759,7 +1740,7 @@ public class CallbackHandler {
         List<RideResponse> recent = rides.stream()
                 .filter(r -> r.status().name().equals("COMPLETED")
                         || r.status().name().equals("CANCELLED"))
-                .limit(10)
+                .limit(3)
                 .toList();
 
         if (recent.isEmpty()) {

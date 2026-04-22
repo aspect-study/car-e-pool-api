@@ -255,7 +255,7 @@ public class MessageHandler {
 
             if (hasPastRides) {
                 rows.add(List.of(
-                        BotMessageBuilder.button("🚗 My Rides", "MY_RIDES")
+                        BotMessageBuilder.button("🔄 Repost a Ride", "MY_RIDES")
                 ));
             }
 
@@ -740,7 +740,7 @@ public class MessageHandler {
     // ── My rides / bookings ───────────────────────────────────────────────
 
     private void showMyRides(Long chatId, Long carpoolUserId, CarpoolBot bot) {
-        List<RideResponse> rides = rideService.getMyRides(carpoolUserId);
+        List<RideResponse> rides = rideService.getRecentRidesForRepost(carpoolUserId);
 
         if (rides.isEmpty()) {
             bot.send(BotMessageBuilder.text(chatId,
@@ -752,7 +752,7 @@ public class MessageHandler {
         List<RideResponse> recent = rides.stream()
                 .filter(r -> r.status().name().equals("COMPLETED")
                         || r.status().name().equals("CANCELLED"))
-                .limit(10)
+                .limit(3)
                 .toList();
 
         if (recent.isEmpty()) {

@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Suspended/banned users cannot log in.
      */
     Optional<User> findByTelegramIdAndStatus(Long telegramId, UserStatus status);
+
+    Optional<User> findByPlateNumber(String plateNumber);
 }

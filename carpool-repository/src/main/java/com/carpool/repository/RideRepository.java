@@ -190,4 +190,18 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             Long driverId,
             List<RideStatus> statuses,
             org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Last 3 completed or cancelled rides for repost feature.
+     * DB-level LIMIT — no in-memory filtering needed.
+     */
+    @Query("""
+    SELECT r FROM Ride r
+    WHERE r.driver.id = :driverId
+      AND r.status IN ('COMPLETED', 'CANCELLED')
+    ORDER BY r.departureTime DESC
+    LIMIT 3
+    """)
+    List<Ride> findTop3CompletedOrCancelledByDriverId(@Param("driverId") Long driverId);
+
 }

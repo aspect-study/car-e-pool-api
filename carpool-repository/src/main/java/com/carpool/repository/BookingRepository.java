@@ -203,4 +203,18 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("rideId")   Long rideId,
             @Param("statuses") List<BookingStatus> statuses,
             org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Last 7 past bookings for passenger booking history.
+     * DB-level limit — safe for large datasets.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    WHERE b.passenger.id = :passengerId
+      AND b.status IN ('COMPLETED', 'CANCELLED_BY_PASSENGER', 'CANCELLED_BY_DRIVER',
+                       'DECLINED', 'TIMED_OUT')
+    ORDER BY b.createdAt DESC
+    LIMIT 7
+    """)
+    List<Booking> findTop7PastBookingsByPassengerId(@Param("passengerId") Long passengerId);
 }
