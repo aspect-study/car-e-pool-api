@@ -19,6 +19,7 @@ import com.carpool.service.hub.HubService;
 import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.ride.RideService;
+import com.carpool.service.vehicle.VehicleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -52,14 +53,11 @@ public class MessageHandler {
     private final PostRideHelper    postRideHelper;
     private final HubService hubService;
     private final ProfileService profileService;
+    private final VehicleService vehicleService;
 
-    private static final DateTimeFormatter ETD_FMT =
-            DateTimeFormatter.ofPattern("MM/dd HH:mm");
+    private static final DateTimeFormatter ETD_FMT =DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
-    private static final Set<String> GREETINGS = Set.of(
-            "hi", "hello", "hey", "start", "helo", "uy", "oi",
-            "kumusta", "kamusta", "sup", "yo", "hoy", "musta",
-            "zup", "ey", "help", "bot", "pre", "mars");
+    private static final Set<String> GREETINGS = Set.of("hi", "hey", "start","ey");
 
     public void handle(Message message, CarpoolBot bot) {
         Long chatId     = message.getChatId();
@@ -129,6 +127,9 @@ public class MessageHandler {
             case SEARCH_SELECT_TIME       -> handleCustomTimeInput(chatId, text, state, carpoolUserId, bot);
             case POST_RIDE_NOTES_WRITE    -> handlePostRideNotesWrite(chatId, text, state, bot, carpoolUserId);
             case BOOKING_MESSAGE          -> handleBookingMessage(chatId, text, state, carpoolUserId, bot);
+            case SET_VEHICLE_COLOR        -> handleSetVehicleColor(chatId, text, state, bot);
+            case SET_VEHICLE_MODEL        -> handleSetVehicleModel(chatId, text, state, bot);
+            case SET_VEHICLE_PLATE        -> handleSetVehiclePlate(chatId, text, state, carpoolUserId, bot);
             default                       -> showMainMenu(chatId, carpoolUserId, state, bot);
         }
     }
@@ -146,6 +147,7 @@ public class MessageHandler {
             case "/postride"   -> startPostRideFlow(chatId, carpoolUserId, state, bot);
             case "/findride"   -> startFindRideFlow(chatId, carpoolUserId, state, bot);
             case "/profile"    -> handleProfile(chatId, carpoolUserId, bot);
+            case "/vehicle"    -> handleVehicleCommand(chatId, carpoolUserId, state, bot);
             default -> bot.send(BotMessageBuilder.text(chatId,
                     "Unknown command. Use /start to see the main menu."));
         }
@@ -514,12 +516,61 @@ public class MessageHandler {
     }
 
     private void handlePostRideNotes(Long chatId, String text, UserState state, CarpoolBot bot) {
-        // Fallback — user typed directly instead of tapping a button
-        // Treat as custom note, proceed to confirmation without saving to DB
         String notes = text.trim();
-        UserState updated = state.withNotes(notes).withFlow(BotFlow.POST_RIDE_CONFIRM);
+        UserState updated = state.withNotes(notes);
         stateManager.save(chatId, updated);
-        postRideHelper.showConfirmation(chatId, updated, bot);
+        // Route to vehicle confirmation step via CallbackHandler helper
+        // Cannot call directly — delegate via state flow change
+        // MessageHandler will re-route on next update if needed
+        // Instead, show vehicle confirmation inline here:
+        showVehicleConfirmStepFromMessage(chatId, state.getCarpoolUserId(), updated, bot);
+    }
+
+    private void showVehicleConfirmStepFromMessage(Long chatId, Long carpoolUserId,
+                                                   UserState state, CarpoolBot bot) {
+        var userOpt = userRepository.findById(carpoolUserId);
+        if (userOpt.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ User not found."));
+            return;
+        }
+
+        var user = userOpt.get();
+        UserState updated = state.withFlow(BotFlow.POST_RIDE_VEHICLE_CONFIRM);
+        stateManager.save(chatId, updated);
+
+        if (user.hasVehicleInfo()) {
+            String vehicleDisplay = String.format("%s%s | 🔢 %s",
+                    user.getCarColor() != null
+                            ? "🎨 " + BotMessageBuilder.escape(user.getCarColor()) + " "
+                            : "",
+                    BotMessageBuilder.escape(user.getCarModel()),
+                    BotMessageBuilder.escape(user.getPlateNumber()));
+
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("✅ Yes, Proceed",  "VEHICLE_CONFIRM_YES"),
+                            BotMessageBuilder.button("📝 Change Vehicle", "VEHICLE_CHANGE")
+                    )
+            );
+
+            bot.send(sendWithInline(chatId,
+                    "🚘 <b>Vehicle Confirmation</b>\n\n" +
+                            "You are currently using:\n" +
+                            "<b>" + vehicleDisplay + "</b>\n\n" +
+                            "Use this for your ride?",
+                    rows));
+        } else {
+            UserState vehicleState = updated
+                    .withPendingCarColor(null)
+                    .withPendingCarModel(null)
+                    .withPendingPlateNumber(null)
+                    .withFlow(BotFlow.SET_VEHICLE_COLOR);
+            stateManager.save(chatId, vehicleState);
+
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "🎨 <b>What color is your vehicle?</b>\n\n" +
+                            "Example: <code>Silver</code>, <code>White</code>, <code>Black</code>"));
+        }
     }
 
     private void handleBookingMessage(Long chatId, String text,
@@ -590,6 +641,20 @@ public class MessageHandler {
             sb.append(stats.roleLabel()).append("\n");
             sb.append("📅 Member since: ").append(stats.memberSince()).append("\n");
 
+            // Vehicle info
+            if (stats.driverRidesPosted() != null || stats.carModel() != null) {
+                if (stats.carModel() != null && stats.plateNumber() != null) {
+                    sb.append(String.format("\n🚘 %s%s\n🔢 %s\n",
+                            stats.carColor() != null
+                                    ? "🎨 " + BotMessageBuilder.escape(stats.carColor()) + " "
+                                    : "",
+                            BotMessageBuilder.escape(stats.carModel()),
+                            BotMessageBuilder.escape(stats.plateNumber())));
+                } else {
+                    sb.append("\n🚘 <i>No vehicle info yet</i>\n");
+                }
+            }
+
             if (stats.driverRidesPosted() != null) {
                 sb.append("\n🏆 <b>Driver Stats</b>\n");
                 if (stats.driverCompletionRate() != null) {
@@ -623,8 +688,9 @@ public class MessageHandler {
 
             bot.send(sendWithInline(chatId, sb.toString(),
                     List.of(List.of(
-                            BotMessageBuilder.button("🔄 Refresh", "MY_PROFILE"),
-                            BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
+                            BotMessageBuilder.button("🔄 Refresh",    "MY_PROFILE"),
+                            BotMessageBuilder.button("🚘 My Vehicle", "VEHICLE_CHANGE"),
+                            BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
                     ))));
 
         } catch (Exception e) {
@@ -822,14 +888,12 @@ public class MessageHandler {
                                           UserState state, CarpoolBot bot,
                                           Long carpoolUserId) {
         String notes = text.trim();
-
-        // Save to DB — saveOrUpdate handles dedup + LRU replacement
         driverNoteService.saveOrUpdate(carpoolUserId, notes);
 
-        UserState updated = state.withNotes(notes).withFlow(BotFlow.POST_RIDE_CONFIRM);
+        UserState updated = state.withNotes(notes);
         stateManager.save(chatId, updated);
 
-        postRideHelper.showConfirmation(chatId, updated, bot);
+        showVehicleConfirmStepFromMessage(chatId, carpoolUserId, updated, bot);
     }
 
     // ── Helper ────────────────────────────────────────────────────────────
@@ -842,5 +906,130 @@ public class MessageHandler {
                 .parseMode("HTML")
                 .replyMarkup(BotMessageBuilder.inlineButtons(rows))
                 .build();
+    }
+
+    // ── Vehicle input handlers ────────────────────────────────────────────
+
+    private void handleSetVehicleColor(Long chatId, String text,
+                                       UserState state, CarpoolBot bot) {
+        String color = text.trim();
+        if (color.length() > 50) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Color is too long. Please enter a shorter description:"));
+            return;
+        }
+
+        stateManager.save(chatId, state
+                .withPendingCarColor(color)
+                .withFlow(BotFlow.SET_VEHICLE_MODEL));
+
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "🚘 <b>What's your car model?</b>\n\n" +
+                        "Example: <code>Toyota Vios</code>, <code>Honda City</code>"));
+    }
+
+    private void handleSetVehicleModel(Long chatId, String text,
+                                       UserState state, CarpoolBot bot) {
+        String model = text.trim();
+        if (model.isBlank() || model.length() > 100) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please enter a valid car model (max 100 characters):"));
+            return;
+        }
+
+        stateManager.save(chatId, state
+                .withPendingCarModel(model)
+                .withFlow(BotFlow.SET_VEHICLE_PLATE));
+
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "🔢 <b>What's your plate number?</b>\n\n" +
+                        "Example: <code>ABC 1234</code>"));
+    }
+
+    private void handleSetVehiclePlate(Long chatId, String text,
+                                       UserState state, Long carpoolUserId,
+                                       CarpoolBot bot) {
+        String plate = text.trim().toUpperCase();
+        if (plate.isBlank() || plate.length() > 20) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please enter a valid plate number (max 20 characters):"));
+            return;
+        }
+
+        // Save pending plate to state then show confirmation
+        UserState updated = state
+                .withPendingPlateNumber(plate)
+                .withFlow(BotFlow.POST_RIDE_VEHICLE_CONFIRM);
+        stateManager.save(chatId, updated);
+
+        showVehicleConfirmation(chatId, updated, bot);
+    }
+
+    private void showVehicleConfirmation(Long chatId, UserState state, CarpoolBot bot) {
+        String vehicleDisplay = String.format("%s%s | 🔢 %s",
+                state.getPendingCarColor() != null
+                        ? "🎨 " + BotMessageBuilder.escape(state.getPendingCarColor()) + " "
+                        : "",
+                BotMessageBuilder.escape(state.getPendingCarModel()),
+                BotMessageBuilder.escape(state.getPendingPlateNumber()));
+
+        var rows = List.of(
+                List.of(
+                        BotMessageBuilder.button("✅ Save & Continue", "VEHICLE_CONFIRM_SAVE"),
+                        BotMessageBuilder.button("✏️ Change",          "VEHICLE_CHANGE")
+                ),
+                List.of(
+                        BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+                )
+        );
+
+        bot.send(sendWithInline(chatId,
+                "🚘 <b>Vehicle Details</b>\n\n" +
+                        vehicleDisplay + "\n\n" +
+                        "Save this vehicle info?",
+                rows));
+    }
+
+    private void handleVehicleCommand(Long chatId, Long carpoolUserId,
+                                      UserState state, CarpoolBot bot) {
+        // Load current vehicle from DB
+        var userOpt = userRepository.findById(carpoolUserId);
+        if (userOpt.isEmpty()) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ User not found."));
+            return;
+        }
+
+        var user = userOpt.get();
+
+        if (user.hasVehicleInfo()) {
+            String current = String.format("%s%s | 🔢 %s",
+                    user.getCarColor() != null
+                            ? "🎨 " + BotMessageBuilder.escape(user.getCarColor()) + " "
+                            : "",
+                    BotMessageBuilder.escape(user.getCarModel()),
+                    BotMessageBuilder.escape(user.getPlateNumber()));
+
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("📝 Update Vehicle", "VEHICLE_CHANGE"),
+                            BotMessageBuilder.button("🗑️ Remove",         "VEHICLE_REMOVE")
+                    ),
+                    List.of(BotMessageBuilder.button("🏠 Menu", "MAIN_MENU"))
+            );
+
+            bot.send(sendWithInline(chatId,
+                    "🚘 <b>Your Vehicle</b>\n\n" + current, rows));
+        } else {
+            var rows = List.of(List.of(
+                    BotMessageBuilder.button("🚘 Add Vehicle", "VEHICLE_CHANGE"),
+                    BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU")
+            ));
+
+            bot.send(sendWithInline(chatId,
+                    "🚘 <b>Your Vehicle</b>\n\n" +
+                            "<i>No vehicle info yet.</i>\n\n" +
+                            "Add your vehicle so passengers know what to look for.",
+                    rows));
+        }
     }
 }

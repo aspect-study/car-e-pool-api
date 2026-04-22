@@ -57,6 +57,13 @@ public class UserState {
     // Stores selected note ID during notes preview step
     private final Long selectedNoteId;
 
+    // ── Vehicle state ─────────────────────────────────────────────────
+    // Temporary storage during vehicle input flow
+    // Cleared after save or cancel — never persisted in state long-term
+    private final String pendingCarColor;
+    private final String pendingCarModel;
+    private final String pendingPlateNumber;
+
     public static UserState initial(Long carpoolUserId) {
         return UserState.builder()
                 .flow(BotFlow.IDLE)

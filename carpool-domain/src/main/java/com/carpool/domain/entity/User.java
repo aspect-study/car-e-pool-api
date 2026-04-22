@@ -44,8 +44,23 @@ public class User extends BaseEntity {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Column(name = "car_model", length = 100)
+    private String carModel;
+
+    @Column(name = "car_color", length = 50)
+    private String carColor;
+
+    @Column(name = "plate_number", length = 20, unique = true)
+    private String plateNumber;
+
     // Convenience: can this user offer rides?
     public boolean canDrive() {
         return role == UserRole.DRIVER || role == UserRole.BOTH;
+    }
+
+    // Convenience: does this driver have vehicle info saved?
+    public boolean hasVehicleInfo() {
+        return carModel != null && !carModel.isBlank()
+                && plateNumber != null && !plateNumber.isBlank();
     }
 }

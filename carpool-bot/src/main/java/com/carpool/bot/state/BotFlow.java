@@ -15,9 +15,13 @@ public enum BotFlow {
     POST_RIDE_DESTINATION,
     POST_RIDE_SEATS,
     POST_RIDE_CONTRIBUTION,
-    POST_RIDE_NOTES,         // showing saved notes selection
-    POST_RIDE_NOTES_WRITE,   // user chose to write custom note — waiting for text input
-    BOOKING_MESSAGE,         // passenger typing optional message before booking
+    POST_RIDE_NOTES,              // showing saved notes selection
+    POST_RIDE_NOTES_WRITE,        // user chose to write custom note — waiting for text input
+    BOOKING_MESSAGE,              // passenger typing optional message before booking
+    POST_RIDE_VEHICLE_CONFIRM,    // showing vehicle confirmation screen
+    SET_VEHICLE_COLOR,            // waiting for car color input
+    SET_VEHICLE_MODEL,            // waiting for car model input
+    SET_VEHICLE_PLATE,            // waiting for plate number input
     POST_RIDE_CONFIRM,
 
     // ── Driver: Manage active ride ────────────────────────────────────────

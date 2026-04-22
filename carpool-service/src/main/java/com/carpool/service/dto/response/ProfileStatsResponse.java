@@ -14,6 +14,11 @@ public record ProfileStatsResponse(
         String roleLabel,          // "Driver", "Passenger", "Driver & Passenger"
         String memberSince,        // formatted: "Apr 1, 2026"
 
+        // ── Vehicle info (null if not set) ────────────────────────────────
+        String carModel,
+        String carColor,
+        String plateNumber,
+
         // ── Driver stats (null if never drove) ────────────────────────────
         Integer driverRidesPosted,
         Integer driverCompleted,

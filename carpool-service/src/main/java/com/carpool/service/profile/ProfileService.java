@@ -66,6 +66,10 @@ public class ProfileService {
                 user.getTelegramHandle(),
                 roleLabel,
                 memberSince,
+                // Vehicle info — null if not set
+                user.getCarModel(),
+                user.getCarColor(),
+                user.getPlateNumber(),
                 driverRidesPosted   > 0 ? driverRidesPosted      : null,
                 driverRidesPosted   > 0 ? driverCompleted         : null,
                 driverRidesPosted   > 0 ? driverCancelled         : null,

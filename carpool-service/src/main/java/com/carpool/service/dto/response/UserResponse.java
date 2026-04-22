@@ -13,5 +13,10 @@ public record UserResponse(
         String photoUrl,
         UserRole role,
         UserStatus status,
-        Instant createdAt
+        Instant createdAt,
+
+        // Vehicle info — nullable (driver may not have set this yet)
+        String carModel,
+        String carColor,
+        String plateNumber
 ) {}
