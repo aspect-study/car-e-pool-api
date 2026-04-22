@@ -134,7 +134,7 @@ public class BotMessageBuilder {
                 "%s <b>%s → %s</b>\n" +
                         "🕐 %s\n" +
                         "🪑 %s\n" +
-                        "💵 ₱%.2f / seat\n" +
+                        "⛽ ₱%.2f gas share/seat\n" +
                         "👤 %s%s\n" +
                         "🕓 Posted %s" +
                         "%s",
@@ -171,7 +171,7 @@ public class BotMessageBuilder {
 
         for (int i = 0; i < rides.size(); i++) {
             RideResponse ride = rides.get(i);
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ₱%.2f\n",
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n",
                     i + 1,
                     escape(ride.originHub().name()),
                     escape(ride.destinationHub().name()),
@@ -306,7 +306,7 @@ public class BotMessageBuilder {
 
         for (int i = 0; i < pageRides.size(); i++) {
             RideResponse ride = pageRides.get(i);
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ₱%.2f\n",
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n",
                     fromIdx + i + 1,
                     escape(ride.originHub().name()),
                     escape(ride.destinationHub().name()),

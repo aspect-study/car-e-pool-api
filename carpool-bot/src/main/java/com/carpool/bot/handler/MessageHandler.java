@@ -479,7 +479,7 @@ public class MessageHandler {
 
             bot.send(BotMessageBuilder.text(chatId,
                     "✅ Passenger slots: <b>" + seats + "</b>\n\n" +
-                            "💵 <b>How much is the contribution per seat?</b>\n" +
+                            "⛽ <b>What's the suggested gas share per seat?</b>\n" +
                             "Enter <code>0</code> if it's a free ride.\n" +
                             "Example: <code>50</code>"));
 
@@ -504,7 +504,7 @@ public class MessageHandler {
                     .withFlow(BotFlow.POST_RIDE_NOTES));
 
             bot.send(BotMessageBuilder.textNoMenu(chatId,
-                    "✅ Contribution: <b>₱" + amount + " / seat</b>"));
+                    "✅ Gas share: <b>₱" + amount + " / seat</b>"));
             postRideHelper.showNotesPrompt(chatId, carpoolUserId, state.withContribution(amount), bot);
 
         } catch (NumberFormatException e) {
@@ -699,7 +699,7 @@ public class MessageHandler {
                 default          -> "📋";
             };
 
-            sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ₱%.2f\n",
+            sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ⛽ ₱%.2f share\n",
                     i + 1,
                     dirEmoji,
                     BotMessageBuilder.escape(r.originHub().name()),
@@ -740,7 +740,7 @@ public class MessageHandler {
             sb.append("<b>Active</b>\n");
             for (int i = 0; i < myBookings.size(); i++) {
                 BookingResponse b = myBookings.get(i);
-                sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ₱%.2f\n",
+                sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ⛽ ₱%.2f share\n",
                         i + 1,
                         BotMessageBuilder.escape(b.ride().originHub().name()),
                         BotMessageBuilder.escape(b.ride().destinationHub().name()),

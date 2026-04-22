@@ -429,7 +429,7 @@ public class CallbackHandler {
             parts.add("🪑 " + state.getFilterMinSeats() + "+ seats");
         }
         if (state.getFilterMaxPrice() != null) {
-            parts.add("💵 Max ₱" + state.getFilterMaxPrice().toPlainString());
+            parts.add("⛽ Max ₱" + state.getFilterMaxPrice().toPlainString() + " share");
         }
 
         return parts.isEmpty() ? "" : "<i>Filters: " + String.join(" | ", parts) + "</i>";
@@ -609,7 +609,7 @@ public class CallbackHandler {
                                 BotMessageBuilder.escape(b.passengerMessage())));
                     }
 
-                    sb.append(String.format("    🪑 %d seat(s) | 💵 ₱%.2f\n",
+                    sb.append(String.format("    🪑 %d seat(s) | ⛽ ₱%.2f share\n",
                             b.seatsReserved(),
                             b.contributionDue()));
                 }
@@ -710,7 +710,7 @@ public class CallbackHandler {
             bot.send(sendWithInline(chatId,
                     "✅ <b>Ride Completed!</b>\n\n" +
                             "Thank you for driving! All passengers have been notified.\n\n" +
-                            "Please collect contributions from your passengers.",
+                            "Please collect gas share contributions from your passengers.",
                     List.of(List.of(
                             BotMessageBuilder.button("🚗 My Rides", "MY_RIDES"),
                             BotMessageBuilder.button("🏠 Menu",     "MAIN_MENU")
@@ -738,7 +738,7 @@ public class CallbackHandler {
             sb.append("<b>Active</b>\n");
             for (int i = 0; i < myBookings.size(); i++) {
                 BookingResponse b = myBookings.get(i);
-                sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ₱%.2f\n",
+                sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ⛽ ₱%.2f share\n",
                         i + 1,
                         BotMessageBuilder.escape(b.ride().originHub().name()),
                         BotMessageBuilder.escape(b.ride().destinationHub().name()),
@@ -816,7 +816,7 @@ public class CallbackHandler {
                             "🚏 Pickup: <b>%s</b>\n" +
                             "🏁 Dropoff: <b>%s</b>\n" +
                             "🪑 Seats: %d\n" +
-                            "💵 Contribution: ₱%.2f\n" +
+                            "⛽ Suggested share: ₱%.2f\n" +
                             "👤 Driver: %s%s\n" +
                             "%s" +
                             "📊 Status: %s%s",
@@ -953,7 +953,7 @@ public class CallbackHandler {
                         : b.ride().originHub().name();
 
                 sb.append(String.format("<b>%d.</b> %s%s\n" +
-                                "    🚏 %s | 🪑 %d | ₱%.2f\n",
+                                "    🚏 %s | 🪑 %d | ⛽ ₱%.2f share\n",
                         index,
                         BotMessageBuilder.escape(b.passenger().fullName()),
                         paxHandle,
@@ -983,7 +983,7 @@ public class CallbackHandler {
                         : 0;
 
                 sb.append(String.format("<b>%d.</b> %s%s\n" +
-                                "    🪑 %d | ₱%.2f | ⏰ %d min\n",
+                                "    🪑 %d | ⛽ ₱%.2f share | ⏰ %d min\n",
                         index,
                         BotMessageBuilder.escape(b.passenger().fullName()),
                         paxHandle,
@@ -1047,7 +1047,7 @@ public class CallbackHandler {
                             BotMessageBuilder.escape(original.destinationHub().name()) +
                             "</b>\n" +
                             "🪑 " + original.totalSeats() + " seat(s)\n" +
-                            "💵 ₱" + original.contributionAmount().toPlainString() + " / seat\n" +
+                            "⛽ ₱" + original.contributionAmount().toPlainString() + " gas share/seat\n" +
                             notesLine +
                             "<i>Only the departure time will be updated.</i>\n\n" +
                             "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
@@ -1157,7 +1157,7 @@ public class CallbackHandler {
                     : 0;
 
             sb.append(String.format(
-                    "<b>%d.</b> %s | 🪑 %d | ₱%.2f | ⏰ %d min\n",
+                    "<b>%d.</b> %s | 🪑 %d | ⛽ ₱%.2f share | ⏰ %d min\n",
                     i + 1,
                     BotMessageBuilder.escape(b.passenger().fullName()),
                     b.seatsReserved(),
@@ -1200,7 +1200,7 @@ public class CallbackHandler {
                     "🔔 <b>Booking Request</b>\n\n" +
                             "👤 <b>%s</b>%s\n" +
                             "🪑 Seats: %d\n" +
-                            "💵 Contribution: ₱%.2f\n" +
+                            "⛽ Suggested share: ₱%.2f\n" +
                             "%s" +
                             "⏰ Expires in: %d minutes",
                     BotMessageBuilder.escape(b.passenger().fullName()),
@@ -1319,9 +1319,9 @@ public class CallbackHandler {
             };
 
             String paymentLabel = switch (b.paymentStatus().name()) {
-                case "PAID"           -> "✅ Paid";
-                case "PARTIALLY_PAID" -> "⚠️ Partially paid";
-                default               -> "❌ Unpaid";
+                case "PAID"           -> "✅ Settled";
+                case "PARTIALLY_PAID" -> "⚠️ Partially settled";
+                default               -> "❌ Not yet settled";
             };
 
             String detail = String.format(
@@ -1332,8 +1332,8 @@ public class CallbackHandler {
                             "🚏 Pickup: <b>%s</b>\n" +
                             "🏁 Dropoff: <b>%s</b>\n" +
                             "🪑 Seats: %d\n" +
-                            "💵 Contribution: ₱%.2f\n" +
-                            "💳 Payment: %s\n" +
+                            "⛽ Suggested share: ₱%.2f\n" +
+                            "💳 Share settlement: %s\n" +
                             "%s" +
                             "📊 Status: %s",
                     BotMessageBuilder.escape(b.passenger().fullName()),
@@ -1596,7 +1596,7 @@ public class CallbackHandler {
                         BotMessageBuilder.button(seats3Label,   "APPLY_FILTER:SEATS:3"),
                         BotMessageBuilder.button(seatsAnyLabel, "APPLY_FILTER:SEATS:ANY")
                 ),
-                List.of(BotMessageBuilder.button("── Max Price ──", "NOOP")),
+                List.of(BotMessageBuilder.button("── Max Share ──", "NOOP")),
                 List.of(
                         BotMessageBuilder.button(price50Label,  "APPLY_FILTER:PRICE:50"),
                         BotMessageBuilder.button(price100Label, "APPLY_FILTER:PRICE:100"),
@@ -1720,7 +1720,7 @@ public class CallbackHandler {
                 default          -> "📋";
             };
 
-            sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ₱%.2f\n",
+            sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ⛽ ₱%.2f share\n",
                     i + 1,
                     dirEmoji,
                     BotMessageBuilder.escape(r.originHub().name()),

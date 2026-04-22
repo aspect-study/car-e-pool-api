@@ -102,7 +102,7 @@ public class NotificationService {
                         "👤 <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
-                        "🪑 %d seat(s) | 💵 ₱%.2f\n" +
+                        "🪑 %d seat(s) | ⛽ ₱%.2f share\n" +
                         "%s\n\n" +
                         "Seat(s) have been freed up.",
                 escape(pax.getFullName()),
@@ -164,7 +164,7 @@ public class NotificationService {
             String personalMsg = msg + String.format(
                     "\n\n📋 <b>Your Booking</b>\n" +
                             "🚏 Pickup: <b>%s</b>\n" +
-                            "🪑 Seats: %d | 💵 ₱%.2f",
+                            "🪑 Seats: %d | ⛽ ₱%.2f share",
                     escape(pickup),
                     booking.getSeatsReserved(),
                     booking.getContributionDue());
@@ -192,7 +192,7 @@ public class NotificationService {
                 "✅ <b>Ride Completed!</b>\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n\n" +
-                        "Thank you for carpooling! Please settle your contribution with the driver.",
+                        "Thank you for carpooling! Please settle your gas share with the driver.",
                 escape(ride.getOriginHub().getName()),
                 escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
@@ -269,7 +269,7 @@ public class NotificationService {
                         "👤 Driver: <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
-                        "🪑 %d seat(s) | 💵 ₱%.2f\n" +
+                        "🪑 %d seat(s) | ⛽ ₱%.2f share\n" +
                         "%s\n\n" +
                         "Please look for another available ride.",
                 escape(ride.getDriver().getFullName()),
@@ -324,7 +324,7 @@ public class NotificationService {
                         "because you did not respond in time.\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
-                        "🪑 %d seat(s) | 💵 ₱%.2f\n\n" +
+                        "🪑 %d seat(s) | ⛽ ₱%.2f share\n\n" +
                         "The seat(s) have been released back to your ride.",
                 escape(pax.getFullName()),
                 paxHandle,
@@ -366,7 +366,7 @@ public class NotificationService {
                         "👤 <b>%s</b>%s is waiting for your response.\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
-                        "🪑 %d seat(s) | 💵 ₱%.2f\n\n" +
+                        "🪑 %d seat(s) | ⛽ ₱%.2f share\n\n" +
                         "⚠️ Auto-declines in ~%d minutes if no response.",
                 event.reminderNumber(),
                 escape(pax.getFullName()),
@@ -491,7 +491,7 @@ public class NotificationService {
                         "📍 Route: %s → %s\n" +
                         "🚏 Pickup at: <b>%s</b>\n" +
                         "🕐 %s\n" +
-                        "💵 Contribution: ₱%.2f\n\n" +
+                        "⛽ Suggested share: ₱%.2f\n\n" +
                         "Contact the passenger directly to coordinate.",
                 escape(pax.getFullName()),
                 paxHandle,
@@ -525,7 +525,7 @@ public class NotificationService {
                         "🏁 Your dropoff: <b>%s</b>\n" +
                         "🕐 %s\n" +
                         "🪑 Seats: %d\n" +
-                        "💵 Contribution due: <b>₱%.2f</b>\n\n" +
+                        "⛽ Suggested share: <b>₱%.2f</b>\n\n" +
                         "👤 Driver: <b>%s</b>%s\n" +
                         "%s",
                 escape(ride.getOriginHub().getName()),
@@ -589,7 +589,7 @@ public class NotificationService {
                 "🔔 <b>New Booking Request</b>\n\n" +
                         "👤 <b>%s</b>%s\n" +
                         "🚏 Pickup at: <b>%s</b>\n" +
-                        "🪑 Seats: %d | 💵 ₱%.2f\n" +
+                        "🪑 Seats: %d | ⛽ ₱%.2f share\n" +
                         "%s\n" +
                         "⏰ Expires in %d minutes",
                 escape(pax.getFullName()),
@@ -618,7 +618,7 @@ public class NotificationService {
                 "⏳ <b>Booking Request Sent!</b>\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
-                        "🪑 Seats: %d | 💵 ₱%.2f\n" +
+                        "🪑 Seats: %d | ⛽ ₱%.2f share\n" +
                         "👤 Driver: <b>%s</b>%s\n\n" +
                         "Waiting for driver approval.\n" +
                         "⏰ Auto-declines in %d minutes if no response.",
