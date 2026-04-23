@@ -5,6 +5,7 @@ import com.carpool.bot.handler.CallbackHandler;
 import com.carpool.bot.handler.MessageHandler;
 import com.carpool.bot.ratelimit.BotRateLimiter;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,8 +17,11 @@ import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import java.util.List;
 
 /**
  * Main Telegram bot entry point.
@@ -32,10 +36,11 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 @RequiredArgsConstructor
 public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 
-    private final BotConfig       botConfig;
-    private final MessageHandler  messageHandler;
-    private final CallbackHandler callbackHandler;
-    private final BotRateLimiter rateLimiter;
+    private final BotConfig         botConfig;
+    private final MessageHandler    messageHandler;
+    private final CallbackHandler   callbackHandler;
+    private final BotRateLimiter    rateLimiter;
+    private final UserRepository    userRepository;
 
     // Lazy-initialized to avoid circular dependency
     private TelegramClient telegramClient;
@@ -73,9 +78,51 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
             }
 
             if (update.hasMessage() && update.getMessage().hasText()) {
+                // Terms gate — check before routing to MessageHandler
+                Long telegramId = update.getMessage().getFrom().getId();
+                var userOpt = userRepository.findByTelegramId(telegramId);
+
+                if (userOpt.isPresent() && !userOpt.get().isTermsAccepted()) {
+                    // Existing user who hasn't accepted — show reminder
+                    // New users are handled inside MessageHandler (auto-register then show welcome)
+                    Long gatedChatId = update.getMessage().getChatId();
+                    String text = update.getMessage().getText().trim();
+
+                    // Allow /start to pass through so MessageHandler can show welcome screen
+                    if (!text.equals("/start")) {
+                        send(BotMessageBuilder.textNoMenu(gatedChatId,
+                                "⚠️ Please accept our community terms first to use this bot."));
+                        send(sendWithInlineInternal(gatedChatId,
+                                "Tap below to review and accept:",
+                                List.of(List.of(
+                                        BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME")
+                                ))));
+                        return;
+                    }
+                }
+
                 messageHandler.handle(update.getMessage(), this);
 
             } else if (update.hasCallbackQuery()) {
+                // Terms gate for callbacks
+                Long telegramId = update.getCallbackQuery().getFrom().getId();
+                String callbackData = update.getCallbackQuery().getData();
+                var userOpt = userRepository.findByTelegramId(telegramId);
+
+                boolean isTermsCallback = callbackData != null && (
+                        callbackData.startsWith("TERMS_") );
+
+                if (userOpt.isPresent() && !userOpt.get().isTermsAccepted() && !isTermsCallback) {
+                    Long gatedChatId = update.getCallbackQuery().getMessage().getChatId();
+                    answerCallback(update.getCallbackQuery().getId());
+                    send(sendWithInlineInternal(gatedChatId,
+                            "⚠️ Please accept our community terms first.",
+                            List.of(List.of(
+                                    BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME")
+                            ))));
+                    return;
+                }
+
                 callbackHandler.handle(update.getCallbackQuery(), this);
 
             } else {
@@ -146,5 +193,19 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
             return update.getCallbackQuery().getMessage().getChatId();
         }
         return null;
+    }
+
+    /**
+     * Internal helper for building inline messages within CarpoolBot.
+     * Avoids circular dependency on handler utilities.
+     */
+    private SendMessage sendWithInlineInternal(Long chatId, String text,
+                                               List<List<InlineKeyboardButton>> rows) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
+                .replyMarkup(BotMessageBuilder.inlineButtons(rows))
+                .build();
     }
 }
