@@ -607,6 +607,15 @@ public class CallbackHandler {
 
     private void handleCancelRide(Long chatId, Long rideId, Long carpoolUserId, CarpoolBot bot) {
         try {
+            // Cannot cancel a DEPARTED ride — must Complete it instead
+            RideResponse ride = rideService.getRideById(rideId);
+            if (ride.status().name().equals("DEPARTED")) {
+                bot.send(BotMessageBuilder.text(chatId,
+                        "⚠️ Your ride has already started.\n\n" +
+                                "Please tap <b>Complete Ride</b> when you reach the destination."));
+                return;
+            }
+
             List<BookingResponse> activeBookings = bookingService.getBookingsByRideId(rideId);
 
             if (!activeBookings.isEmpty()) {
