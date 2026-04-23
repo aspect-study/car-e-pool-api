@@ -713,6 +713,35 @@ public class CallbackHandler {
 
     private void handleDepartRide(Long chatId, Long rideId, Long carpoolUserId, CarpoolBot bot) {
         try {
+            // Validate time window — prevent starting ride too early
+            RideResponse ride = rideService.getRideById(rideId);
+
+            ZoneId manila = ZoneId.of("Asia/Manila");
+            LocalDateTime departure = ride.departureTime()
+                    .atZone(ZoneId.of("UTC"))
+                    .withZoneSameInstant(manila)
+                    .toLocalDateTime();
+            LocalDateTime now      = LocalDateTime.now(manila);
+            LocalDateTime earliest = departure.minusHours(1);
+
+            if (now.isBefore(earliest)) {
+                String formatted = departure.format(
+                        DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
+                long hoursAway = Duration.between(now, departure).toHours();
+                long minsAway  = Duration.between(now, departure).toMinutesPart();
+
+                String timeAway = hoursAway > 0
+                        ? hoursAway + "h " + minsAway + "m away"
+                        : minsAway + " minutes away";
+
+                bot.send(BotMessageBuilder.text(chatId,
+                        "⚠️ <b>Too early to start this ride.</b>\n\n" +
+                                "Your ride is scheduled for <b>" + formatted + "</b> " +
+                                "(" + timeAway + ").\n\n" +
+                                "You can start the ride up to <b>1 hour before</b> departure."));
+                return;
+            }
+
             rideService.updateRideStatus(rideId,
                     new UpdateRideStatusRequest(RideStatus.DEPARTED), carpoolUserId);
             stateManager.reset(chatId);
