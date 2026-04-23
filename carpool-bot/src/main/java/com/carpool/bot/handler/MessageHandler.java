@@ -729,7 +729,7 @@ public class MessageHandler {
                         BotMessageBuilder.button("🌇 Afternoon (3-7 PM)",     "TIME:AFTERNOON")
                 ),
                 List.of(
-                        BotMessageBuilder.button("🕛 Custom Time",            "TIME:CUSTOM"),
+                        BotMessageBuilder.button("📅 Custom Date & Time", "TIME:CUSTOM"),
                         BotMessageBuilder.button("🔍 Show All Today",         "TIME:ALL_TODAY")
                 )
         );
@@ -865,11 +865,23 @@ public class MessageHandler {
     private void handleCustomTimeInput(Long chatId, String text, UserState state,
                                        Long carpoolUserId, CarpoolBot bot) {
         try {
-            LocalTime time = LocalTime.parse(text.trim(),
-                    DateTimeFormatter.ofPattern("HH:mm"));
+            String input = text.trim();
+            LocalDateTime from;
 
-            LocalDateTime from = LocalDateTime.now().toLocalDate().atTime(time);
-            LocalDateTime to   = from.plusHours(2);
+            // Accept both "MM/DD HH:MM" (with date) and "HH:MM" (today)
+            if (input.matches("\\d{2}/\\d{2} \\d{2}:\\d{2}")) {
+                // MM/DD HH:MM — include date
+                from = LocalDateTime.parse(
+                        LocalDateTime.now().getYear() + "/" + input,
+                        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
+            } else {
+                // HH:MM only — default to today (backward compatible)
+                LocalTime time = LocalTime.parse(input,
+                        DateTimeFormatter.ofPattern("HH:mm"));
+                from = LocalDateTime.now().toLocalDate().atTime(time);
+            }
+
+            LocalDateTime to = from.plusHours(2);
 
             List<RideResponse> rides = rideService.getRidesByDirection(
                     state.getDirection(), carpoolUserId, from, to,
@@ -885,14 +897,18 @@ public class MessageHandler {
                     .withSearchTo(to)
                     .withFlow(BotFlow.SEARCH_RESULTS));
 
+            String timeLabel = from.atZone(ZoneId.of("Asia/Manila"))
+                    .format(DateTimeFormatter.ofPattern("MMM d 'at' h:mm a"));
+
             bot.send(BotMessageBuilder.rideList(chatId, rides,
                     "🔍 <b>Available Rides — " + dirLabel +
-                            "</b> (around " + text.trim() + ")"));
+                            "</b>\n<i>Around " + timeLabel + "</i>"));
 
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Invalid format. Please use <code>HH:MM</code>\n" +
-                            "Example: <code>07:30</code>"));
+                    "⚠️ Invalid format.\n\n" +
+                            "For today: <code>HH:MM</code> — e.g. <code>07:30</code>\n" +
+                            "For another date: <code>MM/DD HH:MM</code> — e.g. <code>04/25 07:30</code>"));
         }
     }
 

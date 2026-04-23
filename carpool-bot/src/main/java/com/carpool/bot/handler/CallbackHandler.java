@@ -377,9 +377,12 @@ public class CallbackHandler {
             case "AFTERNOON"     -> { from = now.toLocalDate().atTime(15, 0); to = now.toLocalDate().atTime(19, 0); }
             case "ALL_TODAY"     -> { from = now; to = now.toLocalDate().atTime(23, 59); }
             default -> {
-                bot.send(BotMessageBuilder.text(chatId,
-                        "🕐 <b>Enter your preferred departure time:</b>\n\n" +
-                                "Format: <code>HH:MM</code>\nExample: <code>07:30</code>"));
+                bot.send(BotMessageBuilder.textWithCancel(chatId,
+                        "📅 <b>Enter date and time:</b>\n\n" +
+                                "For today: <code>HH:MM</code>\n" +
+                                "Example: <code>07:30</code>\n\n" +
+                                "For another date: <code>MM/DD HH:MM</code>\n" +
+                                "Example: <code>04/25 07:30</code>"));
                 stateManager.save(chatId, state.withFlow(BotFlow.SEARCH_SELECT_TIME));
                 return;
             }
@@ -1562,7 +1565,7 @@ public class CallbackHandler {
                         BotMessageBuilder.button("🌇 Afternoon (3-7 PM)",     "TIME:AFTERNOON")
                 ),
                 List.of(
-                        BotMessageBuilder.button("🕛 Custom Time",            "TIME:CUSTOM"),
+                        BotMessageBuilder.button("📅 Custom Date & Time",     "TIME:CUSTOM"),
                         BotMessageBuilder.button("🔍 Show All Today",         "TIME:ALL_TODAY")
                 )
         );

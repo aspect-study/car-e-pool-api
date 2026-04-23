@@ -1,5 +1,6 @@
 package com.carpool.service.vehicle;
 
+import com.carpool.common.exception.InvalidRideStateException;
 import com.carpool.common.exception.UserNotFoundException;
 import com.carpool.domain.entity.User;
 import com.carpool.repository.UserRepository;
@@ -35,8 +36,8 @@ public class VehicleService {
         // Same user updating their own plate is allowed
         userRepository.findByPlateNumber(newPlate).ifPresent(existing -> {
             if (!existing.getId().equals(userId)) {
-                throw new com.carpool.common.exception.InvalidRideStateException(
-                        "Plate number " + newPlate + " is already registered by another user.");
+                throw new InvalidRideStateException(
+                        "Plate number " + newPlate + " is already registered by another user. If this belongs to you, please report it to the admin.");
             }
         });
 
