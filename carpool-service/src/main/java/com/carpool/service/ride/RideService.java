@@ -257,8 +257,14 @@ public class RideService {
         };
 
         if (!valid) {
-            throw new InvalidRideStateException(
-                    "Cannot transition ride from " + current + " to " + requested);
+            String message = switch (current) {
+                case DEPARTED  -> "This ride has already started and cannot be changed.";
+                case COMPLETED -> "This ride has already been completed.";
+                case CANCELLED -> "This ride has already been cancelled.";
+                case DRAFT     -> "Please publish your ride first before changing its status.";
+                default        -> "This status change is not allowed at this stage.";
+            };
+            throw new InvalidRideStateException(message);
         }
     }
 

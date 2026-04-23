@@ -68,8 +68,15 @@ public class BookingService {
 
         // ── 2. Validate ride state ───────────────────────────────────────
         if (ride.getStatus() != RideStatus.ACTIVE) {
-            throw new InvalidRideStateException(
-                    "Ride " + rideId + " is not accepting bookings. Status: " + ride.getStatus());
+            String message = switch (ride.getStatus()) {
+                case FULL      -> "Sorry, this ride is now fully booked.";
+                case DEPARTED  -> "This ride has already started and is no longer accepting bookings.";
+                case COMPLETED -> "This ride has already been completed.";
+                case CANCELLED -> "This ride has been cancelled by the driver.";
+                case DRAFT     -> "This ride is not available for booking yet.";
+                default        -> "This ride is not currently accepting bookings.";
+            };
+            throw new InvalidRideStateException(message);
         }
 
         // ── 3. Check available seats ─────────────────────────────────────
@@ -151,8 +158,15 @@ public class BookingService {
 
         if (booking.getStatus() != BookingStatus.CONFIRMED
                 && booking.getStatus() != BookingStatus.PENDING) {
-            throw new InvalidRideStateException(
-                    "Cannot cancel booking with status: " + booking.getStatus());
+            String message = switch (booking.getStatus()) {
+                case DECLINED            -> "This booking was already declined by the driver.";
+                case TIMED_OUT           -> "This booking has already expired.";
+                case COMPLETED           -> "This ride has already been completed.";
+                case CANCELLED_BY_DRIVER -> "This booking was already cancelled by the driver.";
+                case CANCELLED_BY_PASSENGER -> "This booking has already been cancelled.";
+                default                  -> "This booking can no longer be cancelled.";
+            };
+            throw new InvalidRideStateException(message);
         }
 
         // Cannot cancel once ride has departed
@@ -237,7 +251,7 @@ public class BookingService {
 
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new InvalidRideStateException(
-                    "Cannot accept booking with status: " + booking.getStatus());
+                    "This request has already received a response.");
         }
 
         booking.setStatus(BookingStatus.CONFIRMED);
@@ -267,7 +281,7 @@ public class BookingService {
 
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new InvalidRideStateException(
-                    "Cannot decline booking with status: " + booking.getStatus());
+                    "This request has already received a response.");
         }
 
         booking.setStatus(BookingStatus.DECLINED);
