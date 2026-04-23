@@ -527,12 +527,11 @@ Priority 1 (Tech Debt):
 
 Priority 2 (Quality):
 - Integration tests for REST API endpoints (defer until after first deployment)
-- Additional unit tests for BookingService
 
 Priority 3 (Features -- post-launch based on user feedback):
 - Multi-vehicle support (Path 2) -- organic accumulation via plate uniqueness
+- Full ride history / reporting
 - Hub search suggestions in Find a Ride flow
-- REST API additional filters
 
 ---
 
@@ -547,3 +546,4 @@ Priority 3 (Features -- post-launch based on user feedback):
 | Apr 20, 2026 | Booking approval flow, scheduler, filter + pagination, profile view |
 | Apr 21, 2026 | Cancel with reason, repost ride, context-aware menu, LTFRB compliance, CLAUDE.md |
 | Apr 22, 2026 | RideService unit tests, REST API alignment, ProfileController, bot rate limiting, REST pagination, vehicle info flow, driver view bookings fix, My Profile always visible, LTFRB compliance completed |
+| Apr 23, 2026 | Repost ride (3 max DB limit), booking history (7 max DB limit), passenger bookings shows driver name/handle, vehicle update fix |
