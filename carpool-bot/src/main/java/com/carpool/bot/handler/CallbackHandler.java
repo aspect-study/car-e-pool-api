@@ -132,6 +132,10 @@ public class CallbackHandler {
             case "VEHICLE_CONFIRM_SAVE" -> handleVehicleConfirmSave(chatId, carpoolUserId, state, bot);
             case "VEHICLE_CHANGE"       -> handleVehicleChange(chatId, carpoolUserId, state, bot);
             case "VEHICLE_REMOVE"       -> handleVehicleRemove(chatId, carpoolUserId, bot);
+            case "TERMS_WELCOME"        -> handleTermsWelcome(chatId, bot);
+            case "TERMS_ACCEPT"         -> handleTermsAccept(chatId, carpoolUserId, bot);
+            case "TERMS_DECLINE"        -> handleTermsDecline(chatId, bot);
+            case "TERMS_VIEW_AGAIN"     -> handleTermsWelcome(chatId, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
@@ -1977,5 +1981,95 @@ public class CallbackHandler {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not load profile. Please try again."));
         }
+    }
+
+    // ── Terms ─────────────────────────────────────────────────────────────
+
+    /**
+     * Show full terms screen with key points.
+     * Called from welcome screen or "View Terms Again" button.
+     */
+    public void handleTermsWelcome(Long chatId, CarpoolBot bot) {
+        String termsText =
+                "📋 <b>Terms & Community Guidelines</b>\n\n" +
+                        "Please read and accept the following before using this bot:\n\n" +
+                        "🚫 <b>Non-Commercial Use</b>\n" +
+                        "This is a peer-to-peer carpooling tool — not a ride-hailing business.\n\n" +
+                        "⛽ <b>Cost-Recovery Only</b>\n" +
+                        "Contributions cover fuel, tolls, and parking only. No profit allowed.\n\n" +
+                        "📜 <b>Legal Compliance</b>\n" +
+                        "Drivers must follow LTFRB Carpooling Guidelines: 2-trip/day limit and required permits/QR codes.\n\n" +
+                        "🛡️ <b>Safety First</b>\n" +
+                        "Obey traffic laws and prioritize passenger safety. The bot owner/admin is not liable for any incidents.\n\n" +
+                        "🚨 <b>Zero Tolerance</b>\n" +
+                        "Overcharging, random pickups, or operating without permits (\"Colorum\" behavior) = permanent ban.\n\n" +
+                        "Do you accept these terms?";
+
+        var rows = List.of(
+                List.of(
+                        BotMessageBuilder.button("✅ I Accept",  "TERMS_ACCEPT"),
+                        BotMessageBuilder.button("❌ Decline",   "TERMS_DECLINE")
+                )
+        );
+
+        bot.send(sendWithInline(chatId, termsText, rows));
+    }
+
+    /**
+     * User accepted terms — save version + timestamp, show welcome message.
+     */
+    private void handleTermsAccept(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+        try {
+            userRepository.findById(carpoolUserId).ifPresent(user -> {
+                user.setTermsVersionAccepted(com.carpool.bot.config.BotConfig.CURRENT_TERMS_VERSION);
+                user.setTermsAcceptedAt(java.time.LocalDateTime.now());
+                user.setTermsDeclinedAt(null);
+                userRepository.save(user);
+                log.info("Terms accepted: userId={} version={}",
+                        carpoolUserId, com.carpool.bot.config.BotConfig.CURRENT_TERMS_VERSION);
+            });
+
+            bot.send(BotMessageBuilder.textNoMenu(chatId,
+                    "🎉 <b>Welcome to the community!</b>\n\n" +
+                            "Thank you for accepting the terms. You're now part of the " +
+                            "Car-e-Pool Carpooling Community.\n\n" +
+                            "Let's get started! 🚗"));
+
+            // Show main menu after welcome message
+            UserState state = stateManager.get(chatId);
+            if (state == null) state = UserState.initial(carpoolUserId);
+            handleMainMenu(chatId, carpoolUserId, state, bot);
+
+        } catch (Exception e) {
+            log.error("Failed to save terms acceptance for userId={}: {}",
+                    carpoolUserId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Something went wrong. Please try again."));
+        }
+    }
+
+    /**
+     * User declined terms — show empathetic message with option to review again.
+     * Stores declined_at for weekly re-prompt logic.
+     */
+    private void handleTermsDecline(Long chatId, CarpoolBot bot) {
+        userRepository.findById(
+                        stateManager.get(chatId) != null
+                                ? stateManager.get(chatId).getCarpoolUserId()
+                                : 0L)
+                .ifPresent(user -> {
+                    user.setTermsDeclinedAt(java.time.LocalDateTime.now());
+                    userRepository.save(user);
+                });
+
+        var rows = List.of(List.of(
+                BotMessageBuilder.button("🔁 Review Terms Again", "TERMS_VIEW_AGAIN")
+        ));
+
+        bot.send(sendWithInline(chatId,
+                "We understand if you're not ready. 🙏\n\n" +
+                        "You'll need to accept the terms to use this bot. " +
+                        "You can review them again anytime.",
+                rows));
     }
 }

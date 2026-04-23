@@ -53,6 +53,19 @@ public class User extends BaseEntity {
     @Column(name = "plate_number", length = 20, unique = true)
     private String plateNumber;
 
+    /**
+     * Terms version accepted by the user.
+     * NULL = not yet accepted. '1.0' = current version accepted.
+     */
+    @Column(name = "terms_version_accepted", length = 10)
+    private String termsVersionAccepted;
+
+    @Column(name = "terms_accepted_at")
+    private java.time.LocalDateTime termsAcceptedAt;
+
+    @Column(name = "terms_declined_at")
+    private java.time.LocalDateTime termsDeclinedAt;
+
     // Convenience: can this user offer rides?
     public boolean canDrive() {
         return role == UserRole.DRIVER || role == UserRole.BOTH;
@@ -62,5 +75,21 @@ public class User extends BaseEntity {
     public boolean hasVehicleInfo() {
         return carModel != null && !carModel.isBlank()
                 && plateNumber != null && !plateNumber.isBlank();
+    }
+
+    /**
+     * Returns true if the user has accepted the current terms version.
+     */
+    public boolean isTermsAccepted() {
+        return termsVersionAccepted != null;
+    }
+
+    /**
+     * Returns true if the user declined within the last 7 days.
+     * Used to show periodic re-prompt instead of blocking forever.
+     */
+    public boolean isRecentlyDeclined() {
+        return termsDeclinedAt != null &&
+                termsDeclinedAt.isAfter(java.time.LocalDateTime.now().minusDays(7));
     }
 }

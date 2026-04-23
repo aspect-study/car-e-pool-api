@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BotConfig {
 
+    public static final String CURRENT_TERMS_VERSION = "1.0";
+
     @Value("${carpool.telegram.bot-token}")
     private String botToken;
 

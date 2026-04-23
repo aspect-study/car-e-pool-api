@@ -64,6 +64,8 @@ public class MessageHandler {
         Long telegramId = message.getFrom().getId();
         String text     = message.getText().trim();
 
+        boolean isNewUser = !userRepository.existsByTelegramId(telegramId);
+
         User user = userRepository.findByTelegramId(telegramId)
                 .orElseGet(() -> {
                     String firstName = message.getFrom().getFirstName();
@@ -78,6 +80,23 @@ public class MessageHandler {
                     log.info("Auto-registered new user telegramId={} name={}", telegramId, saved.getFullName());
                     return saved;
                 });
+
+        // New user or not yet accepted — show welcome/terms screen
+        if (isNewUser || !user.isTermsAccepted()) {
+            // Re-prompt declined users weekly
+            if (!isNewUser && user.isRecentlyDeclined()) {
+                showTermsReminder(chatId, bot);
+                return;
+            }
+            if (!isNewUser && !user.isTermsAccepted() && !user.isRecentlyDeclined()) {
+                showTermsReminder(chatId, bot);
+                return;
+            }
+            if (isNewUser) {
+                showWelcomeScreen(chatId, user, bot);
+                return;
+            }
+        }
 
         Long carpoolUserId = user.getId();
 
@@ -1062,5 +1081,44 @@ public class MessageHandler {
                             "Add your vehicle so passengers know what to look for.",
                     rows));
         }
+    }
+
+    /**
+     * Welcome screen for brand new users — friendly intro before showing terms.
+     */
+    private void showWelcomeScreen(Long chatId, User user, CarpoolBot bot) {
+        String firstName = user.getFullName().split(" ")[0];
+
+        var rows = List.of(
+                List.of(
+                        BotMessageBuilder.button("📄 View Terms & Accept", "TERMS_WELCOME"),
+                        BotMessageBuilder.button("❌ Not Now",              "TERMS_DECLINE")
+                )
+        );
+
+        bot.send(sendWithInline(chatId,
+                "👋 <b>Welcome, " + BotMessageBuilder.escape(firstName) + "!</b>\n\n" +
+                        "You've joined the <b>" +
+                        BotMessageBuilder.escape(botConfig.getCommunityName()) +
+                        " Carpooling Community</b>. 🚗\n\n" +
+                        "Before we get started, please review and accept our community terms " +
+                        "to keep this a safe, legal, and non-profit carpooling group.\n\n" +
+                        "<i>Tap below to review the terms.</i>",
+                rows));
+    }
+
+    /**
+     * Reminder screen for users who declined or haven't accepted yet.
+     */
+    private void showTermsReminder(Long chatId, CarpoolBot bot) {
+        var rows = List.of(List.of(
+                BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME")
+        ));
+
+        bot.send(sendWithInline(chatId,
+                "⚠️ <b>Terms Acceptance Required</b>\n\n" +
+                        "You'll need to accept our community terms to use this bot.\n\n" +
+                        "Tap below to review and accept.",
+                rows));
     }
 }
