@@ -28,4 +28,15 @@ public class RideExpiryScheduler {
         rideService.expireStaleRides();
     }
 
+    /**
+     * Runs every 30 minutes.
+     * Auto-completes rides that have been DEPARTED for 2+ hours.
+     * Transitions DEPARTED → COMPLETED and marks all confirmed bookings as COMPLETED.
+     */
+    @Scheduled(fixedDelay = 30 * 60 * 1000)
+    public void completeStaleRides() {
+        log.debug("Running stale departed ride completion check...");
+        rideService.completeStaleRides();
+    }
+
 }
