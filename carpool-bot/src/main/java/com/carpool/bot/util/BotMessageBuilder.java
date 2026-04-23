@@ -171,14 +171,19 @@ public class BotMessageBuilder {
 
         for (int i = 0; i < rides.size(); i++) {
             RideResponse ride = rides.get(i);
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n",
+            String driverHandle = ride.driver().telegramHandle() != null
+                    ? " (@" + escape(ride.driver().telegramHandle()) + ")"
+                    : "";
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n",
                     i + 1,
                     escape(ride.originHub().name()),
                     escape(ride.destinationHub().name()),
                     ride.departureTime().atZone(MANILA).format(
                             DateTimeFormatter.ofPattern("MMM d h:mma")),
                     ride.availableSeats(),
-                    ride.contributionAmount()));
+                    ride.contributionAmount(),
+                    escape(ride.driver().fullName()),
+                    driverHandle));
 
             keyboardRows.add(new InlineKeyboardRow(InlineKeyboardButton.builder()
                     .text("View #" + (i + 1))
@@ -306,14 +311,19 @@ public class BotMessageBuilder {
 
         for (int i = 0; i < pageRides.size(); i++) {
             RideResponse ride = pageRides.get(i);
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n",
+            String driverHandle = ride.driver().telegramHandle() != null
+                    ? " (@" + escape(ride.driver().telegramHandle()) + ")"
+                    : "";
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n",
                     fromIdx + i + 1,
                     escape(ride.originHub().name()),
                     escape(ride.destinationHub().name()),
                     ride.departureTime().atZone(MANILA).format(
                             DateTimeFormatter.ofPattern("MMM d h:mma")),
                     ride.availableSeats(),
-                    ride.contributionAmount()));
+                    ride.contributionAmount(),
+                    escape(ride.driver().fullName()),
+                    driverHandle));
         }
 
         List<InlineKeyboardRow> rows = new ArrayList<>();
