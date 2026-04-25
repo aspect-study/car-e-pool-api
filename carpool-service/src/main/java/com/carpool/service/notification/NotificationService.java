@@ -181,10 +181,14 @@ public class NotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRideCompleted(RideEvents.RideCompletedEvent event) {
+        // Bookings are already COMPLETED at this point — query by COMPLETED status
         List<Booking> activeBookings = bookingRepository
-                .findActiveBookingsForRide(event.ride().getId());
+                .findCompletedBookingsForRide(event.ride().getId());
 
-        if (activeBookings.isEmpty()) return;
+        if (activeBookings.isEmpty()) {
+            log.info("Ride {} completed with no bookings to notify", event.ride().getId());
+            return;
+        }
 
         Ride ride = activeBookings.get(0).getRide();
 
