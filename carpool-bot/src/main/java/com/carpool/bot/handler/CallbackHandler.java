@@ -716,13 +716,10 @@ public class CallbackHandler {
             // Validate time window — prevent starting ride too early
             RideResponse ride = rideService.getRideById(rideId);
 
-            ZoneId manila = ZoneId.of("Asia/Manila");
-            LocalDateTime departure = ride.departureTime()
-                    .atZone(ZoneId.of("UTC"))
-                    .withZoneSameInstant(manila)
-                    .toLocalDateTime();
-            LocalDateTime now      = LocalDateTime.now(manila);
-            LocalDateTime earliest = departure.minusHours(1);
+            // departure_time is LocalDateTime stored as Manila local time — use directly
+            LocalDateTime departure = ride.departureTime();
+            LocalDateTime now       = LocalDateTime.now();
+            LocalDateTime earliest  = departure.minusHours(1);
 
             if (now.isBefore(earliest)) {
                 String formatted = departure.format(
