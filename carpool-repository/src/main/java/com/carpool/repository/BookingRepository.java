@@ -217,4 +217,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     LIMIT 7
     """)
     List<Booking> findTop7PastBookingsByPassengerId(@Param("passengerId") Long passengerId);
+
+    /**
+     * Find COMPLETED bookings for a ride — used for post-completion notifications.
+     * Called after ride completion when booking status is already COMPLETED.
+     */
+    @Query("SELECT b FROM Booking b JOIN FETCH b.passenger JOIN FETCH b.ride r " +
+            "JOIN FETCH r.originHub JOIN FETCH r.destinationHub JOIN FETCH r.driver " +
+            "WHERE r.id = :rideId AND b.status = 'COMPLETED'")
+    List<Booking> findCompletedBookingsForRide(@Param("rideId") Long rideId);
 }
