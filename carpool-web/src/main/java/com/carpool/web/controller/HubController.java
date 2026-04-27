@@ -22,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/hubs")
 @RequiredArgsConstructor
+@Tag(name = "Hubs", description = "Pickup and dropoff location management")
 public class HubController {
 
     private final HubService hubService;

@@ -104,6 +104,10 @@ public class BookingController {
                 **Pagination:** `page` (default 0), `size` (default 10, max 50)
                 """,
             security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Driver's ride history")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "Not authenticated")
     @GetMapping("/bookings/mine")
     public ResponseEntity<ApiResponse<PagedResponse<BookingResponse>>> getMyBookings(
             @RequestParam(defaultValue = "0")  int page,
