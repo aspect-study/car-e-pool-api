@@ -430,4 +430,24 @@ public class BookingService {
                 .map(mapper::toBookingResponse)
                 .toList();
     }
+
+    /**
+     * Get booking by ID with ownership check.
+     * Accessible by the passenger who made the booking OR the ride's driver.
+     * Used by REST API — bot uses the no-arg version directly.
+     */
+    @Transactional(readOnly = true)
+    public BookingResponse getBookingById(Long bookingId, Long requestingUserId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+        boolean isPassenger = booking.getPassenger().getId().equals(requestingUserId);
+        boolean isDriver    = booking.getRide().getDriver().getId().equals(requestingUserId);
+
+        if (!isPassenger && !isDriver) {
+            throw new com.carpool.common.exception.NotBookingOwnerException();
+        }
+
+        return mapper.toBookingResponse(booking);
+    }
 }
