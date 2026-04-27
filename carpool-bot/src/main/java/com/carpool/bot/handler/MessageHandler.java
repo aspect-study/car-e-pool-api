@@ -337,13 +337,16 @@ public class MessageHandler {
 
     private void askForEtd(Long chatId, UserState state, CarpoolBot bot) {
         stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
+
+        LocalDateTime manila = LocalDateTime.now(ZoneId.of("Asia/Manila"));
+        String etdExample = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? manila.withHour(7).withMinute(30).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+                : manila.withHour(18).withMinute(0).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+
         bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
-                        "Example: <code>" +
-                        LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(1)
-                                .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
-                        "</code>"));
+                        "Example: <code>" + etdExample + "</code>"));
     }
 
     private void handlePostRideEtd(Long chatId, String text, UserState state, CarpoolBot bot) {
@@ -373,27 +376,35 @@ public class MessageHandler {
                     .withDepartureTime(etd)
                     .withFlow(BotFlow.POST_RIDE_ORIGIN));
 
+            String originExample = state.getDirection() == RideDirection.HOME_TO_WORK
+                    ? "SM Southmall" : "BGC";
+
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "📍 <b>Where does your ride start?</b>\n\n" +
                             "Type a nearby landmark as your pickup point.\n" +
-                            "Example: <code>SM Southmall</code>"));
+                            "Example: <code>" + originExample + "</code>"));
 
         } catch (DateTimeParseException e) {
+            LocalDateTime manila = LocalDateTime.now(ZoneId.of("Asia/Manila"));
+            String etdExample = state.getDirection() == RideDirection.HOME_TO_WORK
+                    ? manila.withHour(7).withMinute(30).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+                    : manila.withHour(18).withMinute(0).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "⚠️ Invalid format. Please use <code>MM/DD HH:MM</code>\n" +
-                            "Example: <code>" +
-                            LocalDateTime.now().plusHours(1)
-                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
-                            "</code>"));
+                            "Example: <code>" + etdExample + "</code>"));
         }
     }
 
     private void handlePostRideOrigin(Long chatId, String text, UserState state, CarpoolBot bot) {
         // Minimum 3 characters required
         if (text.trim().length() < 3) {
+            String originHint = state.getDirection() == RideDirection.HOME_TO_WORK
+                    ? "SM Southmall" : "BGC";
+
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "⚠️ Please type at least 3 characters to search.\n\n" +
-                            "Example: <code>BGC</code> or <code>Southmall</code>"));
+                            "Example: <code>" + originHint + "</code>"));
             return;
         }
 
@@ -438,9 +449,12 @@ public class MessageHandler {
     private void handlePostRideDestination(Long chatId, String text, UserState state, CarpoolBot bot) {
         // Minimum 3 characters required
         if (text.trim().length() < 3) {
+            String destHint = state.getDirection() == RideDirection.HOME_TO_WORK
+                    ? "BGC" : "SM Southmall";
+
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "⚠️ Please type at least 3 characters to search.\n\n" +
-                            "Example: <code>BGC</code> or <code>Alabang</code>"));
+                            "Example: <code>" + destHint + "</code>"));
             return;
         }
 
