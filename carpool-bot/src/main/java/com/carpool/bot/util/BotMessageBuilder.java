@@ -174,7 +174,8 @@ public class BotMessageBuilder {
             String driverHandle = ride.driver().telegramHandle() != null
                     ? " (@" + escape(ride.driver().telegramHandle()) + ")"
                     : "";
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n",
+            String vehicleLine = buildVehicleLine(ride);
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n%s",
                     i + 1,
                     escape(ride.originHub().name()),
                     escape(ride.destinationHub().name()),
@@ -183,7 +184,8 @@ public class BotMessageBuilder {
                     ride.availableSeats(),
                     ride.contributionAmount(),
                     escape(ride.driver().fullName()),
-                    driverHandle));
+                    driverHandle,
+                    vehicleLine));
 
             keyboardRows.add(new InlineKeyboardRow(InlineKeyboardButton.builder()
                     .text("View #" + (i + 1))
@@ -314,7 +316,8 @@ public class BotMessageBuilder {
             String driverHandle = ride.driver().telegramHandle() != null
                     ? " (@" + escape(ride.driver().telegramHandle()) + ")"
                     : "";
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n",
+            String vehicleLine = buildVehicleLine(ride);
+            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n%s",
                     fromIdx + i + 1,
                     escape(ride.originHub().name()),
                     escape(ride.destinationHub().name()),
@@ -323,7 +326,8 @@ public class BotMessageBuilder {
                     ride.availableSeats(),
                     ride.contributionAmount(),
                     escape(ride.driver().fullName()),
-                    driverHandle));
+                    driverHandle,
+                    vehicleLine));
         }
 
         List<InlineKeyboardRow> rows = new ArrayList<>();
@@ -379,6 +383,26 @@ public class BotMessageBuilder {
                         .keyboard(rows)
                         .build())
                 .build();
+    }
+
+    /**
+     * Builds vehicle display line for ride cards.
+     * Returns empty string if driver has no vehicle info set.
+     */
+    private static String buildVehicleLine(RideResponse ride) {
+        String model = ride.driver().carModel();
+        String color = ride.driver().carColor();
+        String plate = ride.driver().plateNumber();
+
+        if (model == null && plate == null) return "";
+
+        StringBuilder sb = new StringBuilder("🚘 ");
+        if (color != null) sb.append(escape(color)).append(" ");
+        if (model != null) sb.append(escape(model));
+        if (plate != null) sb.append(" | 🔢 ").append(escape(plate));
+        sb.append("\n");
+
+        return sb.toString();
     }
 
     private BotMessageBuilder() {}
