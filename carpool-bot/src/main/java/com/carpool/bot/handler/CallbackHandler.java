@@ -645,7 +645,7 @@ public class CallbackHandler {
                 return;
             }
 
-            List<BookingResponse> activeBookings = bookingService.getBookingsByRideId(rideId);
+            List<BookingResponse> activeBookings = bookingService.getActiveBookingsForRide(rideId);
 
             if (!activeBookings.isEmpty()) {
                 StringBuilder sb = new StringBuilder();
