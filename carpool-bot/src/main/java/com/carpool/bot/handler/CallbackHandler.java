@@ -268,7 +268,7 @@ public class CallbackHandler {
                 "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
-                        LocalDateTime.now().plusHours(1)
+                        LocalDateTime.now(java.time.ZoneId.of("Asia/Manila")).plusHours(1)
                                 .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
                         "</code>"));
         stateManager.save(chatId, state
@@ -1117,7 +1117,7 @@ public class CallbackHandler {
                             "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
-                            LocalDateTime.now().plusHours(1)
+                            LocalDateTime.now(java.time.ZoneId.of("Asia/Manila")).plusHours(1)
                                     .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
                             "</code>"));
 
