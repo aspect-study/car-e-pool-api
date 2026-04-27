@@ -800,7 +800,7 @@ public class MessageHandler {
                     BotMessageBuilder.escape(r.destinationHub().name()),
                     statusLabel,
                     r.departureTime()
-                            .atZone(java.time.ZoneId.of("Asia/Manila"))
+                            .atZone(ZoneId.of("Asia/Manila"))
                             .format(DateTimeFormatter.ofPattern("MMM d h:mma")),
                     r.contributionAmount()));
 
