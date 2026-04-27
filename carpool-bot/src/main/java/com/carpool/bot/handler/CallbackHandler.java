@@ -49,6 +49,7 @@ public class CallbackHandler {
     private final ProfileService profileService;
     private final VehicleService vehicleService;
     private final SessionRecoveryHandler sessionRecoveryHandler;
+    private final HelpHandler helpHandler;
 
     public void handle(CallbackQuery callback, CarpoolBot bot) {
         Long chatId     = callback.getMessage().getChatId();
@@ -138,6 +139,7 @@ public class CallbackHandler {
             case "TERMS_ACCEPT"         -> handleTermsAccept(chatId, carpoolUserId, bot);
             case "TERMS_DECLINE"        -> handleTermsDecline(chatId, bot);
             case "TERMS_VIEW_AGAIN"     -> handleTermsWelcome(chatId, bot);
+            case "HELP"                 -> helpHandler.handleTopic(chatId, payload, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);

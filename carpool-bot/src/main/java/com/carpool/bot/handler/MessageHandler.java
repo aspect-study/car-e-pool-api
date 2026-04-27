@@ -53,7 +53,7 @@ public class MessageHandler {
     private final PostRideHelper    postRideHelper;
     private final HubService hubService;
     private final ProfileService profileService;
-    private final VehicleService vehicleService;
+    private final HelpHandler helpHandler;
 
     private static final DateTimeFormatter ETD_FMT =DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
@@ -167,8 +167,9 @@ public class MessageHandler {
             case "/findride"   -> startFindRideFlow(chatId, carpoolUserId, state, bot);
             case "/profile"    -> handleProfile(chatId, carpoolUserId, bot);
             case "/vehicle"    -> handleVehicleCommand(chatId, carpoolUserId, state, bot);
+            case "/help"       -> helpHandler.showHelpMenu(chatId, bot);
             default -> bot.send(BotMessageBuilder.text(chatId,
-                    "Unknown command. Use /start to see the main menu."));
+                    "Unknown command. Type /help to see available commands."));
         }
     }
 
