@@ -35,5 +35,12 @@ public enum BotFlow {
     SEARCH_FILTER,              // user is on filter & sort screen
 
     // ── Passenger: My bookings ────────────────────────────────────────────
-    MY_BOOKINGS
+    MY_BOOKINGS,
+
+    // Help flows
+    HELP_MAIN,
+    HELP_POST_RIDE,
+    HELP_FIND_RIDE,
+    HELP_RULES,
+    HELP_COMMANDS
 }
