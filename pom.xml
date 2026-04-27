@@ -149,7 +149,6 @@
                     <configuration>
                         <source>25</source>
                         <target>25</target>
-                        <!-- Required: Lombok + MapStruct must be in correct order -->
                         <annotationProcessorPaths>
                             <path>
                                 <groupId>org.projectlombok</groupId>
@@ -166,6 +165,14 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <!-- Activate compiler plugin for all modules — applies Lombok + MapStruct -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 
 </project>
