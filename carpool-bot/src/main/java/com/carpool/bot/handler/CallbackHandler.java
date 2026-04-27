@@ -30,10 +30,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -430,13 +427,26 @@ public class CallbackHandler {
         stateManager.save(chatId, updated);
 
         if (rides.isEmpty()) {
-            var rows = List.of(List.of(
-                    BotMessageBuilder.button("🔧 Filter & Sort", "SEARCH_FILTER"),
-                    BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
-            ));
+            // Build time context for the message
+            String timeContext = buildTimeContext(from, to);
+
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("🔄 Try Different Time", "FIND_RIDE"),
+                            BotMessageBuilder.button("🔧 Adjust Filters",     "SEARCH_FILTER")
+                    ),
+                    List.of(
+                            BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
+                            BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU")
+                    )
+            );
+
             bot.send(sendWithInline(chatId,
-                    "🔍 <b>No rides found — " + dirLabel + "</b>\n\n" +
-                            "Try adjusting your filters or check back later.",
+                    "🔍 <b>No rides available — " + dirLabel + "</b>\n" +
+                            "<i>" + timeContext + "</i>\n\n" +
+                            "No drivers have posted for this time window yet.\n\n" +
+                            "You can try a different time, adjust your filters, " +
+                            "or be the first to offer a ride! 🚗",
                     rows));
             return;
         }
@@ -2136,5 +2146,24 @@ public class CallbackHandler {
                         "You'll need to accept the terms to use this bot. " +
                         "You can review them again anytime.",
                 rows));
+    }
+
+    /**
+     * Builds a human-readable time context string for empty ride list messages.
+     * Example: "Today, 7:00 AM – 9:00 AM" or "Apr 28, 7:00 AM – 9:00 AM"
+     */
+    private String buildTimeContext(LocalDateTime from, LocalDateTime to) {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Manila"));
+        LocalDate fromDate = from.toLocalDate();
+
+        String datePart = fromDate.equals(today)
+                ? "Today"
+                : from.format(DateTimeFormatter.ofPattern("MMM d"));
+
+        String timePart = from.format(DateTimeFormatter.ofPattern("h:mm a"))
+                + " – "
+                + to.format(DateTimeFormatter.ofPattern("h:mm a"));
+
+        return datePart + ", " + timePart;
     }
 }
