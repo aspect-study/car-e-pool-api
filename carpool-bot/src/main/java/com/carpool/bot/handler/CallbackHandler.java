@@ -264,13 +264,16 @@ public class CallbackHandler {
             return;
         }
 
+        String etdExample1 = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(7).withMinute(30)
+                  .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+                : LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(18).withMinute(0)
+                  .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+
         bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
-                        "Example: <code>" +
-                        LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(1)
-                                .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
-                        "</code>"));
+                        "Example: <code>" + etdExample1 + "</code>"));
         stateManager.save(chatId, state
                 .withCarpoolUserId(carpoolUserId)
                 .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
@@ -370,7 +373,7 @@ public class CallbackHandler {
 
     private void handleTimeSelection(Long chatId, String timeSlot, Long carpoolUserId,
                                      UserState state, CarpoolBot bot) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Manila"));
         LocalDateTime from;
         LocalDateTime to;
 
@@ -550,11 +553,14 @@ public class CallbackHandler {
                     .withFlow(BotFlow.POST_RIDE_DESTINATION);
             stateManager.save(chatId, updated);
 
+            String destExample1 = state.getDirection() == RideDirection.HOME_TO_WORK
+                    ? "BGC" : "SM Southmall";
+
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "✅ Start point: <b>" + BotMessageBuilder.escape(hub.name()) + "</b>\n\n" +
                             "🏁 <b>Where does your ride end?</b>\n\n" +
                             "Type a nearby landmark as your drop-off point.\n" +
-                            "Example: <code>BGC High Street</code>"));
+                            "Example: <code>" + destExample1 + "</code>"));
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load hub. Please try again."));
         }
@@ -588,19 +594,25 @@ public class CallbackHandler {
     private void handleRetypeOrigin(Long chatId, Long carpoolUserId,
                                     UserState state, CarpoolBot bot) {
         stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_ORIGIN));
+        String retypeOriginExample = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? "SM Southmall" : "BGC";
+
         bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "📍 <b>Where does your ride start?</b>\n\n" +
                         "Type a nearby landmark as your pickup point.\n" +
-                        "Example: <code>SM Southmall</code>"));
+                        "Example: <code>" + retypeOriginExample + "</code>"));
     }
 
     private void handleRetypeDest(Long chatId, Long carpoolUserId,
                                   UserState state, CarpoolBot bot) {
         stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DESTINATION));
+        String retypeDestExample = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? "BGC" : "SM Southmall";
+
         bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "🏁 <b>Where does your ride end?</b>\n\n" +
                         "Type a nearby landmark as your drop-off point.\n" +
-                        "Example: <code>BGC High Street</code>"));
+                        "Example: <code>" + retypeDestExample + "</code>"));
     }
 
     // ── Cancel ride ───────────────────────────────────────────────────────
@@ -1117,8 +1129,11 @@ public class CallbackHandler {
                             "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
-                            LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(1)
-                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                            (original.direction() == RideDirection.HOME_TO_WORK
+                                    ? LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(7).withMinute(30)
+                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+                                    : LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(18).withMinute(0)
+                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))) +
                             "</code>"));
 
         } catch (Exception e) {
@@ -1573,8 +1588,11 @@ public class CallbackHandler {
                     "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
-                            LocalDateTime.now().plusHours(1)
-                                    .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
+                            (state.getDirection() == RideDirection.HOME_TO_WORK
+                                    ? LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(7).withMinute(30)
+                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+                                    : LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(18).withMinute(0)
+                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))) +
                             "</code>"));
             return;
         }
