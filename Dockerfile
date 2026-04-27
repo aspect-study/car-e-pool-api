@@ -10,21 +10,24 @@ COPY carpool-common/pom.xml   carpool-common/
 COPY carpool-domain/pom.xml   carpool-domain/
 COPY carpool-repository/pom.xml carpool-repository/
 COPY carpool-service/pom.xml  carpool-service/
+COPY carpool-bot/pom.xml      carpool-bot/
 COPY carpool-web/pom.xml      carpool-web/
 
 # Download dependencies (cached layer — only invalidated when POMs change)
 RUN apk add --no-cache maven && \
-    mvn dependency:go-offline -q
+    mvn dependency:go-offline -q -Dmaven.compiler.forceJavacCompilerUse=true
 
 # Copy source code
-COPY carpool-common/src   carpool-common/src
-COPY carpool-domain/src   carpool-domain/src
+COPY carpool-common/src     carpool-common/src
+COPY carpool-domain/src     carpool-domain/src
 COPY carpool-repository/src carpool-repository/src
-COPY carpool-service/src  carpool-service/src
-COPY carpool-web/src      carpool-web/src
+COPY carpool-service/src    carpool-service/src
+COPY carpool-bot/src        carpool-bot/src
+COPY carpool-web/src        carpool-web/src
 
 # Build — skip tests in Docker build (tests run in CI pipeline)
-RUN mvn clean package -pl carpool-web -am -DskipTests -q
+RUN mvn clean package -pl carpool-web -am -DskipTests -q \
+    -Dmaven.compiler.forceJavacCompilerUse=true
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 # Use JRE-only alpine image — significantly smaller than JDK

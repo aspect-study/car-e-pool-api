@@ -1891,7 +1891,14 @@ public class CallbackHandler {
                             "🚘 " + BotMessageBuilder.escape(state.getPendingCarModel()) +
                             " | 🔢 " + BotMessageBuilder.escape(state.getPendingPlateNumber())));
 
-            postRideHelper.showConfirmation(chatId, updated, bot);
+            // Only proceed to ride confirmation if in post ride flow
+            // Otherwise (vehicle command / profile) — just show menu
+            if (state.getOriginHubId() != null && state.getDepartureTime() != null) {
+                postRideHelper.showConfirmation(chatId, updated, bot);
+            } else {
+                stateManager.reset(chatId);
+                handleMainMenu(chatId, carpoolUserId, updated, bot);
+            }
 
         } catch (Exception e) {
             log.error("Failed to save vehicle for userId={}: {}", carpoolUserId, e.getMessage());

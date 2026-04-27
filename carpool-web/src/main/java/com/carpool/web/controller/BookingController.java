@@ -266,32 +266,4 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.ok(
                 bookingService.getBookingById(id, currentUser.getUserId())));
     }
-
-    /**
-     * GET /api/v1/bookings/{id}
-     * Get single booking detail — accessible by booking owner or ride driver.
-     */
-    @Operation(summary = "Get booking detail",
-            description = """
-                Returns full detail of a single booking.
-                
-                Accessible by:
-                - The passenger who made the booking
-                - The driver of the ride
-                """,
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200", description = "Booking detail")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "403", description = "Not the booking owner or ride driver")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "404", description = "Booking not found")
-    @GetMapping("/bookings/{id}")
-    public ResponseEntity<ApiResponse<BookingResponse>> getBookingById(
-            @PathVariable Long id,
-            @AuthenticationPrincipal AuthenticatedUser currentUser) {
-
-        return ResponseEntity.ok(ApiResponse.ok(
-                bookingService.getBookingById(id, currentUser.getUserId())));
-    }
 }
