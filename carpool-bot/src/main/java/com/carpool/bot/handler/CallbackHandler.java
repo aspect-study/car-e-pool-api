@@ -728,11 +728,51 @@ public class CallbackHandler {
     private void executeCancelRide(Long chatId, Long rideId, Long carpoolUserId,
                                    String reason, CarpoolBot bot) {
         try {
+            // Fetch affected passengers BEFORE cancelling
+            // so we can show the driver a summary of who was notified
+            List<BookingResponse> affectedBookings =
+                    bookingService.getActiveBookingsForRide(rideId);
+
             rideService.updateRideStatus(rideId,
                     new UpdateRideStatusRequest(RideStatus.CANCELLED), carpoolUserId, reason);
             stateManager.reset(chatId);
-            bot.send(BotMessageBuilder.text(chatId,
-                    "✅ Ride cancelled. All passengers have been notified."));
+
+            // Build notification summary
+            if (affectedBookings.isEmpty()) {
+                bot.send(sendWithInline(chatId,
+                        "✅ <b>Ride Cancelled</b>\n\n" +
+                                "No passengers were booked on this ride.",
+                        List.of(List.of(
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                        ))));
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append("✅ <b>Ride Cancelled</b>\n\n");
+                sb.append(String.format(
+                        "<b>%d passenger%s notified:</b>\n",
+                        affectedBookings.size(),
+                        affectedBookings.size() > 1 ? "s" : ""));
+
+                for (BookingResponse b : affectedBookings) {
+                    String handle = b.passenger().telegramHandle() != null
+                            ? " (@" + BotMessageBuilder.escape(
+                            b.passenger().telegramHandle()) + ")"
+                            : "";
+                    sb.append(String.format("• %s%s\n",
+                            BotMessageBuilder.escape(b.passenger().fullName()),
+                            handle));
+                }
+
+                sb.append("\n📝 Reason: <i>")
+                        .append(BotMessageBuilder.escape(reason))
+                        .append("</i>");
+
+                bot.send(sendWithInline(chatId, sb.toString(),
+                        List.of(List.of(
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                        ))));
+            }
+
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not cancel ride: " +
