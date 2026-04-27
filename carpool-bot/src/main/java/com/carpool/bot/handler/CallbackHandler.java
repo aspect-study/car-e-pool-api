@@ -51,6 +51,7 @@ public class CallbackHandler {
     private final DriverNoteService driverNoteService;
     private final ProfileService profileService;
     private final VehicleService vehicleService;
+    private final SessionRecoveryHandler sessionRecoveryHandler;
 
     public void handle(CallbackQuery callback, CarpoolBot bot) {
         Long chatId     = callback.getMessage().getChatId();
@@ -66,13 +67,17 @@ public class CallbackHandler {
         }
 
         Long carpoolUserId = userOpt.get().getId();
-        UserState state    = stateManager.get(chatId);
-        if (state == null) {
-            state = UserState.initial(carpoolUserId);
-        }
-
+        UserState state  = stateManager.get(chatId);
         String[] parts   = data.split(":");
         String   action  = parts[0];
+
+        if (state == null) {
+            if (sessionRecoveryHandler.isFlowSensitive(action)) {
+                sessionRecoveryHandler.handleExpiredSession(chatId, carpoolUserId, action, bot);
+                return;
+            }
+            state = UserState.initial(carpoolUserId);
+        }
         String   payload = parts.length > 1 ? parts[1] : null;
 
         Long entityId = null;
