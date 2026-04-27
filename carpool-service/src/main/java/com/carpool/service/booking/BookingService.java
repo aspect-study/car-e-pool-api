@@ -450,4 +450,17 @@ public class BookingService {
 
         return mapper.toBookingResponse(booking);
     }
+
+    /**
+     * Returns all CONFIRMED and PENDING bookings for a ride — unpaged.
+     * Used internally for cancel notification summary.
+     */
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getActiveBookingsForRide(Long rideId) {
+        return bookingRepository
+                .findActivePassengersForRide(rideId)
+                .stream()
+                .map(mapper::toBookingResponse)
+                .toList();
+    }
 }

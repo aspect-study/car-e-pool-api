@@ -226,4 +226,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "JOIN FETCH r.originHub JOIN FETCH r.destinationHub JOIN FETCH r.driver " +
             "WHERE r.id = :rideId AND b.status = 'COMPLETED'")
     List<Booking> findCompletedBookingsForRide(@Param("rideId") Long rideId);
+
+    /**
+     * Fetch passenger info only for active bookings on a ride.
+     * Used for cancel notification summary — avoids full RideResponse load.
+     */
+    @Query("SELECT b FROM Booking b JOIN FETCH b.passenger " +
+            "WHERE b.ride.id = :rideId " +
+            "AND b.status IN ('CONFIRMED', 'PENDING')")
+    List<Booking> findActivePassengersForRide(@Param("rideId") Long rideId);
 }
