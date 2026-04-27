@@ -131,4 +131,52 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(
                 profileService.getProfileStats(currentUser.getUserId())));
     }
+
+    /**
+     * GET /api/v1/users/me/vehicle
+     * Get current vehicle info for authenticated driver.
+     */
+    @Operation(summary = "Get my vehicle info",
+            description = """
+                Returns the authenticated driver's current vehicle information.
+                
+                Returns `null` fields if no vehicle has been set yet.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Vehicle info returned")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "Not authenticated")
+    @GetMapping("/me/vehicle")
+    public ResponseEntity<ApiResponse<UserResponse>> getMyVehicle(
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                userService.getUserById(currentUser.getUserId())));
+    }
+
+    /**
+     * DELETE /api/v1/users/me/vehicle
+     * Remove vehicle info for authenticated driver.
+     */
+    @Operation(summary = "Remove my vehicle info",
+            description = """
+                Removes the authenticated driver's vehicle information.
+                
+                After removal, `carModel`, `carColor`, and `plateNumber` will be `null`.
+                Driver will be prompted to re-enter vehicle info on next Post Ride.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Vehicle info removed")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "Not authenticated")
+    @DeleteMapping("/me/vehicle")
+    public ResponseEntity<ApiResponse<UserResponse>> removeMyVehicle(
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        vehicleService.clearVehicle(currentUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok(
+                userService.getUserById(currentUser.getUserId())));
+    }
 }
