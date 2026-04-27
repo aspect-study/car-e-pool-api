@@ -268,7 +268,7 @@ public class CallbackHandler {
                 "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" +
-                        LocalDateTime.now(java.time.ZoneId.of("Asia/Manila")).plusHours(1)
+                        LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(1)
                                 .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
                         "</code>"));
         stateManager.save(chatId, state
@@ -1042,8 +1042,8 @@ public class CallbackHandler {
                         ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
                         : "";
                 long remainingMinutes = b.expiresAt() != null
-                        ? java.time.Duration.between(
-                        java.time.Instant.now(), b.expiresAt()).toMinutes()
+                        ? Duration.between(
+                        Instant.now(), b.expiresAt()).toMinutes()
                         : 0;
 
                 sb.append(String.format("<b>%d.</b> %s%s\n" +
@@ -1117,7 +1117,7 @@ public class CallbackHandler {
                             "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
-                            LocalDateTime.now(java.time.ZoneId.of("Asia/Manila")).plusHours(1)
+                            LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(1)
                                     .format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) +
                             "</code>"));
 
@@ -1216,8 +1216,8 @@ public class CallbackHandler {
 
             // Compute remaining minutes
             long remainingMinutes = b.expiresAt() != null
-                    ? java.time.Duration.between(
-                    java.time.Instant.now(), b.expiresAt()).toMinutes()
+                    ? Duration.between(
+                    Instant.now(), b.expiresAt()).toMinutes()
                     : 0;
 
             sb.append(String.format(
@@ -1252,8 +1252,8 @@ public class CallbackHandler {
             BookingResponse b = bookingService.getBookingById(bookingId);
 
             long remainingMinutes = b.expiresAt() != null
-                    ? java.time.Duration.between(
-                    java.time.Instant.now(), b.expiresAt()).toMinutes()
+                    ? Duration.between(
+                    Instant.now(), b.expiresAt()).toMinutes()
                     : 0;
 
             String paxHandle = b.passenger().telegramHandle() != null
@@ -2064,7 +2064,7 @@ public class CallbackHandler {
         try {
             userRepository.findById(carpoolUserId).ifPresent(user -> {
                 user.setTermsVersionAccepted(com.carpool.bot.config.BotConfig.CURRENT_TERMS_VERSION);
-                user.setTermsAcceptedAt(java.time.LocalDateTime.now());
+                user.setTermsAcceptedAt(LocalDateTime.now());
                 user.setTermsDeclinedAt(null);
                 userRepository.save(user);
                 log.info("Terms accepted: userId={} version={}",
@@ -2100,7 +2100,7 @@ public class CallbackHandler {
                                 ? stateManager.get(chatId).getCarpoolUserId()
                                 : 0L)
                 .ifPresent(user -> {
-                    user.setTermsDeclinedAt(java.time.LocalDateTime.now());
+                    user.setTermsDeclinedAt(LocalDateTime.now());
                     userRepository.save(user);
                 });
 
