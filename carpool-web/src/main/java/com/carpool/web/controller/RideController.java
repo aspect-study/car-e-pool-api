@@ -78,6 +78,8 @@ public class RideController {
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "List of available rides")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", description = "Invalid hub IDs or same origin and destination")
     @GetMapping
     public ResponseEntity<ApiResponse<PagedResponse<RideResponse>>> searchRides(
             @RequestParam Long from,
@@ -116,6 +118,8 @@ public class RideController {
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "Filtered and sorted list of rides")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", description = "Invalid direction or time range")
     @GetMapping("/direction")
     public ResponseEntity<ApiResponse<PagedResponse<RideResponse>>> getRidesByDirection(
             @RequestParam RideDirection direction,
@@ -153,6 +157,10 @@ public class RideController {
                 **Pagination:** `page` (default 0), `size` (default 10, max 50)
                 """,
             security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Driver's ride history")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "Not authenticated")
     @GetMapping("/mine")
     public ResponseEntity<ApiResponse<PagedResponse<RideResponse>>> getMyRides(
             @RequestParam(defaultValue = "0")  int page,
