@@ -143,11 +143,20 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                 return;
             }
 
-            // Telegram limit is 4096 chars — truncate if needed
+            // Telegram limit is 4096 chars
             if (message.getText().length() > 4096) {
-                log.warn("Message too long ({} chars) for chatId={} — truncating",
+                log.warn("Message too long ({} chars) for chatId={}",
                         message.getText().length(), message.getChatId());
-                message.setText(message.getText().substring(0, 4090) + "\n...");
+                getClient().execute(SendMessage.builder()
+                        .chatId(message.getChatId())
+                        .text("⚠️ Message too long to display.\n\n" +
+                                "Telegram has a 4,096 character limit per message.")
+                        .parseMode("HTML")
+                        .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                        ))))
+                        .build());
+                return;
             }
 
             getClient().execute(message);
