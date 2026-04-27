@@ -76,24 +76,27 @@ public class SessionRecoveryHandler {
 
     private String buildMessage(String action) {
         if (POST_RIDE_ACTIONS.contains(action)) {
-            return "⏳ <b>Your ride posting session has expired.</b>\n\n" +
-                    "This can happen after a bot restart. " +
-                    "Would you like to start a new one?";
+            return "⏳ <b>Session expired.</b>\n\n" +
+                    "Sorry for the interruption! 🙏\n\n" +
+                    "Would you like to post a new ride?";
         }
         if (BOOKING_ACTIONS.contains(action)) {
-            return "⏳ <b>Your booking session has expired.</b>\n\n" +
-                    "This can happen after a bot restart. " +
+            return "⏳ <b>Session expired.</b>\n\n" +
+                    "Sorry for the interruption! 🙏\n\n" +
                     "Please search for the ride again.";
         }
         if (APPROVAL_ACTIONS.contains(action)) {
-            return "⏳ <b>Your session has expired.</b>\n\n" +
+            return "⏳ <b>Session expired.</b>\n\n" +
+                    "Sorry for the interruption! 🙏\n\n" +
                     "Please check your pending bookings and try again.";
         }
         if (CANCEL_ACTIONS.contains(action)) {
-            return "⏳ <b>Your session has expired.</b>\n\n" +
+            return "⏳ <b>Session expired.</b>\n\n" +
+                    "Sorry for the interruption! 🙏\n\n" +
                     "Please go to the main menu and try again.";
         }
-        return "⏳ <b>Your session has expired.</b>\n\n" +
+        return "⏳ <b>Session expired.</b>\n\n" +
+                "Sorry for the interruption! 🙏\n\n" +
                 "Please start again from the main menu.";
     }
 
