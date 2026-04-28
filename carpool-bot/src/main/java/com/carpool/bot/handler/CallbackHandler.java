@@ -529,7 +529,9 @@ public class CallbackHandler {
 
         bot.send(sendWithInline(chatId,
                 "💬 <b>Any message for the driver?</b>\n\n" +
-                        "<i>e.g. \"Please wait at gate 2\", \"I have extra luggage\"</i>",
+                        "Include where you'll wait and any other info:\n\n" +
+                        "<i>e.g. \"Near Mercury Drug, wearing red shirt. " +
+                        "I have one small bag.\"</i>",
                 List.of(List.of(
                         BotMessageBuilder.button("⏭️ Skip", "BOOK_NOW:" + rideId),
                         BotMessageBuilder.button("❌ Cancel", "MAIN_MENU")
