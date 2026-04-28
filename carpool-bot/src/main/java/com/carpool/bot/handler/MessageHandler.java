@@ -352,13 +352,28 @@ public class MessageHandler {
 
     private void handlePostRideEtd(Long chatId, String text, UserState state, CarpoolBot bot) {
         try {
+            LocalDateTime manila = LocalDateTime.now(ZoneId.of("Asia/Manila"));
+
             LocalDateTime etd = LocalDateTime.parse(
-                    LocalDateTime.now().getYear() + "/" + text.trim(),
+                    manila.getYear() + "/" + text.trim(),
                     DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
 
-            if (etd.isBefore(LocalDateTime.now())) {
+            if (etd.isBefore(manila)) {
+                boolean isRepost = state.getOriginHubId() != null
+                        && state.getDestinationHubId() != null;
+
+                String etdExample = state.getDirection() == RideDirection.HOME_TO_WORK
+                        ? manila.withHour(7).withMinute(30)
+                          .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+                        : manila.withHour(18).withMinute(0)
+                          .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+
                 bot.send(BotMessageBuilder.textWithCancel(chatId,
-                        "⚠️ That time has already passed. Please enter a future departure time:"));
+                        "⚠️ That time has already passed.\n\n" +
+                                (isRepost
+                                        ? "Please enter a future departure time for your reposted ride:\n"
+                                        : "Please enter a future departure time:\n") +
+                                "Example: <code>" + etdExample + "</code>"));
                 return;
             }
 
