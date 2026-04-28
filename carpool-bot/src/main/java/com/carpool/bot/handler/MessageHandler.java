@@ -744,12 +744,25 @@ public class MessageHandler {
                 sb.append("\n<i>No activity yet. Post or book a ride to get started!</i>");
             }
 
-            bot.send(sendWithInline(chatId, sb.toString(),
-                    List.of(List.of(
-                            BotMessageBuilder.button("🔄 Refresh",    "MY_PROFILE"),
-                            BotMessageBuilder.button("🚘 My Vehicle", "VEHICLE_CHANGE"),
-                            BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
-                    ))));
+            // Build profile buttons — add Admin Stats button for admins only
+            User profileUser = userRepository.findById(carpoolUserId).orElse(null);
+            boolean isAdmin  = profileUser != null
+                    && botConfig.isAdmin(profileUser.getTelegramId());
+
+            List<List<InlineKeyboardButton>> profileRows = new ArrayList<>();
+            profileRows.add(List.of(
+                    BotMessageBuilder.button("🔄 Refresh",    "MY_PROFILE"),
+                    BotMessageBuilder.button("🚘 My Vehicle", "VEHICLE_CHANGE"),
+                    BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
+            ));
+
+            if (isAdmin) {
+                profileRows.add(List.of(
+                        BotMessageBuilder.button("📊 Admin Stats", "ADMIN_STATS")
+                ));
+            }
+
+            bot.send(sendWithInline(chatId, sb.toString(), profileRows));
 
         } catch (Exception e) {
             log.error("Failed to load profile for userId={}: {}", carpoolUserId, e.getMessage());

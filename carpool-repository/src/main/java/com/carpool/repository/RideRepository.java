@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -204,4 +205,21 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
     """)
     List<Ride> findTop3CompletedOrCancelledByDriverId(@Param("driverId") Long driverId);
 
+    /**
+     * Count rides by status — used for admin stats.
+     */
+    @Query("SELECT COUNT(r) FROM Ride r WHERE r.status = :status")
+    long countByRideStatus(@Param("status") RideStatus status);
+
+    /**
+     * Count rides with status in list — used for active rides count.
+     */
+    @Query("SELECT COUNT(r) FROM Ride r WHERE r.status IN :statuses")
+    long countByStatusIn(@Param("statuses") List<RideStatus> statuses);
+
+    /**
+     * Count rides created after a given datetime — used for today's activity.
+     */
+    @Query("SELECT COUNT(r) FROM Ride r WHERE r.createdAt > :since")
+    long countRidesCreatedAfter(@Param("since") Instant since);
 }

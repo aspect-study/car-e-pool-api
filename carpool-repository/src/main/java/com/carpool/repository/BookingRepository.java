@@ -235,4 +235,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "WHERE b.ride.id = :rideId " +
             "AND b.status IN ('CONFIRMED', 'PENDING')")
     List<Booking> findActivePassengersForRide(@Param("rideId") Long rideId);
+
+    /**
+     * Count all bookings by status — used for admin stats.
+     */
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = :status")
+    long countByBookingStatus(@Param("status") BookingStatus status);
+
+    /**
+     * Count bookings created after a given datetime — used for today's activity.
+     */
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.createdAt > :since")
+    long countBookingsCreatedAfter(@Param("since") java.time.Instant since);
 }
