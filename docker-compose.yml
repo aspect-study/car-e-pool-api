@@ -6,7 +6,7 @@ services:
     container_name: car-e-pool-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE:      ${DB_NAME}
       MYSQL_USER:          ${DB_USERNAME}
       MYSQL_PASSWORD:      ${DB_PASSWORD}
@@ -44,6 +44,9 @@ services:
       JWT_SECRET:          ${JWT_SECRET}
       JWT_EXPIRATION_MS:   86400000
       TELEGRAM_BOT_TOKEN:  ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      TELEGRAM_GROUP_CHAT_ID: ${TELEGRAM_GROUP_CHAT_ID}
+      TELEGRAM_GROUP_RIDE_TOPIC_ID: ${TELEGRAM_GROUP_RIDE_TOPIC_ID}
     depends_on:
       mysql_db:
         condition: service_healthy
