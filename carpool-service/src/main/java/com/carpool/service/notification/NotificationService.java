@@ -691,4 +691,100 @@ public class NotificationService {
         log.info("Ride expiry notifications sent to {} passengers for rideId={}",
                 cancelledBookings.size(), ride.getId());
     }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onRideDepartureReminder(RideEvents.RideDepartureReminderEvent event) {
+        Ride ride = event.ride();
+
+        // Fetch confirmed bookings for this ride
+        List<Booking> confirmedBookings = bookingRepository
+                .findActiveBookingsForRide(ride.getId())
+                .stream()
+                .filter(b -> b.getStatus().name().equals("CONFIRMED"))
+                .toList();
+
+        String timeFormatted = ride.getDepartureTime()
+                .format(DateTimeFormatter.ofPattern("h:mm a"));
+
+        String route = escape(ride.getOriginHub().getName()) +
+                " → " +
+                escape(ride.getDestinationHub().getName());
+
+        // Notify driver
+        String driverMsg = String.format(
+                "🚀 <b>Departure Reminder</b>\n\n" +
+                        "Your ride departs in <b>~30 minutes</b>!\n\n" +
+                        "📍 %s\n" +
+                        "🕐 %s\n" +
+                        "👥 %d confirmed passenger%s\n\n" +
+                        "Head to your pickup point soon.",
+                route,
+                timeFormatted,
+                confirmedBookings.size(),
+                confirmedBookings.size() == 1 ? "" : "s");
+
+        Notification driverNotif = Notification.builder()
+                .user(ride.getDriver())
+                .type(NotificationTypes.RIDE_DEPARTURE_REMINDER)
+                .rideId(ride.getId())
+                .payload(new HashMap<>(Map.of("rideId", ride.getId())))
+                .status(NotificationStatus.PENDING)
+                .build();
+
+        driverNotif = notificationRepository.save(driverNotif);
+
+        try {
+            sendTelegramMessage(ride.getDriver().getTelegramId(), driverMsg);
+            driverNotif.setStatus(NotificationStatus.SENT);
+            driverNotif.setSentAt(Instant.now());
+        } catch (Exception e) {
+            driverNotif.setStatus(NotificationStatus.FAILED);
+            log.error("Failed to send departure reminder to driver: rideId={} error={}",
+                    ride.getId(), e.getMessage());
+        }
+        notificationRepository.save(driverNotif);
+
+        // Notify each confirmed passenger
+        for (Booking booking : confirmedBookings) {
+            String passengerMsg = String.format(
+                    "🚀 <b>Departure Reminder</b>\n\n" +
+                            "Your ride departs in <b>~30 minutes</b>!\n\n" +
+                            "📍 %s\n" +
+                            "🕐 %s\n" +
+                            "👤 Driver: <b>%s</b>%s\n" +
+                            "🚘 %s\n\n" +
+                            "Head to your pickup point soon.",
+                    route,
+                    timeFormatted,
+                    escape(ride.getDriver().getFullName()),
+                    ride.getDriver().getTelegramHandle() != null
+                            ? " (@" + escape(ride.getDriver().getTelegramHandle()) + ")"
+                            : "",
+                    buildVehicleLine(ride));
+
+            sendAndRecord(booking.getPassenger(),
+                    NotificationTypes.RIDE_DEPARTURE_REMINDER,
+                    passengerMsg,
+                    Map.of("rideId", ride.getId(), "bookingId", booking.getId()));
+        }
+
+        log.info("Departure reminders sent for rideId={} — driver + {} passengers",
+                ride.getId(), confirmedBookings.size());
+    }
+
+    private String buildVehicleLine(Ride ride) {
+        String model = ride.getDriver().getCarModel();
+        String color = ride.getDriver().getCarColor();
+        String plate = ride.getDriver().getPlateNumber();
+
+        if (model == null && plate == null) return "<i>No vehicle info</i>";
+
+        StringBuilder sb = new StringBuilder();
+        if (color != null) sb.append(escape(color)).append(" ");
+        if (model != null) sb.append(escape(model));
+        if (plate != null) sb.append(" | 🔢 ").append(escape(plate));
+        return sb.toString();
+    }
 }
