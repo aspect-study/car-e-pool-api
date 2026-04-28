@@ -787,8 +787,16 @@ public class CallbackHandler {
 
             // departure_time is LocalDateTime stored as Manila local time — use directly
             LocalDateTime departure = ride.departureTime();
-            LocalDateTime now       = LocalDateTime.now();
+            LocalDateTime now       = LocalDateTime.now(ZoneId.of("Asia/Manila"));
             LocalDateTime earliest  = departure.minusHours(1);
+
+            // Only ACTIVE and FULL rides can be departed
+            if (!ride.status().name().equals("ACTIVE") && !ride.status().name().equals("FULL")) {
+                bot.send(BotMessageBuilder.text(chatId,
+                        "⚠️ This ride cannot be started.\n\n" +
+                                "Only ACTIVE or FULL rides can be departed."));
+                return;
+            }
 
             if (now.isBefore(earliest)) {
                 String formatted = departure.format(
