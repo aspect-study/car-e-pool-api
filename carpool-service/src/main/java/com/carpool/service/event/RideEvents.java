@@ -73,4 +73,10 @@ public final class RideEvents {
      * Triggers: notify driver + all confirmed passengers (ride departs soon).
      */
     public record RideDepartureReminderEvent(Ride ride) {}
+
+    /**
+     * Published when a driver successfully posts a ride (DRAFT → ACTIVE).
+     * Triggers: post ride announcement to Telegram group topic.
+     */
+    public record RidePostedEvent(Ride ride) {}
 }

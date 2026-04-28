@@ -171,6 +171,11 @@ public class RideService {
             log.info("Completed {} bookings for rideId={}", activeBookings.size(), rideId);
 
             eventPublisher.publishEvent(new RideEvents.RideCompletedEvent(saved));
+        } else if (request.status() == RideStatus.ACTIVE
+                && previous == RideStatus.DRAFT) {
+            // Ride just published — notify group
+            eventPublisher.publishEvent(new RideEvents.RidePostedEvent(saved));
+            log.info("Ride posted event published: rideId={}", saved.getId());
         }
 
         log.info("Ride status updated: id={} {} → {}", rideId, previous, request.status());

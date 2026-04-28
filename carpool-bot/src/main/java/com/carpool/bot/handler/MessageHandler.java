@@ -159,7 +159,7 @@ public class MessageHandler {
                                UserState state, CarpoolBot bot) {
         String cmd = command.split(" ")[0].toLowerCase();
         switch (cmd) {
-            case "/start"      -> showMainMenu(chatId, carpoolUserId, state, bot);
+            case "/start"       -> handleStart(command, chatId, carpoolUserId, state, bot);
             case "/cancel"     -> handleCancel(chatId, bot);
             case "/myrides"    -> showMyRides(chatId, carpoolUserId, bot);
             case "/mybookings" -> showMyBookings(chatId, carpoolUserId, bot);
@@ -170,6 +170,67 @@ public class MessageHandler {
             case "/help"       -> helpHandler.showHelpMenu(chatId, bot);
             default -> bot.send(BotMessageBuilder.text(chatId,
                     "Unknown command. Type /help to see available commands."));
+        }
+    }
+
+    /**
+     * Handles /start with optional deep link parameter.
+     * /start         — show main menu (normal flow)
+     * /start RIDE_42 — deep link from group post, show specific ride card
+     */
+    private void handleStart(String command, Long chatId, Long carpoolUserId,
+                             UserState state, CarpoolBot bot) {
+        String[] parts = command.split(" ");
+        if (parts.length > 1 && parts[1].startsWith("RIDE_")) {
+            try {
+                Long rideId = Long.parseLong(parts[1].substring(5)); // strip "RIDE_"
+                RideResponse ride = rideService.getRideById(rideId);
+
+                // Validate ride is still available
+                if (!ride.status().name().equals("ACTIVE")
+                        && !ride.status().name().equals("FULL")) {
+                    bot.send(sendWithInline(chatId,
+                            "⚠️ <b>This ride is no longer available.</b>\n\n" +
+                                    "It may have already departed or been cancelled.",
+                            List.of(List.of(
+                                    BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE"),
+                                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                            ))));
+                    return;
+                }
+
+                // Show ride card — reuse existing VIEW_RIDE display
+                boolean isDriver = ride.driver().id().equals(carpoolUserId);
+                List<List<InlineKeyboardButton>> rows;
+
+                if (isDriver) {
+                    rows = List.of(List.of(
+                            BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + rideId),
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                    ));
+                } else {
+                    rows = List.of(List.of(
+                            BotMessageBuilder.button("✅ Book This Ride", "BOOK_RIDE:" + rideId),
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                    ));
+                }
+
+                // Save ride in state for context
+                stateManager.save(chatId, state.withSelectedRideId(rideId));
+                bot.send(sendWithInline(chatId,
+                        BotMessageBuilder.formatRideCard(ride), rows));
+
+            } catch (NumberFormatException e) {
+                log.warn("Invalid deep link parameter: {}", parts[1]);
+                showMainMenu(chatId, carpoolUserId, state, bot);
+            } catch (Exception e) {
+                log.error("Deep link failed: error={}", e.getMessage());
+                bot.send(BotMessageBuilder.text(chatId,
+                        "⚠️ Could not load this ride. It may no longer exist."));
+                showMainMenu(chatId, carpoolUserId, state, bot);
+            }
+        } else {
+            showMainMenu(chatId, carpoolUserId, state, bot);
         }
     }
 
