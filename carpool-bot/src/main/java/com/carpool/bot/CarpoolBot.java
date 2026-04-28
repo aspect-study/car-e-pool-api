@@ -65,6 +65,17 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
     @Override
     public void consume(Update update) {
         try {
+
+            // Ignore all messages from group chats — bot only operates in private chats.
+            // Group membership is only used for posting ride announcements.
+            if (update.hasMessage()) {
+                var chat = update.getMessage().getChat();
+                if (chat.isGroupChat() || chat.isSuperGroupChat()) {
+                    log.debug("Ignoring group message from chatId={}", chat.getId());
+                    return;
+                }
+            }
+
             // Resolve chatId for rate limiting
             Long chatId = resolveChatId(update);
 
@@ -187,6 +198,35 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
             getClient().execute(answer);
         } catch (TelegramApiException e) {
             log.error("Failed to answer callback: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Sends a message to the configured Telegram group topic.
+     * Used for ride announcements. Failures are logged but never propagate
+     * to the caller — group posting must not affect the driver's experience.
+     */
+    public void sendToGroup(String text, Long rideId) {
+        try {
+            SendMessage message = SendMessage.builder()
+                    .chatId(botConfig.getGroupChatId())
+                    .messageThreadId(botConfig.getGroupRideTopicId())
+                    .text(text)
+                    .parseMode("HTML")
+                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
+                            InlineKeyboardButton.builder()
+                                    .text("🚗 View Ride")
+                                    .url("https://t.me/" + botConfig.getBotUsername()
+                                            + "?start=RIDE_" + rideId)
+                                    .build()
+                    ))))
+                    .build();
+            getClient().execute(message);
+            log.info("Group ride announcement sent: rideId={} chatId={} threadId={}",
+                    rideId, botConfig.getGroupChatId(), botConfig.getGroupRideTopicId());
+        } catch (TelegramApiException e) {
+            log.error("Failed to send group announcement: rideId={} error={}",
+                    rideId, e.getMessage());
         }
     }
 
