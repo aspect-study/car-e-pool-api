@@ -222,4 +222,19 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
      */
     @Query("SELECT COUNT(r) FROM Ride r WHERE r.createdAt > :since")
     long countRidesCreatedAfter(@Param("since") Instant since);
+
+    /**
+     * Find ACTIVE or FULL rides departing within a time window.
+     * Used by departure reminder scheduler.
+     */
+    @Query("""
+    SELECT r FROM Ride r
+    WHERE r.status IN :statuses
+      AND r.departureTime >= :from
+      AND r.departureTime <= :to
+    """)
+    List<Ride> findRidesDepartingBetween(
+            @Param("from")     LocalDateTime from,
+            @Param("to")       LocalDateTime to,
+            @Param("statuses") List<RideStatus> statuses);
 }

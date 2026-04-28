@@ -71,6 +71,14 @@ public class Notification {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /**
+     * Optional ride reference — set for ride-level notifications
+     * (e.g. RIDE_DEPARTURE_REMINDER) to allow efficient duplicate checks.
+     * Null for booking-level notifications.
+     */
+    @Column(name = "ride_id")
+    private Long rideId;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();

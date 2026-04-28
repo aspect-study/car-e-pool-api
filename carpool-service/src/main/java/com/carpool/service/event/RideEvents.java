@@ -67,4 +67,10 @@ public final class RideEvents {
      * Triggers: remind driver of pending request.
      */
     public record BookingReminderEvent(Booking booking, int reminderNumber) {}
+
+    /**
+     * Published by RideDepartureReminderScheduler 30 minutes before departure.
+     * Triggers: notify driver + all confirmed passengers (ride departs soon).
+     */
+    public record RideDepartureReminderEvent(Ride ride) {}
 }

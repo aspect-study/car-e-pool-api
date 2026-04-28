@@ -931,19 +931,19 @@ public class MessageHandler {
             LocalDateTime from;
 
             // Accept both "MM/DD HH:MM" (with date) and "HH:MM" (today)
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Manila"));
+
             if (input.matches("\\d{2}/\\d{2} \\d{2}:\\d{2}")) {
                 // MM/DD HH:MM — include date
                 from = LocalDateTime.parse(
-                        LocalDateTime.now().getYear() + "/" + input,
+                        now.getYear() + "/" + input,
                         DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
             } else {
                 // HH:MM only — default to today (backward compatible)
                 LocalTime time = LocalTime.parse(input,
                         DateTimeFormatter.ofPattern("HH:mm"));
-                from = LocalDateTime.now().toLocalDate().atTime(time);
+                from = now.toLocalDate().atTime(time);
             }
-
-            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Manila"));
 
             // Scenario 1 — HH:MM only and past time — auto-adjust to now
             // User likely meant "around this time today" — show current onwards

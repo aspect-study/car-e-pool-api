@@ -13,7 +13,6 @@ public final class NotificationTypes {
     public static final String BOOKING_CANCELLED_BY_PASSENGER = "BOOKING_CANCELLED_BY_PASSENGER";
 
     // Sent to PASSENGER
-    // Sent to PASSENGER
     public static final String BOOKING_CONFIRMED            = "BOOKING_CONFIRMED";
     public static final String BOOKING_DECLINED             = "BOOKING_DECLINED";
     public static final String BOOKING_TIMED_OUT            = "BOOKING_TIMED_OUT";
@@ -23,4 +22,5 @@ public final class NotificationTypes {
 
     // Sent to BOTH (or per-role as needed)
     public static final String PAYMENT_REMINDER       = "PAYMENT_REMINDER";
+    public static final String RIDE_DEPARTURE_REMINDER =  "RIDE_DEPARTURE_REMINDER";
 }
