@@ -4,6 +4,8 @@ import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Arrays;
+
 /**
  * Bot configuration — values injected from application properties.
  * Same token property as NotificationService to avoid duplication.
@@ -25,4 +27,17 @@ public class BotConfig {
 
     @Value("${carpool.community.corridor:South MM to BGC/Makati}")
     private String corridor;
+
+    @Value("${carpool.admin.telegram-ids:}")
+    private String adminTelegramIds;
+
+    /**
+     * Returns true if the given Telegram ID belongs to an admin.
+     */
+    public boolean isAdmin(Long telegramId) {
+        if (adminTelegramIds == null || adminTelegramIds.isBlank()) return false;
+        return Arrays.stream(adminTelegramIds.split(","))
+                .map(String::trim)
+                .anyMatch(id -> id.equals(String.valueOf(telegramId)));
+    }
 }

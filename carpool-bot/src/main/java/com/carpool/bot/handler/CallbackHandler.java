@@ -1,15 +1,18 @@
 package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
+import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.domain.entity.DriverNote;
+import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.UserRepository;
+import com.carpool.service.admin.AdminStatsService;
 import com.carpool.service.booking.BookingService;
 import com.carpool.service.dto.request.CreateBookingRequest;
 import com.carpool.service.dto.request.CreateRideRequest;
@@ -50,6 +53,8 @@ public class CallbackHandler {
     private final VehicleService vehicleService;
     private final SessionRecoveryHandler sessionRecoveryHandler;
     private final HelpHandler helpHandler;
+    private final AdminStatsService adminStatsService;
+    private final BotConfig botConfig;
 
     public void handle(CallbackQuery callback, CarpoolBot bot) {
         Long chatId     = callback.getMessage().getChatId();
@@ -140,6 +145,7 @@ public class CallbackHandler {
             case "TERMS_DECLINE"        -> handleTermsDecline(chatId, bot);
             case "TERMS_VIEW_AGAIN"     -> handleTermsWelcome(chatId, bot);
             case "HELP"                 -> helpHandler.handleTopic(chatId, payload, bot);
+            case "ADMIN_STATS"          -> handleAdminStats(chatId, carpoolUserId, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
@@ -2215,5 +2221,55 @@ public class CallbackHandler {
                 + to.format(DateTimeFormatter.ofPattern("h:mm a"));
 
         return datePart + ", " + timePart;
+    }
+
+    // ── Admin ─────────────────────────────────────────────────────────────────
+
+    private void handleAdminStats(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+        // Security check — only admins can view stats
+        User user = userRepository.findById(carpoolUserId).orElse(null);
+        if (user == null || !botConfig.isAdmin(user.getTelegramId())) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ You don't have permission to view this."));
+            return;
+        }
+
+        AdminStatsService.AdminStats s = adminStatsService.getStats();
+
+        String report = String.format(
+                "📊 <b>Admin Stats</b>\n" +
+                        "<i>%s</i>\n\n" +
+
+                        "👥 <b>Users</b>\n" +
+                        "Total: <b>%d</b> | New today: <b>%d</b>\n\n" +
+
+                        "🚗 <b>Rides</b>\n" +
+                        "Active now: <b>%d</b> | Posted today: <b>%d</b>\n" +
+                        "Total: <b>%d</b> | Completed: <b>%d</b> | Cancelled: <b>%d</b>\n\n" +
+
+                        "📋 <b>Bookings</b>\n" +
+                        "Pending now: <b>%d</b> | Made today: <b>%d</b>\n" +
+                        "Total: <b>%d</b> | Completed: <b>%d</b>",
+
+                LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                        .format(DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")),
+                s.totalUsers(),
+                s.newUsersToday(),
+                s.activeRidesNow(),
+                s.ridesPostedToday(),
+                s.totalRides(),
+                s.completedRides(),
+                s.cancelledRides(),
+                s.pendingBookingsNow(),
+                s.bookingsMadeToday(),
+                s.totalBookings(),
+                s.completedBookings()
+        );
+
+        bot.send(sendWithInline(chatId, report,
+                List.of(List.of(
+                        BotMessageBuilder.button("🔄 Refresh", "ADMIN_STATS"),
+                        BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
+                ))));
     }
 }
