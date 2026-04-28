@@ -915,6 +915,26 @@ public class MessageHandler {
                 from = LocalDateTime.now().toLocalDate().atTime(time);
             }
 
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Manila"));
+
+            // Scenario 1 — HH:MM only and past time — auto-adjust to now
+            // User likely meant "around this time today" — show current onwards
+            if (!input.matches("\\d{2}/\\d{2} \\d{2}:\\d{2}") && from.isBefore(now)) {
+                bot.send(BotMessageBuilder.textNoMenu(chatId,
+                        "⚠️ That time has already passed.\n\n" +
+                                "Showing available rides from <b>now</b> onwards instead."));
+                from = now;
+            }
+
+            // Scenario 2 — MM/DD HH:MM with explicit date and past — block
+            if (input.matches("\\d{2}/\\d{2} \\d{2}:\\d{2}") && from.isBefore(now)) {
+                bot.send(BotMessageBuilder.textWithCancel(chatId,
+                        "⚠️ That date and time has already passed.\n\n" +
+                                "Please enter a future date and time:\n" +
+                                "Format: <code>MM/DD HH:MM</code>"));
+                return;
+            }
+
             LocalDateTime to = from.plusHours(2);
 
             List<RideResponse> rides = rideService.getRidesByDirection(
