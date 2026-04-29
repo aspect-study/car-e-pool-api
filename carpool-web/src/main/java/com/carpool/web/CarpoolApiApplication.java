@@ -3,6 +3,7 @@ package com.carpool.web;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -19,7 +20,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * ComponentScan covers all com.carpool sub-packages across modules
  * because they share the same root package.
  */
-@SpringBootApplication(scanBasePackages = "com.carpool")
+@SpringBootApplication(
+        scanBasePackages = "com.carpool",
+        exclude = UserDetailsServiceAutoConfiguration.class
+)
 @EntityScan(basePackages = "com.carpool.domain.entity")
 @EnableJpaRepositories(basePackages = "com.carpool.repository")
 @EnableJpaAuditing
