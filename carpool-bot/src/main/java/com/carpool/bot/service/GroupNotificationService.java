@@ -84,7 +84,6 @@ public class GroupNotificationService {
                         "📍 <b>%s → %s</b>\n" +
                         "🕐 %s\n" +
                         "💺 Seats: <b>%d</b>\n" +
-                        "⛽ Gas share: <b>₱%s/seat</b>" +
                         "%s" +
                         "%s\n\n" +
                         "👤 Driver: %s\n" +
@@ -95,7 +94,6 @@ public class GroupNotificationService {
                 BotMessageBuilder.escape(ride.getDestinationHub().getName()),
                 departure,
                 ride.getAvailableSeats(),
-                ride.getContributionAmount().toPlainString(),
                 notesLine,
                 vehicleLine,
                 driverName,
