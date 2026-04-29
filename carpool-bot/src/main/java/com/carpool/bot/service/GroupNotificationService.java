@@ -1,6 +1,7 @@
 package com.carpool.bot.service;
 
 import com.carpool.bot.CarpoolBot;
+import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.domain.entity.Ride;
 import com.carpool.service.event.RideEvents;
@@ -32,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 public class GroupNotificationService {
 
     private final CarpoolBot carpoolBot;
+    private final BotConfig botConfig;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -39,7 +41,7 @@ public class GroupNotificationService {
         Ride ride = event.ride();
         try {
             String message = buildRidePostedMessage(ride);
-            carpoolBot.sendToGroup(message, ride.getId());
+            carpoolBot.sendToGroup(message, ride.getId(), resolveTopicId(ride));
             log.info("Ride announcement posted to group: rideId={}", ride.getId());
         } catch (Exception e) {
             // Never propagate — group posting failure must not affect the driver
@@ -99,5 +101,13 @@ public class GroupNotificationService {
                 driverName,
                 ride.getId()
         );
+    }
+
+    private Integer resolveTopicId(Ride ride) {
+        return switch (ride.getDirection()) {
+            case HOME_TO_WORK -> botConfig.getGroupHomeToWorkTopicId();
+            case WORK_TO_HOME -> botConfig.getGroupWorkToHomeTopicId();
+            default           -> botConfig.getGroupHomeToWorkTopicId();
+        };
     }
 }

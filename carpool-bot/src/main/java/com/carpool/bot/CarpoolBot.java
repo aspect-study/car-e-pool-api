@@ -206,11 +206,11 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
      * Used for ride announcements. Failures are logged but never propagate
      * to the caller — group posting must not affect the driver's experience.
      */
-    public void sendToGroup(String text, Long rideId) {
+    public void sendToGroup(String text, Long rideId, Integer topicId) {
         try {
             SendMessage message = SendMessage.builder()
                     .chatId(botConfig.getGroupChatId())
-                    .messageThreadId(botConfig.getGroupRideTopicId())
+                    .messageThreadId(topicId)
                     .text(text)
                     .parseMode("HTML")
                     .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
@@ -223,7 +223,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                     .build();
             getClient().execute(message);
             log.info("Group ride announcement sent: rideId={} chatId={} threadId={}",
-                    rideId, botConfig.getGroupChatId(), botConfig.getGroupRideTopicId());
+                    rideId, botConfig.getGroupChatId(), topicId);
         } catch (TelegramApiException e) {
             log.error("Failed to send group announcement: rideId={} error={}",
                     rideId, e.getMessage());
