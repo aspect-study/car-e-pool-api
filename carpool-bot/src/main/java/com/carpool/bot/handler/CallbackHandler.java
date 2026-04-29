@@ -397,9 +397,11 @@ public class CallbackHandler {
                 bot.send(BotMessageBuilder.textWithCancel(chatId,
                         "📅 <b>Enter date and time:</b>\n\n" +
                                 "For today: <code>HH:MM</code>\n" +
-                                "Example: <code>07:30</code>\n\n" +
+                                "Example: <code>" + LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                                .plusHours(1).format(DateTimeFormatter.ofPattern("HH:mm")) + "</code>\n\n" +
                                 "For another date: <code>MM/DD HH:MM</code>\n" +
-                                "Example: <code>04/25 07:30</code>"));
+                                "Example: <code>" + LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                                .plusDays(1).format(DateTimeFormatter.ofPattern("MM/dd HH:mm")) + "</code>"));
                 stateManager.save(chatId, state.withFlow(BotFlow.SEARCH_SELECT_TIME));
                 return;
             }

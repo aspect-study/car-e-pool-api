@@ -871,7 +871,7 @@ public class MessageHandler {
             return;
         }
 
-        // Show last 10 COMPLETED or CANCELLED rides only — these have repost buttons
+        // Show last 3 COMPLETED or CANCELLED rides only — these have repost buttons
         List<RideResponse> recent = rides.stream()
                 .filter(r -> r.status().name().equals("COMPLETED")
                         || r.status().name().equals("CANCELLED"))
@@ -1050,8 +1050,14 @@ public class MessageHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Invalid format.\n\n" +
-                            "For today: <code>HH:MM</code> — e.g. <code>07:30</code>\n" +
-                            "For another date: <code>MM/DD HH:MM</code> — e.g. <code>04/25 07:30</code>"));
+                            "For today: <code>HH:MM</code> — e.g. <code>" +
+                            LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                                    .plusHours(1).format(DateTimeFormatter.ofPattern("HH:mm")) + "</code>\n" +
+                            "For another date: <code>MM/DD HH:MM</code> — e.g. <code>" +
+                            LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                                    .plusDays(1).format(DateTimeFormatter.ofPattern("MM/dd")) + " " +
+                            LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                                    .plusHours(1).format(DateTimeFormatter.ofPattern("HH:mm")) + "</code>"));
         }
     }
 
