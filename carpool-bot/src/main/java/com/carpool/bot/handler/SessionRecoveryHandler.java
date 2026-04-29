@@ -37,7 +37,7 @@ public class SessionRecoveryHandler {
     );
 
     private static final Set<String> APPROVAL_ACTIONS = Set.of(
-            "ACCEPT_BOOKING", "DECLINE_BOOKING", "DECLINE_BOOKING_REASON"
+            "DECLINE_BOOKING_REASON"
     );
 
     private static final Set<String> CANCEL_ACTIONS = Set.of(
