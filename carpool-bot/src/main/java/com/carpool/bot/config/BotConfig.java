@@ -34,8 +34,11 @@ public class BotConfig {
     @Value("${carpool.telegram.group-chat-id}")
     private Long groupChatId;
 
-    @Value("${carpool.telegram.group-ride-topic-id}")
-    private Integer groupRideTopicId;
+    @Value("${carpool.telegram.group-home-to-work-topic-id}")
+    private Integer groupHomeToWorkTopicId;
+
+    @Value("${carpool.telegram.group-work-to-home-topic-id}")
+    private Integer groupWorkToHomeTopicId;
 
     /**
      * Returns true if the given Telegram ID belongs to an admin.
