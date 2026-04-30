@@ -1,0 +1,2 @@
+ALTER TABLE rides
+    MODIFY COLUMN announce_count INT NOT NULL DEFAULT 1;
