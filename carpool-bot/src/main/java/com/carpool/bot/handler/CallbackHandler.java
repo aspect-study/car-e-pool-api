@@ -146,6 +146,7 @@ public class CallbackHandler {
             case "TERMS_VIEW_AGAIN"     -> handleTermsWelcome(chatId, bot);
             case "HELP"                 -> helpHandler.handleTopic(chatId, payload, bot);
             case "ADMIN_STATS"          -> handleAdminStats(chatId, carpoolUserId, bot);
+            case "REANNOUNCE_RIDE"      -> handleReannounceRide(chatId, entityId, carpoolUserId, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
                 log.warn("Unknown callback action: {} from chatId={}", action, chatId);
@@ -176,53 +177,66 @@ public class CallbackHandler {
                     BotMessageBuilder.formatRideCard(active) +
                     "\n\nWhat would you like to do?";
 
-            // After getting active ride, check pending count
             long pendingCount = bookingService.countPendingRequestsForDriver(carpoolUserId);
+            boolean canReannounce = active.announceCount() != null && active.announceCount() < 3;
 
-            var rows = active.status().name().equals("DEPARTED")
-                    ? List.of(
-                    List.of(
-                            BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
-                            BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
-                    )
-            )
-                    : pendingCount > 0
-                      ? List.of(
-                    List.of(
-                            BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
-                            BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS"),
-                            BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
-                    )
-            )
-                      : List.of(
-                    List.of(
-                            BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
-                            BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
-                    ),
-                    List.of(
-                            BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
-                    )
-            );
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            if (active.status().name().equals("DEPARTED")) {
+                rows.add(List.of(
+                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
+                        BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
+                ));
+                rows.add(List.of(
+                        BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
+                ));
+            } else if (pendingCount > 0) {
+                rows.add(List.of(
+                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
+                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
+                ));
+                rows.add(List.of(
+                        BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS"),
+                        BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
+                ));
+                if (canReannounce) {
+                    rows.add(List.of(
+                            BotMessageBuilder.button(
+                                    "📢 Re-announce (" + (3 - active.announceCount()) + " left)",
+                                    "REANNOUNCE_RIDE:" + active.id())
+                    ));
+                }
+                rows.add(List.of(
+                        BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                ));
+                rows.add(List.of(
+                        BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
+                ));
+            } else {
+                rows.add(List.of(
+                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
+                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
+                ));
+                rows.add(List.of(
+                        BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
+                ));
+                if (canReannounce) {
+                    rows.add(List.of(
+                            BotMessageBuilder.button(
+                                    "📢 Re-announce (" + (3 - active.announceCount()) + " left)",
+                                    "REANNOUNCE_RIDE:" + active.id())
+                    ));
+                }
+                rows.add(List.of(
+                        BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                ));
+                rows.add(List.of(
+                        BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")
+                ));
+            }
 
             bot.send(sendWithInline(chatId, msg, rows));
+
         } else {
             List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
             boolean hasPastRides = rideService.getMyRides(carpoolUserId).stream()
@@ -2285,5 +2299,27 @@ public class CallbackHandler {
                         BotMessageBuilder.button("🔄 Refresh", "ADMIN_STATS"),
                         BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
                 ))));
+    }
+
+    private void handleReannounceRide(Long chatId, Long rideId,
+                                      Long carpoolUserId, CarpoolBot bot) {
+        try {
+            RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
+
+            int remaining = 3 - ride.announceCount();
+            String remainingText = remaining == 0
+                    ? "No more re-announcements available."
+                    : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+
+            bot.send(BotMessageBuilder.text(chatId,
+                    "📢 <b>Ride Re-announced!</b>\n\n" +
+                            "Your ride has been posted to the group again.\n" +
+                            "<i>" + remainingText + "</i>"));
+
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not re-announce ride: " +
+                            BotMessageBuilder.escape(e.getMessage())));
+        }
     }
 }
