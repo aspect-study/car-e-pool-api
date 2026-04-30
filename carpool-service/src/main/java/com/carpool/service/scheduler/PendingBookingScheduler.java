@@ -41,8 +41,8 @@ public class PendingBookingScheduler {
     private final ApplicationEventPublisher eventPublisher;
 
     // Reminder intervals in minutes from booking creation
-    private static final int[] REMINDER_INTERVALS = {5, 10, 15};
-    private static final int   EXPIRY_MINUTES      = 20;
+    private static final int[] REMINDER_INTERVALS = {15, 30, 45};  // minutes
+    private static final int   EXPIRY_MINUTES      = 60;
 
     /**
      * Runs every minute — checks for pending bookings needing reminders or expiry.

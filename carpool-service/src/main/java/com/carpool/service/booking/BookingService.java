@@ -27,6 +27,8 @@ import org.springframework.data.domain.Pageable;
 import com.carpool.common.response.PagedResponse;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
@@ -115,7 +117,7 @@ public class BookingService {
                 .status(BookingStatus.PENDING)
                 .contributionDue(contributionDue)
                 .passengerMessage(request.passengerMessage())
-                .expiresAt(java.time.Instant.now().plus(20, java.time.temporal.ChronoUnit.MINUTES))
+                .expiresAt(Instant.now().plus(60, ChronoUnit.MINUTES))
                 .build();
 
         // ── 9. Decrement available seats ─────────────────────────────────
