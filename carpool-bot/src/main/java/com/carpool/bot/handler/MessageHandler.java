@@ -81,6 +81,28 @@ public class MessageHandler {
                     return saved;
                 });
 
+        // Sync profile fields for existing users — covers the case where a user
+        // had no @username at registration time but set one later in Telegram settings,
+        // or changed their name. Fires on every /start or message — lightweight DB write
+        // only when something actually changed.
+        String latestHandle  = message.getFrom().getUserName();
+        String latestFirst   = message.getFrom().getFirstName();
+        String latestLast    = message.getFrom().getLastName();
+        String latestName    = latestLast != null ? latestFirst + " " + latestLast : latestFirst;
+
+        boolean handleChanged = latestHandle != null
+                && !latestHandle.equals(user.getTelegramHandle());
+        boolean nameChanged   = latestName != null
+                && !latestName.equals(user.getFullName());
+
+        if (!isNewUser && (handleChanged || nameChanged)) {
+            if (handleChanged) user.setTelegramHandle(latestHandle);
+            if (nameChanged)   user.setFullName(latestName);
+            userRepository.save(user);
+            log.info("Synced profile for userId={} handleChanged={} nameChanged={}",
+                    user.getId(), handleChanged, nameChanged);
+        }
+
         // New user or not yet accepted — show welcome/terms screen
         if (isNewUser || !user.isTermsAccepted()) {
             // Re-prompt declined users weekly
