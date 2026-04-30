@@ -21,5 +21,6 @@ public record RideResponse(
         String notes,
         RideStatus status,
         List<WaypointResponse> waypoints,
-        Instant createdAt
+        Instant createdAt,
+        Integer announceCount
 ) {}

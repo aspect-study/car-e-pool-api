@@ -79,6 +79,10 @@ public class Ride extends BaseEntity {
     @Builder.Default
     private RideStatus status = RideStatus.DRAFT;
 
+    @Column(name = "announce_count", nullable = false)
+    @Builder.Default
+    private Integer announceCount = 1;
+
     /**
      * Ordered waypoints between origin and destination.
      * CascadeType.ALL: waypoints are lifecycle-managed with the ride.

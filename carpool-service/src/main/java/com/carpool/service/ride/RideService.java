@@ -422,4 +422,35 @@ public class RideService {
                 .map(mapper::toRideResponse)
                 .toList();
     }
+
+    @Transactional
+    public RideResponse reannounceRide(Long rideId, Long requestingUserId) {
+        Ride ride = rideRepository.findByIdWithLock(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(requestingUserId)) {
+            throw new NotRideOwnerException();
+        }
+
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
+            throw new InvalidRideStateException(
+                    "Only ACTIVE or FULL rides can be re-announced.");
+        }
+
+        if (ride.getAnnounceCount() == null || ride.getAnnounceCount() >= 3) {
+            throw new InvalidRideStateException(
+                    "This ride has already been announced 3 times. Maximum reached.");
+        }
+
+        ride.setAnnounceCount(ride.getAnnounceCount() + 1);
+        Ride saved = rideRepository.save(ride);
+
+        // Reuse the same RidePostedEvent — GroupNotificationService handles the message
+        eventPublisher.publishEvent(new RideEvents.RidePostedEvent(saved));
+
+        log.info("Ride re-announced: rideId={} announceCount={} driverId={}",
+                saved.getId(), saved.getAnnounceCount(), requestingUserId);
+
+        return mapper.toRideResponse(saved);
+    }
 }
