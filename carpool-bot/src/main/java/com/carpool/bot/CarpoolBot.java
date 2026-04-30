@@ -112,6 +112,28 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                     }
                 }
 
+                // Handle gate — must have a Telegram @username to use the bot
+                if (userOpt.isPresent() && userOpt.get().isTermsAccepted()
+                        && userOpt.get().getTelegramHandle() == null) {
+                    Long gatedChatId = update.getMessage().getChatId();
+                    String text = update.getMessage().getText().trim();
+                    if (!text.equals("/start")) {
+                        send(BotMessageBuilder.textNoMenu(gatedChatId,
+                                "🚫 <b>Telegram Username Required</b>\n\n" +
+                                        "You need a Telegram @username to use this bot.\n\n" +
+                                        "📌 <b>Why is this required?</b>\n" +
+                                        "Drivers and passengers need to contact each other " +
+                                        "directly outside the bot to coordinate pickups.\n\n" +
+                                        "⚙️ <b>How to set your username:</b>\n" +
+                                        "1️⃣ Open <b>Telegram Settings</b>\n" +
+                                        "2️⃣ Tap your <b>Profile</b>\n" +
+                                        "3️⃣ Tap <b>Username</b> and set one\n\n" +
+                                        "✅ Once done, send /start and you're good to go!\n\n" +
+                                        "<i>Already set it? Just send /start and the bot will detect it automatically.</i>"));
+                        return;
+                    }
+                }
+
                 messageHandler.handle(update.getMessage(), this);
 
             } else if (update.hasCallbackQuery()) {
@@ -131,6 +153,26 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                             List.of(List.of(
                                     BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME")
                             ))));
+                    return;
+                }
+
+                // Handle gate for callbacks
+                if (userOpt.isPresent() && userOpt.get().isTermsAccepted()
+                        && userOpt.get().getTelegramHandle() == null) {
+                    Long gatedChatId = update.getCallbackQuery().getMessage().getChatId();
+                    answerCallback(update.getCallbackQuery().getId());
+                    send(BotMessageBuilder.textNoMenu(gatedChatId,
+                            "🚫 <b>Telegram Username Required</b>\n\n" +
+                                    "You need a Telegram @username to use this bot.\n\n" +
+                                    "📌 <b>Why is this required?</b>\n" +
+                                    "Drivers and passengers need to contact each other " +
+                                    "directly outside the bot to coordinate pickups.\n\n" +
+                                    "⚙️ <b>How to set your username:</b>\n" +
+                                    "1️⃣ Open <b>Telegram Settings</b>\n" +
+                                    "2️⃣ Tap your <b>Profile</b>\n" +
+                                    "3️⃣ Tap <b>Username</b> and set one\n\n" +
+                                    "✅ Once done, send /start and you're good to go!\n\n" +
+                                    "<i>Already set it? Just send /start and the bot will detect it automatically.</i>"));
                     return;
                 }
 
