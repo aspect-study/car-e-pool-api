@@ -14,6 +14,10 @@ import java.util.Arrays;
 @Configuration
 public class BotConfig {
 
+    /**
+     * Terms version accepted by the user.
+     * NULL = not yet accepted. '1.0' = current version accepted.
+     */
     public static final String CURRENT_TERMS_VERSION = "1.0";
 
     @Value("${carpool.telegram.bot-token}")

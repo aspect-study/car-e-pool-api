@@ -134,6 +134,13 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                     }
                 }
 
+                // Deleted account gate
+                if (userOpt.isPresent() && userOpt.get().isDeleted()) {
+                    log.warn("Deleted account attempted bot access telegramId={}",
+                            update.getMessage().getFrom().getId());
+                    return;
+                }
+
                 messageHandler.handle(update.getMessage(), this);
 
             } else if (update.hasCallbackQuery()) {
@@ -173,6 +180,13 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                                     "3️⃣ Tap <b>Username</b> and set one\n\n" +
                                     "✅ Once done, send /start and you're good to go!\n\n" +
                                     "<i>Already set it? Just send /start and the bot will detect it automatically.</i>"));
+                    return;
+                }
+
+                // Deleted account gate for callbacks — silent ignore
+                if (userOpt.isPresent() && userOpt.get().isDeleted()) {
+                    log.warn("Deleted account attempted bot access telegramId={}",
+                            update.getCallbackQuery().getFrom().getId());
                     return;
                 }
 

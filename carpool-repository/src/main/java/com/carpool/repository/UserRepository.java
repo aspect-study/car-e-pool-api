@@ -29,4 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt > :since")
     long countByCreatedAtAfter(@Param("since") Instant since);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt > :since")
+    long countUsersCreatedAfter(@Param("since") Instant since);
 }

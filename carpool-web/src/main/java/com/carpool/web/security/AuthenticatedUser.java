@@ -35,7 +35,7 @@ public class AuthenticatedUser implements UserDetails {
 
     public boolean canDrive() {
         UserRole r = getUserRole();
-        return r == UserRole.DRIVER || r == UserRole.BOTH;
+        return r == UserRole.DRIVER || r == UserRole.BOTH || r == UserRole.ADMIN;
     }
 
     @Override

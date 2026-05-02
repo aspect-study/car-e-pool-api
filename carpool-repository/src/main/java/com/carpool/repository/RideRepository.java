@@ -237,4 +237,13 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("from")     LocalDateTime from,
             @Param("to")       LocalDateTime to,
             @Param("statuses") List<RideStatus> statuses);
+
+    @Query("""
+        SELECT r FROM Ride r
+        WHERE r.driver.id = :driverUserId
+        AND r.status IN ('ACTIVE', 'FULL', 'DEPARTED')
+        ORDER BY r.createdAt DESC
+        LIMIT 1
+        """)
+    Optional<Ride> findActiveRideByDriverId(@Param("driverUserId") Long driverUserId);
 }

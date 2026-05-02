@@ -66,11 +66,10 @@ public class RideService {
         }
 
         // Prevent posting a ride if user has an active booking as passenger
-        boolean hasActiveBooking = !bookingRepository
-                .findByPassengerIdAndStatusInOrderByCreatedAtDesc(
+        boolean hasActiveBooking = bookingRepository
+                .countByPassengerIdAndStatusIn(
                         driverUserId,
-                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING))
-                .isEmpty();
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING)) > 0;
 
         if (hasActiveBooking) {
             throw new InvalidRideStateException(
@@ -119,13 +118,14 @@ public class RideService {
     }
 
     /**
-     * Driver publishes, cancels, or completes a ride.
+     * Driver publishes, departs, cancels, or completes a ride.
      * Allowed transitions:
-     *   DRAFT      → ACTIVE    (publish)
+     *   DRAFT      → ACTIVE    (publish — visible to passengers)
+     *   ACTIVE     → DEPARTED  (start ride)
+     *   FULL       → DEPARTED  (start full ride)
      *   ACTIVE     → CANCELLED (driver cancels — notifies all passengers)
      *   FULL       → CANCELLED (driver cancels full ride)
-     *   ACTIVE     → COMPLETED (driver marks done — notifies passengers)
-     *   FULL       → COMPLETED
+     *   DEPARTED   → COMPLETED (mark ride done — notifies passengers)
      */
     @Transactional
     public RideResponse updateRideStatus(Long rideId, UpdateRideStatusRequest request,
@@ -362,13 +362,13 @@ public class RideService {
             return;
         }
 
-        for (Ride ride : staleRides) {
+        staleRides.forEach(ride -> {
             ride.setStatus(RideStatus.DEPARTED);
-            rideRepository.save(ride);
             log.info("Auto-departed stale ride: id={} departureTime={}",
                     ride.getId(), ride.getDepartureTime());
-        }
+        });
 
+        rideRepository.saveAll(staleRides);
         log.info("Auto-departed {} stale rides", staleRides.size());
     }
 
@@ -387,20 +387,21 @@ public class RideService {
             return;
         }
 
+        List<Booking> allBookings = new ArrayList<>();
+
         for (Ride ride : departedRides) {
             ride.setStatus(RideStatus.COMPLETED);
-            rideRepository.save(ride);
 
             List<Booking> activeBookings = bookingRepository.findActiveBookingsForRide(ride.getId());
-            activeBookings.forEach(b -> {
-                b.setStatus(BookingStatus.COMPLETED);
-                bookingRepository.save(b);
-            });
+            activeBookings.forEach(b -> b.setStatus(BookingStatus.COMPLETED));
+            allBookings.addAll(activeBookings);
 
             log.info("Auto-completed stale ride: id={} departureTime={}",
                     ride.getId(), ride.getDepartureTime());
         }
 
+        rideRepository.saveAll(departedRides);
+        bookingRepository.saveAll(allBookings);
         log.info("Auto-completed {} stale departed rides", departedRides.size());
     }
 
@@ -453,4 +454,17 @@ public class RideService {
 
         return mapper.toRideResponse(saved);
     }
+
+    /**
+     * Returns the driver's current active ride (ACTIVE, FULL, or DEPARTED).
+     * Returns null if no active ride exists — does not throw.
+     * Used by REST clients as a lightweight check before loading full ride list.
+     */
+    @Transactional(readOnly = true)
+    public RideResponse getActiveRide(Long driverUserId) {
+        return rideRepository.findActiveRideByDriverId(driverUserId)
+                .map(mapper::toRideResponse)
+                .orElse(null);
+    }
+
 }

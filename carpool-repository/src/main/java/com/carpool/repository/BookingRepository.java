@@ -2,7 +2,9 @@ package com.carpool.repository;
 
 import com.carpool.domain.entity.Booking;
 import com.carpool.domain.enums.BookingStatus;
+import com.carpool.domain.enums.RideStatus;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -247,4 +249,40 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      */
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.createdAt > :since")
     long countBookingsCreatedAfter(@Param("since") java.time.Instant since);
+
+    Page<Booking> findByRideIdAndStatus(Long rideId, BookingStatus status, Pageable pageable);
+
+    /**
+     * Driver's active bookings — filtered by both booking status and ride status.
+     * Avoids in-memory filtering after DB fetch.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.ride r
+    JOIN FETCH r.driver
+    JOIN FETCH r.originHub
+    JOIN FETCH r.destinationHub
+    JOIN FETCH b.passenger
+    WHERE r.driver.id = :driverId
+    AND b.status IN :bookingStatuses
+    AND r.status IN :rideStatuses
+    ORDER BY r.departureTime ASC, b.createdAt DESC
+    """)
+    List<Booking> findByDriverIdAndStatusInAndRideStatusIn(
+            @Param("driverId") Long driverId,
+            @Param("bookingStatuses") List<BookingStatus> bookingStatuses,
+            @Param("rideStatuses") List<RideStatus> rideStatuses);
+
+    /**
+     * Count active bookings for a passenger — used to prevent posting a ride
+     * while having an active booking. Count query avoids loading full list.
+     */
+    @Query("""
+    SELECT COUNT(b) FROM Booking b
+    WHERE b.passenger.id = :passengerId
+    AND b.status IN :statuses
+    """)
+    long countByPassengerIdAndStatusIn(
+            @Param("passengerId") Long passengerId,
+            @Param("statuses") List<BookingStatus> statuses);
 }

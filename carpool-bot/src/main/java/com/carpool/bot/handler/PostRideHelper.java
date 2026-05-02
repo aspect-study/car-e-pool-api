@@ -5,6 +5,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.DriverNote;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.service.note.DriverNoteService;
@@ -38,9 +39,9 @@ public class PostRideHelper {
             // Driver just entered new vehicle info in this flow
             vehicleLine = String.format("🚘 %s%s | 🔢 %s",
                     state.getPendingCarColor() != null
-                            ? BotMessageBuilder.escape(state.getPendingCarColor()) + " " : "",
-                    BotMessageBuilder.escape(state.getPendingCarModel()),
-                    BotMessageBuilder.escape(state.getPendingPlateNumber()));
+                            ? HtmlEscapeUtil.escape(state.getPendingCarColor()) + " " : "",
+                    HtmlEscapeUtil.escape(state.getPendingCarModel()),
+                    HtmlEscapeUtil.escape(state.getPendingPlateNumber()));
         } else {
             // No vehicle info in state — will show "Not set" on confirmation
             vehicleLine = "<i>No vehicle info set</i>";
@@ -58,13 +59,13 @@ public class PostRideHelper {
                         "🚘 Vehicle: %s\n\n" +
                         "Looks good? Post this ride?",
                 dirLabel,
-                BotMessageBuilder.escape(state.getOriginHubName()),
-                BotMessageBuilder.escape(state.getDestinationHubName()),
+                HtmlEscapeUtil.escape(state.getOriginHubName()),
+                HtmlEscapeUtil.escape(state.getDestinationHubName()),
                 state.getDepartureTime().format(DateTimeFormatter.ofPattern("MMM d 'at' h:mm a")),
                 state.getSeats(),
                 state.getContribution().toPlainString(),
                 state.getNotes() != null
-                        ? "📝 Notes: " + BotMessageBuilder.escape(state.getNotes()) + "\n"
+                        ? "📝 Notes: " + HtmlEscapeUtil.escape(state.getNotes()) + "\n"
                         : "",
                 vehicleLine);
 

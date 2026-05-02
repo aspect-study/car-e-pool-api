@@ -96,6 +96,17 @@ public class BookingService {
             throw new InvalidRideStateException("You cannot book your own ride.");
         }
 
+        // ── 5b. Prevent booking a ride while having an active ride as driver ─
+        boolean passengerHasActiveRide = rideRepository
+                .findActiveRideByDriverId(passengerUserId)
+                .isPresent();
+
+        if (passengerHasActiveRide) {
+            throw new InvalidRideStateException(
+                    "You have an active ride posted as a driver. " +
+                            "Please cancel or complete your ride before booking as a passenger.");
+        }
+
         User passenger = userRepository.findById(passengerUserId)
                 .orElseThrow(() -> new UserNotFoundException(passengerUserId));
 
@@ -387,15 +398,12 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsForDriver(Long driverUserId) {
-        return bookingRepository.findByDriverIdAndStatusIn(
+        return bookingRepository.findByDriverIdAndStatusInAndRideStatusIn(
                         driverUserId,
-                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING))
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING),
+                        List.of(RideStatus.ACTIVE, RideStatus.FULL, RideStatus.DEPARTED))
                 .stream()
                 .map(mapper::toBookingResponse)
-                // Only show bookings for active rides
-                .filter(b -> b.ride().status() == RideStatus.ACTIVE
-                        || b.ride().status() == com.carpool.domain.enums.RideStatus.FULL
-                        || b.ride().status() == com.carpool.domain.enums.RideStatus.DEPARTED)
                 .toList();
     }
 
@@ -408,13 +416,16 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public PagedResponse<BookingResponse> getBookingsByRideId(Long rideId,
+                                                              BookingStatus status,
                                                               Pageable pageable) {
-        Page<BookingResponse> page = bookingRepository
-                .findByRideIdAndStatusIn(
-                        rideId,
-                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING),
-                        pageable)
-                .map(mapper::toBookingResponse);
+        Page<BookingResponse> page = status != null
+                ? bookingRepository.findByRideIdAndStatus(rideId, status, pageable)
+                  .map(mapper::toBookingResponse)
+                : bookingRepository.findByRideIdAndStatusIn(
+                rideId,
+                List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING),
+                pageable)
+                  .map(mapper::toBookingResponse);
 
         return PagedResponse.of(page);
     }

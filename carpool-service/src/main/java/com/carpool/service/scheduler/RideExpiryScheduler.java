@@ -21,8 +21,9 @@ public class RideExpiryScheduler {
     /**
      * Runs every 30 minutes.
      * fixedDelay = wait 30 min AFTER last execution completes — prevents overlap.
+     * initialDelay = starts 1 minute after boot — staggered from completeStaleRides.
      */
-    @Scheduled(fixedDelay = 30 * 60 * 1000)
+    @Scheduled(fixedDelay = 30 * 60 * 1000, initialDelay = 60_000)
     public void expireStaleRides() {
         log.debug("Running ride expiry check...");
         rideService.expireStaleRides();
@@ -32,8 +33,9 @@ public class RideExpiryScheduler {
      * Runs every 30 minutes.
      * Auto-completes rides that have been DEPARTED for 2+ hours.
      * Transitions DEPARTED → COMPLETED and marks all confirmed bookings as COMPLETED.
+     * initialDelay = starts 5 minutes after boot — staggered from expireStaleRides.
      */
-    @Scheduled(fixedDelay = 30 * 60 * 1000)
+    @Scheduled(fixedDelay = 30 * 60 * 1000, initialDelay = 5 * 60 * 1000)
     public void completeStaleRides() {
         log.debug("Running stale departed ride completion check...");
         rideService.completeStaleRides();

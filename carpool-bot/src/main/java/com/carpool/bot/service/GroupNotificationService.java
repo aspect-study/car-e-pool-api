@@ -3,6 +3,7 @@ package com.carpool.bot.service;
 import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.Ride;
 import com.carpool.service.event.RideEvents;
 import lombok.RequiredArgsConstructor;
@@ -62,20 +63,20 @@ public class GroupNotificationService {
         String departure = ride.getDepartureTime()
                 .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
 
-        String driverName = BotMessageBuilder.escape(ride.getDriver().getFullName());
+        String driverName = HtmlEscapeUtil.escape(ride.getDriver().getFullName());
 
         String notesLine = (ride.getNotes() != null && !ride.getNotes().isBlank())
-                ? "\n📝 " + BotMessageBuilder.escape(ride.getNotes())
+                ? "\n📝 " + HtmlEscapeUtil.escape(ride.getNotes())
                 : "";
 
         String vehicleLine = (ride.getDriver().getCarModel() != null
                 && ride.getDriver().getPlateNumber() != null)
                 ? String.format("\n🚘 %s%s | 🔢 %s",
                 ride.getDriver().getCarColor() != null
-                ? BotMessageBuilder.escape(ride.getDriver().getCarColor()) + " "
+                ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " "
                 : "",
-                BotMessageBuilder.escape(ride.getDriver().getCarModel()),
-                BotMessageBuilder.escape(ride.getDriver().getPlateNumber()))
+                HtmlEscapeUtil.escape(ride.getDriver().getCarModel()),
+                HtmlEscapeUtil.escape(ride.getDriver().getPlateNumber()))
                 : "";
 
         return String.format(
@@ -90,8 +91,8 @@ public class GroupNotificationService {
                         "🔖 Ride #%d\n\n" +
                         "👇 Tap <b>View Ride</b> below to book instantly.",
                 dirLabel,
-                BotMessageBuilder.escape(ride.getOriginHub().getName()),
-                BotMessageBuilder.escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 departure,
                 ride.getAvailableSeats(),
                 notesLine,

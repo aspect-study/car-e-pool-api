@@ -1,6 +1,8 @@
 package com.carpool.web.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
@@ -18,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Per-IP rate limiting using Bucket4j token bucket algorithm.
@@ -29,8 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * Default (from application.properties): 60 requests per 60 seconds per IP.
  *
- * ConcurrentHashMap is safe here — Bucket4j buckets are thread-safe individually,
- * and computeIfAbsent is atomic for bucket creation.
+ * Caffeine cache with TTL eviction — prevents unbounded memory growth from
+ * unique IPs. Buckets expire after 1 hour of inactivity, hard cap at 100k IPs.
+ * Bucket4j buckets are thread-safe individually.
  *
  * Note: For multi-instance deployments, replace with Bucket4j + Redis backend.
  * For 5k users on a single instance, in-memory is sufficient.
@@ -39,7 +42,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .maximumSize(100_000)
+            .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final int capacity;
@@ -62,7 +68,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String clientIp = resolveClientIp(request);
-        Bucket bucket   = buckets.computeIfAbsent(clientIp, this::createBucket);
+        Bucket bucket = buckets.get(clientIp, this::createBucket);
 
         if (bucket.tryConsume(1)) {
             filterChain.doFilter(request, response);

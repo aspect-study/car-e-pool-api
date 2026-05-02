@@ -50,7 +50,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 Long   userId     = jwtService.extractUserId(claims);
                 Long   telegramId = jwtService.extractTelegramId(claims);
-                String role       = jwtService.extractRole(claims);
+
+                // Role is read from JWT claim — not from DB on every request.
+                // If a user's role was updated, their existing token retains the old role
+                // until expiry. This is intentional — stateless JWT design trade-off.
+                String role = jwtService.extractRole(claims);
 
                 AuthenticatedUser principal = new AuthenticatedUser(userId, telegramId, role);
 
