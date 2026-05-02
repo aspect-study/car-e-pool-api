@@ -7,9 +7,12 @@ import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.RideRepository;
 import com.carpool.repository.UserRepository;
+import com.carpool.service.admin.AdminStatsService;
+import com.carpool.service.dto.response.AdminStatsResponse;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +27,7 @@ public class ProfileService {
     private final UserRepository    userRepository;
     private final RideRepository    rideRepository;
     private final BookingRepository bookingRepository;
+    private final AdminStatsService adminStatsService;
 
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy")
@@ -34,6 +38,7 @@ public class ProfileService {
      * Driver stats included if user has posted at least one ride.
      * Passenger stats included if user has made at least one booking.
      */
+    @Cacheable(value = "profileStats", key = "#userId")
     @Transactional(readOnly = true)
     public ProfileStatsResponse getProfileStats(Long userId) {
         User user = userRepository.findById(userId)
@@ -98,12 +103,33 @@ public class ProfileService {
      * More accurate than stored role since it reflects actual usage.
      */
     private String buildRoleLabel(int ridesPosted, int bookingsMade) {
-        boolean isDiver    = ridesPosted   > 0;
-        boolean isPassenger = bookingsMade > 0;
+        boolean isDriver    = ridesPosted   > 0;
+        boolean isPassenger = bookingsMade  > 0;
 
-        if (isDiver && isPassenger) return "🚗 Driver & 🧳 Passenger";
-        if (isDiver)                return "🚗 Driver";
-        if (isPassenger)            return "🧳 Passenger";
+        if (isDriver && isPassenger) return "🚗 Driver & 🧳 Passenger";
+        if (isDriver)                return "🚗 Driver";
+        if (isPassenger)             return "🧳 Passenger";
         return "👋 New Member";
+    }
+
+    /**
+     * Platform-wide statistics for admin dashboard.
+     */
+    @Transactional(readOnly = true)
+    public AdminStatsResponse getAdminStats() {
+        AdminStatsService.AdminStats s = adminStatsService.getStats();
+        return new AdminStatsResponse(
+                s.totalUsers(),
+                s.newUsersToday(),
+                s.activeRidesNow(),
+                s.ridesPostedToday(),
+                s.totalRides(),
+                s.completedRides(),
+                s.cancelledRides(),
+                s.pendingBookingsNow(),
+                s.bookingsMadeToday(),
+                s.totalBookings(),
+                s.completedBookings()
+        );
     }
 }

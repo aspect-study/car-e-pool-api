@@ -7,8 +7,10 @@ import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.HubMatcher;
+import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.RideDirection;
+import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.booking.BookingService;
 import com.carpool.service.dto.request.CreateBookingRequest;
@@ -129,7 +131,7 @@ public class MessageHandler {
         }
 
         if (text.startsWith("/")) {
-            handleCommand(text, chatId, carpoolUserId, state, bot);
+            handleCommand(text, chatId, carpoolUserId, state, bot, user.getTelegramId());
             return;
         }
 
@@ -178,16 +180,16 @@ public class MessageHandler {
     // ── Commands ──────────────────────────────────────────────────────────
 
     private void handleCommand(String command, Long chatId, Long carpoolUserId,
-                               UserState state, CarpoolBot bot) {
+                               UserState state, CarpoolBot bot, Long telegramId) {
         String cmd = command.split(" ")[0].toLowerCase();
         switch (cmd) {
-            case "/start"       -> handleStart(command, chatId, carpoolUserId, state, bot);
+            case "/start"      -> handleStart(command, chatId, carpoolUserId, state, bot);
             case "/cancel"     -> handleCancel(chatId, bot);
             case "/myrides"    -> showMyRides(chatId, carpoolUserId, bot);
             case "/mybookings" -> showMyBookings(chatId, carpoolUserId, bot);
             case "/postride"   -> startPostRideFlow(chatId, carpoolUserId, state, bot);
             case "/findride"   -> startFindRideFlow(chatId, carpoolUserId, state, bot);
-            case "/profile"    -> handleProfile(chatId, carpoolUserId, bot);
+            case "/profile"    -> handleProfile(chatId, carpoolUserId, telegramId, bot);
             case "/vehicle"    -> handleVehicleCommand(chatId, carpoolUserId, state, bot);
             case "/help"       -> helpHandler.showHelpMenu(chatId, bot);
             default -> bot.send(BotMessageBuilder.text(chatId,
@@ -209,8 +211,8 @@ public class MessageHandler {
                 RideResponse ride = rideService.getRideById(rideId);
 
                 // Validate ride is still available
-                if (!ride.status().name().equals("ACTIVE")
-                        && !ride.status().name().equals("FULL")) {
+                if (ride.status() != RideStatus.ACTIVE
+                        && ride.status() != RideStatus.FULL) {
                     bot.send(sendWithInline(chatId,
                             "⚠️ <b>This ride is no longer available.</b>\n\n" +
                                     "It may have already departed or been cancelled.",
@@ -270,15 +272,15 @@ public class MessageHandler {
 
         List<RideResponse> myRides = rideService.getMyRides(carpoolUserId);
         boolean hasActiveRide = myRides.stream()
-                .anyMatch(r -> r.status().name().equals("ACTIVE")
-                        || r.status().name().equals("FULL")
-                        || r.status().name().equals("DEPARTED"));
+                .anyMatch(r -> r.status() == RideStatus.ACTIVE
+                        || r.status() == RideStatus.FULL
+                        || r.status() == RideStatus.DEPARTED);
 
         if (hasActiveRide) {
             RideResponse active = myRides.stream()
-                    .filter(r -> r.status().name().equals("ACTIVE")
-                            || r.status().name().equals("FULL")
-                            || r.status().name().equals("DEPARTED"))
+                    .filter(r -> r.status() == RideStatus.ACTIVE
+                            || r.status() == RideStatus.FULL
+                            || r.status() == RideStatus.DEPARTED)
                     .findFirst().orElseThrow();
 
             String msg = "🚗 <b>Your Active Ride</b>\n\n" +
@@ -290,7 +292,7 @@ public class MessageHandler {
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            if (active.status().name().equals("DEPARTED")) {
+            if (active.status() == RideStatus.DEPARTED) {
                 rows.add(List.of(
                         BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
                         BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
@@ -348,13 +350,13 @@ public class MessageHandler {
 
         } else {
             List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
-            boolean hasPastRides = rideService.getMyRides(carpoolUserId).stream()
-                    .anyMatch(r -> r.status().name().equals("COMPLETED")
-                            || r.status().name().equals("CANCELLED"));
+            boolean hasPastRides = myRides.stream()
+                    .anyMatch(r -> r.status() == RideStatus.COMPLETED
+                            || r.status() == RideStatus.CANCELLED);
 
             String prompt = (!myBookings.isEmpty() && hasPastRides)
                     ? "👋 What would you like to do?"
-                    : "👋 Welcome to <b>" + BotMessageBuilder.escape(botConfig.getCommunityName()) +
+                    : "👋 Welcome to <b>" + HtmlEscapeUtil.escape(botConfig.getCommunityName()) +
                       "</b>!\n\nWhere are you headed today?";
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -437,14 +439,24 @@ public class MessageHandler {
         stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
 
         LocalDateTime manila = LocalDateTime.now(ZoneId.of("Asia/Manila"));
-        String etdExample = state.getDirection() == RideDirection.HOME_TO_WORK
-                ? manila.withHour(7).withMinute(30).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
-                : manila.withHour(18).withMinute(0).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+        String etdExample = etdExample(state.getDirection());
 
         bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                         "Format: <code>MM/DD HH:MM</code>\n" +
                         "Example: <code>" + etdExample + "</code>"));
+    }
+
+    /**
+     * Returns a sample departure time string based on direction.
+     * Used as input format example throughout the post ride flow.
+     */
+    private String etdExample(RideDirection direction) {
+        int hour = direction == RideDirection.HOME_TO_WORK ? 7  : 18;
+        int min  = direction == RideDirection.HOME_TO_WORK ? 30 : 0;
+        return LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                .withHour(hour).withMinute(min)
+                .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
     }
 
     private void handlePostRideEtd(Long chatId, String text, UserState state, CarpoolBot bot) {
@@ -459,11 +471,7 @@ public class MessageHandler {
                 boolean isRepost = state.getOriginHubId() != null
                         && state.getDestinationHubId() != null;
 
-                String etdExample = state.getDirection() == RideDirection.HOME_TO_WORK
-                        ? manila.withHour(7).withMinute(30)
-                          .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
-                        : manila.withHour(18).withMinute(0)
-                          .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+                String etdExample = etdExample(state.getDirection());
 
                 bot.send(BotMessageBuilder.textWithCancel(chatId,
                         "⚠️ That time has already passed.\n\n" +
@@ -499,9 +507,7 @@ public class MessageHandler {
 
         } catch (DateTimeParseException e) {
             LocalDateTime manila = LocalDateTime.now(ZoneId.of("Asia/Manila"));
-            String etdExample = state.getDirection() == RideDirection.HOME_TO_WORK
-                    ? manila.withHour(7).withMinute(30).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
-                    : manila.withHour(18).withMinute(0).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+            String etdExample = etdExample(state.getDirection());
 
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "⚠️ Invalid format. Please use <code>MM/DD HH:MM</code>\n" +
@@ -538,7 +544,7 @@ public class MessageHandler {
             rows.add(List.of(BotMessageBuilder.button("✏️ Try different name", "RETYPE_ORIGIN")));
 
             bot.send(sendWithInline(chatId,
-                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
+                    "⚠️ Couldn't find <b>\"" + HtmlEscapeUtil.escape(text) + "\"</b>.\n\n" +
                             (recentHubs.isEmpty()
                                     ? "Try a more specific name or nearby landmark:"
                                     : "Here are your recent locations:"),
@@ -555,7 +561,7 @@ public class MessageHandler {
 
         bot.send(sendWithInline(chatId,
                 "📍 <b>Select your start point:</b>\n\n" +
-                        "Results for \"" + BotMessageBuilder.escape(text) + "\":",
+                        "Results for \"" + HtmlEscapeUtil.escape(text) + "\":",
                 rows));
     }
 
@@ -588,7 +594,7 @@ public class MessageHandler {
             rows.add(List.of(BotMessageBuilder.button("✏️ Try different name", "RETYPE_DEST")));
 
             bot.send(sendWithInline(chatId,
-                    "⚠️ Couldn't find <b>\"" + BotMessageBuilder.escape(text) + "\"</b>.\n\n" +
+                    "⚠️ Couldn't find <b>\"" + HtmlEscapeUtil.escape(text) + "\"</b>.\n\n" +
                             (recentHubs.isEmpty()
                                     ? "Try a more specific name or nearby landmark:"
                                     : "Here are your recent locations:"),
@@ -617,7 +623,7 @@ public class MessageHandler {
 
         bot.send(sendWithInline(chatId,
                 "🏁 <b>Select your end point:</b>\n\n" +
-                        "Results for \"" + BotMessageBuilder.escape(text) + "\":",
+                        "Results for \"" + HtmlEscapeUtil.escape(text) + "\":",
                 rows));
     }
 
@@ -696,10 +702,10 @@ public class MessageHandler {
         if (user.hasVehicleInfo()) {
             String vehicleDisplay = String.format("%s%s | 🔢 %s",
                     user.getCarColor() != null
-                            ? "🎨 " + BotMessageBuilder.escape(user.getCarColor()) + " "
+                            ? "🎨 " + HtmlEscapeUtil.escape(user.getCarColor()) + " "
                             : "",
-                    BotMessageBuilder.escape(user.getCarModel()),
-                    BotMessageBuilder.escape(user.getPlateNumber()));
+                    HtmlEscapeUtil.escape(user.getCarModel()),
+                    HtmlEscapeUtil.escape(user.getPlateNumber()));
 
             var rows = List.of(
                     List.of(
@@ -763,7 +769,7 @@ public class MessageHandler {
                     rideId, carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not book this ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -780,7 +786,8 @@ public class MessageHandler {
         showRidesForDirection(chatId, carpoolUserId, state.getDirection(), state, bot);
     }
 
-    private void handleProfile(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+    private void handleProfile(Long chatId, Long carpoolUserId,
+                               Long telegramId, CarpoolBot bot) {
         try {
             com.carpool.service.dto.response.ProfileStatsResponse stats =
                     profileService.getProfileStats(carpoolUserId);
@@ -789,9 +796,9 @@ public class MessageHandler {
             sb.append("👤 <b>My Profile</b>\n\n");
 
             sb.append(String.format("<b>%s</b>%s\n",
-                    BotMessageBuilder.escape(stats.fullName()),
+                    HtmlEscapeUtil.escape(stats.fullName()),
                     stats.telegramHandle() != null
-                            ? " (@" + BotMessageBuilder.escape(stats.telegramHandle()) + ")"
+                            ? " (@" + HtmlEscapeUtil.escape(stats.telegramHandle()) + ")"
                             : ""));
             sb.append(stats.roleLabel()).append("\n");
             sb.append("📅 Member since: ").append(stats.memberSince()).append("\n");
@@ -801,10 +808,10 @@ public class MessageHandler {
                 if (stats.carModel() != null && stats.plateNumber() != null) {
                     sb.append(String.format("\n🚘 %s%s\n🔢 %s\n",
                             stats.carColor() != null
-                                    ? "🎨 " + BotMessageBuilder.escape(stats.carColor()) + " "
+                                    ? "🎨 " + HtmlEscapeUtil.escape(stats.carColor()) + " "
                                     : "",
-                            BotMessageBuilder.escape(stats.carModel()),
-                            BotMessageBuilder.escape(stats.plateNumber())));
+                            HtmlEscapeUtil.escape(stats.carModel()),
+                            HtmlEscapeUtil.escape(stats.plateNumber())));
                 } else {
                     sb.append("\n🚘 <i>No vehicle info yet</i>\n");
                 }
@@ -842,9 +849,7 @@ public class MessageHandler {
             }
 
             // Build profile buttons — add Admin Stats button for admins only
-            User profileUser = userRepository.findById(carpoolUserId).orElse(null);
-            boolean isAdmin  = profileUser != null
-                    && botConfig.isAdmin(profileUser.getTelegramId());
+            boolean isAdmin = botConfig.isAdmin(telegramId);
 
             List<List<InlineKeyboardButton>> profileRows = new ArrayList<>();
             profileRows.add(List.of(
@@ -909,8 +914,8 @@ public class MessageHandler {
 
         // Show last 3 COMPLETED or CANCELLED rides only — these have repost buttons
         List<RideResponse> recent = rides.stream()
-                .filter(r -> r.status().name().equals("COMPLETED")
-                        || r.status().name().equals("CANCELLED"))
+                .filter(r -> r.status() == RideStatus.COMPLETED
+                        || r.status() == RideStatus.CANCELLED)
                 .limit(3)
                 .toList();
 
@@ -936,8 +941,8 @@ public class MessageHandler {
             sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ⛽ ₱%.2f share\n",
                     i + 1,
                     dirEmoji,
-                    BotMessageBuilder.escape(r.originHub().name()),
-                    BotMessageBuilder.escape(r.destinationHub().name()),
+                    HtmlEscapeUtil.escape(r.originHub().name()),
+                    HtmlEscapeUtil.escape(r.destinationHub().name()),
                     statusLabel,
                     r.departureTime()
                             .atZone(ZoneId.of("Asia/Manila"))
@@ -975,18 +980,18 @@ public class MessageHandler {
             for (int i = 0; i < myBookings.size(); i++) {
                 BookingResponse b = myBookings.get(i);
                 String driverInfo = b.ride().driver().telegramHandle() != null
-                        ? " (@" + BotMessageBuilder.escape(b.ride().driver().telegramHandle()) + ")"
+                        ? " (@" + HtmlEscapeUtil.escape(b.ride().driver().telegramHandle()) + ")"
                         : "";
 
                 sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ⛽ ₱%.2f share\n👤 %s%s\n",
                         i + 1,
-                        BotMessageBuilder.escape(b.ride().originHub().name()),
-                        BotMessageBuilder.escape(b.ride().destinationHub().name()),
+                        HtmlEscapeUtil.escape(b.ride().originHub().name()),
+                        HtmlEscapeUtil.escape(b.ride().destinationHub().name()),
                         b.ride().departureTime()
                                 .atZone(ZoneId.of("Asia/Manila"))
                                 .format(DateTimeFormatter.ofPattern("MMM d h:mma")),
                         b.contributionDue(),
-                        BotMessageBuilder.escape(b.ride().driver().fullName()),
+                        HtmlEscapeUtil.escape(b.ride().driver().fullName()),
                         driverInfo));
 
                 String statusPrefix = b.status() == com.carpool.domain.enums.BookingStatus.PENDING
@@ -1184,10 +1189,10 @@ public class MessageHandler {
     private void showVehicleConfirmation(Long chatId, UserState state, CarpoolBot bot) {
         String vehicleDisplay = String.format("%s%s | 🔢 %s",
                 state.getPendingCarColor() != null
-                        ? "🎨 " + BotMessageBuilder.escape(state.getPendingCarColor()) + " "
+                        ? "🎨 " + HtmlEscapeUtil.escape(state.getPendingCarColor()) + " "
                         : "",
-                BotMessageBuilder.escape(state.getPendingCarModel()),
-                BotMessageBuilder.escape(state.getPendingPlateNumber()));
+                HtmlEscapeUtil.escape(state.getPendingCarModel()),
+                HtmlEscapeUtil.escape(state.getPendingPlateNumber()));
 
         var rows = List.of(
                 List.of(
@@ -1220,10 +1225,10 @@ public class MessageHandler {
         if (user.hasVehicleInfo()) {
             String current = String.format("%s%s | 🔢 %s",
                     user.getCarColor() != null
-                            ? "🎨 " + BotMessageBuilder.escape(user.getCarColor()) + " "
+                            ? "🎨 " + HtmlEscapeUtil.escape(user.getCarColor()) + " "
                             : "",
-                    BotMessageBuilder.escape(user.getCarModel()),
-                    BotMessageBuilder.escape(user.getPlateNumber()));
+                    HtmlEscapeUtil.escape(user.getCarModel()),
+                    HtmlEscapeUtil.escape(user.getPlateNumber()));
 
             var rows = List.of(
                     List.of(
@@ -1263,9 +1268,9 @@ public class MessageHandler {
         );
 
         bot.send(sendWithInline(chatId,
-                "👋 <b>Welcome, " + BotMessageBuilder.escape(firstName) + "!</b>\n\n" +
+                "👋 <b>Welcome, " + HtmlEscapeUtil.escape(firstName) + "!</b>\n\n" +
                         "You've joined the <b>" +
-                        BotMessageBuilder.escape(botConfig.getCommunityName()) +
+                        HtmlEscapeUtil.escape(botConfig.getCommunityName()) +
                         " Carpooling Community</b>. 🚗\n\n" +
                         "Before we get started, please review and accept our community terms " +
                         "to keep this a safe, legal, and non-profit carpooling group.\n\n" +

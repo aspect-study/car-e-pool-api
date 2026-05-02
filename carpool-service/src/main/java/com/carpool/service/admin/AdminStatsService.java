@@ -6,6 +6,7 @@ import com.carpool.repository.BookingRepository;
 import com.carpool.repository.RideRepository;
 import com.carpool.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class AdminStatsService {
     private final BookingRepository bookingRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "adminStats", key = "'global'")
     public AdminStats getStats() {
         Instant startOfDay = LocalDate.now(ZoneId.of("Asia/Manila"))
                 .atStartOfDay(ZoneId.of("Asia/Manila"))

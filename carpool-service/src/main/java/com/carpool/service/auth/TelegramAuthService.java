@@ -57,6 +57,12 @@ public class TelegramAuthService {
                 .map(existing -> updateUserProfile(existing, request))
                 .orElseGet(() -> createNewUser(request));
 
+        // Deleted accounts cannot log in
+        if (user.isDeleted()) {
+            log.warn("Login attempt from deleted account telegramId={}", request.id());
+            throw new InvalidTelegramAuthException();
+        }
+
         // Suspended/banned users cannot log in
         if (user.getStatus() != UserStatus.ACTIVE) {
             log.warn("Login attempt from non-active user telegramId={} status={}",
@@ -166,7 +172,13 @@ public class TelegramAuthService {
                 : request.firstName();
 
         user.setFullName(fullName);
-        user.setTelegramHandle(request.username());
+
+        // Only update handle if Telegram provides one — never overwrite with null
+        // A user may have removed their username from Telegram settings
+        if (request.username() != null) {
+            user.setTelegramHandle(request.username());
+        }
+
         user.setPhotoUrl(request.photoUrl());
         return userRepository.save(user);
     }

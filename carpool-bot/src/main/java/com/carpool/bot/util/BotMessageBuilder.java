@@ -1,13 +1,12 @@
 package com.carpool.bot.util;
 
+import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.service.dto.response.RideResponse;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -20,7 +19,7 @@ import java.util.List;
  * and special characters.
  *
  * HTML tags supported: <b>, <i>, <u>, <code>, <pre>
- * Special chars to escape: & → &amp;  < → &lt;  > → &gt;
+ * Special chars to HtmlEscapeUtil.escape: & → &amp;  < → &lt;  > → &gt;
  */
 public class BotMessageBuilder {
 
@@ -69,17 +68,6 @@ public class BotMessageBuilder {
                 .build();
     }
 
-    public static SendMessage textWithBackButton(Long chatId, String text) {
-        return SendMessage.builder()
-                .chatId(chatId)
-                .text(text)
-                .parseMode("HTML")
-                .replyMarkup(InlineKeyboardMarkup.builder()
-                        .keyboard(List.of(menuButtonRow()))
-                        .build())
-                .build();
-    }
-
     // ── Direction selector ────────────────────────────────────────────────
 
     public static SendMessage directionSelector(Long chatId, String prompt) {
@@ -116,7 +104,7 @@ public class BotMessageBuilder {
         String seatsInfo = ride.availableSeats() + " of " + ride.totalSeats() + " seats available";
 
         String driverHandle = ride.driver().telegramHandle() != null
-                ? " (@" + escape(ride.driver().telegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
                 : "";
 
         long minutesAgo = java.time.Duration.between(
@@ -139,16 +127,16 @@ public class BotMessageBuilder {
                         "🕓 Posted %s" +
                         "%s",
                 directionEmoji,
-                escape(ride.originHub().name()),
-                escape(ride.destinationHub().name()),
+                HtmlEscapeUtil.escape(ride.originHub().name()),
+                HtmlEscapeUtil.escape(ride.destinationHub().name()),
                 ride.departureTime().atZone(MANILA).format(DISPLAY_FMT),
                 seatsInfo,
                 ride.contributionAmount(),
-                escape(ride.driver().fullName()),
+                HtmlEscapeUtil.escape(ride.driver().fullName()),
                 driverHandle,
                 postedAgo,
                 ride.notes() != null && !ride.notes().isBlank()
-                        ? "\n📝 " + escape(ride.notes())
+                        ? "\n📝 " + HtmlEscapeUtil.escape(ride.notes())
                         : "");
     }
 
@@ -172,18 +160,18 @@ public class BotMessageBuilder {
         for (int i = 0; i < rides.size(); i++) {
             RideResponse ride = rides.get(i);
             String driverHandle = ride.driver().telegramHandle() != null
-                    ? " (@" + escape(ride.driver().telegramHandle()) + ")"
+                    ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
                     : "";
             String vehicleLine = buildVehicleLine(ride);
             sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n%s",
                     i + 1,
-                    escape(ride.originHub().name()),
-                    escape(ride.destinationHub().name()),
+                    HtmlEscapeUtil.escape(ride.originHub().name()),
+                    HtmlEscapeUtil.escape(ride.destinationHub().name()),
                     ride.departureTime().atZone(MANILA).format(
                             DateTimeFormatter.ofPattern("MMM d h:mma")),
                     ride.availableSeats(),
                     ride.contributionAmount(),
-                    escape(ride.driver().fullName()),
+                    HtmlEscapeUtil.escape(ride.driver().fullName()),
                     driverHandle,
                     vehicleLine));
 
@@ -217,32 +205,11 @@ public class BotMessageBuilder {
                 .build();
     }
 
-    public static InlineKeyboardMarkup inlineButtonsWithMenu(
-            List<List<InlineKeyboardButton>> rows) {
-        List<InlineKeyboardRow> keyboardRows = new ArrayList<>(rows.stream()
-                .map(InlineKeyboardRow::new)
-                .toList());
-        keyboardRows.add(menuButtonRow());
-        return InlineKeyboardMarkup.builder()
-                .keyboard(keyboardRows)
-                .build();
-    }
-
     public static InlineKeyboardButton button(String text, String callbackData) {
         return InlineKeyboardButton.builder()
                 .text(text)
                 .callbackData(callbackData)
                 .build();
-    }
-
-    // ── HTML escape helper ────────────────────────────────────────────────
-
-    public static String escape(String text) {
-        if (text == null) return "";
-        return text
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
     }
 
     /**
@@ -259,30 +226,6 @@ public class BotMessageBuilder {
                                         .text("❌ Cancel")
                                         .callbackData("CANCEL_POST_RIDE")
                                         .build())))
-                        .build())
-                .build();
-    }
-
-    /**
-     * Send a flow message with Cancel + Skip buttons.
-     * Used for optional fields like notes.
-     */
-    public static SendMessage textWithCancelAndSkip(Long chatId, String text, String skipCallback) {
-        return SendMessage.builder()
-                .chatId(chatId)
-                .text(text)
-                .parseMode("HTML")
-                .replyMarkup(InlineKeyboardMarkup.builder()
-                        .keyboard(List.of(
-                                new InlineKeyboardRow(
-                                        InlineKeyboardButton.builder()
-                                                .text("⏭️ Skip")
-                                                .callbackData(skipCallback)
-                                                .build(),
-                                        InlineKeyboardButton.builder()
-                                                .text("❌ Cancel")
-                                                .callbackData("CANCEL_POST_RIDE")
-                                                .build())))
                         .build())
                 .build();
     }
@@ -314,18 +257,18 @@ public class BotMessageBuilder {
         for (int i = 0; i < pageRides.size(); i++) {
             RideResponse ride = pageRides.get(i);
             String driverHandle = ride.driver().telegramHandle() != null
-                    ? " (@" + escape(ride.driver().telegramHandle()) + ")"
+                    ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
                     : "";
             String vehicleLine = buildVehicleLine(ride);
             sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n%s",
                     fromIdx + i + 1,
-                    escape(ride.originHub().name()),
-                    escape(ride.destinationHub().name()),
+                    HtmlEscapeUtil.escape(ride.originHub().name()),
+                    HtmlEscapeUtil.escape(ride.destinationHub().name()),
                     ride.departureTime().atZone(MANILA).format(
                             DateTimeFormatter.ofPattern("MMM d h:mma")),
                     ride.availableSeats(),
                     ride.contributionAmount(),
-                    escape(ride.driver().fullName()),
+                    HtmlEscapeUtil.escape(ride.driver().fullName()),
                     driverHandle,
                     vehicleLine));
         }
@@ -397,9 +340,9 @@ public class BotMessageBuilder {
         if (model == null && plate == null) return "";
 
         StringBuilder sb = new StringBuilder("🚘 ");
-        if (color != null) sb.append(escape(color)).append(" ");
-        if (model != null) sb.append(escape(model));
-        if (plate != null) sb.append(" | 🔢 ").append(escape(plate));
+        if (color != null) sb.append(HtmlEscapeUtil.escape(color)).append(" ");
+        if (model != null) sb.append(HtmlEscapeUtil.escape(model));
+        if (plate != null) sb.append(" | 🔢 ").append(HtmlEscapeUtil.escape(plate));
         sb.append("\n");
 
         return sb.toString();

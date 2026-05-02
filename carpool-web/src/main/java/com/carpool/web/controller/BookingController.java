@@ -1,8 +1,11 @@
 package com.carpool.web.controller;
 
 import com.carpool.common.response.ApiResponse;
+import com.carpool.domain.enums.BookingStatus;
 import com.carpool.service.booking.BookingService;
+import com.carpool.service.dto.request.CancelBookingRequest;
 import com.carpool.service.dto.request.CreateBookingRequest;
+import com.carpool.service.dto.request.DeclineBookingRequest;
 import com.carpool.service.dto.request.UpdatePaymentRequest;
 import com.carpool.service.dto.response.BookingResponse;
 import com.carpool.web.security.AuthenticatedUser;
@@ -38,7 +41,7 @@ public class BookingController {
                     race-condition safe even if two passengers book simultaneously.
                     
                     Booking starts as **PENDING** — driver must Accept or Decline.
-                    Auto-declines after 20 minutes if driver does not respond.
+                    Auto-declines after 60 minutes if driver does not respond.
                     
                     - `pickupWaypointId` — null means board at ride's origin hub
                     - `dropoffWaypointId` — null means alight at ride's destination hub
@@ -66,12 +69,16 @@ public class BookingController {
      */
     @Operation(summary = "Get bookings for a ride",
             description = """
-                Driver views all bookings on their ride.
-                Returns CONFIRMED and PENDING bookings only.
-                Ordered by creation date ascending.
-                
-                **Pagination:** `page` (default 0), `size` (default 10, max 50)
-                """,
+            Driver views all bookings on their ride.
+            
+            **Optional filter:** `status` — filter by booking status.
+            If omitted, returns CONFIRMED and PENDING bookings only.
+            Pass `status=COMPLETED` to review passengers on a past ride.
+            
+            Ordered by creation date ascending.
+            
+            **Pagination:** `page` (default 0), `size` (default 10, max 50)
+            """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "List of bookings for the ride")
@@ -80,6 +87,7 @@ public class BookingController {
     @GetMapping("/rides/{rideId}/bookings")
     public ResponseEntity<ApiResponse<PagedResponse<BookingResponse>>> getRideBookings(
             @PathVariable Long rideId,
+            @RequestParam(required = false) BookingStatus status,
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
@@ -88,7 +96,7 @@ public class BookingController {
                 Sort.by("createdAt").ascending());
 
         return ResponseEntity.ok(ApiResponse.ok(
-                bookingService.getBookingsByRideId(rideId, pageable)));
+                bookingService.getBookingsByRideId(rideId, status, pageable)));
     }
 
     /**
@@ -155,15 +163,17 @@ public class BookingController {
      */
     @Operation(summary = "Decline a booking request",
             description = """
-                    Driver declines a PENDING booking request.
-                    
-                    - Booking transitions: PENDING → DECLINED
-                    - Seat is restored to the ride
-                    - If ride was FULL, transitions back to ACTIVE
-                    - Passenger is notified with the decline reason
-                    
-                    Decline reasons: Already fully booked, Route change, Vehicle issue, Other
-                    """,
+                Driver declines a PENDING booking request.
+                
+                - Booking transitions: PENDING → DECLINED
+                - Seat is restored to the ride
+                - If ride was FULL, transitions back to ACTIVE
+                - Passenger is notified with the decline reason
+                
+                Decline reasons: Already fully booked, Route change, Vehicle issue, Other
+                
+                **Request body is optional** — omit entirely or send `{}` if no reason provided.
+                """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "Booking declined — passenger notified")
@@ -174,9 +184,10 @@ public class BookingController {
     @PostMapping("/bookings/{id}/decline")
     public ResponseEntity<ApiResponse<BookingResponse>> declineBooking(
             @PathVariable Long id,
-            @RequestParam(required = false) String reason,
+            @RequestBody(required = false) DeclineBookingRequest request,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
 
+        String reason = request != null ? request.reason() : null;
         BookingResponse booking = bookingService.declineBooking(
                 id, currentUser.getUserId(), reason);
         return ResponseEntity.ok(ApiResponse.ok(booking));
@@ -188,15 +199,17 @@ public class BookingController {
      */
     @Operation(summary = "Cancel my booking",
             description = """
-                    Passenger cancels their own PENDING or CONFIRMED booking.
-                    
-                    - Booking transitions: PENDING/CONFIRMED → CANCELLED_BY_PASSENGER
-                    - Seat is restored to the ride
-                    - If ride was FULL, transitions back to ACTIVE
-                    - Driver is notified with the cancellation reason
-                    
-                    Cancel reasons: Found another ride, Change of plans, Running late, Other
-                    """,
+                Passenger cancels their own PENDING or CONFIRMED booking.
+                
+                - Booking transitions: PENDING/CONFIRMED → CANCELLED_BY_PASSENGER
+                - Seat is restored to the ride
+                - If ride was FULL, transitions back to ACTIVE
+                - Driver is notified with the cancellation reason
+                
+                Cancel reasons: Found another ride, Change of plans, Running late, Other
+                
+                **Request body is optional** — omit entirely or send `{}` if no reason provided.
+                """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", description = "Booking cancelled — driver notified")
@@ -205,9 +218,10 @@ public class BookingController {
     @DeleteMapping("/bookings/{id}")
     public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(
             @PathVariable Long id,
-            @RequestParam(required = false) String reason,
+            @RequestBody(required = false) CancelBookingRequest request,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
 
+        String reason = request != null ? request.reason() : null;
         BookingResponse booking = bookingService.cancelBooking(
                 id, currentUser.getUserId(), reason);
         return ResponseEntity.ok(ApiResponse.ok(booking));

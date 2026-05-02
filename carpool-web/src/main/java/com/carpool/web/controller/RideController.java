@@ -25,7 +25,6 @@ import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/rides")
@@ -175,6 +174,32 @@ public class RideController {
     }
 
     /**
+     * GET /api/v1/rides/mine/active
+     * Returns the driver's current active ride or null if none exists.
+     */
+    @Operation(summary = "Get my active ride",
+            description = """
+                Returns the authenticated driver's current active ride.
+                
+                Active means status is one of: `ACTIVE`, `FULL`, or `DEPARTED`.
+                
+                Returns `null` in the data field if no active ride exists.
+                Use this as a lightweight check instead of loading the full ride list.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Active ride returned, or null if none exists")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "Not authenticated")
+    @GetMapping("/mine/active")
+    public ResponseEntity<ApiResponse<RideResponse>> getMyActiveRide(
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                rideService.getActiveRide(currentUser.getUserId())));
+    }
+
+    /**
      * GET /api/v1/rides/{id}
      * Ride detail with waypoints eagerly loaded (avoids N+1).
      */
@@ -228,5 +253,39 @@ public class RideController {
         RideResponse ride = rideService.updateRideStatus(
                 id, request, currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.ok(ride));
+    }
+
+    /**
+     * POST /api/v1/rides/{id}/reannounce
+     * Driver re-announces their active ride to the community group.
+     * Maximum 3 total announcements per ride (including the original post).
+     */
+    @Operation(summary = "Re-announce ride to community group",
+            description = """
+                Driver re-announces their active ride to the community Telegram group.
+                
+                - Maximum **3 total announcements** per ride (including the original post)
+                - Only the ride owner can re-announce
+                - Only ACTIVE or FULL rides can be re-announced
+                - Reuses the same group announcement format as the original post
+                
+                Returns the updated ride with the new `announceCount`.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Ride re-announced to community group")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", description = "Announce limit reached or invalid ride state")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403", description = "Not the ride owner")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404", description = "Ride not found")
+    @PostMapping("/{id}/reannounce")
+    public ResponseEntity<ApiResponse<RideResponse>> reannounceRide(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                rideService.reannounceRide(id, currentUser.getUserId())));
     }
 }

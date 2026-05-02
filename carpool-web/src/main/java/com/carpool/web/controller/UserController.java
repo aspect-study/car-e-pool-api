@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -133,6 +134,41 @@ public class UserController {
     }
 
     /**
+     * GET /api/v1/users/admin/stats
+     * Admin only — returns platform-wide statistics.
+     */
+    @Operation(summary = "[Admin] Get platform statistics",
+            description = """
+                Returns platform-wide statistics for admin dashboard.
+                
+                **User stats:**
+                - Total registered users
+                - New users today
+                
+                **Ride stats:**
+                - Active rides right now
+                - Rides posted today
+                - Total rides, completed, cancelled
+                
+                **Booking stats:**
+                - Pending requests right now
+                - Bookings made today
+                - Total bookings, completed
+                
+                Requires role: `ADMIN`
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Platform statistics returned")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403", description = "Not an admin")
+    @GetMapping("/admin/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<com.carpool.service.dto.response.AdminStatsResponse>> getAdminStats() {
+        return ResponseEntity.ok(ApiResponse.ok(profileService.getAdminStats()));
+    }
+
+    /**
      * GET /api/v1/users/me/vehicle
      * Get current vehicle info for authenticated driver.
      */
@@ -178,5 +214,30 @@ public class UserController {
         vehicleService.clearVehicle(currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.ok(
                 userService.getUserById(currentUser.getUserId())));
+    }
+
+    @Operation(summary = "Delete my account",
+            description = """
+                Permanently deletes the authenticated user's account.
+                
+                **What happens:**
+                - Active ride is cancelled — all passengers are notified
+                - All active bookings (PENDING/CONFIRMED) are cancelled — drivers are notified
+                - Personal data is anonymized (name, @handle, Telegram ID)
+                - Account is soft-deleted — ride and booking history retained for other users
+                
+                **This action is irreversible.**
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Account deleted successfully")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "Not authenticated")
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> deleteMyAccount(
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        userService.deleteAccount(currentUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 }

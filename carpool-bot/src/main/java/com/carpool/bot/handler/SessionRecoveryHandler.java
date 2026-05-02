@@ -41,7 +41,7 @@ public class SessionRecoveryHandler {
     );
 
     private static final Set<String> CANCEL_ACTIONS = Set.of(
-            "CONFIRM_CANCEL_RIDE", "CANCEL_BOOKING", "CANCEL_BOOKING_REASON"
+            "CANCEL_BOOKING"
     );
 
     // ── Public API ────────────────────────────────────────────────────────

@@ -5,6 +5,8 @@ import com.carpool.domain.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 /**
  * Platform user. Identity is anchored to Telegram — no passwords stored.
  * telegramId is the immutable unique identifier from Telegram OAuth.
@@ -55,7 +57,8 @@ public class User extends BaseEntity {
 
     /**
      * Terms version accepted by the user.
-     * NULL = not yet accepted. '1.0' = current version accepted.
+     * NULL = not yet accepted.
+     * Non-null = version string matching BotConfig.CURRENT_TERMS_VERSION.
      */
     @Column(name = "terms_version_accepted", length = 10)
     private String termsVersionAccepted;
@@ -66,9 +69,16 @@ public class User extends BaseEntity {
     @Column(name = "terms_declined_at")
     private java.time.LocalDateTime termsDeclinedAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     // Convenience: can this user offer rides?
     public boolean canDrive() {
-        return role == UserRole.DRIVER || role == UserRole.BOTH;
+        return role == UserRole.DRIVER || role == UserRole.BOTH || role == UserRole.ADMIN;
     }
 
     // Convenience: does this driver have vehicle info saved?

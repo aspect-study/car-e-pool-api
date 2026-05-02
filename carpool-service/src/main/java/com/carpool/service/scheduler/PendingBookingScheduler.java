@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,10 +27,10 @@ import java.util.List;
  *   2. Auto-decline bookings that have expired after 3 reminders
  *
  * Reminder schedule (from booking creation):
- *   Reminder 1 → at 5 minutes
- *   Reminder 2 → at 10 minutes
- *   Reminder 3 → at 15 minutes
- *   Auto-decline → at 20 minutes
+ *   Reminder 1 → at 15 minutes
+ *   Reminder 2 → at 30 minutes
+ *   Reminder 3 → at 45 minutes
+ *   Auto-decline → at 60 minutes
  */
 @Slf4j
 @Component
@@ -60,18 +61,18 @@ public class PendingBookingScheduler {
 
     private void sendReminders(Instant now) {
         List<Booking> pendingBookings = bookingRepository.findPendingNeedingReminder(now);
+        List<Booking> toSave = new ArrayList<>();
 
         for (Booking booking : pendingBookings) {
             int reminderCount = booking.getReminderCount();
 
-            // Determine if it's time for the next reminder
             if (!isTimeForReminder(booking, reminderCount, now)) {
                 continue;
             }
 
             int nextReminder = reminderCount + 1;
             booking.setReminderCount(nextReminder);
-            bookingRepository.save(booking);
+            toSave.add(booking);
 
             log.info("Sending reminder {}/3 for bookingId={} driverId={}",
                     nextReminder, booking.getId(),
@@ -79,6 +80,10 @@ public class PendingBookingScheduler {
 
             eventPublisher.publishEvent(
                     new RideEvents.BookingReminderEvent(booking, nextReminder));
+        }
+
+        if (!toSave.isEmpty()) {
+            bookingRepository.saveAll(toSave); // ← one batch save
         }
     }
 

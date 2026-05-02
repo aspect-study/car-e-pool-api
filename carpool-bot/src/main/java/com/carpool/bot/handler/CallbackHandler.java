@@ -6,6 +6,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.DriverNote;
 import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.BookingStatus;
@@ -18,6 +19,7 @@ import com.carpool.service.dto.request.CreateBookingRequest;
 import com.carpool.service.dto.request.CreateRideRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.BookingResponse;
+import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.profile.ProfileService;
@@ -135,7 +137,7 @@ public class CallbackHandler {
             case "RESET_FILTER"         -> handleResetFilter(chatId, carpoolUserId, state, bot);
             case "RIDE_PAGE"            -> handleRidePage(chatId, payload, carpoolUserId, state, bot);
             case "MY_RIDES"             -> showMyRides(chatId, carpoolUserId, bot);
-            case "MY_PROFILE"           -> handleMyProfile(chatId, carpoolUserId, bot);
+            case "MY_PROFILE"           -> handleMyProfile(chatId, carpoolUserId, telegramId, bot);
             case "VEHICLE_CONFIRM_YES"  -> handleVehicleConfirmYes(chatId, carpoolUserId, state, bot);
             case "VEHICLE_CONFIRM_SAVE" -> handleVehicleConfirmSave(chatId, carpoolUserId, state, bot);
             case "VEHICLE_CHANGE"       -> handleVehicleChange(chatId, carpoolUserId, state, bot);
@@ -145,7 +147,7 @@ public class CallbackHandler {
             case "TERMS_DECLINE"        -> handleTermsDecline(chatId, bot);
             case "TERMS_VIEW_AGAIN"     -> handleTermsWelcome(chatId, bot);
             case "HELP"                 -> helpHandler.handleTopic(chatId, payload, bot);
-            case "ADMIN_STATS"          -> handleAdminStats(chatId, carpoolUserId, bot);
+            case "ADMIN_STATS"          -> handleAdminStats(chatId, carpoolUserId, telegramId, bot);
             case "REANNOUNCE_RIDE"      -> handleReannounceRide(chatId, entityId, carpoolUserId, bot);
             case "NOOP"                 -> { /* page indicator button — do nothing */ }
             default -> {
@@ -162,15 +164,15 @@ public class CallbackHandler {
         stateManager.reset(chatId);
         List<RideResponse> myRides = rideService.getMyRides(carpoolUserId);
         boolean hasActiveRide = myRides.stream()
-                .anyMatch(r -> r.status().name().equals("ACTIVE")
-                        || r.status().name().equals("FULL")
-                        || r.status().name().equals("DEPARTED"));
+                .anyMatch(r -> r.status() == RideStatus.ACTIVE
+                        || r.status() == RideStatus.FULL
+                        || r.status() == RideStatus.DEPARTED);
 
         if (hasActiveRide) {
             RideResponse active = myRides.stream()
-                    .filter(r -> r.status().name().equals("ACTIVE")
-                            || r.status().name().equals("FULL")
-                            || r.status().name().equals("DEPARTED"))
+                    .filter(r -> r.status() == RideStatus.ACTIVE
+                            || r.status() == RideStatus.FULL
+                            || r.status() == RideStatus.DEPARTED)
                     .findFirst().orElseThrow();
 
             String msg = "🚗 <b>Your Active Ride</b>\n\n" +
@@ -182,7 +184,7 @@ public class CallbackHandler {
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            if (active.status().name().equals("DEPARTED")) {
+            if (active.status() == RideStatus.DEPARTED) {
                 rows.add(List.of(
                         BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
                         BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
@@ -239,9 +241,9 @@ public class CallbackHandler {
 
         } else {
             List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
-            boolean hasPastRides = rideService.getMyRides(carpoolUserId).stream()
-                    .anyMatch(r -> r.status().name().equals("COMPLETED")
-                            || r.status().name().equals("CANCELLED"));
+            boolean hasPastRides = myRides.stream()
+                    .anyMatch(r -> r.status() == RideStatus.COMPLETED
+                            || r.status() == RideStatus.CANCELLED);
 
             String prompt = (!myBookings.isEmpty() && hasPastRides)
                     ? "👋 What would you like to do?"
@@ -288,11 +290,7 @@ public class CallbackHandler {
             return;
         }
 
-        String etdExample1 = state.getDirection() == RideDirection.HOME_TO_WORK
-                ? LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(7).withMinute(30)
-                  .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
-                : LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(18).withMinute(0)
-                  .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
+        String etdExample1 = etdExample(state.getDirection());
 
         bot.send(BotMessageBuilder.textWithCancel(chatId,
                 "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
@@ -301,6 +299,18 @@ public class CallbackHandler {
         stateManager.save(chatId, state
                 .withCarpoolUserId(carpoolUserId)
                 .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
+    }
+
+    /**
+     * Returns a sample departure time string based on direction.
+     * Used as input format example throughout the post ride flow.
+     */
+    private String etdExample(RideDirection direction) {
+        int hour = direction == RideDirection.HOME_TO_WORK ? 7  : 18;
+        int min  = direction == RideDirection.HOME_TO_WORK ? 30 : 0;
+        return LocalDateTime.now(ZoneId.of("Asia/Manila"))
+                .withHour(hour).withMinute(min)
+                .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"));
     }
 
     private void handleCancelPostRide(Long chatId, CarpoolBot bot) {
@@ -354,7 +364,7 @@ public class CallbackHandler {
             log.error("Failed to post ride for userId={}: {}", carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Failed to post ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
             stateManager.reset(chatId);
         }
     }
@@ -365,9 +375,9 @@ public class CallbackHandler {
                                      UserState state, CarpoolBot bot) {
         // Driver with active ride cannot find a ride
         long activeRideCount = rideService.getMyRides(carpoolUserId).stream()
-                .filter(r -> r.status().name().equals("ACTIVE")
-                        || r.status().name().equals("FULL")
-                        || r.status().name().equals("DEPARTED"))
+                .filter(r -> r.status() == RideStatus.ACTIVE
+                        || r.status() == RideStatus.FULL
+                        || r.status() == RideStatus.DEPARTED)
                 .count();
 
         if (activeRideCount > 0) {
@@ -426,6 +436,10 @@ public class CallbackHandler {
 
     private void showFilteredRides(Long chatId, Long carpoolUserId, UserState state,
                                    LocalDateTime from, LocalDateTime to, CarpoolBot bot) {
+        // TEMPORARY DEBUG — remove after fix
+        log.info("DEBUG SEARCH: direction={} from={} to={} userId={}",
+                state.getDirection(), from, to, carpoolUserId);
+
         if (state.getDirection() == null) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Session expired. Use /start."));
             return;
@@ -577,7 +591,7 @@ public class CallbackHandler {
                     rideId, carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not book this ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -598,7 +612,7 @@ public class CallbackHandler {
                     ? "BGC" : "SM Southmall";
 
             bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "✅ Start point: <b>" + BotMessageBuilder.escape(hub.name()) + "</b>\n\n" +
+                    "✅ Start point: <b>" + HtmlEscapeUtil.escape(hub.name()) + "</b>\n\n" +
                             "🏁 <b>Where does your ride end?</b>\n\n" +
                             "Type a nearby landmark as your drop-off point.\n" +
                             "Example: <code>" + destExample1 + "</code>"));
@@ -625,7 +639,7 @@ public class CallbackHandler {
             stateManager.save(chatId, updated);
 
             bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "✅ End point: <b>" + BotMessageBuilder.escape(hub.name()) + "</b>\n\n" +
+                    "✅ End point: <b>" + HtmlEscapeUtil.escape(hub.name()) + "</b>\n\n" +
                             "🪑 <b>How many passengers can you take?</b> (1-8)"));
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load hub. Please try again."));
@@ -662,7 +676,7 @@ public class CallbackHandler {
         try {
             // Cannot cancel a DEPARTED ride — must Complete it instead
             RideResponse ride = rideService.getRideById(rideId);
-            if (ride.status().name().equals("DEPARTED")) {
+            if (ride.status() == RideStatus.DEPARTED) {
                 bot.send(BotMessageBuilder.text(chatId,
                         "⚠️ Your ride has already started.\n\n" +
                                 "Please tap <b>Complete Ride</b> when you reach the destination."));
@@ -680,19 +694,19 @@ public class CallbackHandler {
                     BookingResponse b = activeBookings.get(i);
                     String statusIcon = b.status() == BookingStatus.PENDING ? "⏳" : "✅";
                     String paxHandle = b.passenger().telegramHandle() != null
-                            ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                            ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")"
                             : "";
 
                     sb.append(String.format("<b>%d.</b> %s %s%s\n",
                             i + 1,
                             statusIcon,
-                            BotMessageBuilder.escape(b.passenger().fullName()),
+                            HtmlEscapeUtil.escape(b.passenger().fullName()),
                             paxHandle));
 
                     if (b.passengerMessage() != null) {
                         sb.append(String.format(
                                 "    💬 \"%s\"\n",
-                                BotMessageBuilder.escape(b.passengerMessage())));
+                                HtmlEscapeUtil.escape(b.passengerMessage())));
                     }
 
                     sb.append(String.format("    🪑 %d seat(s) | ⛽ ₱%.2f share\n",
@@ -719,7 +733,7 @@ public class CallbackHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not cancel ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -779,16 +793,16 @@ public class CallbackHandler {
 
                 for (BookingResponse b : affectedBookings) {
                     String handle = b.passenger().telegramHandle() != null
-                            ? " (@" + BotMessageBuilder.escape(
+                            ? " (@" + HtmlEscapeUtil.escape(
                             b.passenger().telegramHandle()) + ")"
                             : "";
                     sb.append(String.format("• %s%s\n",
-                            BotMessageBuilder.escape(b.passenger().fullName()),
+                            HtmlEscapeUtil.escape(b.passenger().fullName()),
                             handle));
                 }
 
                 sb.append("\n📝 Reason: <i>")
-                        .append(BotMessageBuilder.escape(reason))
+                        .append(HtmlEscapeUtil.escape(reason))
                         .append("</i>");
 
                 bot.send(sendWithInline(chatId, sb.toString(),
@@ -800,7 +814,7 @@ public class CallbackHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not cancel ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -815,7 +829,7 @@ public class CallbackHandler {
             LocalDateTime earliest  = departure.minusHours(1);
 
             // Only ACTIVE and FULL rides can be departed
-            if (!ride.status().name().equals("ACTIVE") && !ride.status().name().equals("FULL")) {
+            if (ride.status() != RideStatus.ACTIVE && ride.status() != RideStatus.FULL) {
                 bot.send(BotMessageBuilder.text(chatId,
                         "⚠️ This ride cannot be started.\n\n" +
                                 "Only ACTIVE or FULL rides can be departed."));
@@ -858,7 +872,7 @@ public class CallbackHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not start ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -879,7 +893,7 @@ public class CallbackHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not complete ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -899,18 +913,18 @@ public class CallbackHandler {
             for (int i = 0; i < myBookings.size(); i++) {
                 BookingResponse b = myBookings.get(i);
                 String driverInfo = b.ride().driver().telegramHandle() != null
-                        ? " (@" + BotMessageBuilder.escape(b.ride().driver().telegramHandle()) + ")"
+                        ? " (@" + HtmlEscapeUtil.escape(b.ride().driver().telegramHandle()) + ")"
                         : "";
 
                 sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | ⛽ ₱%.2f share\n👤 %s%s\n",
                         i + 1,
-                        BotMessageBuilder.escape(b.ride().originHub().name()),
-                        BotMessageBuilder.escape(b.ride().destinationHub().name()),
+                        HtmlEscapeUtil.escape(b.ride().originHub().name()),
+                        HtmlEscapeUtil.escape(b.ride().destinationHub().name()),
                         b.ride().departureTime()
                                 .atZone(ZoneId.of("Asia/Manila"))
                                 .format(DateTimeFormatter.ofPattern("MMM d h:mma")),
                         b.contributionDue(),
-                        BotMessageBuilder.escape(b.ride().driver().fullName()),
+                        HtmlEscapeUtil.escape(b.ride().driver().fullName()),
                         driverInfo));
 
                 String statusPrefix = b.status() == BookingStatus.PENDING ? "⏳ " : "🔍 ";
@@ -986,28 +1000,28 @@ public class CallbackHandler {
                             "👤 Driver: %s%s\n" +
                             "%s" +
                             "📊 Status: %s%s",
-                    BotMessageBuilder.escape(b.ride().originHub().name()),
-                    BotMessageBuilder.escape(b.ride().destinationHub().name()),
+                    HtmlEscapeUtil.escape(b.ride().originHub().name()),
+                    HtmlEscapeUtil.escape(b.ride().destinationHub().name()),
                     b.ride().departureTime()
                             .atZone(ZoneId.of("Asia/Manila"))
                             .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a")),
-                    BotMessageBuilder.escape(pickup),
-                    BotMessageBuilder.escape(dropoff),
+                    HtmlEscapeUtil.escape(pickup),
+                    HtmlEscapeUtil.escape(dropoff),
                     b.seatsReserved(),
                     b.contributionDue(),
-                    BotMessageBuilder.escape(b.ride().driver().fullName()),
+                    HtmlEscapeUtil.escape(b.ride().driver().fullName()),
                     b.ride().driver().telegramHandle() != null
-                            ? " (@" + BotMessageBuilder.escape(b.ride().driver().telegramHandle()) + ")" : "",
+                            ? " (@" + HtmlEscapeUtil.escape(b.ride().driver().telegramHandle()) + ")" : "",
                     b.passengerMessage() != null
-                            ? "💬 Your message: \"" + BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
+                            ? "💬 Your message: \"" + HtmlEscapeUtil.escape(b.passengerMessage()) + "\"\n"
                             : "",
                     statusLabel,
                     expiryInfo);
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            boolean rideNotStarted = !b.ride().status().name().equals("DEPARTED")
-                    && !b.ride().status().name().equals("COMPLETED");
+            boolean rideNotStarted = b.ride().status() != RideStatus.DEPARTED
+                    && b.ride().status() != RideStatus.COMPLETED;
 
             if ((b.status() == BookingStatus.CONFIRMED || b.status() == BookingStatus.PENDING)
                     && rideNotStarted) {
@@ -1060,8 +1074,8 @@ public class CallbackHandler {
             };
             sb.append(String.format("<b>%d.</b> %s → %s | %s\n",
                     i + 1,
-                    BotMessageBuilder.escape(b.ride().originHub().name()),
-                    BotMessageBuilder.escape(b.ride().destinationHub().name()),
+                    HtmlEscapeUtil.escape(b.ride().originHub().name()),
+                    HtmlEscapeUtil.escape(b.ride().destinationHub().name()),
                     statusLabel));
         }
 
@@ -1112,7 +1126,7 @@ public class CallbackHandler {
             sb.append("─── <b>Confirmed</b> ───\n");
             for (BookingResponse b : confirmed) {
                 String paxHandle = b.passenger().telegramHandle() != null
-                        ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                        ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")"
                         : "";
                 String pickup = b.pickupWaypoint() != null
                         ? b.pickupWaypoint().hub().name()
@@ -1121,7 +1135,7 @@ public class CallbackHandler {
                 sb.append(String.format("<b>%d.</b> %s%s\n" +
                                 "    🪑 %d | ⛽ ₱%.2f share\n",
                         index,
-                        BotMessageBuilder.escape(b.passenger().fullName()),
+                        HtmlEscapeUtil.escape(b.passenger().fullName()),
                         paxHandle,
                         b.seatsReserved(),
                         b.contributionDue()));
@@ -1140,7 +1154,7 @@ public class CallbackHandler {
             sb.append("─── <b>Pending Approval</b> ───\n");
             for (BookingResponse b : pending) {
                 String paxHandle = b.passenger().telegramHandle() != null
-                        ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                        ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")"
                         : "";
                 long remainingMinutes = b.expiresAt() != null
                         ? Duration.between(
@@ -1150,7 +1164,7 @@ public class CallbackHandler {
                 sb.append(String.format("<b>%d.</b> %s%s\n" +
                                 "    🪑 %d | ⛽ ₱%.2f share | ⏰ %d min\n",
                         index,
-                        BotMessageBuilder.escape(b.passenger().fullName()),
+                        HtmlEscapeUtil.escape(b.passenger().fullName()),
                         paxHandle,
                         b.seatsReserved(),
                         b.contributionDue(),
@@ -1200,16 +1214,16 @@ public class CallbackHandler {
             stateManager.save(chatId, updated);
 
             String notesLine = original.notes() != null && !original.notes().isBlank()
-                    ? "📝 Notes: " + BotMessageBuilder.escape(original.notes()) + "\n\n"
+                    ? "📝 Notes: " + HtmlEscapeUtil.escape(original.notes()) + "\n\n"
                     : "";
 
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "🔄 <b>Review Ride to Repost</b>\n\n" +
                             "Direction: <b>" + dirLabel + "</b>\n" +
                             "📍 <b>" +
-                            BotMessageBuilder.escape(original.originHub().name()) +
+                            HtmlEscapeUtil.escape(original.originHub().name()) +
                             " → " +
-                            BotMessageBuilder.escape(original.destinationHub().name()) +
+                            HtmlEscapeUtil.escape(original.destinationHub().name()) +
                             "</b>\n" +
                             "🪑 " + original.totalSeats() + " seat(s)\n" +
                             "⛽ ₱" + original.contributionAmount().toPlainString() + " gas share/seat\n" +
@@ -1218,11 +1232,7 @@ public class CallbackHandler {
                             "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
-                            (original.direction() == RideDirection.HOME_TO_WORK
-                                    ? LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(7).withMinute(30)
-                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
-                                    : LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(18).withMinute(0)
-                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))) +
+                            etdExample(original.direction()) +
                             "</code>"));
 
         } catch (Exception e) {
@@ -1245,7 +1255,7 @@ public class CallbackHandler {
                     bookingId, carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not accept booking: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -1296,7 +1306,7 @@ public class CallbackHandler {
                     bookingId, carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not decline booking: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -1327,7 +1337,7 @@ public class CallbackHandler {
             sb.append(String.format(
                     "<b>%d.</b> %s | 🪑 %d | ⛽ ₱%.2f share | ⏰ %d min\n",
                     i + 1,
-                    BotMessageBuilder.escape(b.passenger().fullName()),
+                    HtmlEscapeUtil.escape(b.passenger().fullName()),
                     b.seatsReserved(),
                     b.contributionDue(),
                     Math.max(0, remainingMinutes)));
@@ -1361,7 +1371,7 @@ public class CallbackHandler {
                     : 0;
 
             String paxHandle = b.passenger().telegramHandle() != null
-                    ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")"
+                    ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")"
                     : "";
 
             String detail = String.format(
@@ -1371,13 +1381,13 @@ public class CallbackHandler {
                             "⛽ Suggested share: ₱%.2f\n" +
                             "%s" +
                             "⏰ Expires in: %d minutes",
-                    BotMessageBuilder.escape(b.passenger().fullName()),
+                    HtmlEscapeUtil.escape(b.passenger().fullName()),
                     paxHandle,
                     b.seatsReserved(),
                     b.contributionDue(),
                     b.passengerMessage() != null
                             ? "💬 Message: \"" +
-                            BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
+                            HtmlEscapeUtil.escape(b.passengerMessage()) + "\"\n"
                             : "",
                     Math.max(0, remainingMinutes));
 
@@ -1450,7 +1460,7 @@ public class CallbackHandler {
                     bookingId, carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not cancel booking: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
@@ -1493,14 +1503,14 @@ public class CallbackHandler {
                             "💳 Settlement: %s\n" +
                             "%s" +
                             "📊 Status: %s",
-                    BotMessageBuilder.escape(b.passenger().fullName()),
+                    HtmlEscapeUtil.escape(b.passenger().fullName()),
                     b.passenger().telegramHandle() != null
-                            ? " (@" + BotMessageBuilder.escape(b.passenger().telegramHandle()) + ")" : "",
+                            ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")" : "",
                     b.seatsReserved(),
                     b.contributionDue(),
                     paymentLabel,
                     b.passengerMessage() != null
-                            ? "💬 Passenger's note: \"" + BotMessageBuilder.escape(b.passengerMessage()) + "\"\n"
+                            ? "💬 Passenger's note: \"" + HtmlEscapeUtil.escape(b.passengerMessage()) + "\"\n"
                             : "",
                     statusLabel);
 
@@ -1551,7 +1561,7 @@ public class CallbackHandler {
 
             bot.send(sendWithInline(chatId,
                     "📌 <b>Selected reminder:</b>\n\n" +
-                            "\"" + BotMessageBuilder.escape(note.getContent()) + "\"",
+                            "\"" + HtmlEscapeUtil.escape(note.getContent()) + "\"",
                     rows));
 
         } catch (Exception e) {
@@ -1635,10 +1645,10 @@ public class CallbackHandler {
         if (user.hasVehicleInfo()) {
             String vehicleDisplay = String.format("%s%s | 🔢 %s",
                     user.getCarColor() != null
-                            ? "🎨 " + BotMessageBuilder.escape(user.getCarColor()) + " "
+                            ? "🎨 " + HtmlEscapeUtil.escape(user.getCarColor()) + " "
                             : "",
-                    BotMessageBuilder.escape(user.getCarModel()),
-                    BotMessageBuilder.escape(user.getPlateNumber()));
+                    HtmlEscapeUtil.escape(user.getCarModel()),
+                    HtmlEscapeUtil.escape(user.getPlateNumber()));
 
             var rows = List.of(
                     List.of(
@@ -1677,11 +1687,7 @@ public class CallbackHandler {
                     "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
-                            (state.getDirection() == RideDirection.HOME_TO_WORK
-                                    ? LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(7).withMinute(30)
-                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
-                                    : LocalDateTime.now(ZoneId.of("Asia/Manila")).withHour(18).withMinute(0)
-                                      .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))) +
+                            etdExample(state.getDirection()) +
                             "</code>"));
             return;
         }
@@ -1893,8 +1899,8 @@ public class CallbackHandler {
         }
 
         List<RideResponse> recent = rides.stream()
-                .filter(r -> r.status().name().equals("COMPLETED")
-                        || r.status().name().equals("CANCELLED"))
+                .filter(r -> r.status() == RideStatus.COMPLETED
+                        || r.status() == RideStatus.CANCELLED)
                 .limit(3)
                 .toList();
 
@@ -1919,8 +1925,8 @@ public class CallbackHandler {
             sb.append(String.format("<b>%d.</b> %s %s → %s | %s %s | ⛽ ₱%.2f share\n",
                     i + 1,
                     dirEmoji,
-                    BotMessageBuilder.escape(r.originHub().name()),
-                    BotMessageBuilder.escape(r.destinationHub().name()),
+                    HtmlEscapeUtil.escape(r.originHub().name()),
+                    HtmlEscapeUtil.escape(r.destinationHub().name()),
                     statusLabel,
                     r.departureTime()
                             .atZone(ZoneId.of("Asia/Manila"))
@@ -1993,10 +1999,10 @@ public class CallbackHandler {
             bot.send(BotMessageBuilder.textNoMenu(chatId,
                     "✅ Vehicle saved: " +
                             (state.getPendingCarColor() != null
-                                    ? "🎨 " + BotMessageBuilder.escape(state.getPendingCarColor()) + " "
+                                    ? "🎨 " + HtmlEscapeUtil.escape(state.getPendingCarColor()) + " "
                                     : "") +
-                            "🚘 " + BotMessageBuilder.escape(state.getPendingCarModel()) +
-                            " | 🔢 " + BotMessageBuilder.escape(state.getPendingPlateNumber())));
+                            "🚘 " + HtmlEscapeUtil.escape(state.getPendingCarModel()) +
+                            " | 🔢 " + HtmlEscapeUtil.escape(state.getPendingPlateNumber())));
 
             // Only proceed to ride confirmation if in post ride flow
             // Otherwise (vehicle command / profile) — just show menu
@@ -2050,19 +2056,19 @@ public class CallbackHandler {
 
     // ── Profile ───────────────────────────────────────────────────────
 
-    private void handleMyProfile(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+    private void handleMyProfile(Long chatId, Long carpoolUserId,
+                                 Long telegramId, CarpoolBot bot) {
         try {
-            com.carpool.service.dto.response.ProfileStatsResponse stats =
-                    profileService.getProfileStats(carpoolUserId);
+            ProfileStatsResponse stats = profileService.getProfileStats(carpoolUserId);
 
             StringBuilder sb = new StringBuilder();
             sb.append("👤 <b>My Profile</b>\n\n");
 
             // Basic info
             sb.append(String.format("<b>%s</b>%s\n",
-                    BotMessageBuilder.escape(stats.fullName()),
+                    HtmlEscapeUtil.escape(stats.fullName()),
                     stats.telegramHandle() != null
-                            ? " (@" + BotMessageBuilder.escape(stats.telegramHandle()) + ")"
+                            ? " (@" + HtmlEscapeUtil.escape(stats.telegramHandle()) + ")"
                             : ""));
             sb.append(stats.roleLabel()).append("\n");
             sb.append("📅 Member since: ").append(stats.memberSince()).append("\n");
@@ -2072,10 +2078,10 @@ public class CallbackHandler {
                 if (stats.carModel() != null && stats.plateNumber() != null) {
                     sb.append(String.format("\n🚘 %s%s\n🔢 %s\n",
                             stats.carColor() != null
-                                    ? "🎨 " + BotMessageBuilder.escape(stats.carColor()) + " "
+                                    ? "🎨 " + HtmlEscapeUtil.escape(stats.carColor()) + " "
                                     : "",
-                            BotMessageBuilder.escape(stats.carModel()),
-                            BotMessageBuilder.escape(stats.plateNumber())));
+                            HtmlEscapeUtil.escape(stats.carModel()),
+                            HtmlEscapeUtil.escape(stats.plateNumber())));
                 } else {
                     sb.append("\n🚘 <i>No vehicle info yet</i>\n");
                 }
@@ -2116,9 +2122,7 @@ public class CallbackHandler {
             }
 
             // Add Admin Stats button for admins only
-            User profileUser = userRepository.findById(carpoolUserId).orElse(null);
-            boolean isAdmin  = profileUser != null
-                    && botConfig.isAdmin(profileUser.getTelegramId());
+            boolean isAdmin = botConfig.isAdmin(telegramId);
 
             List<List<InlineKeyboardButton>> profileRows = new ArrayList<>();
             profileRows.add(List.of(
@@ -2253,10 +2257,10 @@ public class CallbackHandler {
 
     // ── Admin ─────────────────────────────────────────────────────────────────
 
-    private void handleAdminStats(Long chatId, Long carpoolUserId, CarpoolBot bot) {
-        // Security check — only admins can view stats
-        User user = userRepository.findById(carpoolUserId).orElse(null);
-        if (user == null || !botConfig.isAdmin(user.getTelegramId())) {
+    private void handleAdminStats(Long chatId, Long carpoolUserId,
+                                  Long telegramId, CarpoolBot bot) {
+        // Security check — only admins can view stats — reuse telegramId from callback
+        if (!botConfig.isAdmin(telegramId)) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ You don't have permission to view this."));
             return;
@@ -2319,7 +2323,7 @@ public class CallbackHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not re-announce ride: " +
-                            BotMessageBuilder.escape(e.getMessage())));
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 }

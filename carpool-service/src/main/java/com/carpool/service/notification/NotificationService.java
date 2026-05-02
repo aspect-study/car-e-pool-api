@@ -1,14 +1,17 @@
 package com.carpool.service.notification;
 
+import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.Booking;
 import com.carpool.domain.entity.Notification;
 import com.carpool.domain.entity.Ride;
 import com.carpool.domain.entity.User;
+import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.NotificationStatus;
 import com.carpool.domain.enums.NotificationTypes;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.NotificationRepository;
 import com.carpool.service.event.RideEvents;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,8 +48,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final BookingRepository      bookingRepository;
-
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
 
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a")
@@ -54,9 +56,31 @@ public class NotificationService {
 
     @Value("${carpool.telegram.bot-token}")
     private String botToken;
+    private String telegramApiBase;
+
+    @PostConstruct
+    private void init() {
+        this.telegramApiBase = "https://api.telegram.org/bot" + botToken;
+    }
 
     // ── Event Listeners ───────────────────────────────────────────────────────
 
+    // ── Event Listeners ───────────────────────────────────────────────────────
+    //
+    // Threading model for all listeners:
+    //   @Async             — runs in a separate thread from the async executor pool,
+    //                        decoupled from the caller's thread and transaction.
+    //   @TransactionalEventListener(AFTER_COMMIT)
+    //                      — only fires after the caller's transaction successfully
+    //                        commits. Prevents notifications being sent for rolled-back operations.
+    //   @Transactional(REQUIRES_NEW)
+    //                      — opens a fresh independent transaction in the async thread
+    //                        so notification DB writes (INSERT/UPDATE on notifications table)
+    //                        are independent of any outer transaction.
+    //
+    // Order of Spring AOP proxy application: @Async is processed first (new thread),
+    // then @Transactional creates a new transaction in that thread. This is correct
+    // and intentional — do not reorder or remove either annotation.
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -94,7 +118,7 @@ public class NotificationService {
         User pax    = booking.getPassenger();
 
         String paxHandle = pax.getTelegramHandle() != null
-                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(pax.getTelegramHandle()) + ")"
                 : "";
 
         String msg = String.format(
@@ -105,16 +129,16 @@ public class NotificationService {
                         "🪑 %d seat(s) | ⛽ ₱%.2f share\n" +
                         "%s\n\n" +
                         "Seat(s) have been freed up.",
-                escape(pax.getFullName()),
+                HtmlEscapeUtil.escape(pax.getFullName()),
                 paxHandle,
-                escape(booking.getRide().getOriginHub().getName()),
-                escape(booking.getRide().getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(booking.getRide().getOriginHub().getName()),
+                HtmlEscapeUtil.escape(booking.getRide().getDestinationHub().getName()),
                 TIME_FMT.format(booking.getRide().getDepartureTime()
                         .atZone(ZoneId.of("Asia/Manila"))),
                 booking.getSeatsReserved(),
                 booking.getContributionDue(),
                 booking.getCancellationReason() != null
-                        ? "📝 Reason: <i>" + escape(booking.getCancellationReason()) + "</i>"
+                        ? "📝 Reason: <i>" + HtmlEscapeUtil.escape(booking.getCancellationReason()) + "</i>"
                         : "");
 
         sendAndRecord(driver, NotificationTypes.BOOKING_CANCELLED_BY_PASSENGER, msg,
@@ -137,7 +161,7 @@ public class NotificationService {
         Ride ride = cancelledBookings.get(0).getRide();
         User driver = ride.getDriver();
         String driverHandle = driver.getTelegramHandle() != null
-                ? " (@" + escape(driver.getTelegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(driver.getTelegramHandle()) + ")"
                 : "";
 
         String msg = String.format(
@@ -147,13 +171,13 @@ public class NotificationService {
                         "🕐 %s\n" +
                         "%s\n\n" +
                         "Please look for another carpool or arrange alternative transport.",
-                escape(driver.getFullName()),
+                HtmlEscapeUtil.escape(driver.getFullName()),
                 driverHandle,
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
                 event.reason() != null
-                        ? "📝 Reason: <i>" + escape(event.reason()) + "</i>"
+                        ? "📝 Reason: <i>" + HtmlEscapeUtil.escape(event.reason()) + "</i>"
                         : "");
 
         for (Booking booking : cancelledBookings) {
@@ -165,7 +189,7 @@ public class NotificationService {
                     "\n\n📋 <b>Your Booking</b>\n" +
                             "🚏 Pickup: <b>%s</b>\n" +
                             "🪑 Seats: %d | ⛽ ₱%.2f share",
-                    escape(pickup),
+                    HtmlEscapeUtil.escape(pickup),
                     booking.getSeatsReserved(),
                     booking.getContributionDue());
 
@@ -197,8 +221,8 @@ public class NotificationService {
                         "📍 %s → %s\n" +
                         "🕐 %s\n\n" +
                         "Thank you for carpooling! Please settle your gas share with the driver.",
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
 
         for (Booking booking : activeBookings) {
@@ -265,7 +289,7 @@ public class NotificationService {
         User pax  = booking.getPassenger();
 
         String driverHandle = ride.getDriver().getTelegramHandle() != null
-                ? " (@" + escape(ride.getDriver().getTelegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(ride.getDriver().getTelegramHandle()) + ")"
                 : "";
 
         String msg = String.format(
@@ -276,15 +300,15 @@ public class NotificationService {
                         "🪑 %d seat(s) | ⛽ ₱%.2f share\n" +
                         "%s\n\n" +
                         "Please look for another available ride.",
-                escape(ride.getDriver().getFullName()),
+                HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
                 driverHandle,
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
                 booking.getSeatsReserved(),
                 booking.getContributionDue(),
                 booking.getCancellationReason() != null
-                        ? "📝 Reason: <i>" + escape(booking.getCancellationReason()) + "</i>"
+                        ? "📝 Reason: <i>" + HtmlEscapeUtil.escape(booking.getCancellationReason()) + "</i>"
                         : "");
 
         sendAndRecord(pax, NotificationTypes.BOOKING_CANCELLED_BY_DRIVER, msg,
@@ -310,8 +334,8 @@ public class NotificationService {
                         "📍 %s → %s\n" +
                         "🕐 %s\n\n" +
                         "Please look for another available ride.",
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
 
         sendAndRecord(pax, NotificationTypes.BOOKING_TIMED_OUT, paxMsg,
@@ -319,7 +343,7 @@ public class NotificationService {
 
         // Notify driver — pending request auto-declined
         String paxHandle = pax.getTelegramHandle() != null
-                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(pax.getTelegramHandle()) + ")"
                 : "";
 
         String driverMsg = String.format(
@@ -330,15 +354,15 @@ public class NotificationService {
                         "🕐 %s\n" +
                         "🪑 %d seat(s) | ⛽ ₱%.2f share\n\n" +
                         "The seat(s) have been released back to your ride.",
-                escape(pax.getFullName()),
+                HtmlEscapeUtil.escape(pax.getFullName()),
                 paxHandle,
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
                 booking.getSeatsReserved(),
                 booking.getContributionDue());
 
-        sendAndRecord(driver, NotificationTypes.BOOKING_RECEIVED, driverMsg,
+        sendAndRecord(driver, NotificationTypes.BOOKING_TIMED_OUT, driverMsg,
                 Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
 
         log.info("Booking timed out notifications sent: bookingId={} passengerId={} driverId={}",
@@ -358,7 +382,7 @@ public class NotificationService {
         User pax    = booking.getPassenger();
 
         String paxHandle = pax.getTelegramHandle() != null
-                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(pax.getTelegramHandle()) + ")"
                 : "";
 
         // Compute remaining minutes
@@ -373,10 +397,10 @@ public class NotificationService {
                         "🪑 %d seat(s) | ⛽ ₱%.2f share\n\n" +
                         "⚠️ Auto-declines in ~%d minutes if no response.",
                 event.reminderNumber(),
-                escape(pax.getFullName()),
+                HtmlEscapeUtil.escape(pax.getFullName()),
                 paxHandle,
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
                 booking.getSeatsReserved(),
                 booking.getContributionDue(),
@@ -448,7 +472,7 @@ public class NotificationService {
 
         log.info("Sending Telegram notification to chatId={}", chatId);
 
-        String url = "https://api.telegram.org/bot" + botToken + "/sendMessage";
+        String url = telegramApiBase + "/sendMessage";
 
         Map<String, Object> body = new HashMap<>();
         body.put("chat_id",    chatId);
@@ -476,37 +500,6 @@ public class NotificationService {
 
     // ── Message builders ──────────────────────────────────────────────────────
 
-    private String buildDriverBookingMessage(Booking booking) {
-        Ride ride = booking.getRide();
-        User pax  = booking.getPassenger();
-
-        String pickupPoint = booking.getPickupWaypoint() != null
-                ? booking.getPickupWaypoint().getHub().getName()
-                : ride.getOriginHub().getName();
-
-        String paxHandle = pax.getTelegramHandle() != null
-                ? " (@" + escape(pax.getTelegramHandle()) + ")"
-                : "";
-
-        return String.format(
-                "🎉 <b>New Booking!</b>\n\n" +
-                        "👤 Passenger: <b>%s</b>%s\n" +
-                        "🪑 Seats: %d\n" +
-                        "📍 Route: %s → %s\n" +
-                        "🚏 Pickup at: <b>%s</b>\n" +
-                        "🕐 %s\n" +
-                        "⛽ Suggested share: ₱%.2f\n\n" +
-                        "Contact the passenger directly to coordinate.",
-                escape(pax.getFullName()),
-                paxHandle,
-                booking.getSeatsReserved(),
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
-                escape(pickupPoint),
-                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
-                booking.getContributionDue());
-    }
-
     private String buildPassengerConfirmationMessage(Booking booking) {
         Ride ride = booking.getRide();
 
@@ -519,7 +512,7 @@ public class NotificationService {
                 : ride.getDestinationHub().getName();
 
         String driverHandle = ride.getDriver().getTelegramHandle() != null
-                ? " (@" + escape(ride.getDriver().getTelegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(ride.getDriver().getTelegramHandle()) + ")"
                 : "";
 
         return String.format(
@@ -532,17 +525,17 @@ public class NotificationService {
                         "⛽ Suggested share: <b>₱%.2f</b>\n\n" +
                         "👤 Driver: <b>%s</b>%s\n" +
                         "%s",
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
-                escape(pickupPoint),
-                escape(dropoffPoint),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(pickupPoint),
+                HtmlEscapeUtil.escape(dropoffPoint),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
                 booking.getSeatsReserved(),
                 booking.getContributionDue(),
-                escape(ride.getDriver().getFullName()),
+                HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
                 driverHandle,
                 ride.getNotes() != null
-                        ? "📝 Note: " + escape(ride.getNotes())
+                        ? "📝 Note: " + HtmlEscapeUtil.escape(ride.getNotes())
                         : "");
     }
 
@@ -553,7 +546,7 @@ public class NotificationService {
             return;
         }
 
-        String url = "https://api.telegram.org/bot" + botToken + "/sendMessage";
+        String url = telegramApiBase + "/sendMessage";
 
         Map<String, Object> body = new HashMap<>();
         body.put("chat_id",    chatId);
@@ -579,7 +572,7 @@ public class NotificationService {
         User pax  = booking.getPassenger();
 
         String paxHandle = pax.getTelegramHandle() != null
-                ? " (@" + escape(pax.getTelegramHandle()) + ")"
+                ? " (@" + HtmlEscapeUtil.escape(pax.getTelegramHandle()) + ")"
                 : "";
 
         String pickupPoint = booking.getPickupWaypoint() != null
@@ -596,55 +589,18 @@ public class NotificationService {
                         "🪑 Seats: %d | ⛽ ₱%.2f share\n" +
                         "%s\n" +
                         "⏰ Expires in %d minutes",
-                escape(pax.getFullName()),
+                HtmlEscapeUtil.escape(pax.getFullName()),
                 paxHandle,
-                escape(pickupPoint),
+                HtmlEscapeUtil.escape(pickupPoint),
                 booking.getSeatsReserved(),
                 booking.getContributionDue(),
                 booking.getPassengerMessage() != null
-                        ? "💬 \"" + escape(booking.getPassengerMessage()) + "\"\n"
+                        ? "💬 \"" + HtmlEscapeUtil.escape(booking.getPassengerMessage()) + "\"\n"
                         : "",
                 Math.max(0, expiresInMinutes));
     }
 
-    private String buildPassengerRequestSentMessage(Booking booking) {
-        Ride ride   = booking.getRide();
-        User driver = ride.getDriver();
-
-        String driverHandle = driver.getTelegramHandle() != null
-                ? " (@" + escape(driver.getTelegramHandle()) + ")"
-                : "";
-
-        long expiresInMinutes = java.time.Duration.between(
-                Instant.now(), booking.getExpiresAt()).toMinutes();
-
-        return String.format(
-                "⏳ <b>Booking Request Sent!</b>\n\n" +
-                        "📍 %s → %s\n" +
-                        "🕐 %s\n" +
-                        "🪑 Seats: %d | ⛽ ₱%.2f share\n" +
-                        "👤 Driver: <b>%s</b>%s\n\n" +
-                        "Waiting for driver approval.\n" +
-                        "⏰ Auto-declines in %d minutes if no response.",
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
-                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
-                booking.getSeatsReserved(),
-                booking.getContributionDue(),
-                escape(driver.getFullName()),
-                driverHandle,
-                Math.max(0, expiresInMinutes));
-    }
-
     // ── HTML escape ───────────────────────────────────────────────────────────
-
-    private String escape(String text) {
-        if (text == null) return "";
-        return text
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
-    }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -679,8 +635,8 @@ public class NotificationService {
                         "🕐 Scheduled: %s\n\n" +
                         "Your booking has been automatically cancelled.\n" +
                         "Please look for another available ride.",
-                escape(ride.getOriginHub().getName()),
-                escape(ride.getDestinationHub().getName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))));
 
         for (Booking booking : cancelledBookings) {
@@ -702,15 +658,15 @@ public class NotificationService {
         List<Booking> confirmedBookings = bookingRepository
                 .findActiveBookingsForRide(ride.getId())
                 .stream()
-                .filter(b -> b.getStatus().name().equals("CONFIRMED"))
+                .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
                 .toList();
 
         String timeFormatted = ride.getDepartureTime()
                 .format(DateTimeFormatter.ofPattern("h:mm a"));
 
-        String route = escape(ride.getOriginHub().getName()) +
+        String route = HtmlEscapeUtil.escape(ride.getOriginHub().getName()) +
                 " → " +
-                escape(ride.getDestinationHub().getName());
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName());
 
         // Notify driver
         String driverMsg = String.format(
@@ -758,9 +714,9 @@ public class NotificationService {
                             "Head to your pickup point soon.",
                     route,
                     timeFormatted,
-                    escape(ride.getDriver().getFullName()),
+                    HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
                     ride.getDriver().getTelegramHandle() != null
-                            ? " (@" + escape(ride.getDriver().getTelegramHandle()) + ")"
+                            ? " (@" + HtmlEscapeUtil.escape(ride.getDriver().getTelegramHandle()) + ")"
                             : "",
                     buildVehicleLine(ride));
 
@@ -782,9 +738,9 @@ public class NotificationService {
         if (model == null && plate == null) return "<i>No vehicle info</i>";
 
         StringBuilder sb = new StringBuilder();
-        if (color != null) sb.append(escape(color)).append(" ");
-        if (model != null) sb.append(escape(model));
-        if (plate != null) sb.append(" | 🔢 ").append(escape(plate));
+        if (color != null) sb.append(HtmlEscapeUtil.escape(color)).append(" ");
+        if (model != null) sb.append(HtmlEscapeUtil.escape(model));
+        if (plate != null) sb.append(" | 🔢 ").append(HtmlEscapeUtil.escape(plate));
         return sb.toString();
     }
 }
