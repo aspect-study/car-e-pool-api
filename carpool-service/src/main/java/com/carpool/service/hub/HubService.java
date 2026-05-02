@@ -5,6 +5,7 @@ import com.carpool.common.exception.UserNotFoundException;
 import com.carpool.domain.entity.Hub;
 import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.HubStatus;
+import com.carpool.repository.HubAliasRepository;
 import com.carpool.repository.HubRepository;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.dto.request.SuggestHubRequest;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -26,6 +28,7 @@ public class HubService {
 
     private final HubRepository  hubRepository;
     private final UserRepository userRepository;
+    private final HubAliasRepository  hubAliasRepository;
     private final EntityMapper   mapper;
 
     /**
@@ -178,5 +181,13 @@ public class HubService {
                 .map(mapper::toHubResponse)
                 .limit(5)
                 .toList();
+    }
+
+    @Cacheable(value = "hub-aliases", key = "#alias.toLowerCase()")
+    @Transactional(readOnly = true)
+    public Optional<HubResponse> findByAlias(String alias) {
+        return hubAliasRepository
+                .findByAliasIgnoreCase(alias)
+                .map(a -> mapper.toHubResponse(a.getHub()));
     }
 }

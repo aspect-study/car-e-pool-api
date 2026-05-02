@@ -25,6 +25,7 @@ public class CacheConfig {
     public static final String CACHE_HUB_SEARCH  = "hub-search";
     public static final String CACHE_ADMIN_STATS = "adminStats";
     public static final String CACHE_PROFILE_STATS = "profileStats";
+    public static final String CACHE_HUB_ALIASES = "hub-aliases";
 
     @Bean
     public CacheManager cacheManager() {
@@ -63,8 +64,15 @@ public class CacheConfig {
                         .recordStats()
                         .build());
 
+        var hubAliasesCache = new CaffeineCache(CACHE_HUB_ALIASES,
+                Caffeine.newBuilder()
+                        .maximumSize(2000)
+                        .expireAfterWrite(60, TimeUnit.MINUTES)
+                        .recordStats()
+                        .build());
+
         var manager = new SimpleCacheManager();
-        manager.setCaches(List.of(hubsCache, usersCache, hubSearchCache, adminStatsCache, profileStatsCache));
+        manager.setCaches(List.of(hubsCache, usersCache, hubSearchCache, adminStatsCache, profileStatsCache, hubAliasesCache));
         return manager;
     }
 }

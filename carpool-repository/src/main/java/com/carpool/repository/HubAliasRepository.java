@@ -19,4 +19,5 @@ public interface HubAliasRepository extends JpaRepository<HubAlias, Long> {
         WHERE LOWER(a.alias) = LOWER(:alias)
         """)
     Optional<HubAlias> findByAliasIgnoreCase(@Param("alias") String alias);
+
 }
