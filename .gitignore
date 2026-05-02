@@ -19,4 +19,6 @@ target/
 # Environment files with actual secrets
 .documents/
 .env
-.zip
+
+# compressed files
+*.zip
