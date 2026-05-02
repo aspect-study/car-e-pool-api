@@ -21,7 +21,6 @@ import com.carpool.service.hub.HubService;
 import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.ride.RideService;
-import com.carpool.service.vehicle.VehicleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -37,7 +36,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -552,11 +550,26 @@ public class MessageHandler {
             return;
         }
 
-        // Show matched suggestions
+        // Show matched suggestions — 2 columns for short names, 1 column for long names
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> pair = new ArrayList<>();
         for (HubResponse s : suggestions) {
-            rows.add(List.of(BotMessageBuilder.button(s.name(), "HUB_ORIGIN:" + s.id())));
+            InlineKeyboardButton btn = BotMessageBuilder.button(s.name(), "HUB_ORIGIN:" + s.id());
+            if (s.name().length() > 20) {
+                if (!pair.isEmpty()) {
+                    rows.add(new ArrayList<>(pair));
+                    pair = new ArrayList<>();
+                }
+                rows.add(List.of(btn));
+            } else {
+                pair.add(btn);
+                if (pair.size() == 2) {
+                    rows.add(List.of(pair.get(0), pair.get(1)));
+                    pair = new ArrayList<>();
+                }
+            }
         }
+        if (!pair.isEmpty()) rows.add(new ArrayList<>(pair));
         rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_ORIGIN")));
 
         bot.send(sendWithInline(chatId,
@@ -615,10 +628,26 @@ public class MessageHandler {
             return;
         }
 
+        // Show matched suggestions — 2 columns for short names, 1 column for long names
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> pair = new ArrayList<>();
         for (HubResponse s : suggestions) {
-            rows.add(List.of(BotMessageBuilder.button(s.name(), "HUB_DEST:" + s.id())));
+            InlineKeyboardButton btn = BotMessageBuilder.button(s.name(), "HUB_DEST:" + s.id());
+            if (s.name().length() > 20) {
+                if (!pair.isEmpty()) {
+                    rows.add(new ArrayList<>(pair));
+                    pair = new ArrayList<>();
+                }
+                rows.add(List.of(btn));
+            } else {
+                pair.add(btn);
+                if (pair.size() == 2) {
+                    rows.add(List.of(pair.get(0), pair.get(1)));
+                    pair = new ArrayList<>();
+                }
+            }
         }
+        if (!pair.isEmpty()) rows.add(new ArrayList<>(pair));
         rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_DEST")));
 
         bot.send(sendWithInline(chatId,

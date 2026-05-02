@@ -43,6 +43,7 @@ public class HubMatcher {
         if (input.trim().length() < 3) return Optional.empty();
 
         String normalized = input.trim().toLowerCase();
+        log.debug("HubMatcher: normalized input='{}'", normalized);
 
         // Layer 1: Alias match — "moa", "bgc", "atc", etc.
         Optional<HubResponse> aliasMatch = hubAliasRepository
@@ -94,6 +95,36 @@ public class HubMatcher {
         if (input.trim().length() < 3) return List.of();
 
         String normalized = input.trim().toLowerCase();
+
+        // Layer 1: Alias exact match — cached in HubService
+        Optional<HubResponse> aliasMatch = hubService.findByAlias(normalized);
+        if (aliasMatch.isPresent()) {
+            HubResponse matched = aliasMatch.get();
+            List<HubResponse> merged = new java.util.ArrayList<>();
+            merged.add(matched);
+
+            // Still show fuzzy results below alias match — deduplicated
+            List<HubResponse> all = hubService.getAllHubs();
+            String[] inputWords = normalized.split("\\s+");
+            all.stream()
+                    .filter(h -> !h.id().equals(matched.id()))
+                    .filter(hub -> {
+                        String searchable = (hub.name() + " " + hub.area() + " " +
+                                (hub.code() != null ? hub.code() : "")).toLowerCase();
+                        return searchable.contains(normalized)
+                                || levenshtein(normalized, hub.name().toLowerCase()) <= MAX_LEVENSHTEIN
+                                || allWordsMatch(searchable, inputWords);
+                    })
+                    .sorted(Comparator.comparingInt((HubResponse hub) ->
+                                    levenshtein(normalized, hub.name().toLowerCase()))
+                            .thenComparingInt(hub -> -scoreHub(hub, inputWords)))
+                    .limit(MAX_SUGGESTIONS - 1)
+                    .forEach(merged::add);
+
+            return merged;
+        }
+
+        // Layer 2: Fuzzy match against hub name/area/code
         List<HubResponse> all = hubService.getAllHubs();
         String[] inputWords = normalized.split("\\s+");
 
@@ -101,7 +132,6 @@ public class HubMatcher {
                 .filter(hub -> {
                     String searchable = (hub.name() + " " + hub.area() + " " +
                             (hub.code() != null ? hub.code() : "")).toLowerCase();
-                    // Include if contains match OR levenshtein within threshold
                     return searchable.contains(normalized)
                             || levenshtein(normalized, hub.name().toLowerCase()) <= MAX_LEVENSHTEIN
                             || allWordsMatch(searchable, inputWords);
