@@ -1687,7 +1687,7 @@ public class CallbackHandler {
                     "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
                             "Format: <code>MM/DD HH:MM</code>\n" +
                             "Example: <code>" +
-                            etdExample(state.getDirection()) +
+                            etdExample(direction) +
                             "</code>"));
             return;
         }
