@@ -2,7 +2,7 @@
 
 > **Purpose:** Load this file at the start of every new Claude session for instant project context.
 > **Last Updated:** 2026-05-03
-> **Current Session:** 7
+> **Current Session:** 7 (complete)
 
 ---
 
@@ -58,29 +58,33 @@ com.carpool
 - **Soft delete** — `deleted + deleted_at` on users, preserves history
 - **Pessimistic locking** — `findByIdWithLock()` for ride booking (financial ops)
 - **Event-driven notifications** — `@TransactionalEventListener(AFTER_COMMIT)` + `@Async` + `@Transactional(REQUIRES_NEW)`
-- **Single admin stats source** — `AdminStatsService.getStats()` used by both bot and REST API via `ProfileService.getAdminStats()`
+- **Single admin stats source** — `AdminStatsService.getStats()` used by both bot and REST API
 - **Bot state machine** — Caffeine-backed `StateManager` with `UserState` per chatId
-- **Rate limiting** — Caffeine cache (1hr TTL, 100k max) replacing old `ConcurrentHashMap`
+- **Rate limiting** — Caffeine cache (1hr TTL, 100k max)
 - **Role system** — `UserRole` enum: `PASSENGER`, `DRIVER`, `BOTH`, `ADMIN`
 - **Re-announce** — max 3 times per ride, `announce_count` column on rides table
 - **Pending booking window** — 60 minutes, reminders at 15/30/45 min, auto-decline at 60
-- **Command pattern** — `BotCommand` interface + `@PostConstruct` Map registry in `CallbackHandler` — adding a new callback action = one `commands.put()` line, router never changes
-- **Facade pattern** — sub-handlers group domain logic (`PostRideHandler`, `BookingHandler`, `RideSearchHandler`, `DriverHandler`, `ProfileHandler`)
-- **Value object** — `BotContext` record replaces scattered `(chatId, carpoolUserId, telegramId, state, parts, bot)` parameter lists
-- **Shared helper** — `BotFlowHelper` is the single source of truth for `showMainMenu`, `askForTimeWindow`, `etdExample`, `sendWithInline`, `buildFilterSummary`, `buildTimeContext`, `handleDirectionSelected`
+- **Command pattern** — `BotCommand` interface + `@PostConstruct` Map registry in `CallbackHandler` — adding a new callback = one `commands.put()` line
+- **Facade pattern** — sub-handlers group domain logic
+- **Value object** — `BotContext` record replaces scattered parameter lists
+- **Shared helper** — `BotFlowHelper` is single source of truth for shared flows
+- **TelegramClient** — proper Spring bean via `TelegramClientConfig` (eliminates lazy-init race condition)
+- **Ratings** — mutual, both driver and passenger rate each other after completed ride. Driver rates each passenger independently (per-ratee check). Passenger rates driver once per ride.
+- **Favorites** — passenger saves driver as favorite after rating. Alert fires when favorite driver posts a ride. Driver saving passenger as favorite is intentionally not supported.
 
-### Bot Handler Architecture (Session 7 Refactor)
+### Bot Handler Architecture
 ```
-CallbackHandler  — thin router only (Map registry dispatch)
-MessageHandler   — thin router only (flow switch dispatch)
-BotFlowHelper    — shared stateful flows (no handler dependencies)
-PostRideHandler  — post ride sub-flow
-BookingHandler   — passenger booking sub-flow
-RideSearchHandler— search, filter, pagination
-DriverHandler    — driver ride management
-ProfileHandler   — profile, vehicle, terms, admin, onboarding
-BotContext       — value object (replaces scattered params)
-BotCommand       — @FunctionalInterface for Command pattern
+CallbackHandler     — thin router only (Map registry dispatch)
+MessageHandler      — thin router only (flow switch dispatch)
+BotFlowHelper       — shared stateful flows (no handler dependencies)
+PostRideHandler     — post ride sub-flow
+BookingHandler      — passenger booking sub-flow
+RideSearchHandler   — search, filter, pagination
+DriverHandler       — driver ride management
+ProfileHandler      — profile, vehicle, terms, admin, onboarding
+RatingHandler       — rating + favorite flow
+BotContext          — value object (replaces scattered params)
+BotCommand          — @FunctionalInterface for Command pattern
 ```
 
 ### Module Dependency Rules
@@ -94,9 +98,6 @@ BotCommand       — @FunctionalInterface for Command pattern
 ```
 @Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)
 ```
-- `@Async` → new thread, decoupled from caller
-- `AFTER_COMMIT` → only fires after successful commit
-- `REQUIRES_NEW` → fresh transaction for notification DB writes
 
 ---
 
@@ -104,13 +105,18 @@ BotCommand       — @FunctionalInterface for Command pattern
 
 ### Key Entities
 ```
-User        — telegram_id, full_name, telegram_handle, role, status, deleted
-Ride        — driver, origin_hub, destination_hub, direction, departure_time,
-              available_seats, total_seats, contribution_amount, status, announce_count
-Booking     — ride, passenger, seats_reserved, status, expires_at, reminder_count
-Hub         — name, area, type (PREDEFINED/USER_SUGGESTED), approved
+User         — telegram_id, full_name, telegram_handle, role, status, deleted
+Ride         — driver, origin_hub, destination_hub, direction, departure_time,
+               available_seats, total_seats, contribution_amount, status, announce_count
+Booking      — ride, passenger, seats_reserved, status, expires_at, reminder_count
+Hub          — name, area, type (PREDEFINED/USER_SUGGESTED), approved
 RideWaypoint — ride, hub, type (PICKUP/DROPOFF)
 Notification — user, type, message, sent_at
+RideRating   — ride, rater, ratee, stars (TINYINT), comment (VARCHAR 1000),
+               rater_role (DRIVER/PASSENGER), created_at
+               UNIQUE: (ride_id, rater_id, ratee_id)
+UserFavorite — follower, favorite, created_at
+               UNIQUE: (follower_id, favorite_id)
 ```
 
 ### Enums
@@ -137,7 +143,7 @@ DEPARTED → COMPLETED
 
 ## 4. Database
 
-### Flyway Migrations (Latest: V30)
+### Flyway Migrations (Latest: V33)
 ```
 V1–V20   — initial schema, hubs, waypoints, notifications
 V21      — add notes to rides
@@ -149,12 +155,17 @@ V26      — add deleted + deleted_at to users
 V27      — ALTER users.role ENUM to include ADMIN
 V28      — add Parañaque Sucat Road hubs
 V29      — add hub aliases (V28 hubs)
-V30      — add additional hub aliases (ups5, upsv, valley 1, jaka plaza, yp mall, etc.)
+V30      — add additional hub aliases (ups5, upsv, valley 1, jaka plaza, yp mall etc.)
+V31      — expand driver_notes.content VARCHAR(500) → VARCHAR(1000)
+V32      — add ride_ratings table (mutual rating, per-ratee unique constraint)
+V33      — add user_favorites table (follower/favorite unique constraint)
 ```
 
 ### Important Indexes
 - `rides`: composite index on `(driver_id, status)`
 - `bookings`: composite index on `(passenger_id, status)`, `(ride_id, status)`
+- `ride_ratings`: indexes on `ratee_id`, `ride_id`, `rater_id`
+- `user_favorites`: indexes on `follower_id`, `favorite_id`
 
 ### Prod DB
 - AWS RDS MySQL 8
@@ -186,7 +197,6 @@ V30      — add additional hub aliases (ups5, upsv, valley 1, jaka plaza, yp ma
 ### Rate Limiting
 - `RateLimitFilter` — Caffeine cache, 1hr TTL, 100k max IPs
 - `X-Forwarded-For` still uses spoofable header — **fix when nginx is deployed**
-- Fix: use `X-Real-IP` set by nginx, fall back to `getRemoteAddr()`
 
 ### Bot Gates (in order)
 ```
@@ -213,6 +223,12 @@ FIND_RIDE  → direction → time window → filter → view ride → book →
 
 BOOKING    → driver receives notification → accept/decline →
              passenger notified → ride departs → completed
+
+RATING     → ride completed → rate now button →
+             star tap → optional comment → favorite prompt (passenger only)
+
+MULTI-PAX  → driver has 2+ passengers → passenger selection screen →
+             rate each passenger independently
 ```
 
 ### Time Window Slots (Find Ride)
@@ -229,16 +245,40 @@ BOOKING    → driver receives notification → accept/decline →
 
 ### Session Recovery
 - `SessionRecoveryHandler` handles expired `UserState`
-- Flow-sensitive actions (need state): `POST_RIDE_ACTIONS`, `BOOKING_ACTIONS`, `APPROVAL_ACTIONS`, `CANCEL_ACTIONS`
-- `CONFIRM_CANCEL_RIDE` — **NOT** flow-sensitive (carries rideId+reason in payload)
-- `ACCEPT_BOOKING` / `DECLINE_BOOKING` — **NOT** flow-sensitive (carry bookingId in payload)
-- `CANCEL_BOOKING_REASON` — flow-sensitive
+- **Flow-sensitive** (need state): `POST_RIDE_ACTIONS`, `RATING_ACTIONS`
+- **NOT flow-sensitive** (carry payload): `VIEW_RIDE`, `BOOK_RIDE`, `BOOK_NOW`,
+  `CANCEL_BOOKING`, `DECLINE_BOOKING_REASON`, `ACCEPT_BOOKING`, `DECLINE_BOOKING`,
+  `CONFIRM_CANCEL_RIDE`, `RATE_RIDE`, `RATE_PASSENGER`, `SAVE_FAVORITE`, `SKIP_FAVORITE`
 
 ### Hub Search (HubMatcher)
 - 5-layer matching: alias exact → alias fuzzy → name exact → name fuzzy → area
 - `suggest()` alias check as Layer 1 via cached `HubService.findByAlias()`
 - 2-column button layout for hub names ≤20 chars, 1-column for longer
 - MAX_SUGGESTIONS = 20
+
+### Rating System
+- Triggered after `RideCompletedEvent` via `onRideCompleted()` in `NotificationService`
+- Rating prompt sent via `sendTelegramMessageWithButtons()` with `⭐ Rate Now` button
+- Driver — rates each passenger independently (per-ratee unique check)
+- Passenger — rates driver once per ride (per-ride unique check)
+- Stars: 1–5 (TINYINT in DB, Integer in Java with `columnDefinition = "TINYINT"`)
+- Comment: optional, max 1000 characters
+- Favorite prompt: shown to passenger only after rating driver
+- Average rating shown on ride card and profile
+
+### Notification Events
+```
+RidePostedEvent      → group announcement + favorite follower alerts
+RideDepartedEvent    → confirmed passengers notified (driver on the way)
+RideCompletedEvent   → passengers notified + rating prompts sent
+RideCancelledEvent   → all booked passengers notified
+RideExpiredEvent     → booked passengers notified
+BookingConfirmedEvent→ passenger notified
+BookingDeclinedEvent → passenger notified
+BookingTimedOutEvent → passenger + driver notified
+BookingReminderEvent → driver reminded of pending request
+RideDepartureReminderEvent → driver + passengers reminded 30min before
+```
 
 ---
 
@@ -273,11 +313,15 @@ UPDATE users SET role = 'ADMIN' WHERE telegram_id = 208038458;
 ```
 
 ### Verify After Deploy
+- [ ] Flyway V1–V33 all applied successfully
 - [ ] Bot responds to `/start`
-- [ ] Ride search works — all time slots return results
+- [ ] Ride search works — all 6 time slots return results
 - [ ] Admin stats visible in profile
 - [ ] Notifications sending
-- [ ] Flyway V1–V30 all applied
+- [ ] Complete test ride → rating prompts appear with Rate Now button
+- [ ] Favorite alert fires when driver posts new ride
+- [ ] View Ride from favorite alert opens correctly (no session expired)
+- [ ] Driver departed notification fires on Start Ride
 - [ ] No ERROR lines in startup logs
 
 ---
@@ -308,6 +352,7 @@ springdoc.api-docs.enabled=true
 |---|-------|--------|-----------|
 | SEC-01 | `X-Forwarded-For` spoofable | `RateLimitFilter` | Fix when nginx deployed |
 | PERF-01 | 8 separate DB queries for profile stats | `ProfileService` | Revisit at 1k+ daily users |
+| ARCH-01 | `NotificationService` makes raw Telegram REST calls | `sendTelegramMessageWithButtons()` | Refactor to `TelegramNotificationPort` interface — bot module implements, service module depends on interface only |
 
 ---
 
@@ -315,9 +360,10 @@ springdoc.api-docs.enabled=true
 
 | Priority | Feature |
 |----------|---------|
-| 🔴 High | **Ratings system** — trust is the product, 87% trust correlation |
 | 🟠 Medium | **Hub suggestion flow in bot** — TDD document complete (Session 7), implementation pending |
 | 🟠 Medium | **Auto-accept toggle** — driver profile setting |
+| 🟠 Medium | **Date picker UX** — replace MM/DD HH:MM free-text with quick-select day buttons (Today, Tomorrow, Next Monday, etc.) + separate time input. Reported by user on weekend posting confusion. |
+| 🟠 Medium | **Rating comments display** — show saved comments on ratee's profile (driver and passenger reviews section) |
 | 🟡 Low | **Emergency contact** — one field on user profile |
 | 🟡 Low | **Carbon savings tracker** — based on completed rides |
 | 🟡 Low | **Recurring ride / regular riders** |
@@ -331,40 +377,71 @@ springdoc.api-docs.enabled=true
 ### Session 7 — 2026-05-03
 
 #### What We Did
-1. **Group invite link feature** — community group link prominently shown on terms screen and as dedicated join prompt after acceptance. `groupInviteLink` added to `BotConfig`, `urlButton()` added to `BotMessageBuilder`.
-2. **Hub suggestion TDD** — full Technical Design Document produced for the hub suggestion bot flow. Implementation deferred — document saved for study.
-3. **Bot handler refactor** — major architectural overhaul of `CallbackHandler` and `MessageHandler`:
-   - Command pattern via `@PostConstruct` Map registry — router never changes again
-   - Facade pattern via 5 focused sub-handlers
-   - `BotContext` value object eliminates scattered parameter lists
-   - `BotFlowHelper` as single source of truth for shared flows
-   - Eliminated 7 duplicated methods between the two handlers
-   - `CallbackHandler` reduced from 2,328 lines to 167 lines
-4. **Search time buffer fix** — custom time input now searches `from - 1hr` to `from + 2hr` — fixes bug where rides departing slightly before typed time were missed.
-5. **Time window overhaul** — 6 slots with full 24-hour coverage, no gaps:
-   - Early Morning (4-6 AM), Morning Rush (6-9 AM), Late Morning (9 AM-12 PM)
-   - Noon (12-3 PM), Afternoon (3-7 PM), Evening (7-11 PM)
-6. **Notes prompt UX** — updated driver notes prompt with realistic pickup/stop/drop-off example. Updated `NOTE_WRITE` prompt for consistency.
-7. **Booking message UX** — updated passenger booking message prompt to emphasize importance and give general example.
-8. **Deployed to production** — all changes live on EC2, Flyway V1–V30 applied.
+1. **Group invite link** — shown prominently on terms screen and as dedicated join prompt after acceptance
+2. **Hub suggestion TDD** — full Technical Design Document produced. Implementation deferred.
+3. **Bot handler refactor** — Command + Facade pattern:
+   - `BotContext` value object, `BotCommand` interface
+   - `BotFlowHelper` — single source of truth for shared flows
+   - 5 focused sub-handlers: `PostRideHandler`, `BookingHandler`, `RideSearchHandler`, `DriverHandler`, `ProfileHandler`
+   - `CallbackHandler` reduced from 2,328 lines to ~170 lines
+   - `TelegramClientConfig` — proper Spring bean, eliminates lazy-init race condition
+4. **Search time buffer fix** — custom time input searches `from - 1hr` to `from + 2hr`
+5. **Time window overhaul** — 6 slots with full 24-hour coverage, no gaps
+6. **Notes prompt UX** — realistic pickup/stop/drop-off example, max 1000 chars (V31)
+7. **Booking message UX** — emphasizes importance, general example
+8. **Group announcement** — notes moved to end of card
+9. **Driver departed notification** — `RideDepartedEvent` fires when driver taps Start Ride, all confirmed passengers notified immediately
+10. **Rating system** — mutual rating after completed rides:
+    - Stars (1–5) + optional comment (max 1000 chars)
+    - Driver rates each passenger independently
+    - Passenger rates driver once per ride
+    - Average rating shown on ride card and profile
+    - Rating prompt sent with Rate Now button
+    - Favorite prompt shown to passenger only (not driver)
+11. **Favorite driver system** — save driver as favorite after rating, alert when favorite driver posts a ride
+12. **Multi-passenger rating fix** — per-ratee duplicate check, passenger selection screen
+13. **Session recovery fix** — removed over-blocking: VIEW_RIDE, BOOK_RIDE, BOOK_NOW, CANCEL_BOOKING, DECLINE_BOOKING_REASON, SAVE_FAVORITE, SKIP_FAVORITE all carry payload and don't need session state
+14. **Schema fix** — `RideRating.stars` uses `columnDefinition = "TINYINT"` to match DB
+15. **Pending deploy** — scheduled Tuesday/Wednesday
 
-#### Files Changed
+#### Files Changed This Session
 ```
 application-local.properties
 application-prod.properties
 carpool-bot/config/BotConfig.java
+carpool-bot/config/TelegramClientConfig.java          (NEW)
+carpool-bot/CarpoolBot.java
 carpool-bot/util/BotMessageBuilder.java
-carpool-bot/handler/BotContext.java           (NEW)
-carpool-bot/handler/BotCommand.java           (NEW)
-carpool-bot/handler/BotFlowHelper.java        (NEW)
-carpool-bot/handler/PostRideHandler.java      (NEW)
-carpool-bot/handler/BookingHandler.java       (NEW)
-carpool-bot/handler/RideSearchHandler.java    (NEW)
-carpool-bot/handler/DriverHandler.java        (NEW)
-carpool-bot/handler/ProfileHandler.java       (NEW)
-carpool-bot/handler/CallbackHandler.java      (REPLACED)
-carpool-bot/handler/MessageHandler.java       (REPLACED)
-carpool-bot/handler/PostRideHelper.java       (UPDATED)
+carpool-bot/handler/BotContext.java                   (NEW)
+carpool-bot/handler/BotCommand.java                   (NEW)
+carpool-bot/handler/BotFlowHelper.java                (NEW)
+carpool-bot/handler/PostRideHandler.java              (NEW)
+carpool-bot/handler/BookingHandler.java               (NEW)
+carpool-bot/handler/RideSearchHandler.java            (NEW)
+carpool-bot/handler/DriverHandler.java                (NEW)
+carpool-bot/handler/ProfileHandler.java               (NEW)
+carpool-bot/handler/RatingHandler.java                (NEW)
+carpool-bot/handler/CallbackHandler.java              (REPLACED)
+carpool-bot/handler/MessageHandler.java               (REPLACED)
+carpool-bot/handler/SessionRecoveryHandler.java       (UPDATED)
+carpool-bot/handler/PostRideHelper.java               (UPDATED)
+carpool-bot/service/GroupNotificationService.java     (UPDATED)
+carpool-bot/state/BotFlow.java
+carpool-bot/state/UserState.java
+carpool-domain/entity/RideRating.java                 (NEW)
+carpool-domain/entity/UserFavorite.java               (NEW)
+carpool-domain/entity/DriverNote.java
+carpool-domain/enums/NotificationTypes.java
+carpool-repository/RideRatingRepository.java          (NEW)
+carpool-repository/UserFavoriteRepository.java        (NEW)
+carpool-service/rating/RatingService.java             (NEW)
+carpool-service/favorite/FavoriteService.java         (NEW)
+carpool-service/event/RideEvents.java
+carpool-service/ride/RideService.java
+carpool-service/notification/NotificationService.java
+db/migration/V31__expand_driver_notes_content.sql
+db/migration/V32__add_ride_ratings.sql
+db/migration/V33__add_user_favorites.sql
 ```
 
 ---
@@ -380,12 +457,12 @@ carpool-bot/handler/PostRideHelper.java       (UPDATED)
 8. Set up local dev environment with separate dev bot
 9. Deployed to production
 
-### Sessions 1–5 (earlier work — pre-context-doc)
+### Sessions 1–5
 - Hub alias search improvements (V28–V30 migrations, 12 new Parañaque Sucat hubs)
-- Direction-based group topics (`groupHomeToWorkTopicId` / `groupWorkToHomeTopicId`)
+- Direction-based group topics
 - Gas share hidden from group announcement
 - Dynamic date/time examples in bot prompts
-- `ACCEPT_BOOKING` / `DECLINE_BOOKING` removed from `APPROVAL_ACTIONS` in `SessionRecoveryHandler`
+- `ACCEPT_BOOKING` / `DECLINE_BOOKING` removed from `APPROVAL_ACTIONS`
 - Initial scaffold, auth, ride posting, booking, notifications, schedulers
 
 ---
