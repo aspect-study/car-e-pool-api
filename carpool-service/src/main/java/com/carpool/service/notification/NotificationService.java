@@ -235,6 +235,64 @@ public class NotificationService {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onRideDeparted(RideEvents.RideDepartedEvent event) {
+        List<Booking> confirmedBookings = bookingRepository
+                .findByRideIdAndStatusIn(
+                        event.ride().getId(),
+                        List.of(BookingStatus.CONFIRMED));
+
+        if (confirmedBookings.isEmpty()) {
+            log.info("Ride {} departed with no confirmed passengers to notify",
+                    event.ride().getId());
+            return;
+        }
+
+        Ride ride = event.ride();
+
+        String vehicleLine = (ride.getDriver().getCarModel() != null
+                && ride.getDriver().getPlateNumber() != null)
+                ? String.format("\n🚘 %s%s | 🔢 %s",
+                ride.getDriver().getCarColor() != null
+                ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " "
+                : "",
+                HtmlEscapeUtil.escape(ride.getDriver().getCarModel()),
+                HtmlEscapeUtil.escape(ride.getDriver().getPlateNumber()))
+                : "";
+
+        String driverHandle = ride.getDriver().getTelegramHandle() != null
+                ? " (@" + HtmlEscapeUtil.escape(ride.getDriver().getTelegramHandle()) + ")"
+                : "";
+
+        String msg = String.format(
+                "🚗 <b>Your driver is on the way!</b>\n\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n\n" +
+                        "👤 Driver: <b>%s</b>%s%s\n\n" +
+                        "📌 <b>Please be at your pickup point.</b>\n" +
+                        "<i>Message your driver directly if needed.</i>",
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
+                TIME_FMT.format(ride.getDepartureTime()
+                        .atZone(ZoneId.of("Asia/Manila"))),
+                HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
+                driverHandle,
+                vehicleLine);
+
+        for (Booking booking : confirmedBookings) {
+            sendAndRecord(booking.getPassenger(),
+                    NotificationTypes.RIDE_DEPARTED, msg,
+                    Map.of("rideId", ride.getId()));
+            log.info("Ride departed notification sent: rideId={} passengerId={}",
+                    ride.getId(), booking.getPassenger().getId());
+        }
+
+        log.info("Ride departed notifications sent: rideId={} passengers={}",
+                ride.getId(), confirmedBookings.size());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onBookingRequested(RideEvents.BookingRequestedEvent event) {
         Booking booking = bookingRepository.findByIdWithDetails(event.booking().getId())
                 .orElse(null);

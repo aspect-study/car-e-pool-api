@@ -85,20 +85,20 @@ public class GroupNotificationService {
                         "📍 <b>%s → %s</b>\n" +
                         "🕐 %s\n" +
                         "💺 Seats: <b>%d</b>\n" +
-                        "%s" +
                         "%s\n\n" +
                         "👤 Driver: %s\n" +
-                        "🔖 Ride #%d\n\n" +
+                        "🔖 Ride #%d" +
+                        "%s\n\n" +
                         "👇 Tap <b>View Ride</b> below to book instantly.",
                 dirLabel,
                 HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
                 HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 departure,
                 ride.getAvailableSeats(),
-                notesLine,
                 vehicleLine,
                 driverName,
-                ride.getId()
+                ride.getId(),
+                notesLine
         );
     }
 
