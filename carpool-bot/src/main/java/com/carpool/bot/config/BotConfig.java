@@ -32,6 +32,9 @@ public class BotConfig {
     @Value("${carpool.community.corridor:South MM to BGC/Makati}")
     private String corridor;
 
+    @Value("${carpool.community.group-invite-link:https://t.me/southispoolofcare}")
+    private String groupInviteLink;
+
     @Value("${carpool.admin.telegram-ids:}")
     private String adminTelegramIds;
 

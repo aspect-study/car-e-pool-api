@@ -100,8 +100,10 @@ public class PostRideHelper {
             ));
 
             bot.send(sendWithInline(chatId,
-                    "📝 <b>Any reminders for your passengers?</b>\n\n" +
-                            "Tap a recent note or write a new one:", rows));
+                    "📝 <b>Any details for your passengers?</b>\n\n" +
+                            "Tap a saved note or write a new one.\n" +
+                            "<i>You can include pickup spot, stops, drop-off point, and reminders.</i>",
+                    rows));
         } else {
             rows.add(List.of(BotMessageBuilder.button("✏️ Write a note", "NOTE_WRITE")));
             rows.add(List.of(
@@ -110,8 +112,12 @@ public class PostRideHelper {
             ));
 
             bot.send(sendWithInline(chatId,
-                    "📝 <b>Any reminders for your passengers?</b>\n\n" +
-                            "<i>e.g. exact pickup spot, stops along the way, what to bring</i>",
+                    "📝 <b>Any details for your passengers?</b>\n\n" +
+                            "<i>e.g.\n" +
+                            "📍 Pickup: In front of Mercury Drug, gate 2\n" +
+                            "🛑 Stop: Alabang Town Center (quick stop)\n" +
+                            "🏁 Drop-off: BGC High Street, near Fully Booked\n" +
+                            "📌 Note: Exact change preferred. No strong food inside the car.</i>",
                     rows));
         }
     }

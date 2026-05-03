@@ -213,6 +213,17 @@ public class BotMessageBuilder {
     }
 
     /**
+     * Creates an inline button that opens a URL directly.
+     * No callback is fired — Telegram opens the link in-app.
+     */
+    public static InlineKeyboardButton urlButton(String text, String url) {
+        return InlineKeyboardButton.builder()
+                .text(text)
+                .url(url)
+                .build();
+    }
+
+    /**
      * Send a flow message with a Cancel button at the bottom.
      */
     public static SendMessage textWithCancel(Long chatId, String text) {
