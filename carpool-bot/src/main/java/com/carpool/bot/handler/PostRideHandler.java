@@ -379,6 +379,12 @@ public class PostRideHandler {
 
     public void handlePostRideNotes(Long chatId, String text,
                                     UserState state, CarpoolBot bot) {
+        if (text.trim().length() > 1000) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Note is too long (max 1000 characters). " +
+                            "Please shorten it and try again."));
+            return;
+        }
         UserState updated = state.withNotes(text.trim());
         stateManager.save(chatId, updated);
         profileHandler.showVehicleConfirmStep(
@@ -389,6 +395,12 @@ public class PostRideHandler {
                                          UserState state, Long carpoolUserId,
                                          CarpoolBot bot) {
         String notes = text.trim();
+        if (notes.length() > 1000) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Note is too long (max 1000 characters). " +
+                            "Please shorten it and try again."));
+            return;
+        }
         driverNoteService.saveOrUpdate(carpoolUserId, notes);
         UserState updated = state.withNotes(notes);
         stateManager.save(chatId, updated);

@@ -1,0 +1,2 @@
+ALTER TABLE driver_notes
+    MODIFY COLUMN content VARCHAR(1000) NOT NULL;
