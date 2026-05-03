@@ -13,6 +13,7 @@ import com.carpool.service.admin.AdminStatsService;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.profile.ProfileService;
+import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
 import com.carpool.service.vehicle.VehicleService;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ public class ProfileHandler {
     private final BotFlowHelper     flowHelper;
     private final PostRideHelper    postRideHelper;
     private final BotConfig         botConfig;
+    private final RatingService     ratingService;
 
     // ── Profile ───────────────────────────────────────────────────────────
 
@@ -77,6 +79,13 @@ public class ProfileHandler {
 
             if (stats.driverRidesPosted() != null) {
                 sb.append("\n🏆 <b>Driver Stats</b>\n");
+
+                // Add driver rating
+                String driverRating = ratingService.getDriverRatingLabel(ctx.carpoolUserId());
+                if (driverRating != null) {
+                    sb.append(driverRating).append("\n");
+                }
+
                 if (stats.driverCompletionRate() != null) {
                     sb.append(String.format("⭐ %d%% Completion Rate\n",
                             stats.driverCompletionRate()));
@@ -91,6 +100,13 @@ public class ProfileHandler {
 
             if (stats.passengerBookingsMade() != null) {
                 sb.append("\n🧳 <b>Passenger Stats</b>\n");
+
+                // Add passenger rating
+                String passengerRating = ratingService.getPassengerRatingLabel(ctx.carpoolUserId());
+                if (passengerRating != null) {
+                    sb.append(passengerRating).append("\n");
+                }
+
                 if (stats.passengerCompletionRate() != null) {
                     sb.append(String.format("⭐ %d%% Completion Rate\n",
                             stats.passengerCompletionRate()));

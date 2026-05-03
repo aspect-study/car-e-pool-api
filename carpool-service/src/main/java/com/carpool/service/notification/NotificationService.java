@@ -205,7 +205,6 @@ public class NotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRideCompleted(RideEvents.RideCompletedEvent event) {
-        // Bookings are already COMPLETED at this point — query by COMPLETED status
         List<Booking> activeBookings = bookingRepository
                 .findCompletedBookingsForRide(event.ride().getId());
 
@@ -230,6 +229,41 @@ public class NotificationService {
                     Map.of("rideId", ride.getId(),
                             "contributionDue", booking.getContributionDue()));
         }
+
+        // ── Prompt both driver and passengers to rate each other ──────────────
+        for (Booking booking : activeBookings) {
+            // Prompt passenger to rate driver
+            String passengerRatingMsg = String.format(
+                    "⭐ <b>Rate Your Ride!</b>\n\n" +
+                            "How was your experience with driver <b>%s</b>?\n\n" +
+                            "Tap below to leave a rating:",
+                    HtmlEscapeUtil.escape(ride.getDriver().getFullName()));
+
+            sendTelegramMessageWithButtons(
+                    booking.getPassenger().getTelegramId(),
+                    passengerRatingMsg,
+                    List.of(List.of(
+                            Map.of("text",          "⭐ Rate Now",
+                                    "callback_data", "RATE_RIDE:" + ride.getId())
+                    )));
+
+            // Prompt driver to rate passenger
+            String driverRatingMsg = String.format(
+                    "⭐ <b>Rate Your Passenger!</b>\n\n" +
+                            "How was <b>%s</b> as a passenger?\n\n" +
+                            "Tap below to leave a rating:",
+                    HtmlEscapeUtil.escape(booking.getPassenger().getFullName()));
+
+            sendTelegramMessageWithButtons(
+                    ride.getDriver().getTelegramId(),
+                    driverRatingMsg,
+                    List.of(List.of(
+                            Map.of("text",          "⭐ Rate Now",
+                                    "callback_data", "RATE_RIDE:" + ride.getId())
+                    )));
+        }
+        log.info("Rating prompts sent: rideId={} passengers={}",
+                ride.getId(), activeBookings.size());
     }
 
     @Async

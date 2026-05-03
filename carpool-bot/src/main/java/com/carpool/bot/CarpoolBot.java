@@ -17,7 +17,9 @@ import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -42,15 +44,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
     private final BotRateLimiter    rateLimiter;
     private final UserRepository    userRepository;
 
-    // Lazy-initialized to avoid circular dependency
-    private TelegramClient telegramClient;
-
-    private TelegramClient getClient() {
-        if (telegramClient == null) {
-            telegramClient = new OkHttpTelegramClient(getBotToken());
-        }
-        return telegramClient;
-    }
+    private final TelegramClient telegramClient;
 
     @Override
     public String getBotToken() {
@@ -214,7 +208,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
             if (message.getText().length() > 4096) {
                 log.warn("Message too long ({} chars) for chatId={}",
                         message.getText().length(), message.getChatId());
-                getClient().execute(SendMessage.builder()
+                telegramClient.execute(SendMessage.builder()
                         .chatId(message.getChatId())
                         .text("⚠️ Message too long to display.\n\n" +
                                 "Telegram has a 4,096 character limit per message.")
@@ -226,7 +220,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                 return;
             }
 
-            getClient().execute(message);
+            telegramClient.execute(message);
         } catch (TelegramApiException e) {
             log.error("Failed to send message to chatId={}: {}",
                     message.getChatId(), e.getMessage());
@@ -235,7 +229,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
 
     public void edit(EditMessageText edit) {
         try {
-            getClient().execute(edit);
+            telegramClient.execute(edit);
         } catch (TelegramApiException e) {
             log.error("Failed to edit message: {}", e.getMessage());
         }
@@ -251,7 +245,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                     .callbackQueryId(callbackQueryId)
                     .text(text)
                     .build();
-            getClient().execute(answer);
+            telegramClient.execute(answer);
         } catch (TelegramApiException e) {
             log.error("Failed to answer callback: {}", e.getMessage());
         }
@@ -277,12 +271,39 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                                     .build()
                     ))))
                     .build();
-            getClient().execute(message);
+            telegramClient.execute(message);
             log.info("Group ride announcement sent: rideId={} chatId={} threadId={}",
                     rideId, botConfig.getGroupChatId(), topicId);
         } catch (TelegramApiException e) {
             log.error("Failed to send group announcement: rideId={} error={}",
                     rideId, e.getMessage());
+        }
+    }
+
+    /**
+     * Sends a message with a View Ride inline button directly to a user.
+     * Used for favorite driver alerts — sends to the follower's chat.
+     */
+    public void sendToUser(Long telegramId, String text, Long rideId) {
+        try {
+            SendMessage message = SendMessage.builder()
+                    .chatId(telegramId)
+                    .text(text)
+                    .parseMode("HTML")
+                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
+                            InlineKeyboardButton.builder()
+                                    .text("👀 View Ride")
+                                    .callbackData("VIEW_RIDE:" + rideId)
+                                    .build()
+                    ))))
+                    .build();
+
+            telegramClient.execute(message);
+            log.info("Direct message sent to telegramId={} rideId={}",
+                    telegramId, rideId);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send direct message to telegramId={} error={}",
+                    telegramId, e.getMessage());
         }
     }
 

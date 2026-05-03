@@ -64,6 +64,12 @@ public class UserState {
     private final String pendingCarModel;
     private final String pendingPlateNumber;
 
+    // ── Rating temporary state ────────────────────────────────────────────────
+    // Cleared after rating is submitted or skipped.
+    private final Long    pendingRatingRideId;  // ride being rated
+    private final Long    pendingRateeId;       // user being rated
+    private final Integer pendingStars;         // stars selected, held during comment step
+
     public static UserState initial(Long carpoolUserId) {
         return UserState.builder()
                 .flow(BotFlow.IDLE)

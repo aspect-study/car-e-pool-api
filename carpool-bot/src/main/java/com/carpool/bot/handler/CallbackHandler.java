@@ -40,6 +40,7 @@ public class CallbackHandler {
     private final RideSearchHandler rideSearchHandler;
     private final DriverHandler     driverHandler;
     private final ProfileHandler    profileHandler;
+    private final RatingHandler     ratingHandler;
 
     private final Map<String, BotCommand> commands = new HashMap<>();
 
@@ -122,6 +123,17 @@ public class CallbackHandler {
                 ctx.chatId(), ctx.bot()));
         commands.put("TERMS_ACCEPT",     ctx -> profileHandler.handleTermsAccept(ctx));
         commands.put("TERMS_DECLINE",    ctx -> profileHandler.handleTermsDecline(ctx));
+
+        // ── Rating ────────────────────────────────────────────────────────────────
+        commands.put("RATE_RIDE",      ctx -> ratingHandler.handleRateRide(ctx));
+        commands.put("RATE_STARS",     ctx -> ratingHandler.handleStarSelected(ctx));
+        commands.put("SUBMIT_RATING",  ctx -> ratingHandler.handleSubmitRating(ctx));
+        commands.put("SKIP_RATING",    ctx -> ratingHandler.handleSkipRating(ctx));
+        commands.put("RATE_PASSENGER", ctx -> ratingHandler.handleRatePassenger(ctx));
+
+        // ── Favorites ─────────────────────────────────────────────────────────────
+        commands.put("SAVE_FAVORITE",  ctx -> ratingHandler.handleSaveFavorite(ctx));
+        commands.put("SKIP_FAVORITE",  ctx -> ratingHandler.handleSkipFavorite(ctx));
 
         // ── Help ──────────────────────────────────────────────────────────
         commands.put("HELP", ctx -> helpHandler.handleTopic(

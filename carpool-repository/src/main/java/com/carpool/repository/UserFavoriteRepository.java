@@ -1,0 +1,49 @@
+package com.carpool.repository;
+
+import com.carpool.domain.entity.UserFavorite;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface UserFavoriteRepository extends JpaRepository<UserFavorite, Long> {
+
+    /**
+     * Check if a user has already saved another user as favorite.
+     * Used to prevent duplicates.
+     */
+    boolean existsByFollowerIdAndFavoriteId(Long followerId, Long favoriteId);
+
+    /**
+     * Get all favorites saved by a user.
+     * Used to display the user's favorite list.
+     */
+    List<UserFavorite> findByFollowerIdOrderByCreatedAtDesc(Long followerId);
+
+    /**
+     * Get all followers of a specific user.
+     * Used to alert followers when a favorite driver posts a ride.
+     */
+    List<UserFavorite> findByFavoriteId(Long favoriteId);
+
+    /**
+     * Get follower IDs of a specific user — lightweight version.
+     * Avoids loading full User entities when only IDs are needed.
+     */
+    @Query("SELECT uf.follower.id FROM UserFavorite uf " +
+            "WHERE uf.favorite.id = :favoriteId")
+    List<Long> findFollowerIdsByFavoriteId(@Param("favoriteId") Long favoriteId);
+
+    /**
+     * Remove a specific favorite.
+     */
+    void deleteByFollowerIdAndFavoriteId(Long followerId, Long favoriteId);
+
+    /**
+     * Count how many users have saved a specific user as favorite.
+     */
+    long countByFavoriteId(Long favoriteId);
+}

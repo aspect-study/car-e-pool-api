@@ -8,6 +8,7 @@ import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class RideSearchHandler {
     private final StateManager  stateManager;
     private final RideService   rideService;
     private final BotFlowHelper flowHelper;
+    private final RatingService ratingService;
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
 
@@ -201,8 +203,9 @@ public class RideSearchHandler {
                                 "BOOK_RIDE:" + ctx.entityId())
                 ));
             }
+            String ratingLabel = ratingService.getRideCardRatingLabel(ride.driver().id());
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    BotMessageBuilder.formatRideCard(ride), rows));
+                    BotMessageBuilder.formatRideCard(ride, ratingLabel), rows));
 
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
