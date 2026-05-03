@@ -27,6 +27,7 @@ import org.springframework.data.domain.Page;
 import com.carpool.common.response.PagedResponse;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -43,6 +44,8 @@ public class RideService {
     private final BookingRepository   bookingRepository;
     private final EntityMapper        mapper;
     private final ApplicationEventPublisher eventPublisher;
+
+    private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
 
     @Transactional
     public RideResponse createRide(CreateRideRequest request, Long driverUserId) {
@@ -86,7 +89,7 @@ public class RideService {
             throw new SameHubException();
         }
 
-        if (request.departureTime().isBefore(LocalDateTime.now())) {
+        if (request.departureTime().isBefore(LocalDateTime.now(MANILA))) {
             throw new DeparturePastException();
         }
 
@@ -201,7 +204,7 @@ public class RideService {
         if (fromHubId.equals(toHubId))             throw new SameHubException();
 
         Page<RideResponse> page = rideRepository
-                .searchAvailablePaged(fromHubId, toHubId, LocalDateTime.now(), pageable)
+                .searchAvailablePaged(fromHubId, toHubId, LocalDateTime.now(MANILA), pageable)
                 .map(mapper::toRideResponse);
 
         return PagedResponse.of(page);
@@ -357,7 +360,7 @@ public class RideService {
     @Transactional
     public void expireStaleRides() {
         // 15-minute buffer — gives driver time to tap Start Ride
-        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(15);
+        LocalDateTime cutoff = LocalDateTime.now(MANILA).minusMinutes(15);
         List<Ride> staleRides = rideRepository.findStaleActiveRides(cutoff);
 
         if (staleRides.isEmpty()) {
@@ -372,6 +375,9 @@ public class RideService {
         });
 
         rideRepository.saveAll(staleRides);
+        // Notify passengers — same behavior as manual Start Ride
+        staleRides.forEach(ride ->
+                eventPublisher.publishEvent(new RideEvents.RideDepartedEvent(ride)));
         log.info("Auto-departed {} stale rides", staleRides.size());
     }
 
@@ -381,7 +387,7 @@ public class RideService {
      */
     @Transactional
     public void completeStaleRides() {
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(2);
+        LocalDateTime cutoff = LocalDateTime.now(MANILA).minusHours(2);
         List<Ride> departedRides = rideRepository
                 .findByStatusAndDepartureTimeBefore(RideStatus.DEPARTED, cutoff);
 
@@ -405,6 +411,9 @@ public class RideService {
 
         rideRepository.saveAll(departedRides);
         bookingRepository.saveAll(allBookings);
+        // Notify passengers + trigger rating prompts — same as manual Complete Ride
+        departedRides.forEach(ride ->
+                eventPublisher.publishEvent(new RideEvents.RideCompletedEvent(ride)));
         log.info("Auto-completed {} stale departed rides", departedRides.size());
     }
 
