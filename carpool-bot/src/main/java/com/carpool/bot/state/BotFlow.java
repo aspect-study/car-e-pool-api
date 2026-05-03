@@ -37,6 +37,11 @@ public enum BotFlow {
     // ── Passenger: My bookings ────────────────────────────────────────────
     MY_BOOKINGS,
 
+    // ── Rating flow ───────────────────────────────────────────────────────────
+    RATING_STARS,        // waiting for passenger/driver to tap a star rating
+    RATING_COMMENT,      // waiting for optional comment text after stars selected
+    RATING_FAVORITE,     // showing save as favorite prompt after rating saved
+
     // Help flows
     HELP_MAIN,
     HELP_POST_RIDE,

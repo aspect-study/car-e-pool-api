@@ -359,5 +359,82 @@ public class BotMessageBuilder {
         return sb.toString();
     }
 
+    /**
+     * Builds a row of star rating buttons for the rating flow.
+     * Returns two rows — first row: 1-3 stars, second row: 4-5 stars.
+     * Keeps buttons readable on mobile without wrapping.
+     */
+    public static List<List<InlineKeyboardButton>> starRatingRows(
+            Long rideId, Long rateeId) {
+        String suffix = ":" + rideId + ":" + rateeId;
+        return List.of(
+                List.of(
+                        button("⭐",     "RATE_STARS:1" + suffix),
+                        button("⭐⭐",   "RATE_STARS:2" + suffix),
+                        button("⭐⭐⭐", "RATE_STARS:3" + suffix)
+                ),
+                List.of(
+                        button("⭐⭐⭐⭐",   "RATE_STARS:4" + suffix),
+                        button("⭐⭐⭐⭐⭐", "RATE_STARS:5" + suffix)
+                )
+        );
+    }
+
+    /**
+     * Overloaded version that includes driver rating label on the ride card.
+     * Pass null for ratingLabel if no rating data is available.
+     * Example ratingLabel: "⭐ 4.8" or ""
+     */
+    public static String formatRideCard(RideResponse ride, String ratingLabel) {
+        String directionEmoji = switch (ride.direction()) {
+            case HOME_TO_WORK -> "🏠→🏢";
+            case WORK_TO_HOME -> "🏢→🏠";
+            case OTHER        -> "🚗";
+        };
+
+        String seatsInfo = ride.availableSeats() + " of " +
+                ride.totalSeats() + " seats available";
+
+        String driverHandle = ride.driver().telegramHandle() != null
+                ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
+                : "";
+
+        String rating = (ratingLabel != null && !ratingLabel.isBlank())
+                ? " " + ratingLabel : "";
+
+        long minutesAgo = java.time.Duration.between(
+                ride.createdAt(), java.time.Instant.now()).toMinutes();
+        String postedAgo;
+        if (minutesAgo < 60) {
+            postedAgo = minutesAgo + "m ago";
+        } else if (minutesAgo < 1440) {
+            postedAgo = (minutesAgo / 60) + "h ago";
+        } else {
+            postedAgo = (minutesAgo / 1440) + "d ago";
+        }
+
+        return String.format(
+                "%s <b>%s → %s</b>\n" +
+                        "🕐 %s\n" +
+                        "🪑 %s\n" +
+                        "⛽ ₱%.2f gas share/seat\n" +
+                        "👤 %s%s%s\n" +
+                        "🕓 Posted %s" +
+                        "%s",
+                directionEmoji,
+                HtmlEscapeUtil.escape(ride.originHub().name()),
+                HtmlEscapeUtil.escape(ride.destinationHub().name()),
+                ride.departureTime().atZone(MANILA).format(DISPLAY_FMT),
+                seatsInfo,
+                ride.contributionAmount(),
+                HtmlEscapeUtil.escape(ride.driver().fullName()),
+                driverHandle,
+                rating,
+                postedAgo,
+                ride.notes() != null && !ride.notes().isBlank()
+                        ? "\n📝 " + HtmlEscapeUtil.escape(ride.notes())
+                        : "");
+    }
+
     private BotMessageBuilder() {}
 }

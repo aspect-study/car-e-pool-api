@@ -1,0 +1,120 @@
+package com.carpool.service.favorite;
+
+import com.carpool.domain.entity.User;
+import com.carpool.domain.entity.UserFavorite;
+import com.carpool.repository.UserFavoriteRepository;
+import com.carpool.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * Handles all favorite operations.
+ * Users can save other users as favorites after rating them.
+ * Followers are alerted when a favorite driver posts a new ride.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class FavoriteService {
+
+    private final UserFavoriteRepository favoriteRepository;
+    private final UserRepository         userRepository;
+
+    // ── Save favorite ─────────────────────────────────────────────────────
+
+    /**
+     * Saves a user as a favorite.
+     * Silently ignored if already saved — no error thrown.
+     */
+    @Transactional
+    public void saveFavorite(Long followerId, Long favoriteId) {
+        if (followerId.equals(favoriteId)) {
+            throw new IllegalArgumentException(
+                    "You cannot save yourself as a favorite.");
+        }
+
+        if (favoriteRepository.existsByFollowerIdAndFavoriteId(
+                followerId, favoriteId)) {
+            log.info("Favorite already exists: followerId={} favoriteId={}",
+                    followerId, favoriteId);
+            return;
+        }
+
+        User follower = userRepository.findById(followerId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Follower not found: " + followerId));
+
+        User favorite = userRepository.findById(favoriteId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Favorite user not found: " + favoriteId));
+
+        favoriteRepository.save(UserFavorite.builder()
+                .follower(follower)
+                .favorite(favorite)
+                .build());
+
+        log.info("Favorite saved: followerId={} favoriteId={}",
+                followerId, favoriteId);
+    }
+
+    // ── Remove favorite ───────────────────────────────────────────────────
+
+    /**
+     * Removes a saved favorite.
+     * Silently ignored if not found.
+     */
+    @Transactional
+    public void removeFavorite(Long followerId, Long favoriteId) {
+        if (!favoriteRepository.existsByFollowerIdAndFavoriteId(
+                followerId, favoriteId)) {
+            log.info("Favorite not found — nothing to remove: " +
+                    "followerId={} favoriteId={}", followerId, favoriteId);
+            return;
+        }
+        favoriteRepository.deleteByFollowerIdAndFavoriteId(followerId, favoriteId);
+        log.info("Favorite removed: followerId={} favoriteId={}",
+                followerId, favoriteId);
+    }
+
+    // ── Check favorite ────────────────────────────────────────────────────
+
+    /**
+     * Checks if a user has saved another user as a favorite.
+     */
+    public boolean isFavorite(Long followerId, Long favoriteId) {
+        return favoriteRepository.existsByFollowerIdAndFavoriteId(
+                followerId, favoriteId);
+    }
+
+    // ── Get favorites ─────────────────────────────────────────────────────
+
+    /**
+     * Returns all users saved as favorites by a follower.
+     */
+    public List<UserFavorite> getMyFavorites(Long followerId) {
+        return favoriteRepository.findByFollowerIdOrderByCreatedAtDesc(followerId);
+    }
+
+    // ── Get followers ─────────────────────────────────────────────────────
+
+    /**
+     * Returns all follower IDs for a given user.
+     * Used by NotificationService to alert followers when a ride is posted.
+     * Returns IDs only — avoids loading full User entities.
+     */
+    public List<Long> getFollowerIds(Long favoriteId) {
+        return favoriteRepository.findFollowerIdsByFavoriteId(favoriteId);
+    }
+
+    /**
+     * Returns follower count for a given user.
+     * Used for profile display.
+     */
+    public long getFollowerCount(Long favoriteId) {
+        return favoriteRepository.countByFavoriteId(favoriteId);
+    }
+}

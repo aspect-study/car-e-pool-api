@@ -52,6 +52,7 @@ public class MessageHandler {
     private final RideSearchHandler rideSearchHandler;
     private final DriverHandler     driverHandler;
     private final ProfileHandler    profileHandler;
+    private final RatingHandler     ratingHandler;
 
     private static final ZoneId         MANILA    = ZoneId.of("Asia/Manila");
     private static final Set<String>    GREETINGS = Set.of("hi", "hey", "start", "ey");
@@ -171,6 +172,9 @@ public class MessageHandler {
                     handleSetVehicleModel(chatId, text, state, bot);
             case SET_VEHICLE_PLATE ->
                     handleSetVehiclePlate(chatId, text, state, carpoolUserId, bot);
+            case RATING_COMMENT ->
+                    ratingHandler.handleRatingComment(
+                            chatId, text, state, carpoolUserId, bot);
             default ->
                     flowHelper.showMainMenu(chatId, carpoolUserId, state, bot);
         }

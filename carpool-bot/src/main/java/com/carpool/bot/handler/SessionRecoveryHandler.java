@@ -33,7 +33,7 @@ public class SessionRecoveryHandler {
     );
 
     private static final Set<String> BOOKING_ACTIONS = Set.of(
-            "BOOK_RIDE", "VIEW_RIDE", "BOOK_NOW"
+            "BOOK_RIDE", "BOOK_NOW"
     );
 
     private static final Set<String> APPROVAL_ACTIONS = Set.of(
@@ -44,6 +44,12 @@ public class SessionRecoveryHandler {
             "CANCEL_BOOKING"
     );
 
+    private static final Set<String> RATING_ACTIONS = Set.of(
+            "RATE_STARS",
+            "SUBMIT_RATING",
+            "SKIP_RATING"
+    );
+
     // ── Public API ────────────────────────────────────────────────────────
 
     /**
@@ -52,9 +58,7 @@ public class SessionRecoveryHandler {
      */
     public boolean isFlowSensitive(String action) {
         return POST_RIDE_ACTIONS.contains(action)
-                || BOOKING_ACTIONS.contains(action)
-                || APPROVAL_ACTIONS.contains(action)
-                || CANCEL_ACTIONS.contains(action);
+                || RATING_ACTIONS.contains(action);
     }
 
     /**
@@ -65,14 +69,10 @@ public class SessionRecoveryHandler {
                                      String action, CarpoolBot bot) {
         String message = buildMessage(action);
         List<List<InlineKeyboardButton>> rows = buildRecoveryButtons(action);
-
         bot.send(buildWithInline(chatId, message, rows));
-
         log.warn("Session expired: userId={} action={} — recovery message shown",
                 carpoolUserId, action);
     }
-
-    // ── Private helpers ───────────────────────────────────────────────────
 
     private String buildMessage(String action) {
         if (POST_RIDE_ACTIONS.contains(action)) {
@@ -80,20 +80,10 @@ public class SessionRecoveryHandler {
                     "Sorry for the interruption! 🙏\n\n" +
                     "Would you like to post a new ride?";
         }
-        if (BOOKING_ACTIONS.contains(action)) {
+        if (RATING_ACTIONS.contains(action)) {
             return "⏳ <b>Session expired.</b>\n\n" +
                     "Sorry for the interruption! 🙏\n\n" +
-                    "Please search for the ride again.";
-        }
-        if (APPROVAL_ACTIONS.contains(action)) {
-            return "⏳ <b>Session expired.</b>\n\n" +
-                    "Sorry for the interruption! 🙏\n\n" +
-                    "Please check your pending bookings and try again.";
-        }
-        if (CANCEL_ACTIONS.contains(action)) {
-            return "⏳ <b>Session expired.</b>\n\n" +
-                    "Sorry for the interruption! 🙏\n\n" +
-                    "Please go to the main menu and try again.";
+                    "The rating session has expired. Please go to the main menu.";
         }
         return "⏳ <b>Session expired.</b>\n\n" +
                 "Sorry for the interruption! 🙏\n\n" +
@@ -102,20 +92,9 @@ public class SessionRecoveryHandler {
 
     private List<List<InlineKeyboardButton>> buildRecoveryButtons(String action) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
         if (POST_RIDE_ACTIONS.contains(action)) {
             rows.add(List.of(
                     BotMessageBuilder.button("🚗 Post a New Ride", "POST_RIDE"),
-                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
-            ));
-        } else if (BOOKING_ACTIONS.contains(action)) {
-            rows.add(List.of(
-                    BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE"),
-                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
-            ));
-        } else if (APPROVAL_ACTIONS.contains(action)) {
-            rows.add(List.of(
-                    BotMessageBuilder.button("📋 View Pending", "PENDING_REQUESTS"),
                     BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
             ));
         } else {
@@ -123,7 +102,6 @@ public class SessionRecoveryHandler {
                     BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
             ));
         }
-
         return rows;
     }
 

@@ -5,6 +5,8 @@ import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.Ride;
+import com.carpool.repository.UserFavoriteRepository;
+import com.carpool.repository.UserRepository;
 import com.carpool.service.event.RideEvents;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Listens for ride domain events and posts announcements to the
@@ -35,6 +38,8 @@ public class GroupNotificationService {
 
     private final CarpoolBot carpoolBot;
     private final BotConfig botConfig;
+    private final UserFavoriteRepository favoriteRepository;
+    private final UserRepository userRepository;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -44,8 +49,41 @@ public class GroupNotificationService {
             String message = buildRidePostedMessage(ride);
             carpoolBot.sendToGroup(message, ride.getId(), resolveTopicId(ride));
             log.info("Ride announcement posted to group: rideId={}", ride.getId());
+
+            // ── Alert followers that a favorite driver posted a ride ──────
+            List<Long> followerIds = favoriteRepository
+                    .findFollowerIdsByFavoriteId(ride.getDriver().getId());
+
+            if (!followerIds.isEmpty()) {
+                String departure = ride.getDepartureTime()
+                        .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
+
+                String alertMsg = String.format(
+                        "🔔 <b>Your favorite driver just posted a ride!</b>\n\n" +
+                                "👤 <b>%s</b>%s\n" +
+                                "📍 %s → %s\n" +
+                                "🕐 %s\n\n" +
+                                "Tap below to view and book:",
+                        HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
+                        ride.getDriver().getTelegramHandle() != null
+                                ? " (@" + HtmlEscapeUtil.escape(
+                                ride.getDriver().getTelegramHandle()) + ")" : "",
+                        HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                        HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
+                        departure);
+
+                for (Long followerId : followerIds) {
+                    userRepository.findById(followerId).ifPresent(follower -> {
+                        Long followerTelegramId = follower.getTelegramId();
+                        carpoolBot.sendToUser(followerTelegramId, alertMsg,
+                                ride.getId());
+                    });
+                }
+                log.info("Favorite alerts sent: rideId={} followers={}",
+                        ride.getId(), followerIds.size());
+            }
+
         } catch (Exception e) {
-            // Never propagate — group posting failure must not affect the driver
             log.error("Failed to post ride announcement to group: rideId={} error={}",
                     ride.getId(), e.getMessage());
         }

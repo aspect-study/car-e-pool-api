@@ -24,4 +24,12 @@ public final class NotificationTypes {
     // Sent to BOTH (or per-role as needed)
     public static final String PAYMENT_REMINDER       = "PAYMENT_REMINDER";
     public static final String RIDE_DEPARTURE_REMINDER =  "RIDE_DEPARTURE_REMINDER";
+
+    // ── Rating ────────────────────────────────────────────────────────────────
+    // Sent to both driver and passenger after ride completion — prompts rating.
+    public static final String RATING_PROMPT = "RATING_PROMPT";
+
+    // ── Favorites ─────────────────────────────────────────────────────────────
+    // Sent to followers when a favorite driver posts a new ride.
+    public static final String FAVORITE_DRIVER_POSTED = "FAVORITE_DRIVER_POSTED";
 }
