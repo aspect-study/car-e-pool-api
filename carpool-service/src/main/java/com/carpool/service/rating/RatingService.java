@@ -42,6 +42,17 @@ public class RatingService {
     public RideRating submitRating(Long rideId, Long raterId,
                                    Long rateeId, int stars,
                                    String comment) {
+        // Validate inputs first — before any DB duplicate checks
+        if (stars < 1 || stars > 5) {
+            throw new IllegalArgumentException(
+                    "Stars must be between 1 and 5.");
+        }
+
+        if (comment != null && comment.trim().length() > 1000) {
+            throw new IllegalArgumentException(
+                    "Comment is too long. Maximum 1000 characters allowed.");
+        }
+
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Ride not found: " + rideId));
@@ -51,12 +62,10 @@ public class RatingService {
                     "Ratings can only be submitted for completed rides.");
         }
 
-        // For drivers — check per ratee (can rate each passenger independently)
-        // For passengers — check globally (only one driver to rate)
-        boolean raterIsDriver = rideRepository.findById(rideId)
-                .map(r -> r.getDriver().getId().equals(raterId))
-                .orElse(false);
+        // Determine rater role — single declaration, uses already-loaded ride
+        boolean raterIsDriver = ride.getDriver().getId().equals(raterId);
 
+        // Duplicate check — per-ratee for drivers, per-ride for passengers
         if (raterIsDriver) {
             if (ratingRepository.existsByRideIdAndRaterIdAndRateeId(
                     rideId, raterId, rateeId)) {
@@ -70,16 +79,6 @@ public class RatingService {
             }
         }
 
-        if (stars < 1 || stars > 5) {
-            throw new IllegalArgumentException(
-                    "Stars must be between 1 and 5.");
-        }
-
-        if (comment != null && comment.trim().length() > 1000) {
-            throw new IllegalArgumentException(
-                    "Comment is too long. Maximum 1000 characters allowed.");
-        }
-
         User rater = userRepository.findById(raterId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Rater not found: " + raterId));
@@ -88,8 +87,6 @@ public class RatingService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Ratee not found: " + rateeId));
 
-        // Determine rater role
-        boolean raterIsDriver = ride.getDriver().getId().equals(raterId);
         String raterRole = raterIsDriver ? "DRIVER" : "PASSENGER";
 
         RideRating rating = RideRating.builder()
