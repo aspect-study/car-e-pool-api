@@ -19,6 +19,7 @@ public final class NotificationTypes {
     public static final String BOOKING_CANCELLED_BY_DRIVER  = "BOOKING_CANCELLED_BY_DRIVER";
     public static final String RIDE_CANCELLED               = "RIDE_CANCELLED";
     public static final String RIDE_COMPLETED               = "RIDE_COMPLETED";
+    public static final String RIDE_DEPARTED                = "RIDE_DEPARTED";
 
     // Sent to BOTH (or per-role as needed)
     public static final String PAYMENT_REMINDER       = "PAYMENT_REMINDER";
