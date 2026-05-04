@@ -1,8 +1,8 @@
 # 🚗 Car-e-Pool PH — Session Context
 
 > **Purpose:** Load this file at the start of every new Claude session for instant project context.
-> **Last Updated:** 2026-05-03
-> **Current Session:** 7 (complete)
+> **Last Updated:** 2026-05-04
+> **Current Session:** 8 (next)
 
 ---
 
@@ -71,6 +71,8 @@ com.carpool
 - **TelegramClient** — proper Spring bean via `TelegramClientConfig` (eliminates lazy-init race condition)
 - **Ratings** — mutual, both driver and passenger rate each other after completed ride. Driver rates each passenger independently (per-ratee check). Passenger rates driver once per ride.
 - **Favorites** — passenger saves driver as favorite after rating. Alert fires when favorite driver posts a ride. Driver saving passenger as favorite is intentionally not supported.
+- **Completion rate** — uses only terminal rides (completed + cancelled) as denominator. Excludes active/departed rides still in progress.
+- **Scheduler events** — `expireStaleRides()` publishes `RideDepartedEvent`, `completeStaleRides()` publishes `RideCompletedEvent` — same notifications as manual driver actions.
 
 ### Bot Handler Architecture
 ```
@@ -177,7 +179,7 @@ V33      — add user_favorites table (follower/favorite unique constraint)
 ## 5. Caches (Caffeine)
 
 | Cache Name | TTL | Max Size | Eviction |
-|------------|-----|----------|---------|
+|------------|-----|----------|---------| 
 | `hubs` | 60 min | 200 | On admin hub approval |
 | `users` | 10 min | 1000 | `@CacheEvict` on role/status/delete change |
 | `hub-search` | 5 min | 100 | — |
@@ -266,17 +268,33 @@ MULTI-PAX  → driver has 2+ passengers → passenger selection screen →
 - Favorite prompt: shown to passenger only after rating driver
 - Average rating shown on ride card and profile
 
+### Schedulers
+```
+RideExpiryScheduler      — every 30 min, initialDelay 1 min
+  expireStaleRides()     — ACTIVE/FULL rides 15+ min past departure → DEPARTED
+                           publishes RideDepartedEvent (passengers notified)
+
+  completeStaleRides()   — DEPARTED rides 2+ hours past departure → COMPLETED
+                           publishes RideCompletedEvent (passengers notified + rating prompts)
+
+RideDepartureReminderScheduler — every 5 min
+  sendDepartureReminders() — sends reminder 25-35 min before departure
+                             duplicate check via notifications table
+```
+
 ### Notification Events
 ```
-RidePostedEvent      → group announcement + favorite follower alerts
-RideDepartedEvent    → confirmed passengers notified (driver on the way)
-RideCompletedEvent   → passengers notified + rating prompts sent
-RideCancelledEvent   → all booked passengers notified
-RideExpiredEvent     → booked passengers notified
-BookingConfirmedEvent→ passenger notified
-BookingDeclinedEvent → passenger notified
-BookingTimedOutEvent → passenger + driver notified
-BookingReminderEvent → driver reminded of pending request
+RidePostedEvent            → group announcement + favorite follower alerts
+RideDepartedEvent          → confirmed passengers notified (driver on the way)
+                             fires on manual Start Ride AND auto-depart scheduler
+RideCompletedEvent         → passengers notified + rating prompts sent
+                             fires on manual Complete Ride AND auto-complete scheduler
+RideCancelledEvent         → all booked passengers notified
+RideExpiredEvent           → booked passengers notified
+BookingConfirmedEvent      → passenger notified
+BookingDeclinedEvent       → passenger notified
+BookingTimedOutEvent       → passenger + driver notified
+BookingReminderEvent       → driver reminded of pending request
 RideDepartureReminderEvent → driver + passengers reminded 30min before
 ```
 
@@ -320,7 +338,7 @@ UPDATE users SET role = 'ADMIN' WHERE telegram_id = 208038458;
 - [ ] Notifications sending
 - [ ] Complete test ride → rating prompts appear with Rate Now button
 - [ ] Favorite alert fires when driver posts new ride
-- [ ] View Ride from favorite alert opens correctly (no session expired)
+- [ ] View Ride from favorite alert opens correctly
 - [ ] Driver departed notification fires on Start Ride
 - [ ] No ERROR lines in startup logs
 
@@ -349,7 +367,7 @@ springdoc.api-docs.enabled=true
 ## 10. Known Skipped Items (Fix Later)
 
 | # | Issue | Where | Condition |
-|---|-------|--------|-----------|
+|---|-------|--------|-----------| 
 | SEC-01 | `X-Forwarded-For` spoofable | `RateLimitFilter` | Fix when nginx deployed |
 | PERF-01 | 8 separate DB queries for profile stats | `ProfileService` | Revisit at 1k+ daily users |
 | ARCH-01 | `NotificationService` makes raw Telegram REST calls | `sendTelegramMessageWithButtons()` | Refactor to `TelegramNotificationPort` interface — bot module implements, service module depends on interface only |
@@ -359,9 +377,9 @@ springdoc.api-docs.enabled=true
 ## 11. Feature Backlog
 
 | Priority | Feature |
-|----------|---------|
+|----------|---------| 
 | 🟠 Medium | **Hub suggestion flow in bot** — TDD document complete (Session 7), implementation pending |
-| 🟠 Medium | **Auto-accept toggle** — driver profile setting |
+| 🟠 Medium | **Auto-accept toggle** — driver profile setting. High value for regular commuter pairs who prefer bot over PM. |
 | 🟠 Medium | **Date picker UX** — replace MM/DD HH:MM free-text with quick-select day buttons (Today, Tomorrow, Next Monday, etc.) + separate time input. Reported by user on weekend posting confusion. |
 | 🟠 Medium | **Rating comments display** — show saved comments on ratee's profile (driver and passenger reviews section) |
 | 🟡 Low | **Emergency contact** — one field on user profile |
@@ -374,11 +392,11 @@ springdoc.api-docs.enabled=true
 
 ## 12. Session History
 
-### Session 7 — 2026-05-03
+### Session 7 — 2026-05-03 to 2026-05-04 ✅ DEPLOYED
 
 #### What We Did
 1. **Group invite link** — shown prominently on terms screen and as dedicated join prompt after acceptance
-2. **Hub suggestion TDD** — full Technical Design Document produced. Implementation deferred.
+2. **Hub suggestion TDD** — full Technical Design Document produced. Implementation deferred to future session.
 3. **Bot handler refactor** — Command + Facade pattern:
    - `BotContext` value object, `BotCommand` interface
    - `BotFlowHelper` — single source of truth for shared flows
@@ -390,59 +408,29 @@ springdoc.api-docs.enabled=true
 6. **Notes prompt UX** — realistic pickup/stop/drop-off example, max 1000 chars (V31)
 7. **Booking message UX** — emphasizes importance, general example
 8. **Group announcement** — notes moved to end of card
-9. **Driver departed notification** — `RideDepartedEvent` fires when driver taps Start Ride, all confirmed passengers notified immediately
-10. **Rating system** — mutual rating after completed rides:
+9. **Driver departed notification** — `RideDepartedEvent` fires when driver taps Start Ride
+10. **Rating system** — mutual rating after completed rides (V32):
     - Stars (1–5) + optional comment (max 1000 chars)
     - Driver rates each passenger independently
     - Passenger rates driver once per ride
     - Average rating shown on ride card and profile
     - Rating prompt sent with Rate Now button
-    - Favorite prompt shown to passenger only (not driver)
-11. **Favorite driver system** — save driver as favorite after rating, alert when favorite driver posts a ride
+    - Favorite prompt shown to passenger only
+11. **Favorite driver system** — save driver as favorite after rating, alert on ride post (V33)
 12. **Multi-passenger rating fix** — per-ratee duplicate check, passenger selection screen
-13. **Session recovery fix** — removed over-blocking: VIEW_RIDE, BOOK_RIDE, BOOK_NOW, CANCEL_BOOKING, DECLINE_BOOKING_REASON, SAVE_FAVORITE, SKIP_FAVORITE all carry payload and don't need session state
-14. **Schema fix** — `RideRating.stars` uses `columnDefinition = "TINYINT"` to match DB
-15. **Pending deploy** — scheduled Tuesday/Wednesday
+13. **Session recovery fix** — removed over-blocking for VIEW_RIDE, BOOK_RIDE, BOOK_NOW, CANCEL_BOOKING, DECLINE_BOOKING_REASON, SAVE_FAVORITE, SKIP_FAVORITE
+14. **Schema fix** — `RideRating.stars` uses `columnDefinition = "TINYINT"`
+15. **Scheduler event fix** — `expireStaleRides()` and `completeStaleRides()` now publish events — passengers notified on auto-depart and auto-complete, rating prompts triggered on auto-complete
+16. **Timezone fix** — all `LocalDateTime.now()` in `RideService` use explicit `ZoneId.of("Asia/Manila")`
+17. **Completion rate fix** — uses terminal rides only (completed + cancelled) as denominator
+18. **Dead code cleanup** — removed unused `BOOKING_ACTIONS`, `APPROVAL_ACTIONS`, `CANCEL_ACTIONS` sets from `SessionRecoveryHandler`
 
-#### Files Changed This Session
-```
-application-local.properties
-application-prod.properties
-carpool-bot/config/BotConfig.java
-carpool-bot/config/TelegramClientConfig.java          (NEW)
-carpool-bot/CarpoolBot.java
-carpool-bot/util/BotMessageBuilder.java
-carpool-bot/handler/BotContext.java                   (NEW)
-carpool-bot/handler/BotCommand.java                   (NEW)
-carpool-bot/handler/BotFlowHelper.java                (NEW)
-carpool-bot/handler/PostRideHandler.java              (NEW)
-carpool-bot/handler/BookingHandler.java               (NEW)
-carpool-bot/handler/RideSearchHandler.java            (NEW)
-carpool-bot/handler/DriverHandler.java                (NEW)
-carpool-bot/handler/ProfileHandler.java               (NEW)
-carpool-bot/handler/RatingHandler.java                (NEW)
-carpool-bot/handler/CallbackHandler.java              (REPLACED)
-carpool-bot/handler/MessageHandler.java               (REPLACED)
-carpool-bot/handler/SessionRecoveryHandler.java       (UPDATED)
-carpool-bot/handler/PostRideHelper.java               (UPDATED)
-carpool-bot/service/GroupNotificationService.java     (UPDATED)
-carpool-bot/state/BotFlow.java
-carpool-bot/state/UserState.java
-carpool-domain/entity/RideRating.java                 (NEW)
-carpool-domain/entity/UserFavorite.java               (NEW)
-carpool-domain/entity/DriverNote.java
-carpool-domain/enums/NotificationTypes.java
-carpool-repository/RideRatingRepository.java          (NEW)
-carpool-repository/UserFavoriteRepository.java        (NEW)
-carpool-service/rating/RatingService.java             (NEW)
-carpool-service/favorite/FavoriteService.java         (NEW)
-carpool-service/event/RideEvents.java
-carpool-service/ride/RideService.java
-carpool-service/notification/NotificationService.java
-db/migration/V31__expand_driver_notes_content.sql
-db/migration/V32__add_ride_ratings.sql
-db/migration/V33__add_user_favorites.sql
-```
+#### Community Feedback Received
+- User reported session expired on decline booking reason — fixed
+- User reported 67% completion rate after auto-completed ride — fixed
+- User reported auto-start/complete not notifying — fixed
+- User feedback: regular commuters prefer PM over bot for established relationships — noted, auto-accept toggle added to backlog
+- User requested date picker for easier ETD input — added to backlog
 
 ---
 

@@ -265,7 +265,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                     .parseMode("HTML")
                     .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
                             InlineKeyboardButton.builder()
-                                    .text("🚗 View Ride")
+                                    .text("🚗 View | Book a Ride")
                                     .url("https://t.me/" + botConfig.getBotUsername()
                                             + "?start=RIDE_" + rideId)
                                     .build()
@@ -294,6 +294,10 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                             InlineKeyboardButton.builder()
                                     .text("👀 View Ride")
                                     .callbackData("VIEW_RIDE:" + rideId)
+                                    .build(),
+                            InlineKeyboardButton.builder()
+                                    .text("🎫 Book Ride")
+                                    .callbackData("BOOK_RIDE:" + rideId)
                                     .build()
                     ))))
                     .build();
