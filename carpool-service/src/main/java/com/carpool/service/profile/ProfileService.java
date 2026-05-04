@@ -49,7 +49,9 @@ public class ProfileService {
         int driverCompleted        = rideRepository.countByDriverIdAndStatus(userId, RideStatus.COMPLETED);
         int driverCancelled        = rideRepository.countByDriverIdAndStatus(userId, RideStatus.CANCELLED);
         int driverPassengersServed = rideRepository.sumPassengersServedByDriverId(userId);
-        Integer driverCompletionRate = computeRate(driverCompleted, driverRidesPosted);
+        // Completion rate uses only terminal rides (completed + cancelled)
+        // Excludes active/departed rides still in progress from the denominator
+        Integer driverCompletionRate = computeRate(driverCompleted, driverCompleted + driverCancelled);
 
         // ── Passenger stats ───────────────────────────────────────────────
         int passengerBookingsMade   = bookingRepository.countByPassengerId(userId);
@@ -57,7 +59,9 @@ public class ProfileService {
                 userId, BookingStatus.COMPLETED);
         int passengerCancelledByMe  = bookingRepository.countByPassengerIdAndStatus(
                 userId, BookingStatus.CANCELLED_BY_PASSENGER);
-        Integer passengerCompletionRate = computeRate(passengerCompleted, passengerBookingsMade);
+        // Same logic — only terminal bookings in denominator
+        Integer passengerCompletionRate = computeRate(passengerCompleted,
+                passengerCompleted + passengerCancelledByMe);
 
         // ── Role label ────────────────────────────────────────────────────
         String roleLabel = buildRoleLabel(driverRidesPosted, passengerBookingsMade);

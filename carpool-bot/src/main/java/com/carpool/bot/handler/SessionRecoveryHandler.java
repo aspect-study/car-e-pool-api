@@ -32,18 +32,6 @@ public class SessionRecoveryHandler {
             "NOTE_APPLY", "NOTE_WRITE", "NOTE_CHOOSE_OTHER", "SKIP_NOTES"
     );
 
-    private static final Set<String> BOOKING_ACTIONS = Set.of(
-            "BOOK_RIDE", "BOOK_NOW"
-    );
-
-    private static final Set<String> APPROVAL_ACTIONS = Set.of(
-            "DECLINE_BOOKING_REASON"
-    );
-
-    private static final Set<String> CANCEL_ACTIONS = Set.of(
-            "CANCEL_BOOKING"
-    );
-
     private static final Set<String> RATING_ACTIONS = Set.of(
             "RATE_STARS",
             "SUBMIT_RATING",
