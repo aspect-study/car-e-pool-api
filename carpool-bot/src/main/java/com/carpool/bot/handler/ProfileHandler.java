@@ -161,6 +161,13 @@ public class ProfileHandler {
     }
 
     public void handleVehicleConfirmYes(BotContext ctx) {
+        // Guard — VEHICLE_CONFIRM_YES is only valid inside the post ride flow
+        if (ctx.state().getDepartureTime() == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ This action is no longer valid. Please start again from the main menu."));
+            stateManager.reset(ctx.chatId());
+            return;
+        }
         var userOpt = userRepository.findById(ctx.carpoolUserId());
         if (userOpt.isEmpty()) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ User not found."));
