@@ -28,7 +28,7 @@ public class SessionRecoveryHandler {
     private static final Set<String> POST_RIDE_ACTIONS = Set.of(
             "HUB_ORIGIN", "HUB_DEST", "RETYPE_ORIGIN", "RETYPE_DEST",
             "CONFIRM_POST_RIDE", "CANCEL_POST_RIDE", "VEHICLE_CONFIRM_YES",
-            "VEHICLE_CONFIRM_SAVE", "VEHICLE_CHANGE", "NOTE_PREVIEW",
+            "VEHICLE_CONFIRM_SAVE", "NOTE_PREVIEW",
             "NOTE_APPLY", "NOTE_WRITE", "NOTE_CHOOSE_OTHER", "SKIP_NOTES"
     );
 
