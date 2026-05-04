@@ -22,6 +22,7 @@ public interface EntityMapper {
     WaypointResponse toWaypointResponse(RideWaypoint waypoint);
 
     @Mapping(target = "waypoints", source = "waypoints")
+    @Mapping(target = "driverAvgRating", ignore = true)
     RideResponse toRideResponse(Ride ride);
 
     @Mapping(target = "rideId",          source = "ride.id")

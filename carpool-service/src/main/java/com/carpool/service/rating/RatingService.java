@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Handles all rating operations.
@@ -243,5 +245,26 @@ public class RatingService {
      */
     public List<RideRating> getRatingsReceived(Long userId) {
         return ratingRepository.findByRateeIdOrderByCreatedAtDesc(userId);
+    }
+
+    /**
+     * Batch fetch average driver ratings for a list of driver IDs.
+     * Returns a map of driverId → avgRating.
+     * Used by RideService to enrich search results in one query instead of N.
+     */
+    public Map<Long, Double> getAverageRatingsByDriverIds(List<Long> driverIds) {
+        if (driverIds == null || driverIds.isEmpty()) return Map.of();
+        try {
+            return ratingRepository.findAverageRatingsByDriverIds(driverIds)
+                    .stream()
+                    .filter(row -> row[0] != null && row[1] != null)
+                    .collect(Collectors.toMap(
+                            row -> ((Number) row[0]).longValue(),
+                            row -> ((Number) row[1]).doubleValue()));
+        } catch (Exception e) {
+            log.warn("Failed to batch fetch driver ratings for driverIds={}: {}",
+                    driverIds, e.getMessage());
+            return Map.of();
+        }
     }
 }
