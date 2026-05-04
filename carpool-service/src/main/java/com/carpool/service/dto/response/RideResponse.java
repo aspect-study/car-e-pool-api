@@ -22,5 +22,6 @@ public record RideResponse(
         RideStatus status,
         List<WaypointResponse> waypoints,
         Instant createdAt,
-        Integer announceCount
+        Integer announceCount,
+        Double driverAvgRating
 ) {}

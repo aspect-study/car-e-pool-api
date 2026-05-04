@@ -140,59 +140,6 @@ public class BotMessageBuilder {
                         : "");
     }
 
-    // ── Ride list with inline buttons ─────────────────────────────────────
-
-    public static SendMessage rideList(Long chatId, List<RideResponse> rides, String header) {
-        if (rides.isEmpty()) {
-            return SendMessage.builder()
-                    .chatId(chatId)
-                    .text(header + "\n\n<i>No rides found.</i>")
-                    .parseMode("HTML")
-                    .replyMarkup(InlineKeyboardMarkup.builder()
-                            .keyboard(List.of(menuButtonRow()))
-                            .build())
-                    .build();
-        }
-
-        StringBuilder sb = new StringBuilder(header).append("\n\n");
-        List<InlineKeyboardRow> keyboardRows = new ArrayList<>();
-
-        for (int i = 0; i < rides.size(); i++) {
-            RideResponse ride = rides.get(i);
-            String driverHandle = ride.driver().telegramHandle() != null
-                    ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
-                    : "";
-            String vehicleLine = buildVehicleLine(ride);
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n%s",
-                    i + 1,
-                    HtmlEscapeUtil.escape(ride.originHub().name()),
-                    HtmlEscapeUtil.escape(ride.destinationHub().name()),
-                    ride.departureTime().atZone(MANILA).format(
-                            DateTimeFormatter.ofPattern("MMM d h:mma")),
-                    ride.availableSeats(),
-                    ride.contributionAmount(),
-                    HtmlEscapeUtil.escape(ride.driver().fullName()),
-                    driverHandle,
-                    vehicleLine));
-
-            keyboardRows.add(new InlineKeyboardRow(InlineKeyboardButton.builder()
-                    .text("View #" + (i + 1))
-                    .callbackData("VIEW_RIDE:" + ride.id())
-                    .build()));
-        }
-
-        keyboardRows.add(menuButtonRow());
-
-        return SendMessage.builder()
-                .chatId(chatId)
-                .text(sb.toString())
-                .parseMode("HTML")
-                .replyMarkup(InlineKeyboardMarkup.builder()
-                        .keyboard(keyboardRows)
-                        .build())
-                .build();
-    }
-
     // ── Inline button helpers ─────────────────────────────────────────────
 
     public static InlineKeyboardMarkup inlineButtons(
@@ -242,12 +189,12 @@ public class BotMessageBuilder {
     }
 
     /**
-     * Paginated ride list — shows 5 rides per page with prev/next buttons.
+     * Paginated ride list — shows 3 rides per page with prev/next buttons.
      */
     public static SendMessage paginatedRideList(Long chatId, List<RideResponse> allRides,
                                                 String header, int page,
                                                 String filterSummary) {
-        int pageSize   = 5;
+        int pageSize   = 3;
         int totalPages = (int) Math.ceil((double) allRides.size() / pageSize);
         int safePage   = Math.max(0, Math.min(page, totalPages - 1));
         int fromIdx    = safePage * pageSize;
@@ -267,32 +214,50 @@ public class BotMessageBuilder {
 
         for (int i = 0; i < pageRides.size(); i++) {
             RideResponse ride = pageRides.get(i);
-            String driverHandle = ride.driver().telegramHandle() != null
-                    ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
+
+            // Seat emojis — cap at 5
+            String seatEmojis = "💺".repeat(Math.min(ride.availableSeats(), 5));
+
+            // Rating — empty string if none
+            String rating = ride.driverAvgRating() != null
+                    ? " | ⭐ " + String.format("%.1f", ride.driverAvgRating())
                     : "";
-            String vehicleLine = buildVehicleLine(ride);
-            sb.append(String.format("<b>%d.</b> %s → %s | 🕐 %s | 🪑 %d | ⛽ ₱%.2f share\n👤 %s%s\n%s",
+
+            // Vehicle — compact: color + model only, no plate in list view
+            String vehicle = ride.driver().carModel() != null
+                    ? " | 🚘 " + (ride.driver().carColor() != null
+                                 ? HtmlEscapeUtil.escape(ride.driver().carColor()) + " " : "")
+                      + HtmlEscapeUtil.escape(ride.driver().carModel())
+                    : "";
+
+            sb.append(String.format(
+                    "<b>%d.</b> 📍 %s → %s\n" +
+                            "   🕐 %s | 🪑 %d %s | ⛽ ₱%s\n" +
+                            "   👤 %s%s%s\n\n",
                     fromIdx + i + 1,
                     HtmlEscapeUtil.escape(ride.originHub().name()),
                     HtmlEscapeUtil.escape(ride.destinationHub().name()),
                     ride.departureTime().atZone(MANILA).format(
-                            DateTimeFormatter.ofPattern("MMM d h:mma")),
+                            DateTimeFormatter.ofPattern("MMM d, h:mm a")),
                     ride.availableSeats(),
-                    ride.contributionAmount(),
+                    seatEmojis,
+                    ride.contributionAmount().toPlainString(),
                     HtmlEscapeUtil.escape(ride.driver().fullName()),
-                    driverHandle,
-                    vehicleLine));
+                    rating,
+                    vehicle));
         }
 
         List<InlineKeyboardRow> rows = new ArrayList<>();
 
-        // View buttons
+        // View buttons — all on one row
+        InlineKeyboardRow viewRow = new InlineKeyboardRow();
         for (int i = 0; i < pageRides.size(); i++) {
-            rows.add(new InlineKeyboardRow(InlineKeyboardButton.builder()
+            viewRow.add(InlineKeyboardButton.builder()
                     .text("View #" + (fromIdx + i + 1))
                     .callbackData("VIEW_RIDE:" + pageRides.get(i).id())
-                    .build()));
+                    .build());
         }
+        rows.add(viewRow);
 
         // Pagination controls
         List<InlineKeyboardButton> navButtons = new ArrayList<>();
@@ -337,26 +302,6 @@ public class BotMessageBuilder {
                         .keyboard(rows)
                         .build())
                 .build();
-    }
-
-    /**
-     * Builds vehicle display line for ride cards.
-     * Returns empty string if driver has no vehicle info set.
-     */
-    private static String buildVehicleLine(RideResponse ride) {
-        String model = ride.driver().carModel();
-        String color = ride.driver().carColor();
-        String plate = ride.driver().plateNumber();
-
-        if (model == null && plate == null) return "";
-
-        StringBuilder sb = new StringBuilder("🚘 ");
-        if (color != null) sb.append(HtmlEscapeUtil.escape(color)).append(" ");
-        if (model != null) sb.append(HtmlEscapeUtil.escape(model));
-        if (plate != null) sb.append(" | 🔢 ").append(HtmlEscapeUtil.escape(plate));
-        sb.append("\n");
-
-        return sb.toString();
     }
 
     /**

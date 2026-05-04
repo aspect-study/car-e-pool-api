@@ -16,6 +16,7 @@ import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.event.RideEvents;
 import com.carpool.service.mapper.EntityMapper;
+import com.carpool.service.rating.RatingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,6 +33,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.math.BigDecimal;
+import java.util.Map;
+
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Service
@@ -44,6 +48,7 @@ public class RideService {
     private final BookingRepository   bookingRepository;
     private final EntityMapper        mapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final RatingService       ratingService;
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
 
@@ -193,7 +198,9 @@ public class RideService {
         // Use eager waypoint fetch to avoid N+1 on detail endpoint
         Ride ride = rideRepository.findByIdWithWaypoints(rideId)
                 .orElseThrow(() -> new RideNotFoundException(rideId));
-        return mapper.toRideResponse(ride);
+        return withRating(mapper.toRideResponse(ride),
+                ratingService.getAverageRatingsByDriverIds(List.of(ride.getDriver().getId()))
+                        .get(ride.getDriver().getId()));
     }
 
     @Transactional(readOnly = true)
@@ -303,23 +310,19 @@ public class RideService {
                 .sorted(getComparator(sortBy))
                 .toList();
 
+        List<RideResponse> enriched = withRatings(filtered);
+
         // Manual slice for pagination
         int pageNum  = pageable.getPageNumber();
         int pageSize = pageable.getPageSize();
-        int fromIdx  = Math.min(pageNum * pageSize, filtered.size());
-        int toIdx    = Math.min(fromIdx + pageSize, filtered.size());
+        int fromIdx    = Math.min(pageNum * pageSize, enriched.size());
+        int toIdx      = Math.min(fromIdx + pageSize, enriched.size());
+        List<RideResponse> content = enriched.subList(fromIdx, toIdx);
+        boolean isLast     = toIdx >= enriched.size();
+        int totalPages = (int) Math.ceil((double) enriched.size() / pageSize);
 
-        List<RideResponse> content    = filtered.subList(fromIdx, toIdx);
-        boolean            isLast     = toIdx >= filtered.size();
-        int                totalPages = (int) Math.ceil((double) filtered.size() / pageSize);
-
-        return new PagedResponse<>(
-                content,
-                pageNum,
-                pageSize,
-                filtered.size(),
-                totalPages,
-                isLast);
+        return new PagedResponse<>(content, pageNum, pageSize,
+                enriched.size(), totalPages, isLast);
     }
 
     /**
@@ -331,17 +334,18 @@ public class RideService {
                                                   LocalDateTime from, LocalDateTime to,
                                                   BigDecimal maxPrice, Integer minSeats,
                                                   String sortBy) {
-        return rideRepository.findActiveByDirectionAndTimeRange(
-                        direction, List.of(RideStatus.ACTIVE), from, to)
-                .stream()
-                .filter(r -> !r.getDriver().getId().equals(excludeUserId))
-                .filter(r -> maxPrice == null
-                        || r.getContributionAmount().compareTo(maxPrice) <= 0)
-                .filter(r -> minSeats == null
-                        || r.getAvailableSeats() >= minSeats)
-                .map(mapper::toRideResponse)
-                .sorted(getComparator(sortBy))
-                .toList();
+        return withRatings(
+                rideRepository.findActiveByDirectionAndTimeRange(
+                                direction, List.of(RideStatus.ACTIVE), from, to)
+                        .stream()
+                        .filter(r -> !r.getDriver().getId().equals(excludeUserId))
+                        .filter(r -> maxPrice == null
+                                || r.getContributionAmount().compareTo(maxPrice) <= 0)
+                        .filter(r -> minSeats == null
+                                || r.getAvailableSeats() >= minSeats)
+                        .map(mapper::toRideResponse)
+                        .sorted(getComparator(sortBy))
+                        .toList());
     }
 
     private Comparator<RideResponse> getComparator(String sortBy) {
@@ -477,6 +481,31 @@ public class RideService {
         return rideRepository.findActiveRideByDriverId(driverUserId)
                 .map(mapper::toRideResponse)
                 .orElse(null);
+    }
+
+    /**
+     * Enriches a list of RideResponses with driver avg ratings in a single batch query.
+     * Only called on search methods — not on create/update/status flows.
+     */
+    private List<RideResponse> withRatings(List<RideResponse> rides) {
+        if (rides.isEmpty()) return rides;
+        List<Long> driverIds = rides.stream()
+                .map(r -> r.driver().id())
+                .distinct()
+                .toList();
+        Map<Long, Double> avgMap = ratingService.getAverageRatingsByDriverIds(driverIds);
+        return rides.stream()
+                .map(r -> withRating(r, avgMap.get(r.driver().id())))
+                .toList();
+    }
+
+    private RideResponse withRating(RideResponse r, Double avg) {
+        return new RideResponse(
+                r.id(), r.driver(), r.originHub(), r.destinationHub(),
+                r.direction(), r.departureTime(), r.totalSeats(),
+                r.availableSeats(), r.contributionAmount(), r.notes(),
+                r.status(), r.waypoints(), r.createdAt(),
+                r.announceCount(), avg);
     }
 
 }

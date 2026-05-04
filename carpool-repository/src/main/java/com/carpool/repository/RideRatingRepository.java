@@ -79,4 +79,13 @@ public interface RideRatingRepository extends JpaRepository<RideRating, Long> {
      * Used for multi-passenger rides — driver can rate each passenger independently.
      */
     boolean existsByRideIdAndRaterIdAndRateeId(Long rideId, Long raterId, Long rateeId);
+
+    /**
+     * Batch fetch average driver ratings for a list of driver IDs.
+     * Used by RideService to enrich ride search results in a single query.
+     */
+    @Query("SELECT r.ratee.id, AVG(r.stars) FROM RideRating r " +
+            "WHERE r.ratee.id IN :driverIds AND r.raterRole = 'PASSENGER' " +
+            "GROUP BY r.ratee.id")
+    List<Object[]> findAverageRatingsByDriverIds(@Param("driverIds") List<Long> driverIds);
 }
