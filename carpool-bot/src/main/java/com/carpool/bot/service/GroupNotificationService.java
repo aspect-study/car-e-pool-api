@@ -40,7 +40,6 @@ public class GroupNotificationService {
     private final CarpoolBot carpoolBot;
     private final BotConfig botConfig;
     private final UserFavoriteRepository favoriteRepository;
-    private final UserRepository userRepository;
     private final RatingService ratingService;
 
     @Async
@@ -53,18 +52,21 @@ public class GroupNotificationService {
             log.info("Ride announcement posted to group: rideId={}", ride.getId());
 
             // ── Alert followers that a favorite driver posted a ride ──────
-            List<Long> followerIds = favoriteRepository
-                    .findFollowerIdsByFavoriteId(ride.getDriver().getId());
+            List<Long> followerTelegramIds = favoriteRepository
+                    .findFollowerTelegramIdsByFavoriteId(ride.getDriver().getId());
 
-            if (!followerIds.isEmpty()) {
-                String departure = ride.getDepartureTime()
-                        .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
+            if (!followerTelegramIds.isEmpty()) {
+                String departureDate = ride.getDepartureTime()
+                        .format(DateTimeFormatter.ofPattern("EEE, MMM d"));
+                String departureTime = ride.getDepartureTime()
+                        .format(DateTimeFormatter.ofPattern("h:mm a"));
 
                 String alertMsg = String.format(
                         "🔔 <b>Your favorite driver just posted a ride!</b>\n\n" +
                                 "👤 <b>%s</b>%s\n" +
                                 "📍 %s → %s\n" +
-                                "🕐 %s\n\n" +
+                                "📅 %s\n" +
+                                "🕐 Pickup start: %s\n\n" +
                                 "Tap below to view and book:",
                         HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
                         ride.getDriver().getTelegramHandle() != null
@@ -72,17 +74,19 @@ public class GroupNotificationService {
                                 ride.getDriver().getTelegramHandle()) + ")" : "",
                         HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
                         HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
-                        departure);
+                        departureDate,
+                        departureTime);
 
-                for (Long followerId : followerIds) {
-                    userRepository.findById(followerId).ifPresent(follower -> {
-                        Long followerTelegramId = follower.getTelegramId();
-                        carpoolBot.sendToUser(followerTelegramId, alertMsg,
-                                ride.getId());
-                    });
+                for (Long followerTelegramId : followerTelegramIds) {
+                    try {
+                        carpoolBot.sendToUser(followerTelegramId, alertMsg, ride.getId());
+                    } catch (Exception e) {
+                        log.warn("Failed to send favorite alert to telegramId={} rideId={}: {}",
+                                followerTelegramId, ride.getId(), e.getMessage());
+                    }
                 }
                 log.info("Favorite alerts sent: rideId={} followers={}",
-                        ride.getId(), followerIds.size());
+                        ride.getId(), followerTelegramIds.size());
             }
 
         } catch (Exception e) {
