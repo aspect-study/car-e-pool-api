@@ -8,6 +8,7 @@ import com.carpool.domain.entity.Ride;
 import com.carpool.repository.UserFavoriteRepository;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.event.RideEvents;
+import com.carpool.service.rating.RatingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -40,6 +41,7 @@ public class GroupNotificationService {
     private final BotConfig botConfig;
     private final UserFavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
+    private final RatingService ratingService;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -92,24 +94,27 @@ public class GroupNotificationService {
     // ── Message formatter ─────────────────────────────────────────────────
 
     private String buildRidePostedMessage(Ride ride) {
+
+        String ratingLabel = ratingService.getRideCardRatingLabel(ride.getDriver().getId());
+
+        String departureDate = ride.getDepartureTime().format(DateTimeFormatter.ofPattern("EEE, MMM d"));
+        String departureTime = ride.getDepartureTime().format(DateTimeFormatter.ofPattern("h:mm a"));
+
         String dirLabel = switch (ride.getDirection()) {
             case HOME_TO_WORK -> "🏠 Home → Work";
             case WORK_TO_HOME -> "🏢 Work → Home";
             default           -> "🚗 Carpool Ride";
         };
 
-        String departure = ride.getDepartureTime()
-                .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
-
         String driverName = HtmlEscapeUtil.escape(ride.getDriver().getFullName());
 
         String notesLine = (ride.getNotes() != null && !ride.getNotes().isBlank())
-                ? "\n📝 " + HtmlEscapeUtil.escape(ride.getNotes())
+                ? "\n\n" + HtmlEscapeUtil.escape(ride.getNotes())
                 : "";
 
         String vehicleLine = (ride.getDriver().getCarModel() != null
                 && ride.getDriver().getPlateNumber() != null)
-                ? String.format("\n🚘 %s%s | 🔢 %s",
+                ? String.format("🚘 %s%s | 🔢 %s\n",
                 ride.getDriver().getCarColor() != null
                 ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " "
                 : "",
@@ -118,23 +123,25 @@ public class GroupNotificationService {
                 : "";
 
         return String.format(
-                "🚗 <b>New Ride Available!</b>\n\n" +
+                "🚗 <b>New Ride Available!</b> — %s\n\n" +
+                        "👤 Driver: %s%s\n" +
                         "%s\n" +
                         "📍 <b>%s → %s</b>\n" +
-                        "🕐 %s\n" +
+                        "🕐 Pickup time: %s\n" +
                         "💺 Seats: <b>%d</b>\n" +
-                        "%s\n\n" +
-                        "👤 Driver: %s\n" +
+                        "%s" +
                         "🔖 Ride #%d" +
                         "%s\n\n" +
-                        "👇 Tap <b>View Ride</b> below to book instantly.",
+                        "👇 Tap <b>View | Book a Ride</b> below to book instantly.",
+                departureDate,
+                driverName,
+                ratingLabel,
                 dirLabel,
                 HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
                 HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
-                departure,
+                departureTime,
                 ride.getAvailableSeats(),
                 vehicleLine,
-                driverName,
                 ride.getId(),
                 notesLine
         );
