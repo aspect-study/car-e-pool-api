@@ -127,7 +127,7 @@ public class GroupNotificationService {
                         "👤 Driver: %s%s\n" +
                         "%s\n" +
                         "📍 <b>%s → %s</b>\n" +
-                        "🕐 Pickup time: %s\n" +
+                        "🕐 Pickup start: %s\n" +
                         "💺 Seats: <b>%d</b>\n" +
                         "%s" +
                         "🔖 Ride #%d" +
