@@ -46,4 +46,12 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavorite, Long
      * Count how many users have saved a specific user as favorite.
      */
     long countByFavoriteId(Long favoriteId);
+
+    /**
+     * Get follower Telegram IDs of a specific user — eliminates N+1 in notification loop.
+     * Returns telegramId directly, no secondary userRepository lookup needed.
+     */
+    @Query("SELECT uf.follower.telegramId FROM UserFavorite uf " +
+            "WHERE uf.favorite.id = :favoriteId")
+    List<Long> findFollowerTelegramIdsByFavoriteId(@Param("favoriteId") Long favoriteId);
 }
