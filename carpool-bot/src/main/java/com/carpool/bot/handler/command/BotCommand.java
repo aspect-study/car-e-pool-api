@@ -1,4 +1,6 @@
-package com.carpool.bot.handler;
+package com.carpool.bot.handler.command;
+
+import com.carpool.bot.handler.context.BotContext;
 
 /**
  * Command pattern interface for all bot actions.

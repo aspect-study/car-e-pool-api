@@ -1,4 +1,4 @@
-package com.carpool.bot.handler;
+package com.carpool.bot.handler.context;
 
 import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.state.UserState;

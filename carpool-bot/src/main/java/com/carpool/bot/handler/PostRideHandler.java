@@ -1,6 +1,9 @@
 package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
+import com.carpool.bot.handler.context.BotContext;
+import com.carpool.bot.handler.helper.BotFlowHelper;
+import com.carpool.bot.handler.helper.PostRideHelper;
 import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
@@ -53,8 +56,8 @@ public class PostRideHandler {
     private final HubMatcher        hubMatcher;
     private final DriverNoteService driverNoteService;
     private final ProfileHandler    profileHandler;
-    private final PostRideHelper    postRideHelper;
-    private final BotFlowHelper     flowHelper;
+    private final PostRideHelper postRideHelper;
+    private final BotFlowHelper flowHelper;
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
 

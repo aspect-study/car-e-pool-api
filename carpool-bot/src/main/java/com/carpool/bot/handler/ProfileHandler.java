@@ -2,6 +2,9 @@ package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.config.BotConfig;
+import com.carpool.bot.handler.context.BotContext;
+import com.carpool.bot.handler.helper.BotFlowHelper;
+import com.carpool.bot.handler.helper.PostRideHelper;
 import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
@@ -43,8 +46,8 @@ public class ProfileHandler {
     private final VehicleService    vehicleService;
     private final AdminStatsService adminStatsService;
     private final RideService       rideService;
-    private final BotFlowHelper     flowHelper;
-    private final PostRideHelper    postRideHelper;
+    private final BotFlowHelper flowHelper;
+    private final PostRideHelper postRideHelper;
     private final BotConfig         botConfig;
     private final RatingService     ratingService;
 

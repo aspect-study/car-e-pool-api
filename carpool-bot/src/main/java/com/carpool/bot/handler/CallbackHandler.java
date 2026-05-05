@@ -1,6 +1,9 @@
 package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
+import com.carpool.bot.handler.command.BotCommand;
+import com.carpool.bot.handler.context.BotContext;
+import com.carpool.bot.handler.helper.BotFlowHelper;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
@@ -34,7 +37,7 @@ public class CallbackHandler {
     private final HelpHandler            helpHandler;
 
     // ── Sub-handlers ──────────────────────────────────────────────────────
-    private final BotFlowHelper     flowHelper;
+    private final BotFlowHelper flowHelper;
     private final PostRideHandler   postRideHandler;
     private final BookingHandler    bookingHandler;
     private final RideSearchHandler rideSearchHandler;
