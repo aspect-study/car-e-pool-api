@@ -1,6 +1,8 @@
 package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
+import com.carpool.bot.handler.context.BotContext;
+import com.carpool.bot.handler.helper.BotFlowHelper;
 import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
@@ -22,7 +24,6 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class MessageHandler {
     private final HelpHandler    helpHandler;
 
     // ── Sub-handlers ──────────────────────────────────────────────────────
-    private final BotFlowHelper     flowHelper;
+    private final BotFlowHelper flowHelper;
     private final PostRideHandler   postRideHandler;
     private final BookingHandler    bookingHandler;
     private final RideSearchHandler rideSearchHandler;

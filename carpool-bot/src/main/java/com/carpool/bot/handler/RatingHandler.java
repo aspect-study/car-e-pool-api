@@ -1,5 +1,7 @@
 package com.carpool.bot.handler;
 
+import com.carpool.bot.handler.context.BotContext;
+import com.carpool.bot.handler.helper.BotFlowHelper;
 import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
@@ -9,7 +11,6 @@ import com.carpool.domain.entity.RideRating;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.favorite.FavoriteService;
 import com.carpool.service.rating.RatingService;
-import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,9 +32,8 @@ public class RatingHandler {
     private final StateManager   stateManager;
     private final RatingService  ratingService;
     private final FavoriteService favoriteService;
-    private final RideService    rideService;
     private final UserRepository userRepository;
-    private final BotFlowHelper  flowHelper;
+    private final BotFlowHelper flowHelper;
 
     // ── Show rating prompt ────────────────────────────────────────────────
 

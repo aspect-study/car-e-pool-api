@@ -1,8 +1,9 @@
 package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
+import com.carpool.bot.handler.context.BotContext;
+import com.carpool.bot.handler.helper.BotFlowHelper;
 import com.carpool.bot.state.StateManager;
-import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.BookingStatus;
@@ -43,7 +44,7 @@ public class DriverHandler {
     private final StateManager   stateManager;
     private final RideService    rideService;
     private final BookingService bookingService;
-    private final BotFlowHelper  flowHelper;
+    private final BotFlowHelper flowHelper;
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
 
