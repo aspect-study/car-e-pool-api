@@ -5,6 +5,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.BotTimePickerUtil;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.service.dto.response.RideResponse;
@@ -360,24 +361,41 @@ public class RideSearchHandler {
                 ? current.minusMonths(1)
                 : current.plusMonths(1);
 
+        // Preserve original flow — POST_RIDE_SELECT_DATE or SEARCH_SELECT_DATE
+        BotFlow flow = ctx.state().getFlow() == BotFlow.POST_RIDE_SELECT_DATE
+                ? BotFlow.POST_RIDE_SELECT_DATE
+                : BotFlow.SEARCH_SELECT_DATE;
+
         stateManager.save(ctx.chatId(), ctx.state()
                 .withCalendarMonth(updated)
-                .withFlow(BotFlow.SEARCH_SELECT_DATE));
+                .withFlow(flow));
 
         flowHelper.showCalendar(ctx.chatId(), ctx.messageId(), updated, ctx.bot());
     }
 
-    /**
-     * Handles date selected from calendar.
-     * Saves selected date to state and shows time window screen.
-     */
     public void handleDateSelected(BotContext ctx) {
         try {
             LocalDate selected = LocalDate.parse(ctx.payload());
+
+            // Post ride flow — show time picker
+            if (ctx.state().getFlow() == BotFlow.POST_RIDE_SELECT_DATE) {
+                int windowStart = BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection());
+                UserState updated = ctx.state()
+                        .withSearchDay(selected)
+                        .withTimeWindowStart(windowStart)
+                        .withFlow(BotFlow.POST_RIDE_TIME_PICK);
+                stateManager.save(ctx.chatId(), updated);
+                flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(),
+                        ctx.state().getDirection(), windowStart, selected, ctx.bot());
+                return;
+            }
+
+            // Search flow — show time window
             stateManager.save(ctx.chatId(), ctx.state()
                     .withSearchDay(selected)
                     .withFlow(BotFlow.SEARCH_SELECT_TIME));
             flowHelper.askForTimeWindow(ctx.chatId(), ctx.messageId(), selected, ctx.bot());
+
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Invalid date selected. Please try again."));

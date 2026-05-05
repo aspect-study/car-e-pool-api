@@ -37,6 +37,7 @@ public class UserState {
     private final Long destinationHubId;
     private final String destinationHubName;
     private final LocalDateTime departureTime;
+    private final Integer timeWindowStart; // start hour of visible time picker window (0-23)
     private final Integer seats;
     private final BigDecimal contribution;
     private final String notes;

@@ -6,6 +6,7 @@ import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotCalendarUtil;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.BotTimePickerUtil;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
@@ -207,6 +208,42 @@ public class BotFlowHelper {
                     .text("📅 <b>Select a departure date:</b>")
                     .parseMode("HTML")
                     .replyMarkup(calendar)
+                    .build());
+        }
+    }
+
+    /**
+     * Shows the inline time picker for departure time selection.
+     * Used in both Post Ride and Repost Ride flows.
+     * Edits the existing message if messageId is provided, otherwise sends a new one.
+     */
+    public void showTimePicker(Long chatId, Integer messageId, RideDirection direction,
+                               int windowStart, LocalDate selectedDate, CarpoolBot bot) {
+        LocalDate today = LocalDate.now(MANILA);
+        String dateLabel = selectedDate.equals(today)
+                ? "Today, " + selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))
+                : selectedDate.format(DateTimeFormatter.ofPattern("EEE, MMM d"));
+
+        String text = "🕐 <b>What time are you leaving?</b>\n📅 " + dateLabel +
+                "\n\nSelect your departure time:";
+
+        InlineKeyboardMarkup markup = BotTimePickerUtil.buildTimePicker(
+                direction, windowStart, selectedDate);
+
+        if (messageId != null) {
+            bot.edit(EditMessageText.builder()
+                    .chatId(chatId)
+                    .messageId(messageId)
+                    .text(text)
+                    .parseMode("HTML")
+                    .replyMarkup(markup)
+                    .build());
+        } else {
+            bot.send(SendMessage.builder()
+                    .chatId(chatId)
+                    .text(text)
+                    .parseMode("HTML")
+                    .replyMarkup(markup)
                     .build());
         }
     }

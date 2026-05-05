@@ -128,9 +128,7 @@ public class MessageHandler {
                 return;
             }
             if (state.getFlow() == BotFlow.POST_RIDE_DIRECTION) {
-                UserState updated = state
-                        .withDirection(direction)
-                        .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME);
+                UserState updated = state.withDirection(direction);
                 stateManager.save(chatId, updated);
                 postRideHandler.askForEtd(chatId, updated, bot);
                 return;

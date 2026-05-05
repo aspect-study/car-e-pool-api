@@ -5,6 +5,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.BotTimePickerUtil;
 import com.carpool.bot.util.HubMatcher;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.DriverNote;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -71,12 +73,12 @@ public class PostRideHandler {
     }
 
     public void askForEtd(Long chatId, UserState state, CarpoolBot bot) {
-        stateManager.save(chatId, state.withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME));
-        bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "🕐 <b>What time are you leaving? (Start pickup time)</b>\n\n" +
-                        "Format: <code>MM/DD HH:MM</code>\n" +
-                        "Example: <code>" +
-                        flowHelper.etdExample(state.getDirection()) + "</code>"));
+        YearMonth month = YearMonth.now(ZoneId.of("Asia/Manila"));
+        UserState updated = state
+                .withCalendarMonth(month)
+                .withFlow(BotFlow.POST_RIDE_SELECT_DATE);
+        stateManager.save(chatId, updated);
+        flowHelper.showCalendar(chatId, null, month, bot);
     }
 
     // ── Departure time input ──────────────────────────────────────────────
@@ -541,22 +543,10 @@ public class PostRideHandler {
             String dirLabel = original.direction() == RideDirection.HOME_TO_WORK
                     ? "🏠 Home → Work" : "🏢 Work → Home";
 
-            UserState updated = ctx.state()
-                    .withOriginHubId(original.originHub().id())
-                    .withOriginHubName(original.originHub().name())
-                    .withDestinationHubId(original.destinationHub().id())
-                    .withDestinationHubName(original.destinationHub().name())
-                    .withDirection(original.direction())
-                    .withSeats(original.totalSeats())
-                    .withContribution(original.contributionAmount())
-                    .withNotes(original.notes())
-                    .withFlow(BotFlow.POST_RIDE_DEPARTURE_TIME);
-            stateManager.save(ctx.chatId(), updated);
-
             String notesLine = original.notes() != null && !original.notes().isBlank()
-                    ? "📝 Notes: " +
-                    HtmlEscapeUtil.escape(original.notes()) + "\n\n" : "";
+                    ? "📝 Notes: " + HtmlEscapeUtil.escape(original.notes()) + "\n\n" : "";
 
+            // Show ride summary first
             ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
                     "🔄 <b>Review Ride to Repost</b>\n\n" +
                             "Direction: <b>" + dirLabel + "</b>\n" +
@@ -568,11 +558,27 @@ public class PostRideHandler {
                             "🪑 " + original.totalSeats() + " seat(s)\n" +
                             "⛽ ₱" + original.contributionAmount().toPlainString() +
                             " gas share/seat\n" + notesLine +
-                            "<i>Only the departure time will be updated.</i>\n\n" +
-                            "🕐 <b>What time are you leaving? (Start pickup time)</b>\n" +
-                            "Format: <code>MM/DD HH:MM</code>\n" +
-                            "Example: <code>" +
-                            flowHelper.etdExample(original.direction()) + "</code>"));
+                            "<i>Only the departure time will be updated.</i>"));
+
+            // Set up state with repost data
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Manila"));
+            int windowStart = BotTimePickerUtil.defaultWindowStart(original.direction());
+
+            UserState updated = ctx.state()
+                    .withOriginHubId(original.originHub().id())
+                    .withOriginHubName(original.originHub().name())
+                    .withDestinationHubId(original.destinationHub().id())
+                    .withDestinationHubName(original.destinationHub().name())
+                    .withDirection(original.direction())
+                    .withSeats(original.totalSeats())
+                    .withContribution(original.contributionAmount())
+                    .withNotes(original.notes())
+                    .withSearchDay(today)
+                    .withTimeWindowStart(windowStart)
+                    .withFlow(BotFlow.POST_RIDE_SELECT_DATE);
+            stateManager.save(ctx.chatId(), updated);
+
+            flowHelper.showCalendar(ctx.chatId(), null, YearMonth.now(ZoneId.of("Asia/Manila")), ctx.bot());
 
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -616,5 +622,81 @@ public class PostRideHandler {
         // Default — direction from main menu
         flowHelper.handleDirectionSelected(
                 ctx.chatId(), ctx.carpoolUserId(), direction, ctx.state(), ctx.bot());
+    }
+
+    public void handleTimeNavigation(BotContext ctx) {
+        int current = ctx.state().getTimeWindowStart() != null
+                ? ctx.state().getTimeWindowStart()
+                : BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection());
+
+        int updated = "EARLIER".equals(ctx.payload())
+                ? Math.max(0, current - 2)
+                : Math.min(22, current + 2);
+
+        UserState newState = ctx.state().withTimeWindowStart(updated);
+        stateManager.save(ctx.chatId(), newState);
+
+        LocalDate selectedDate = ctx.state().getSearchDay() != null
+                ? ctx.state().getSearchDay()
+                : LocalDate.now(ZoneId.of("Asia/Manila"));
+
+        flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(),
+                ctx.state().getDirection(), updated, selectedDate, ctx.bot());
+    }
+
+    public void handleRideTimeSelected(BotContext ctx) {
+        try {
+            LocalDate selectedDate = ctx.state().getSearchDay() != null
+                    ? ctx.state().getSearchDay()
+                    : LocalDate.now(ZoneId.of("Asia/Manila"));
+
+            int hour   = Integer.parseInt(ctx.parts()[1]);
+            int minute = Integer.parseInt(ctx.parts()[2]);
+
+            LocalDateTime departure = selectedDate.atTime(hour, minute);
+
+            if (departure.isBefore(LocalDateTime.now(ZoneId.of("Asia/Manila")))) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ That time has already passed. Please select a future time."));
+                int windowStart = ctx.state().getTimeWindowStart() != null
+                        ? ctx.state().getTimeWindowStart()
+                        : BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection());
+                LocalDate selectedSearchDate = ctx.state().getSearchDay() != null
+                        ? ctx.state().getSearchDay()
+                        : LocalDate.now(ZoneId.of("Asia/Manila"));
+                flowHelper.showTimePicker(ctx.chatId(), null,
+                        ctx.state().getDirection(), windowStart, selectedSearchDate, ctx.bot());
+                return;
+            }
+
+            // Repost flow — hubs already set, skip to confirmation
+            if (ctx.state().getOriginHubId() != null
+                    && ctx.state().getDestinationHubId() != null) {
+                UserState updated = ctx.state()
+                        .withDepartureTime(departure)
+                        .withFlow(BotFlow.POST_RIDE_CONFIRM);
+                stateManager.save(ctx.chatId(), updated);
+                postRideHelper.showConfirmation(ctx.chatId(), updated, ctx.bot());
+                return;
+            }
+
+            // New ride flow — ask for origin hub
+            UserState updated = ctx.state()
+                    .withDepartureTime(departure)
+                    .withFlow(BotFlow.POST_RIDE_ORIGIN);
+            stateManager.save(ctx.chatId(), updated);
+
+            String originExample = ctx.state().getDirection() == RideDirection.HOME_TO_WORK
+                    ? "SM Southmall" : "BGC";
+            ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                    "📍 <b>Where does your ride start?</b>\n\n" +
+                            "Type a nearby landmark as your pickup point.\n" +
+                            "Example: <code>" + originExample + "</code>"));
+
+        } catch (Exception e) {
+            log.warn("Invalid time selected: payload={} error={}", ctx.payload(), e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Invalid time. Please select again."));
+        }
     }
 }

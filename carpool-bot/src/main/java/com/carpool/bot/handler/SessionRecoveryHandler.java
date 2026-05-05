@@ -29,7 +29,8 @@ public class SessionRecoveryHandler {
             "HUB_ORIGIN", "HUB_DEST", "RETYPE_ORIGIN", "RETYPE_DEST",
             "CONFIRM_POST_RIDE", "CANCEL_POST_RIDE", "VEHICLE_CONFIRM_YES",
             "VEHICLE_CONFIRM_SAVE", "NOTE_PREVIEW",
-            "NOTE_APPLY", "NOTE_WRITE", "NOTE_CHOOSE_OTHER", "SKIP_NOTES"
+            "NOTE_APPLY", "NOTE_WRITE", "NOTE_CHOOSE_OTHER", "SKIP_NOTES",
+            "RIDE_TIME", "TIME_NAV"
     );
 
     private static final Set<String> RATING_ACTIONS = Set.of(
