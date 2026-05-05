@@ -214,9 +214,7 @@ public class RideSearchHandler {
             } else {
                 rows = List.of(List.of(
                         BotMessageBuilder.button("✅ Book This Ride",
-                                "BOOK_RIDE:" + ctx.entityId()),
-                        BotMessageBuilder.button("🔍 Find a Ride",
-                                "FIND_RIDE")
+                                "BOOK_RIDE:" + ctx.entityId())
                 ));
             }
             String ratingLabel = ratingService.getRideCardRatingLabel(ride.driver().id());
