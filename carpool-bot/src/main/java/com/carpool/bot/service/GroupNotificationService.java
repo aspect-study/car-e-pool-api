@@ -127,7 +127,7 @@ public class GroupNotificationService {
                 : "";
 
         return String.format(
-                "🚗 <b>New Ride Available!</b> — %s\n\n" +
+                "\uD83D\uDFE2 🚗 <b>New Ride Available!</b> — %s\n\n" +
                         "👤 Driver: %s%s\n" +
                         "%s\n" +
                         "📍 <b>%s → %s</b>\n" +
@@ -136,7 +136,7 @@ public class GroupNotificationService {
                         "%s" +
                         "🔖 Ride #%d" +
                         "%s\n\n" +
-                        "👇 Tap <b>View | Book a Ride</b> below to book instantly.",
+                        "Tap <b>View | Book a Ride</b> to see details and book your seat. 👇",
                 departureDate,
                 driverName,
                 ratingLabel,
