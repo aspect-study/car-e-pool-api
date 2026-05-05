@@ -29,6 +29,8 @@ public enum BotFlow {
 
     // ── Passenger: Search rides ───────────────────────────────────────────────
     SEARCH_SELECT_DIRECTION,
+    SEARCH_SELECT_DATE,
+    SEARCH_CALENDAR_NAV,
     SEARCH_SELECT_TIME,
     SEARCH_RESULTS,
     SEARCH_VIEW_RIDE,

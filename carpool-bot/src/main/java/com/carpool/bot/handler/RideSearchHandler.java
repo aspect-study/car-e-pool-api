@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -56,10 +58,12 @@ public class RideSearchHandler {
         }
 
         if (ctx.state().getDirection() != null) {
+            YearMonth month = YearMonth.now(MANILA);
             stateManager.save(ctx.chatId(), ctx.state()
                     .withCarpoolUserId(ctx.carpoolUserId())
-                    .withFlow(BotFlow.SEARCH_SELECT_TIME));
-            flowHelper.askForTimeWindow(ctx.chatId(), ctx.bot());
+                    .withCalendarMonth(month)
+                    .withFlow(BotFlow.SEARCH_SELECT_DATE));
+            flowHelper.showCalendar(ctx.chatId(), null, month, ctx.bot());
             return;
         }
 
@@ -74,38 +78,47 @@ public class RideSearchHandler {
 
     public void handleTimeSelection(BotContext ctx) {
         String timeSlot = ctx.payload();
-        LocalDateTime now = LocalDateTime.now(MANILA);
+        LocalDateTime now       = LocalDateTime.now(MANILA);
+        LocalDate     searchDay = ctx.state().getSearchDay() != null
+                ? ctx.state().getSearchDay()
+                : now.toLocalDate();
         LocalDateTime from;
         LocalDateTime to;
 
         switch (timeSlot) {
+            case "EARLY_BIRD"    -> {
+                from = searchDay.atTime(1,  0);
+                to   = searchDay.atTime(4,  0);
+            }
             case "EARLY_MORNING" -> {
-                from = now.toLocalDate().atTime(3, 30);
-                to   = now.toLocalDate().atTime(6,  0);
+                from = searchDay.atTime(4,  0);
+                to   = searchDay.atTime(6,  0);
             }
             case "MORNING"       -> {
-                from = now.toLocalDate().atTime(6,  0);
-                to   = now.toLocalDate().atTime(9,  0);
+                from = searchDay.atTime(6,  0);
+                to   = searchDay.atTime(9,  0);
             }
             case "MID_MORNING"   -> {
-                from = now.toLocalDate().atTime(9,  0);
-                to   = now.toLocalDate().atTime(12, 0);
+                from = searchDay.atTime(9,  0);
+                to   = searchDay.atTime(11, 59);
             }
             case "NOON"          -> {
-                from = now.toLocalDate().atTime(12, 0);
-                to   = now.toLocalDate().atTime(15, 0);
+                from = searchDay.atTime(12, 0);
+                to   = searchDay.atTime(15, 0);
             }
             case "AFTERNOON"     -> {
-                from = now.toLocalDate().atTime(14, 30);
-                to   = now.toLocalDate().atTime(19,  0);
+                from = searchDay.atTime(15, 0);
+                to   = searchDay.atTime(18, 0);
             }
             case "EVENING"       -> {
-                from = now.toLocalDate().atTime(18, 30);
-                to   = now.toLocalDate().atTime(23,  0);
+                from = searchDay.atTime(18, 0);
+                to   = searchDay.atTime(23, 59);
             }
             case "ALL_TODAY"     -> {
-                from = now;
-                to   = now.toLocalDate().atTime(23, 59);
+                from = searchDay.equals(now.toLocalDate())
+                        ? now
+                        : searchDay.atStartOfDay();
+                to   = searchDay.atTime(23, 59);
             }
             default -> {
                 ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
@@ -292,7 +305,7 @@ public class RideSearchHandler {
         // Re-show filter screen with updated checkmarks
         handleSearchFilter(new BotContext(
                 ctx.chatId(), ctx.carpoolUserId(), ctx.telegramId(),
-                updated, ctx.payload(), ctx.parts(), ctx.bot()));
+                updated, ctx.payload(), ctx.parts(), ctx.bot(), ctx.messageId()));
     }
 
     public void handleResetFilter(BotContext ctx) {
@@ -304,7 +317,7 @@ public class RideSearchHandler {
         stateManager.save(ctx.chatId(), reset);
         handleSearchFilter(new BotContext(
                 ctx.chatId(), ctx.carpoolUserId(), ctx.telegramId(),
-                reset, ctx.payload(), ctx.parts(), ctx.bot()));
+                reset, ctx.payload(), ctx.parts(), ctx.bot(), ctx.messageId()));
     }
 
     public void handleRidePage(BotContext ctx) {
@@ -332,5 +345,44 @@ public class RideSearchHandler {
         ctx.bot().send(BotMessageBuilder.paginatedRideList(ctx.chatId(), rides,
                 "🔍 <b>Available Rides — " + dirLabel + "</b>",
                 page, filterSummary));
+    }
+
+    /**
+     * Handles calendar month navigation — PREV or NEXT.
+     * Updates calendarMonth in state and re-renders the calendar.
+     */
+    public void handleCalendarNav(BotContext ctx) {
+        YearMonth current = ctx.state().getCalendarMonth() != null
+                ? ctx.state().getCalendarMonth()
+                : YearMonth.now(MANILA);
+
+        YearMonth updated = "PREV".equals(ctx.payload())
+                ? current.minusMonths(1)
+                : current.plusMonths(1);
+
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withCalendarMonth(updated)
+                .withFlow(BotFlow.SEARCH_SELECT_DATE));
+
+        flowHelper.showCalendar(ctx.chatId(), ctx.messageId(), updated, ctx.bot());
+    }
+
+    /**
+     * Handles date selected from calendar.
+     * Saves selected date to state and shows time window screen.
+     */
+    public void handleDateSelected(BotContext ctx) {
+        try {
+            LocalDate selected = LocalDate.parse(ctx.payload());
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withSearchDay(selected)
+                    .withFlow(BotFlow.SEARCH_SELECT_TIME));
+            flowHelper.askForTimeWindow(ctx.chatId(), ctx.messageId(), selected, ctx.bot());
+        } catch (Exception e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Invalid date selected. Please try again."));
+            flowHelper.showCalendar(ctx.chatId(), ctx.messageId(),
+                    YearMonth.now(MANILA), ctx.bot());
+        }
     }
 }

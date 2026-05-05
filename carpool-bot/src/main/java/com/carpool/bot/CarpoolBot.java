@@ -15,6 +15,7 @@ import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -337,5 +338,17 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
                 .parseMode("HTML")
                 .replyMarkup(BotMessageBuilder.inlineButtons(rows))
                 .build();
+    }
+
+    public void deleteMessage(Long chatId, Integer messageId) {
+        try {
+            telegramClient.execute(DeleteMessage.builder()
+                    .chatId(chatId)
+                    .messageId(messageId)
+                    .build());
+        } catch (TelegramApiException e) {
+            log.warn("Failed to delete message: chatId={} messageId={} error={}",
+                    chatId, messageId, e.getMessage());
+        }
     }
 }

@@ -4,6 +4,7 @@ import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
+import com.carpool.bot.util.BotCalendarUtil;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.RideDirection;
@@ -16,10 +17,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -182,32 +186,81 @@ public class BotFlowHelper {
                 "Direction: <b>" + dirLabel + "</b>\n\nWhat would you like to do?", rows));
     }
 
+    /**
+     * Shows the inline calendar for date selection.
+     * calendarMonth comes from UserState — no static state.
+     */
+    public void showCalendar(Long chatId, Integer messageId, YearMonth calendarMonth, CarpoolBot bot) {
+        InlineKeyboardMarkup calendar = BotCalendarUtil.buildCalendar(calendarMonth);
+
+        if (messageId != null) {
+            bot.edit(EditMessageText.builder()
+                    .chatId(chatId)
+                    .messageId(messageId)
+                    .text("📅 <b>Select a departure date:</b>")
+                    .parseMode("HTML")
+                    .replyMarkup(calendar)
+                    .build());
+        } else {
+            bot.send(SendMessage.builder()
+                    .chatId(chatId)
+                    .text("📅 <b>Select a departure date:</b>")
+                    .parseMode("HTML")
+                    .replyMarkup(calendar)
+                    .build());
+        }
+    }
+
     // ── Time window ───────────────────────────────────────────────────────
 
     /**
-     * Shows the time window selection screen for Find Ride flow.
+     * Shows time window selection after a date has been picked from the calendar.
      */
-    public void askForTimeWindow(Long chatId, CarpoolBot bot) {
+    public void askForTimeWindow(Long chatId, Integer messageId, LocalDate selectedDate, CarpoolBot bot) {
+        LocalDate today = LocalDate.now(MANILA);
+        String dateLabel = selectedDate.equals(today)
+                ? "Today, " + selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))
+                : selectedDate.format(DateTimeFormatter.ofPattern("EEE, MMM d"));
+
+        String text = "🕐 <b>When do you want to leave?</b>\n📅 " + dateLabel +
+                "\n\nSelect a time window:";
+
         var rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("🌙 Early Morning (4-6 AM)", "TIME:EARLY_MORNING"),
-                        BotMessageBuilder.button("🌅 Morning Rush (6-9 AM)",  "TIME:MORNING")
+                        BotMessageBuilder.button("🌙 Early Bird (1-4 AM)",    "TIME:EARLY_BIRD"),
+                        BotMessageBuilder.button("🌙 Early Morning (4-6 AM)", "TIME:EARLY_MORNING")
                 ),
                 List.of(
-                        BotMessageBuilder.button("☀️ Late Morning (9 AM-12 PM)", "TIME:MID_MORNING"),
-                        BotMessageBuilder.button("🌤️ Noon (12-3 PM)",           "TIME:NOON")
+                        BotMessageBuilder.button("🌅 Morning Rush (6-9 AM)",  "TIME:MORNING"),
+                        BotMessageBuilder.button("☀️ Late Morning (9-12 PM)", "TIME:MID_MORNING")
                 ),
                 List.of(
-                        BotMessageBuilder.button("🌇 Afternoon (3-7 PM)", "TIME:AFTERNOON"),
-                        BotMessageBuilder.button("🌆 Evening (7-11 PM)",  "TIME:EVENING")
+                        BotMessageBuilder.button("🌤️ Noon (12-3 PM)",        "TIME:NOON"),
+                        BotMessageBuilder.button("🌇 Afternoon (3-6 PM)",     "TIME:AFTERNOON")
                 ),
                 List.of(
-                        BotMessageBuilder.button("📅 Custom Date & Time", "TIME:CUSTOM"),
-                        BotMessageBuilder.button("🔍 Show All Today",     "TIME:ALL_TODAY")
+                        BotMessageBuilder.button("🌆 Evening (6-12 PM)",      "TIME:EVENING")
+                ),
+                List.of(
+                        BotMessageBuilder.button("📅 Custom Date & Time",     "TIME:CUSTOM"),
+                        BotMessageBuilder.button("🔍 Show All",               "TIME:ALL_TODAY")
+                ),
+                List.of(
+                        BotMessageBuilder.button("🏠 Menu",                   "MAIN_MENU")
                 )
         );
-        bot.send(sendWithInline(chatId,
-                "🕐 <b>When do you want to leave?</b>\n\nSelect a time window:", rows));
+
+        if (messageId != null) {
+            bot.edit(EditMessageText.builder()
+                    .chatId(chatId)
+                    .messageId(messageId)
+                    .text(text)
+                    .parseMode("HTML")
+                    .replyMarkup(BotMessageBuilder.inlineButtons(rows))
+                    .build());
+        } else {
+            bot.send(sendWithInline(chatId, text, rows));
+        }
     }
 
     // ── ETD example ───────────────────────────────────────────────────────

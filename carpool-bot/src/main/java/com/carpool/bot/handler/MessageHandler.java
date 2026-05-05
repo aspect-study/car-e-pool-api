@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -118,10 +119,12 @@ public class MessageHandler {
                     ? RideDirection.HOME_TO_WORK : RideDirection.WORK_TO_HOME;
 
             if (state.getFlow() == BotFlow.SEARCH_SELECT_DIRECTION) {
+                YearMonth month = YearMonth.now(MANILA);
                 stateManager.save(chatId, state
                         .withDirection(direction)
-                        .withFlow(BotFlow.SEARCH_SELECT_TIME));
-                flowHelper.askForTimeWindow(chatId, bot);
+                        .withCalendarMonth(month)
+                        .withFlow(BotFlow.SEARCH_SELECT_DATE));
+                flowHelper.showCalendar(chatId, null, month, bot);
                 return;
             }
             if (state.getFlow() == BotFlow.POST_RIDE_DIRECTION) {
@@ -408,6 +411,6 @@ public class MessageHandler {
     private BotContext buildCtx(Long chatId, Long carpoolUserId, Long telegramId,
                                 UserState state, String payload, CarpoolBot bot) {
         return new BotContext(chatId, carpoolUserId, telegramId, state, payload,
-                payload != null ? new String[]{payload} : new String[]{}, bot);
+                payload != null ? new String[]{payload} : new String[]{}, bot, null);
     }
 }
