@@ -98,7 +98,7 @@ public class BotCalendarUtil {
                 week.add(button("-", "NOOP"));
             } else if (date.equals(today)) {
                 // Today — highlighted
-                week.add(button("·" + day, "CAL_DATE:" + date.format(ISO_DATE)));
+                week.add(button(String.valueOf(day), "CAL_DATE:" + date.format(ISO_DATE)));
             } else {
                 // Selectable future date
                 week.add(button(String.valueOf(day), "CAL_DATE:" + date.format(ISO_DATE)));
