@@ -95,10 +95,10 @@ public class BotCalendarUtil {
 
             if (date.isBefore(today) || date.isAfter(maxDate)) {
                 // Past or too far ahead — non-selectable, show muted
-                week.add(button("·" + day + "·", "NOOP"));
+                week.add(button("-", "NOOP"));
             } else if (date.equals(today)) {
                 // Today — highlighted
-                week.add(button("📅" + day, "CAL_DATE:" + date.format(ISO_DATE)));
+                week.add(button("·" + day, "CAL_DATE:" + date.format(ISO_DATE)));
             } else {
                 // Selectable future date
                 week.add(button(String.valueOf(day), "CAL_DATE:" + date.format(ISO_DATE)));
