@@ -73,6 +73,8 @@ public class CallbackHandler {
         // ── Find ride ─────────────────────────────────────────────────────
         commands.put("FIND_RIDE",     ctx -> rideSearchHandler.handleStartFindRide(ctx));
         commands.put("VIEW_RIDE",     ctx -> rideSearchHandler.handleViewRide(ctx));
+        commands.put("CAL_NAV",       ctx -> rideSearchHandler.handleCalendarNav(ctx));   // ← add
+        commands.put("CAL_DATE",      ctx -> rideSearchHandler.handleDateSelected(ctx));
         commands.put("TIME",          ctx -> rideSearchHandler.handleTimeSelection(ctx));
         commands.put("SEARCH_FILTER", ctx -> rideSearchHandler.handleSearchFilter(ctx));
         commands.put("APPLY_FILTER",  ctx -> rideSearchHandler.handleApplyFilter(ctx));
@@ -172,8 +174,9 @@ public class CallbackHandler {
 
         String payload = parts.length > 1 ? parts[1] : null;
 
+        Integer messageId = callback.getMessage().getMessageId();
         BotContext ctx = new BotContext(
-                chatId, carpoolUserId, telegramId, state, payload, parts, bot);
+                chatId, carpoolUserId, telegramId, state, payload, parts, bot, messageId);
 
         BotCommand command = commands.getOrDefault(action, unknownAction(action));
         command.execute(ctx);

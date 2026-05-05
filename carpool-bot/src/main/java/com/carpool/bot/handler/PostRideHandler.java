@@ -26,6 +26,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -604,8 +605,11 @@ public class PostRideHandler {
                     .withDirection(direction)
                     .withCarpoolUserId(ctx.carpoolUserId())
                     .withFlow(BotFlow.SEARCH_SELECT_TIME);
-            stateManager.save(ctx.chatId(), updated);
-            flowHelper.askForTimeWindow(ctx.chatId(), ctx.bot());
+            YearMonth month = YearMonth.now(MANILA);
+            stateManager.save(ctx.chatId(), updated
+                    .withCalendarMonth(month)
+                    .withFlow(BotFlow.SEARCH_SELECT_DATE));
+            flowHelper.showCalendar(ctx.chatId(), null, month, ctx.bot());
             return;
         }
 

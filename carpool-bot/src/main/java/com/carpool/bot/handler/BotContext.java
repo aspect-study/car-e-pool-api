@@ -15,7 +15,8 @@ public record BotContext(
         UserState state,
         String payload,       // parts[1] if present, null otherwise
         String[] parts,       // full split of callback data on ":"
-        CarpoolBot bot
+        CarpoolBot bot,
+        Integer messageId
 ) {
 
     /**

@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.With;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 
 /**
  * Immutable per-user conversation state stored in Caffeine cache.
@@ -69,6 +71,11 @@ public class UserState {
     private final Long    pendingRatingRideId;  // ride being rated
     private final Long    pendingRateeId;       // user being rated
     private final Integer pendingStars;         // stars selected, held during comment step
+
+    // ── Search calendar state ─────────────────────────────────────────────
+    // Tracks selected date and current calendar month during date picker flow
+    private final LocalDate searchDay;      // date selected by user
+    private final YearMonth calendarMonth;  // current month shown on calendar
 
     public static UserState initial(Long carpoolUserId) {
         return UserState.builder()
