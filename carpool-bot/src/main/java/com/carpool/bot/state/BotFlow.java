@@ -10,6 +10,9 @@ public enum BotFlow {
 
     // ── Driver: Post a ride ───────────────────────────────────────────────
     POST_RIDE_DIRECTION,
+    POST_RIDE_SELECT_DATE,        // calendar shown for post ride flow
+    POST_RIDE_TIME_PICK,          // waiting for time slot tap
+    POST_RIDE_TIME_NAV,           // navigating earlier/later time window
     POST_RIDE_DEPARTURE_TIME,
     POST_RIDE_ORIGIN,
     POST_RIDE_DESTINATION,

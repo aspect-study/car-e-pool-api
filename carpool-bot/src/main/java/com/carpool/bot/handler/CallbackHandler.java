@@ -69,6 +69,8 @@ public class CallbackHandler {
         commands.put("NOTE_CHOOSE_OTHER", ctx -> postRideHandler.handleNoteChooseOther(ctx));
         commands.put("SKIP_NOTES",        ctx -> postRideHandler.handleSkipNotes(ctx));
         commands.put("REPOST_RIDE",       ctx -> postRideHandler.handleRepostRide(ctx));
+        commands.put("RIDE_TIME",         ctx -> postRideHandler.handleRideTimeSelected(ctx));  // ← add
+        commands.put("TIME_NAV",          ctx -> postRideHandler.handleTimeNavigation(ctx));
 
         // ── Find ride ─────────────────────────────────────────────────────
         commands.put("FIND_RIDE",     ctx -> rideSearchHandler.handleStartFindRide(ctx));

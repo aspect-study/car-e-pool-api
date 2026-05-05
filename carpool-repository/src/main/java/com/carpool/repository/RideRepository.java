@@ -246,4 +246,17 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
         LIMIT 1
         """)
     Optional<Ride> findActiveRideByDriverId(@Param("driverUserId") Long driverUserId);
+
+    /**
+     * Fetch ride with driver and waypoints eagerly.
+     * Used by NotificationService async handlers to avoid LazyInitializationException.
+     */
+    @Query("""
+    SELECT r FROM Ride r
+    LEFT JOIN FETCH r.driver
+    LEFT JOIN FETCH r.waypoints wp
+    LEFT JOIN FETCH wp.hub
+    WHERE r.id = :id
+    """)
+    Optional<Ride> findByIdWithDriverAndWaypoints(@Param("id") Long id);
 }

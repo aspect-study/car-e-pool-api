@@ -10,6 +10,7 @@ import com.carpool.domain.enums.NotificationStatus;
 import com.carpool.domain.enums.NotificationTypes;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.NotificationRepository;
+import com.carpool.repository.RideRepository;
 import com.carpool.service.event.RideEvents;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final BookingRepository      bookingRepository;
     private final RestClient restClient;
+    private final RideRepository rideRepository;
 
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a")
@@ -281,7 +283,12 @@ public class NotificationService {
             return;
         }
 
-        Ride ride = event.ride();
+        Ride ride = rideRepository.findByIdWithDriverAndWaypoints(event.ride().getId())
+                .orElse(null);
+        if (ride == null) {
+            log.error("Ride not found for notification: id={}", event.ride().getId());
+            return;
+        }
 
         String vehicleLine = (ride.getDriver().getCarModel() != null
                 && ride.getDriver().getPlateNumber() != null)
@@ -744,7 +751,12 @@ public class NotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRideDepartureReminder(RideEvents.RideDepartureReminderEvent event) {
-        Ride ride = event.ride();
+        Ride ride = rideRepository.findByIdWithDriverAndWaypoints(event.ride().getId())
+                .orElse(null);
+        if (ride == null) {
+            log.error("Ride not found for notification: id={}", event.ride().getId());
+            return;
+        }
 
         // Fetch confirmed bookings for this ride
         List<Booking> confirmedBookings = bookingRepository
