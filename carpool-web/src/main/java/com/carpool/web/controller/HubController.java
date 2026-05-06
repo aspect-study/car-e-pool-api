@@ -94,7 +94,7 @@ public class HubController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<HubResponse>> approveHub(
             @PathVariable Long id,
-            @RequestParam String code) {
+            @RequestParam(required = false) String code) {
         return ResponseEntity.ok(ApiResponse.ok(hubService.approveHub(id, code)));
     }
 

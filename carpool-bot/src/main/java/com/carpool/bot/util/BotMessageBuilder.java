@@ -1,6 +1,7 @@
 package com.carpool.bot.util;
 
 import com.carpool.common.util.HtmlEscapeUtil;
+import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -326,6 +327,66 @@ public class BotMessageBuilder {
     }
 
     /**
+     * Detail-view card — includes driver rating label and member verification badge.
+     * memberBadge example: "✅ 🚗 Driver | 15 rides done | Since Apr 2025"
+     */
+    public static String formatRideCard(RideResponse ride, String ratingLabel, String memberBadge) {
+        String directionEmoji = switch (ride.direction()) {
+            case HOME_TO_WORK -> "🏠→🏢";
+            case WORK_TO_HOME -> "🏢→🏠";
+            case OTHER        -> "🚗";
+        };
+
+        String seatsInfo = ride.availableSeats() + " of " +
+                ride.totalSeats() + " seats available";
+
+        String driverHandle = ride.driver().telegramHandle() != null
+                ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
+                : "";
+
+        String rating = (ratingLabel != null && !ratingLabel.isBlank())
+                ? " " + ratingLabel : "";
+
+        long minutesAgo = java.time.Duration.between(
+                ride.createdAt(), java.time.Instant.now()).toMinutes();
+        String postedAgo;
+        if (minutesAgo < 60) {
+            postedAgo = minutesAgo + "m ago";
+        } else if (minutesAgo < 1440) {
+            postedAgo = (minutesAgo / 60) + "h ago";
+        } else {
+            postedAgo = (minutesAgo / 1440) + "d ago";
+        }
+
+        String badgeLine = (memberBadge != null && !memberBadge.isBlank())
+                ? memberBadge + "\n" : "";
+
+        return String.format(
+                "%s <b>%s → %s</b>\n" +
+                        "🕐 %s\n" +
+                        "🪑 %s\n" +
+                        "⛽ ₱%.2f gas share/seat\n" +
+                        "👤 %s%s%s\n" +
+                        "%s" +
+                        "🕓 Posted %s" +
+                        "%s",
+                directionEmoji,
+                HtmlEscapeUtil.escape(ride.originHub().name()),
+                HtmlEscapeUtil.escape(ride.destinationHub().name()),
+                ride.departureTime().atZone(MANILA).format(DISPLAY_FMT),
+                seatsInfo,
+                ride.contributionAmount(),
+                HtmlEscapeUtil.escape(ride.driver().fullName()),
+                driverHandle,
+                rating,
+                badgeLine,
+                postedAgo,
+                ride.notes() != null && !ride.notes().isBlank()
+                        ? "\n📝 " + HtmlEscapeUtil.escape(ride.notes())
+                        : "");
+    }
+
+    /**
      * Overloaded version that includes driver rating label on the ride card.
      * Pass null for ratingLabel if no rating data is available.
      * Example ratingLabel: "⭐ 4.8" or ""
@@ -379,6 +440,16 @@ public class BotMessageBuilder {
                 ride.notes() != null && !ride.notes().isBlank()
                         ? "\n📝 " + HtmlEscapeUtil.escape(ride.notes())
                         : "");
+    }
+
+    public static String buildMemberBadge(ProfileStatsResponse stats) {
+        StringBuilder sb = new StringBuilder("✅ ");
+        sb.append(stats.roleLabel());
+        if (stats.driverCompleted() != null && stats.driverCompleted() > 0) {
+            sb.append(" | ").append(stats.driverCompleted()).append(" rides done");
+        }
+        sb.append(" | Since ").append(stats.memberSince());
+        return sb.toString();
     }
 
     private BotMessageBuilder() {}

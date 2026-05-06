@@ -11,7 +11,10 @@ import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.UserRepository;
+import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.profile.ProfileService;
+import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +48,8 @@ public class MessageHandler {
     private final StateManager   stateManager;
     private final UserRepository userRepository;
     private final RideService    rideService;
+    private final RatingService  ratingService;
+    private final ProfileService profileService;
     private final HelpHandler    helpHandler;
 
     // ── Sub-handlers ──────────────────────────────────────────────────────
@@ -242,8 +247,11 @@ public class MessageHandler {
                         BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")));
 
                 stateManager.save(chatId, state.withSelectedRideId(rideId));
+                String ratingLabel = ratingService.getDriverRatingLabel(ride.driver().id());
+                ProfileStatsResponse stats = profileService.getProfileStats(ride.driver().id());
+                String memberBadge = BotMessageBuilder.buildMemberBadge(stats);
                 bot.send(flowHelper.sendWithInline(chatId,
-                        BotMessageBuilder.formatRideCard(ride), rows));
+                        BotMessageBuilder.formatRideCard(ride, ratingLabel, memberBadge), rows));
 
             } catch (NumberFormatException e) {
                 log.warn("Invalid deep link parameter: {}", parts[1]);
