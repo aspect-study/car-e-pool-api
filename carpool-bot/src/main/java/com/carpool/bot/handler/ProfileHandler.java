@@ -13,8 +13,10 @@ import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.User;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.admin.AdminStatsService;
+import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.hub.HubService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
@@ -50,6 +52,7 @@ public class ProfileHandler {
     private final PostRideHelper postRideHelper;
     private final BotConfig         botConfig;
     private final RatingService     ratingService;
+    private final HubService        hubService;
 
     // ── Profile ───────────────────────────────────────────────────────────
 
@@ -135,7 +138,8 @@ public class ProfileHandler {
             ));
             if (isAdmin) {
                 profileRows.add(List.of(
-                        BotMessageBuilder.button("📊 Admin Stats", "ADMIN_STATS")));
+                        BotMessageBuilder.button("📊 Admin Stats",   "ADMIN_STATS"),
+                        BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS")));
             }
 
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString(), profileRows));
@@ -524,10 +528,13 @@ public class ProfileHandler {
                 s.totalBookings(), s.completedBookings());
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), report,
-                List.of(List.of(
-                        BotMessageBuilder.button("🔄 Refresh", "ADMIN_STATS"),
-                        BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
-                ))));
+                List.of(
+                        List.of(
+                                BotMessageBuilder.button("🔄 Refresh",       "ADMIN_STATS"),
+                                BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS"),
+                                BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
+                        )
+                )));
     }
 
     public void handleReannounceRide(BotContext ctx) {
@@ -547,6 +554,138 @@ public class ProfileHandler {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not re-announce ride: " +
                             HtmlEscapeUtil.escape(e.getMessage())));
+        }
+    }
+
+    // ── Hub admin ─────────────────────────────────────────────────────────
+
+    private static final int HUB_PAGE_SIZE = 5;
+
+    public void handlePendingHubs(BotContext ctx) {
+        if (!botConfig.isAdmin(ctx.telegramId())) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You don't have permission to view this."));
+            return;
+        }
+
+        int page = 0;
+        try {
+            if (ctx.payload() != null) page = Integer.parseInt(ctx.payload());
+        } catch (NumberFormatException ignored) {}
+
+        List<HubResponse> pending = hubService.getPendingHubs();
+
+        if (pending.isEmpty()) {
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    "🏘️ <b>Pending Hub Suggestions</b>\n\n<i>No pending hubs at the moment.</i>",
+                    List.of(List.of(
+                            BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS"),
+                            BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
+                    ))));
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) pending.size() / HUB_PAGE_SIZE);
+        int safePage   = Math.max(0, Math.min(page, totalPages - 1));
+        int fromIdx    = safePage * HUB_PAGE_SIZE;
+        int toIdx      = Math.min(fromIdx + HUB_PAGE_SIZE, pending.size());
+        List<HubResponse> pageItems = pending.subList(fromIdx, toIdx);
+
+        StringBuilder sb = new StringBuilder("🏘️ <b>Pending Hub Suggestions (")
+                .append(pending.size()).append(")</b>");
+        sb.append(" — Page ").append(safePage + 1).append("/").append(totalPages);
+        sb.append("\n\n");
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (int i = 0; i < pageItems.size(); i++) {
+            HubResponse hub = pageItems.get(i);
+            int globalNum = fromIdx + i + 1;
+            sb.append(String.format("%d. <b>%s</b> — %s\n   ID: %d\n\n",
+                    globalNum,
+                    HtmlEscapeUtil.escape(hub.name()),
+                    HtmlEscapeUtil.escape(hub.area()),
+                    hub.id()));
+            rows.add(List.of(
+                    BotMessageBuilder.button("✅ #" + globalNum, "APPROVE_HUB:" + hub.id()),
+                    BotMessageBuilder.button("❌ #" + globalNum, "REJECT_HUB:"  + hub.id())
+            ));
+        }
+
+        // Pagination nav row
+        if (totalPages > 1) {
+            List<InlineKeyboardButton> nav = new ArrayList<>();
+            if (safePage > 0) {
+                nav.add(BotMessageBuilder.button("◀️ Prev", "PENDING_HUBS:" + (safePage - 1)));
+            }
+            nav.add(BotMessageBuilder.button(
+                    "📄 " + (safePage + 1) + "/" + totalPages, "NOOP"));
+            if (safePage < totalPages - 1) {
+                nav.add(BotMessageBuilder.button("Next ▶️", "PENDING_HUBS:" + (safePage + 1)));
+            }
+            rows.add(nav);
+        }
+
+        rows.add(List.of(
+                BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS:" + safePage),
+                BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
+        ));
+
+        ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(), rows));
+    }
+
+    public void handleApproveHub(BotContext ctx) {
+        if (!botConfig.isAdmin(ctx.telegramId())) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You don't have permission to do this."));
+            return;
+        }
+        Long hubId = ctx.entityId();
+        if (hubId == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Invalid hub ID."));
+            return;
+        }
+        try {
+            HubResponse hub = hubService.approveHub(hubId, null);
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    String.format("✅ <b>Hub Approved!</b>\n\n" +
+                            "📍 <b>%s</b> — %s\n🔑 Code: <code>%s</code>",
+                            HtmlEscapeUtil.escape(hub.name()),
+                            HtmlEscapeUtil.escape(hub.area()),
+                            hub.code()),
+                    List.of(List.of(
+                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS"),
+                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
+                    ))));
+        } catch (Exception e) {
+            log.error("Failed to approve hub id={}: {}", hubId, e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not approve hub. " + HtmlEscapeUtil.escape(e.getMessage())));
+        }
+    }
+
+    public void handleRejectHub(BotContext ctx) {
+        if (!botConfig.isAdmin(ctx.telegramId())) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You don't have permission to do this."));
+            return;
+        }
+        Long hubId = ctx.entityId();
+        if (hubId == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Invalid hub ID."));
+            return;
+        }
+        try {
+            hubService.rejectHub(hubId);
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    "❌ <b>Hub Rejected.</b>\n\nThe suggestion has been marked as rejected.",
+                    List.of(List.of(
+                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS"),
+                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
+                    ))));
+        } catch (Exception e) {
+            log.error("Failed to reject hub id={}: {}", hubId, e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not reject hub. " + HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 }

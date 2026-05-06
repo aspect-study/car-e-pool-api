@@ -17,6 +17,8 @@ public interface HubRepository extends JpaRepository<Hub, Long> {
 
     boolean existsByNameIgnoreCaseAndArea(String name, String area);
 
+    Optional<Hub> findFirstByNameIgnoreCaseAndArea(String name, String area);
+
     /**
      * Find all hubs suggested by a specific user that are still pending review.
      */

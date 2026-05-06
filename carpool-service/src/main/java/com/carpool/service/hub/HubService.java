@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,11 +68,17 @@ public class HubService {
         // Prevent duplicate suggestions for the same location
         if (hubRepository.existsByNameIgnoreCaseAndArea(request.name(), request.area())) {
             log.info("Hub already exists or pending: name={} area={}", request.name(), request.area());
-            // Return the existing hub instead of creating a duplicate
-            return hubRepository.searchActive(request.name()).stream()
-                    .filter(h -> h.getArea().equalsIgnoreCase(request.area()))
-                    .findFirst()
-                    .map(mapper::toHubResponse)
+            // Return whatever exists — ACTIVE, PENDING, or REJECTED — rather than creating a duplicate.
+            // If REJECTED, bump it back to PENDING so the admin can reconsider.
+            return hubRepository.findFirstByNameIgnoreCaseAndArea(request.name(), request.area())
+                    .map(existing -> {
+                        if (existing.getStatus() == HubStatus.REJECTED) {
+                            existing.setStatus(HubStatus.PENDING);
+                            log.info("Re-suggesting rejected hub: id={} name={}", existing.getId(), existing.getName());
+                            return mapper.toHubResponse(hubRepository.save(existing));
+                        }
+                        return mapper.toHubResponse(existing);
+                    })
                     .orElseGet(() -> createPendingHub(request, requestingUserId));
         }
         return createPendingHub(request, requestingUserId);
@@ -80,19 +87,44 @@ public class HubService {
     /**
      * Admin: approve a pending hub. Evicts hub cache so new hub appears
      * immediately in the active hub list.
+     * If code is null or blank, auto-generates one from the hub name
+     * and appends _2, _3, ... until it is unique.
      */
-    @CacheEvict(value = "hubs", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "hubs",       allEntries = true),
+            @CacheEvict(value = "hub-search", allEntries = true)
+    })
     @Transactional
     public HubResponse approveHub(Long hubId, String code) {
         Hub hub = hubRepository.findById(hubId)
                 .orElseThrow(() -> new HubNotFoundException(hubId));
 
-        hub.setCode(code.toUpperCase());
+        String resolvedCode = (code != null && !code.isBlank())
+                ? code.toUpperCase()
+                : generateUniqueCode(hub.getName());
+
+        hub.setCode(resolvedCode);
         hub.setStatus(HubStatus.ACTIVE);
         Hub saved = hubRepository.save(hub);
 
         log.info("Hub approved: id={} code={} name={}", saved.getId(), saved.getCode(), saved.getName());
         return mapper.toHubResponse(saved);
+    }
+
+    private String generateUniqueCode(String name) {
+        String base = name.toUpperCase()
+                .replaceAll("[^A-Z0-9]+", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_|_$", "");
+
+        if (hubRepository.findByCode(base).isEmpty()) return base;
+
+        int suffix = 2;
+        while (true) {
+            String candidate = base + "_" + suffix;
+            if (hubRepository.findByCode(candidate).isEmpty()) return candidate;
+            suffix++;
+        }
     }
 
     /**

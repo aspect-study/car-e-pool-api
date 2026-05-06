@@ -147,7 +147,7 @@ public class GroupNotificationService {
                 ride.getAvailableSeats(),
                 vehicleLine,
                 ride.getId(),
-                notesLine
+                notesLine.replace("@", "")
         );
     }
 

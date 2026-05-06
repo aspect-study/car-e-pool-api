@@ -17,6 +17,7 @@ import com.carpool.domain.enums.RideStatus;
 import com.carpool.domain.enums.UserRole;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.dto.request.CreateRideRequest;
+import com.carpool.service.dto.request.SuggestHubRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.RideResponse;
@@ -153,21 +154,26 @@ public class PostRideHandler {
         List<HubResponse> suggestions = hubMatcher.suggest(text);
 
         if (suggestions.isEmpty()) {
+            stateManager.save(chatId, state.withOriginHubName(text.trim()));
             List<HubResponse> recentHubs =
                     hubService.getRecentHubsForUser(state.getCarpoolUserId());
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            String displayText = text.trim().length() > 38
+                    ? text.trim().substring(0, 38) + "…" : text.trim();
+            rows.add(List.of(BotMessageBuilder.button(
+                    "✅ Use \"" + displayText + "\"", "CONFIRM_CUSTOM_ORIGIN")));
             for (HubResponse h : recentHubs) {
                 rows.add(List.of(BotMessageBuilder.button(
                         "🕐 " + h.name(), "HUB_ORIGIN:" + h.id())));
             }
-            rows.add(List.of(BotMessageBuilder.button(
-                    "✏️ Try different name", "RETYPE_ORIGIN")));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_ORIGIN")));
             bot.send(flowHelper.sendWithInline(chatId,
-                    "⚠️ Couldn't find <b>\"" +
-                            HtmlEscapeUtil.escape(text) + "\"</b>.\n\n" +
-                            (recentHubs.isEmpty()
-                                    ? "Try a more specific name or nearby landmark:"
-                                    : "Here are your recent locations:"),
+                    "📍 <b>\"" + HtmlEscapeUtil.escape(text.trim()) +
+                            "\"</b> isn't in our hub list yet.\n\n" +
+                            "Use it as your start point? It will be added to our " +
+                            "suggestion list for review." +
+                            (recentHubs.isEmpty() ? "" :
+                                    "\n\nOr choose a recent location:"),
                     rows));
             return;
         }
@@ -194,21 +200,26 @@ public class PostRideHandler {
         List<HubResponse> suggestions = hubMatcher.suggest(text);
 
         if (suggestions.isEmpty()) {
+            stateManager.save(chatId, state.withDestinationHubName(text.trim()));
             List<HubResponse> recentHubs =
                     hubService.getRecentHubsForUser(state.getCarpoolUserId());
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            String displayText = text.trim().length() > 38
+                    ? text.trim().substring(0, 38) + "…" : text.trim();
+            rows.add(List.of(BotMessageBuilder.button(
+                    "✅ Use \"" + displayText + "\"", "CONFIRM_CUSTOM_DEST")));
             for (HubResponse h : recentHubs) {
                 rows.add(List.of(BotMessageBuilder.button(
                         "🕐 " + h.name(), "HUB_DEST:" + h.id())));
             }
-            rows.add(List.of(BotMessageBuilder.button(
-                    "✏️ Try different name", "RETYPE_DEST")));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_DEST")));
             bot.send(flowHelper.sendWithInline(chatId,
-                    "⚠️ Couldn't find <b>\"" +
-                            HtmlEscapeUtil.escape(text) + "\"</b>.\n\n" +
-                            (recentHubs.isEmpty()
-                                    ? "Try a more specific name or nearby landmark:"
-                                    : "Here are your recent locations:"),
+                    "🏁 <b>\"" + HtmlEscapeUtil.escape(text.trim()) +
+                            "\"</b> isn't in our hub list yet.\n\n" +
+                            "Use it as your end point? It will be added to our " +
+                            "suggestion list for review." +
+                            (recentHubs.isEmpty() ? "" :
+                                    "\n\nOr choose a recent location:"),
                     rows));
             return;
         }
@@ -264,6 +275,12 @@ public class PostRideHandler {
     // ── Hub callback selections ───────────────────────────────────────────
 
     public void handleHubOriginSelected(BotContext ctx) {
+        if (ctx.state().getDirection() == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Session expired. Please start a new ride from the main menu."));
+            stateManager.reset(ctx.chatId());
+            return;
+        }
         try {
             var hub = rideService.getHubById(ctx.entityId());
             UserState updated = ctx.state()
@@ -287,6 +304,12 @@ public class PostRideHandler {
     }
 
     public void handleHubDestSelected(BotContext ctx) {
+        if (ctx.state().getDirection() == null || ctx.state().getOriginHubId() == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Session expired. Please start a new ride from the main menu."));
+            stateManager.reset(ctx.chatId());
+            return;
+        }
         try {
             var hub = rideService.getHubById(ctx.entityId());
             if (hub.id().equals(ctx.state().getOriginHubId())) {
@@ -482,7 +505,9 @@ public class PostRideHandler {
     // ── Confirm / Cancel ──────────────────────────────────────────────────
 
     public void handleConfirmPostRide(BotContext ctx) {
-        if (ctx.state() == null || ctx.state().getOriginHubId() == null) {
+        if (ctx.state() == null
+                || ctx.state().getOriginHubId() == null
+                || ctx.state().getDirection() == null) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Session expired. Please start again with /start."));
             return;
@@ -625,6 +650,64 @@ public class PostRideHandler {
         // Default — direction from main menu
         flowHelper.handleDirectionSelected(
                 ctx.chatId(), ctx.carpoolUserId(), direction, ctx.state(), ctx.bot());
+    }
+
+    // ── Custom hub confirmation ────────────────────────────────────────────
+
+    public void handleConfirmCustomOrigin(BotContext ctx) {
+        String customName = ctx.state().getOriginHubName();
+        if (customName == null || customName.isBlank()) {
+            stateManager.save(ctx.chatId(), ctx.state().withFlow(BotFlow.POST_RIDE_ORIGIN));
+            ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                    "⚠️ Session expired. Please type your start point again:"));
+            return;
+        }
+        try {
+            HubResponse hub = hubService.suggestHub(
+                    new SuggestHubRequest(customName, "Unverified"), ctx.carpoolUserId());
+            UserState updated = ctx.state()
+                    .withOriginHubId(hub.id())
+                    .withOriginHubName(hub.name())
+                    .withFlow(BotFlow.POST_RIDE_DESTINATION);
+            stateManager.save(ctx.chatId(), updated);
+            String destExample = ctx.state().getDirection() == RideDirection.HOME_TO_WORK
+                    ? "BGC" : "SM Southmall";
+            ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                    "✅ Start point: <b>" + HtmlEscapeUtil.escape(hub.name()) + "</b>\n\n" +
+                            "🏁 <b>Where does your ride end?</b>\n\n" +
+                            "Type a nearby landmark as your drop-off point.\n" +
+                            "Example: <code>" + destExample + "</code>"));
+        } catch (Exception e) {
+            log.error("Failed to suggest hub for origin: {}", e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Something went wrong. Please try again."));
+        }
+    }
+
+    public void handleConfirmCustomDest(BotContext ctx) {
+        String customName = ctx.state().getDestinationHubName();
+        if (customName == null || customName.isBlank()) {
+            stateManager.save(ctx.chatId(), ctx.state().withFlow(BotFlow.POST_RIDE_DESTINATION));
+            ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                    "⚠️ Session expired. Please type your end point again:"));
+            return;
+        }
+        try {
+            HubResponse hub = hubService.suggestHub(
+                    new SuggestHubRequest(customName, "Unverified"), ctx.carpoolUserId());
+            UserState updated = ctx.state()
+                    .withDestinationHubId(hub.id())
+                    .withDestinationHubName(hub.name())
+                    .withFlow(BotFlow.POST_RIDE_SEATS);
+            stateManager.save(ctx.chatId(), updated);
+            ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                    "✅ End point: <b>" + HtmlEscapeUtil.escape(hub.name()) + "</b>\n\n" +
+                            "🪑 <b>How many passengers can you take?</b> (1-8)"));
+        } catch (Exception e) {
+            log.error("Failed to suggest hub for destination: {}", e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Something went wrong. Please try again."));
+        }
     }
 
     public void handleTimeNavigation(BotContext ctx) {

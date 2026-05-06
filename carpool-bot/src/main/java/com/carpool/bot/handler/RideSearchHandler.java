@@ -10,7 +10,9 @@ import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.BotTimePickerUtil;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
+import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.profile.ProfileService;
 import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,7 @@ public class RideSearchHandler {
     private final RideService   rideService;
     private final BotFlowHelper flowHelper;
     private final RatingService ratingService;
+    private final ProfileService profileService;
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
 
@@ -221,9 +224,11 @@ public class RideSearchHandler {
                                 "FIND_RIDE")
                 ));
             }
-            String ratingLabel = ratingService.getRideCardRatingLabel(ride.driver().id());
+            String ratingLabel  = ratingService.getDriverRatingLabel(ride.driver().id());
+            ProfileStatsResponse stats = profileService.getProfileStats(ride.driver().id());
+            String memberBadge  = BotMessageBuilder.buildMemberBadge(stats);
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    BotMessageBuilder.formatRideCard(ride, ratingLabel), rows));
+                    BotMessageBuilder.formatRideCard(ride, ratingLabel, memberBadge), rows));
 
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -407,4 +412,5 @@ public class RideSearchHandler {
                     YearMonth.now(MANILA), ctx.bot());
         }
     }
+
 }

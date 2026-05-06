@@ -62,10 +62,12 @@ public class CallbackHandler {
         commands.put("POST_RIDE",         ctx -> postRideHandler.handleStartPostRide(ctx));
         commands.put("CONFIRM_POST_RIDE", ctx -> postRideHandler.handleConfirmPostRide(ctx));
         commands.put("CANCEL_POST_RIDE",  ctx -> postRideHandler.handleCancelPostRide(ctx));
-        commands.put("HUB_ORIGIN",        ctx -> postRideHandler.handleHubOriginSelected(ctx));
-        commands.put("HUB_DEST",          ctx -> postRideHandler.handleHubDestSelected(ctx));
-        commands.put("RETYPE_ORIGIN",     ctx -> postRideHandler.handleRetypeOrigin(ctx));
-        commands.put("RETYPE_DEST",       ctx -> postRideHandler.handleRetypeDest(ctx));
+        commands.put("HUB_ORIGIN",           ctx -> postRideHandler.handleHubOriginSelected(ctx));
+        commands.put("HUB_DEST",             ctx -> postRideHandler.handleHubDestSelected(ctx));
+        commands.put("RETYPE_ORIGIN",        ctx -> postRideHandler.handleRetypeOrigin(ctx));
+        commands.put("RETYPE_DEST",          ctx -> postRideHandler.handleRetypeDest(ctx));
+        commands.put("CONFIRM_CUSTOM_ORIGIN", ctx -> postRideHandler.handleConfirmCustomOrigin(ctx));
+        commands.put("CONFIRM_CUSTOM_DEST",   ctx -> postRideHandler.handleConfirmCustomDest(ctx));
         commands.put("NOTE_PREVIEW",      ctx -> postRideHandler.handleNotePreview(ctx));
         commands.put("NOTE_APPLY",        ctx -> postRideHandler.handleNoteApply(ctx));
         commands.put("NOTE_WRITE",        ctx -> postRideHandler.handleNoteWrite(ctx));
@@ -122,6 +124,9 @@ public class CallbackHandler {
         commands.put("MY_PROFILE",      ctx -> profileHandler.handleMyProfile(ctx));
         commands.put("ADMIN_STATS",     ctx -> profileHandler.handleAdminStats(ctx));
         commands.put("REANNOUNCE_RIDE", ctx -> profileHandler.handleReannounceRide(ctx));
+        commands.put("PENDING_HUBS",    ctx -> profileHandler.handlePendingHubs(ctx));
+        commands.put("APPROVE_HUB",     ctx -> profileHandler.handleApproveHub(ctx));
+        commands.put("REJECT_HUB",      ctx -> profileHandler.handleRejectHub(ctx));
 
         // ── Terms ─────────────────────────────────────────────────────────
         commands.put("TERMS_WELCOME",    ctx -> profileHandler.handleTermsWelcome(
