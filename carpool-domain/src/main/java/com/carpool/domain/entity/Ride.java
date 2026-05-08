@@ -71,7 +71,7 @@ public class Ride extends BaseEntity {
     @Builder.Default
     private BigDecimal contributionAmount = BigDecimal.ZERO;
 
-    @Column(name = "notes", length = 1000)
+    @Column(name = "notes", length = 300)
     private String notes;
 
     @Enumerated(EnumType.STRING)
