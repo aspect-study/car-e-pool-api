@@ -23,6 +23,7 @@ import com.carpool.service.ride.RideService;
 import com.carpool.service.vehicle.VehicleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
@@ -190,6 +191,7 @@ public class ProfileHandler {
         postRideHelper.showConfirmation(ctx.chatId(), updated, ctx.bot());
     }
 
+    @CacheEvict(value = "profileStats", key = "#ctx.carpoolUserId()")
     public void handleVehicleConfirmSave(BotContext ctx) {
         if (ctx.state().getPendingCarModel() == null
                 || ctx.state().getPendingPlateNumber() == null) {

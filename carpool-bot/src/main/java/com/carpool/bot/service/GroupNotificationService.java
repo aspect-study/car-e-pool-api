@@ -17,8 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.api.objects.User;
+
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Listens for ride domain events and posts announcements to the
@@ -41,6 +45,34 @@ public class GroupNotificationService {
     private final BotConfig botConfig;
     private final UserFavoriteRepository favoriteRepository;
     private final RatingService ratingService;
+
+    @Async
+    public void handleNewMembers(Message message) {
+        if (!message.getChatId().equals(botConfig.getGroupChatId())) return;
+
+        List<User> humans = message.getNewChatMembers().stream()
+                .filter(u -> !Boolean.TRUE.equals(u.getIsBot()))
+                .toList();
+
+        if (humans.isEmpty()) return;
+
+        String names = humans.stream()
+                .map(u -> HtmlEscapeUtil.escape(
+                        u.getFirstName() + (u.getLastName() != null ? " " + u.getLastName() : "")))
+                .collect(Collectors.joining(", "));
+
+        String text = String.format(
+                "👋 Welcome to <b>%s</b>, <b>%s</b>!\n\n" +
+                "🚗 This is the carpool community for commuters along the <b>%s</b> corridor.\n\n" +
+                "Tap the button below to find or post a ride. 👇",
+                HtmlEscapeUtil.escape(botConfig.getCommunityName()),
+                names,
+                HtmlEscapeUtil.escape(botConfig.getCorridor())
+        );
+
+        carpoolBot.sendWelcomeToGroup(text);
+        log.info("Welcome message sent for {} new member(s)", humans.size());
+    }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

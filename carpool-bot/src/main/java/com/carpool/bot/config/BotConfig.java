@@ -47,6 +47,13 @@ public class BotConfig {
     @Value("${carpool.telegram.group-work-to-home-topic-id}")
     private Integer groupWorkToHomeTopicId;
 
+    @Value("${carpool.telegram.group-welcome-topic-id:0}")
+    private Integer groupWelcomeTopicId;
+
+    public boolean isWelcomeTopicConfigured() {
+        return groupWelcomeTopicId != null && groupWelcomeTopicId > 0;
+    }
+
     /**
      * Returns true if the given Telegram ID belongs to an admin.
      */
