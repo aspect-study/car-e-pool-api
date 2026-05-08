@@ -69,16 +69,20 @@ public class ProfileService {
         // ── Member since ──────────────────────────────────────────────────
         String memberSince = DATE_FMT.format(user.getCreatedAt());
 
+        // ── Vehicle info — null if not set ──────────────────────────────────────────────────
+        String carModel = user.getCarModel();
+        String carColor = user.getCarColor();
+        String plateNumber = user.getPlateNumber();
+
         return new ProfileStatsResponse(
                 user.getId(),
                 user.getFullName(),
                 user.getTelegramHandle(),
                 roleLabel,
                 memberSince,
-                // Vehicle info — null if not set
-                user.getCarModel(),
-                user.getCarColor(),
-                user.getPlateNumber(),
+                carModel,
+                carColor,
+                plateNumber,
                 driverRidesPosted   > 0 ? driverRidesPosted      : null,
                 driverRidesPosted   > 0 ? driverCompleted         : null,
                 driverRidesPosted   > 0 ? driverCancelled         : null,

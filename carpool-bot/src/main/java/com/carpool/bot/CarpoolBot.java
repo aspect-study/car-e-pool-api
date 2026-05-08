@@ -4,10 +4,14 @@ import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.handler.CallbackHandler;
 import com.carpool.bot.handler.MessageHandler;
 import com.carpool.bot.ratelimit.BotRateLimiter;
+import com.carpool.bot.service.GroupNotificationService;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.repository.UserRepository;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
@@ -25,6 +29,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Main Telegram bot entry point.
@@ -37,15 +43,20 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
+public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsumer {
 
     private final BotConfig         botConfig;
     private final MessageHandler    messageHandler;
     private final CallbackHandler   callbackHandler;
     private final BotRateLimiter    rateLimiter;
     private final UserRepository    userRepository;
+    private final TelegramClient    telegramClient;
 
-    private final TelegramClient telegramClient;
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+
+    // @Lazy breaks the GroupNotificationService ↔ CarpoolBot circular dependency
+    @Autowired @Lazy
+    private GroupNotificationService groupNotificationService;
 
     @Override
     public String getBotToken() {
@@ -58,15 +69,31 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
     }
 
     @Override
-    public void consume(Update update) {
+    public void consume(List<Update> updates) {
+        // Multi-threaded processing using Java 25 Virtual Threads
+        for (Update update : updates) {
+            executor.submit(() -> {
+                try {
+                    handleParallelUpdate(update);
+                } catch (Exception e) {
+                    log.error("Critical error in virtual thread: {}", e.getMessage(), e);
+                }
+            });
+        }
+    }
+
+    private void handleParallelUpdate(Update update) {
         try {
 
-            // Ignore all messages from group chats — bot only operates in private chats.
-            // Group membership is only used for posting ride announcements.
             if (update.hasMessage()) {
-                var chat = update.getMessage().getChat();
+                var msg  = update.getMessage();
+                var chat = msg.getChat();
                 if (chat.isGroupChat() || chat.isSuperGroupChat()) {
-                    log.debug("Ignoring group message from chatId={}", chat.getId());
+                    if (msg.getNewChatMembers() != null && !msg.getNewChatMembers().isEmpty()) {
+                        groupNotificationService.handleNewMembers(msg);
+                    } else {
+                        log.debug("Ignoring group message from chatId={}", chat.getId());
+                    }
                     return;
                 }
             }
@@ -253,6 +280,36 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
     }
 
     /**
+     * Sends a welcome message to the configured welcome topic when new members join the group.
+     * Failures are logged but never propagate to the caller.
+     */
+    public void sendWelcomeToGroup(String text) {
+        if (!botConfig.isWelcomeTopicConfigured()) {
+            log.debug("Welcome topic not configured — skipping group welcome message");
+            return;
+        }
+        try {
+            SendMessage message = SendMessage.builder()
+                    .chatId(botConfig.getGroupChatId())
+                    .messageThreadId(botConfig.getGroupWelcomeTopicId())
+                    .text(text)
+                    .parseMode("HTML")
+                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
+                            InlineKeyboardButton.builder()
+                                    .text("🤖 Open " + botConfig.getCommunityName() + " Bot")
+                                    .url("https://t.me/" + botConfig.getBotUsername())
+                                    .build()
+                    ))))
+                    .build();
+            telegramClient.execute(message);
+            log.info("Group welcome message sent: chatId={} threadId={}",
+                    botConfig.getGroupChatId(), botConfig.getGroupWelcomeTopicId());
+        } catch (TelegramApiException e) {
+            log.error("Failed to send group welcome message: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Sends a message to the configured Telegram group topic.
      * Used for ride announcements. Failures are logged but never propagate
      * to the caller — group posting must not affect the driver's experience.
@@ -350,5 +407,11 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingSingleThread
             log.warn("Failed to delete message: chatId={} messageId={} error={}",
                     chatId, messageId, e.getMessage());
         }
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("Shutting down Virtual Thread Executor...");
+        executor.shutdown();
     }
 }

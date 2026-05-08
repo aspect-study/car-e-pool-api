@@ -11,6 +11,7 @@ import com.carpool.domain.enums.NotificationTypes;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.NotificationRepository;
 import com.carpool.repository.RideRepository;
+import com.carpool.service.config.RestClientConfig;
 import com.carpool.service.event.RideEvents;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final BookingRepository      bookingRepository;
-    private final RestClient restClient;
+    private final RestClientConfig client;
     private final RideRepository rideRepository;
 
     private static final DateTimeFormatter TIME_FMT =
@@ -589,7 +590,7 @@ public class NotificationService {
             ));
         }
 
-        restClient.post()
+        client.restClient().post()
                 .uri(url)
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .body(body)
@@ -654,7 +655,7 @@ public class NotificationService {
         body.put("reply_markup", Map.of("inline_keyboard", keyboard));
 
         try {
-            restClient.post()
+            client.restClient().post()
                     .uri(url)
                     .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                     .body(body)
