@@ -18,6 +18,7 @@ import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -73,21 +74,23 @@ public class MessageHandler {
 
         boolean isNewUser = !userRepository.existsByTelegramId(telegramId);
 
-        User user = userRepository.findByTelegramId(telegramId)
+        final User user = userRepository.findByTelegramId(telegramId)
                 .orElseGet(() -> {
-                    String firstName = message.getFrom().getFirstName();
-                    String lastName  = message.getFrom().getLastName();
-                    String handle    = message.getFrom().getUserName();
-                    String fullName  = lastName != null
-                            ? firstName + " " + lastName : firstName;
-                    User saved = userRepository.save(User.builder()
-                            .telegramId(telegramId)
-                            .telegramHandle(handle)
-                            .fullName(fullName)
-                            .build());
-                    log.info("Auto-registered new user telegramId={} name={}",
-                            telegramId, saved.getFullName());
-                    return saved;
+                    try {
+                        String firstName = message.getFrom().getFirstName();
+                        String lastName  = message.getFrom().getLastName();
+                        String handle    = message.getFrom().getUserName();
+                        String fullName  = (lastName != null) ? firstName + " " + lastName : firstName;
+                        log.info("Auto-registered new user telegramId={} name={}",telegramId, fullName);
+                        return userRepository.save(User.builder()
+                                .telegramId(telegramId)
+                                .telegramHandle(handle)
+                                .fullName(fullName)
+                                .build());
+                    } catch (DataIntegrityViolationException e) {
+                        return userRepository.findByTelegramId(telegramId)
+                                .orElseThrow(() -> new RuntimeException("User registration failed. Please try again. /start"));
+                    }
                 });
 
         // Sync Telegram profile changes on every message — lightweight
@@ -396,13 +399,11 @@ public class MessageHandler {
         String latestHandle = message.getFrom().getUserName();
         String latestFirst  = message.getFrom().getFirstName();
         String latestLast   = message.getFrom().getLastName();
-        String latestName   = latestLast != null
-                ? latestFirst + " " + latestLast : latestFirst;
+        String latestName   = latestLast != null ? latestFirst + " " + latestLast : latestFirst;
 
         boolean handleChanged = latestHandle != null
                 && !latestHandle.equals(user.getTelegramHandle());
-        boolean nameChanged   = latestName != null
-                && !latestName.equals(user.getFullName());
+        boolean nameChanged   = !latestName.equals(user.getFullName());
 
         if (handleChanged || nameChanged) {
             if (handleChanged) user.setTelegramHandle(latestHandle);
