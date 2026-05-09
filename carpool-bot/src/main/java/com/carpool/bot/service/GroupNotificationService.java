@@ -5,6 +5,7 @@ import com.carpool.bot.config.BotConfig;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.Ride;
+import com.carpool.repository.RideRepository;
 import com.carpool.repository.UserFavoriteRepository;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.event.RideEvents;
@@ -14,13 +15,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.User;
 
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,6 +50,7 @@ public class GroupNotificationService {
     private final BotConfig botConfig;
     private final UserFavoriteRepository favoriteRepository;
     private final RatingService ratingService;
+    private final RideRepository rideRepository;
 
     @Async
     public void handleNewMembers(Message message) {
@@ -76,12 +82,25 @@ public class GroupNotificationService {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRidePosted(RideEvents.RidePostedEvent event) {
         Ride ride = event.ride();
         try {
             String message = buildRidePostedMessage(ride);
-            carpoolBot.sendToGroup(message, ride.getId(), resolveTopicId(ride));
+            Integer messageId = carpoolBot.sendToGroup(message, ride.getId(), resolveTopicId(ride));
             log.info("Ride announcement posted to group: rideId={}", ride.getId());
+
+            if (messageId != null) {
+                try {
+                    rideRepository.findById(ride.getId()).ifPresent(r -> {
+                        r.setGroupMessageId(messageId);
+                        rideRepository.save(r);
+                    });
+                } catch (Exception e) {
+                    log.error("Failed to store groupMessageId: rideId={} messageId={} error={}",
+                            ride.getId(), messageId, e.getMessage());
+                }
+            }
 
             // ── Alert followers that a favorite driver posted a ride ──────
             List<Long> followerTelegramIds = favoriteRepository
@@ -125,6 +144,38 @@ public class GroupNotificationService {
             log.error("Failed to post ride announcement to group: rideId={} error={}",
                     ride.getId(), e.getMessage());
         }
+    }
+
+    // ── Group message cleanup ─────────────────────────────────────────────
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onRideDeparted(RideEvents.RideDepartedEvent event) {
+        deleteGroupAnnouncement(event.ride());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onRideCompleted(RideEvents.RideCompletedEvent event) {
+        deleteGroupAnnouncement(event.ride());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onRideCancelled(RideEvents.RideCancelledEvent event) {
+        deleteGroupAnnouncement(event.ride());
+    }
+
+    private void deleteGroupAnnouncement(Ride ride) {
+        Integer messageId = ride.getGroupMessageId();
+        if (messageId == null) return;
+        if (ride.getCreatedAt().isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
+            log.warn("Skipping group message deletion — message older than 48h: rideId={} messageId={}",
+                    ride.getId(), messageId);
+            return;
+        }
+        carpoolBot.deleteMessage(botConfig.getGroupChatId(), messageId);
+        log.info("Deleted group announcement: rideId={} messageId={}", ride.getId(), messageId);
     }
 
     // ── Message formatter ─────────────────────────────────────────────────

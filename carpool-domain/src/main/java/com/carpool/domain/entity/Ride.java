@@ -83,6 +83,9 @@ public class Ride extends BaseEntity {
     @Builder.Default
     private Integer announceCount = 1;
 
+    @Column(name = "group_message_id")
+    private Integer groupMessageId;
+
     /**
      * Ordered waypoints between origin and destination.
      * CascadeType.ALL: waypoints are lifecycle-managed with the ride.
