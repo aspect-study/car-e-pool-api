@@ -310,11 +310,12 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
     }
 
     /**
-     * Sends a message to the configured Telegram group topic.
-     * Used for ride announcements. Failures are logged but never propagate
-     * to the caller — group posting must not affect the driver's experience.
+     * Sends a ride announcement to the configured Telegram group topic.
+     * Returns the Telegram message ID on success, or null on failure.
+     * Failures are logged but never propagate — group posting must not
+     * affect the driver's experience.
      */
-    public void sendToGroup(String text, Long rideId, Integer topicId) {
+    public Integer sendToGroup(String text, Long rideId, Integer topicId) {
         try {
             SendMessage message = SendMessage.builder()
                     .chatId(botConfig.getGroupChatId())
@@ -329,12 +330,18 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                                     .build()
                     ))))
                     .build();
-            telegramClient.execute(message);
-            log.info("Group ride announcement sent: rideId={} chatId={} threadId={}",
-                    rideId, botConfig.getGroupChatId(), topicId);
+            Message sent = telegramClient.execute(message);
+            if (sent == null) {
+                log.error("sendToGroup returned null message: rideId={}", rideId);
+                return null;
+            }
+            log.info("Group ride announcement sent: rideId={} chatId={} threadId={} messageId={}",
+                    rideId, botConfig.getGroupChatId(), topicId, sent.getMessageId());
+            return sent.getMessageId();
         } catch (TelegramApiException e) {
             log.error("Failed to send group announcement: rideId={} error={}",
                     rideId, e.getMessage());
+            return null;
         }
     }
 
