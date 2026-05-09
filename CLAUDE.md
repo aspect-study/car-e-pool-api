@@ -63,6 +63,11 @@ Only `carpool-web` produces an executable JAR. All application config lives in `
 ### Service: Event-Driven Notifications
 Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `NotificationService` listens with `@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)` — notifications only fire after the outer transaction commits, run in a virtual thread, and write to the `notifications` table with PENDING → SENT/FAILED status.
 
+### Bot: Group Announcement Lifecycle
+`GroupNotificationService.onRidePosted()` posts a ride announcement to the configured Telegram group topic and stores the returned Telegram message ID in `Ride.groupMessageId` (added by V37 migration, column `group_message_id`). The DB save for the message ID is isolated in a separate try/catch so a failure there never masks a successful group post or corrupts the ride transaction.
+
+When a ride is departed, completed, or cancelled, `GroupNotificationService` listens for `RideDepartedEvent`, `RideCompletedEvent`, and `RideCancelledEvent` (all `@Async + @TransactionalEventListener(AFTER_COMMIT)`) and calls `CarpoolBot.deleteMessage()` to remove the announcement. Deletion is skipped if `groupMessageId` is null or if the ride was created more than 48 hours ago (Telegram API limitation).
+
 ### Booking: Pessimistic Locking
 `BookingService.createBooking()` acquires `SELECT FOR UPDATE` on the ride row (`RideRepository.findByIdWithLock()`) to prevent double-booking the last seat. The lock is held for the full transaction duration.
 
