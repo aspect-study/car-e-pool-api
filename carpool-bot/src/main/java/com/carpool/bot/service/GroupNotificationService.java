@@ -86,6 +86,12 @@ public class GroupNotificationService {
     public void onRidePosted(RideEvents.RidePostedEvent event) {
         Ride ride = event.ride();
         try {
+            if (ride.getGroupMessageId() != null) {
+                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+                log.info("Deleted previous group announcement before re-announce: rideId={} oldMessageId={}",
+                        ride.getId(), ride.getGroupMessageId());
+            }
+
             String message = buildRidePostedMessage(ride);
             Integer messageId = carpoolBot.sendToGroup(message, ride.getId(), resolveTopicId(ride));
             log.info("Ride announcement posted to group: rideId={}", ride.getId());

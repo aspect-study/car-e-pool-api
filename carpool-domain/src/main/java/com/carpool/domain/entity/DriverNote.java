@@ -34,7 +34,7 @@ public class DriverNote {
     /**
      * Original note content — displayed to user as-is.
      */
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, length = 300)
     private String content;
 
     /**
