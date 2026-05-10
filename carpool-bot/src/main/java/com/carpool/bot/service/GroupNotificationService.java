@@ -87,9 +87,14 @@ public class GroupNotificationService {
         Ride ride = event.ride();
         try {
             if (ride.getGroupMessageId() != null) {
-                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
-                log.info("Deleted previous group announcement before re-announce: rideId={} oldMessageId={}",
-                        ride.getId(), ride.getGroupMessageId());
+                try {
+                    carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+                    log.info("Deleted previous group announcement before re-announce: rideId={} oldMessageId={}",
+                            ride.getId(), ride.getGroupMessageId());
+                } catch (Exception e) {
+                    log.warn("Could not delete previous group announcement (proceeding with re-announce): rideId={} messageId={} error={}",
+                            ride.getId(), ride.getGroupMessageId(), e.getMessage());
+                }
             }
 
             String message = buildRidePostedMessage(ride);
@@ -108,7 +113,11 @@ public class GroupNotificationService {
                 }
             }
 
-            // ── Alert followers that a favorite driver posted a ride ──────
+            // ── Alert followers on first announcement only (not re-announces) ──
+            if (ride.getAnnounceCount() != null && ride.getAnnounceCount() > 1) {
+                return;
+            }
+
             List<Long> followerTelegramIds = favoriteRepository
                     .findFollowerTelegramIdsByFavoriteId(ride.getDriver().getId());
 
