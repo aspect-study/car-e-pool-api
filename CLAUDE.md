@@ -66,7 +66,11 @@ Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `Notifi
 ### Bot: Group Announcement Lifecycle
 `GroupNotificationService.onRidePosted()` posts a ride announcement to the configured Telegram group topic and stores the returned Telegram message ID in `Ride.groupMessageId` (added by V37 migration, column `group_message_id`). The DB save for the message ID is isolated in a separate try/catch so a failure there never masks a successful group post or corrupts the ride transaction.
 
+**Re-announce:** `RideService.reannounceRide()` increments `Ride.announceCount` (max 3 total) and re-fires `RidePostedEvent`. `onRidePosted` detects a non-null `groupMessageId` and deletes the old message first (isolated in its own try/catch — a Telegram failure logs a warning but does not abort the new post). Follower alerts are suppressed on re-announces: the loop is guarded by `announceCount <= 1` so followers receive only one DM per ride regardless of how many times the driver re-announces.
+
 When a ride is departed, completed, or cancelled, `GroupNotificationService` listens for `RideDepartedEvent`, `RideCompletedEvent`, and `RideCancelledEvent` (all `@Async + @TransactionalEventListener(AFTER_COMMIT)`) and calls `CarpoolBot.deleteMessage()` to remove the announcement. Deletion is skipped if `groupMessageId` is null or if the ride was created more than 48 hours ago (Telegram API limitation).
+
+**Favorite driver alerts:** `CarpoolBot.sendToUser(telegramId, text, rideId, driverId)` sends the alert DM with three inline buttons: `VIEW_RIDE:{rideId}`, `BOOK_RIDE:{rideId}`, and `UNFOLLOW_DRIVER:{driverId}`. Tapping Unfollow calls `RatingHandler.handleUnfollowDriver()`, which removes the `UserFavorite` record and edits the alert message in-place to confirm — no menu navigation needed.
 
 ### Booking: Pessimistic Locking
 `BookingService.createBooking()` acquires `SELECT FOR UPDATE` on the ride row (`RideRepository.findByIdWithLock()`) to prevent double-booking the last seat. The lock is held for the full transaction duration.

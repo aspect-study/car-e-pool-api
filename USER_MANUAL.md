@@ -355,6 +355,14 @@ Tap **❌ Cancel Ride**. The bot asks for an optional reason.
 
 > **Please cancel promptly** if your plans change. Passengers are holding a seat and may have turned down alternatives.
 
+#### Re-Announcing an Active Ride
+
+If your ride is already posted but you want to bump it back to the top of the group channel, tap **📢 Re-announce** from the main menu (visible while you have an ACTIVE or FULL ride).
+
+- The previous group announcement is **deleted** and a fresh one is posted in its place — no duplicate posts.
+- **Follower alerts are not re-sent** on re-announces. Your followers already received a DM when you first posted; they will not be notified again.
+- You may re-announce a maximum of **2 times** after the initial post (3 group posts total). The button shows how many are remaining: `📢 Re-announce (2 left)`. Once the limit is reached the button disappears.
+
 #### Re-Posting a Recent Ride
 
 Your last 3 completed or cancelled rides are listed under **My Rides** with a **🔄 Repost** button. This pre-fills your previous origin and destination, so you only need to enter a new departure time.
@@ -436,6 +444,8 @@ When a driver you follow posts a new ride, you receive a private notification:
 ```
 
 **You can unfollow directly from this alert** by tapping **🔕 Unfollow** — no need to go into any menu. The notification updates to confirm the unfollow.
+
+> **Note:** You will only receive one alert per ride. If the driver re-announces the same ride, no additional DM is sent to followers.
 
 ---
 
@@ -627,6 +637,7 @@ These happen without any user action:
 |------|--------|
 | Auto-post | When a ride is published (ACTIVE), an announcement is posted to the community group |
 | Topic routing | HOME → WORK rides go to the morning topic; WORK → HOME to the evening topic |
+| Re-announce | Replaces the existing group post (old deleted, new posted); maximum 2 re-announces per ride |
 | Auto-delete | Announcement is deleted when ride is DEPARTED, COMPLETED, or CANCELLED |
 | 48-hour safety | Announcements for rides older than 48 hours are NOT deleted (Telegram API limitation) |
 
