@@ -144,8 +144,9 @@ public class CallbackHandler {
         commands.put("RATE_PASSENGER", ctx -> ratingHandler.handleRatePassenger(ctx));
 
         // ── Favorites ─────────────────────────────────────────────────────────────
-        commands.put("SAVE_FAVORITE",  ctx -> ratingHandler.handleSaveFavorite(ctx));
-        commands.put("SKIP_FAVORITE",  ctx -> ratingHandler.handleSkipFavorite(ctx));
+        commands.put("SAVE_FAVORITE",    ctx -> ratingHandler.handleSaveFavorite(ctx));
+        commands.put("SKIP_FAVORITE",    ctx -> ratingHandler.handleSkipFavorite(ctx));
+        commands.put("UNFOLLOW_DRIVER",  ctx -> ratingHandler.handleUnfollowDriver(ctx));
 
         // ── Help ──────────────────────────────────────────────────────────
         commands.put("HELP", ctx -> helpHandler.handleTopic(
