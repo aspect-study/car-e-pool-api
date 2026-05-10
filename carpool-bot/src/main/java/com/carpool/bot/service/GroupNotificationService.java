@@ -130,7 +130,7 @@ public class GroupNotificationService {
 
                 for (Long followerTelegramId : followerTelegramIds) {
                     try {
-                        carpoolBot.sendToUser(followerTelegramId, alertMsg, ride.getId());
+                        carpoolBot.sendToUser(followerTelegramId, alertMsg, ride.getId(), ride.getDriver().getId());
                     } catch (Exception e) {
                         log.warn("Failed to send favorite alert to telegramId={} rideId={}: {}",
                                 followerTelegramId, ride.getId(), e.getMessage());

@@ -14,6 +14,7 @@ import com.carpool.service.rating.RatingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.ArrayList;
@@ -337,6 +338,39 @@ public class RatingHandler {
                     ctx.carpoolUserId(), favoriteId, e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not save favorite. Please try again."));
+        }
+    }
+
+    // ── Unfollow driver (from favorite alert notification) ────────────────
+
+    public void handleUnfollowDriver(BotContext ctx) {
+        Long favoriteId = ctx.entityId();
+        if (favoriteId == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Invalid request."));
+            return;
+        }
+
+        try {
+            favoriteService.removeFavorite(ctx.carpoolUserId(), favoriteId);
+
+            var favUser = userRepository.findById(favoriteId).orElse(null);
+            String favName = favUser != null
+                    ? HtmlEscapeUtil.escape(favUser.getFullName()) : "this driver";
+
+            ctx.bot().edit(EditMessageText.builder()
+                    .chatId(ctx.chatId())
+                    .messageId(ctx.messageId())
+                    .parseMode("HTML")
+                    .text("🔕 <b>Unfollowed " + favName + "</b>\n\nYou'll no longer receive alerts when they post a ride.")
+                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                    ))))
+                    .build());
+
+        } catch (Exception e) {
+            log.error("Unfollow failed: userId={} favoriteId={} error={}",
+                    ctx.carpoolUserId(), favoriteId, e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Could not unfollow. Please try again."));
         }
     }
 

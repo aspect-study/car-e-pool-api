@@ -346,22 +346,30 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
      * Sends a message with a View Ride inline button directly to a user.
      * Used for favorite driver alerts — sends to the follower's chat.
      */
-    public void sendToUser(Long telegramId, String text, Long rideId) {
+    public void sendToUser(Long telegramId, String text, Long rideId, Long driverId) {
         try {
             SendMessage message = SendMessage.builder()
                     .chatId(telegramId)
                     .text(text)
                     .parseMode("HTML")
-                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
-                            InlineKeyboardButton.builder()
-                                    .text("👀 View Ride")
-                                    .callbackData("VIEW_RIDE:" + rideId)
-                                    .build(),
-                            InlineKeyboardButton.builder()
-                                    .text("🎫 Book Ride")
-                                    .callbackData("BOOK_RIDE:" + rideId)
-                                    .build()
-                    ))))
+                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(
+                            List.of(
+                                    InlineKeyboardButton.builder()
+                                            .text("👀 View Ride")
+                                            .callbackData("VIEW_RIDE:" + rideId)
+                                            .build(),
+                                    InlineKeyboardButton.builder()
+                                            .text("🎫 Book Ride")
+                                            .callbackData("BOOK_RIDE:" + rideId)
+                                            .build()
+                            ),
+                            List.of(
+                                    InlineKeyboardButton.builder()
+                                            .text("🔕 Unfollow")
+                                            .callbackData("UNFOLLOW_DRIVER:" + driverId)
+                                            .build()
+                            )
+                    )))
                     .build();
 
             telegramClient.execute(message);
