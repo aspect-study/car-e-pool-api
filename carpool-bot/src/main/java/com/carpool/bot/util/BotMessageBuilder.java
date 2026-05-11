@@ -36,7 +36,7 @@ public class BotMessageBuilder {
                 InlineKeyboardButton.builder()
                         .text("🏠 Menu")
                         .callbackData("MAIN_MENU")
-                        .style("primary")
+                        .style(ButtonStyle.PRIMARY.toString())
                         .build());
     }
 
@@ -78,12 +78,12 @@ public class BotMessageBuilder {
                         InlineKeyboardButton.builder()
                                 .text("🏠 Home to Work")
                                 .callbackData("DIRECTION:HOME_TO_WORK")
-                                .style("primary")
+                                .style(ButtonStyle.SUCCESS.toString())
                                 .build(),
                         InlineKeyboardButton.builder()
                                 .text("🏢 Work to Home")
                                 .callbackData("DIRECTION:WORK_TO_HOME")
-                                .style("primary")
+                                .style(ButtonStyle.PRIMARY.toString())
                                 .build()
                 )
         );
@@ -172,6 +172,7 @@ public class BotMessageBuilder {
         return InlineKeyboardButton.builder()
                 .text(text)
                 .url(url)
+                .style(ButtonStyle.SUCCESS.toString())
                 .build();
     }
 
@@ -188,6 +189,7 @@ public class BotMessageBuilder {
                                 new InlineKeyboardRow(InlineKeyboardButton.builder()
                                         .text("❌ Cancel")
                                         .callbackData("CANCEL_POST_RIDE")
+                                        .style(ButtonStyle.DANGER.toString())
                                         .build())))
                         .build())
                 .build();

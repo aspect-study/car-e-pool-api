@@ -307,6 +307,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                             InlineKeyboardButton.builder()
                                     .text("🤖 Open " + botConfig.getCommunityName() + " Bot")
                                     .url("https://t.me/" + botConfig.getBotUsername())
+                                    .style(ButtonStyle.SUCCESS.toString())
                                     .build()
                     ))))
                     .build();
@@ -336,6 +337,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                                     .text("\uD83D\uDE98#"+rideId +" ❯❯❯❯ | View | Book a Ride")
                                     .url("https://t.me/" + botConfig.getBotUsername()
                                             + "?start=RIDE_" + rideId)
+                                    .style(ButtonStyle.SUCCESS.toString())
                                     .build()
                     ))))
                     .build();
@@ -369,16 +371,19 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                                     InlineKeyboardButton.builder()
                                             .text("👀 View Ride")
                                             .callbackData("VIEW_RIDE:" + rideId)
+                                            .style(ButtonStyle.PRIMARY.toString())
                                             .build(),
                                     InlineKeyboardButton.builder()
                                             .text("🎫 Book Ride")
                                             .callbackData("BOOK_RIDE:" + rideId)
+                                            .style(ButtonStyle.SUCCESS.toString())
                                             .build()
                             ),
                             List.of(
                                     InlineKeyboardButton.builder()
                                             .text("🔕 Unfollow")
                                             .callbackData("UNFOLLOW_DRIVER:" + driverId)
+                                            .style(ButtonStyle.DANGER.toString())
                                             .build()
                             )
                     )))
