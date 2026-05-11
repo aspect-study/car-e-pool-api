@@ -95,6 +95,15 @@ When a ride is departed, completed, or cancelled, `GroupNotificationService` lis
 
 **Favorite driver alerts:** `CarpoolBot.sendToUser(telegramId, text, rideId, driverId)` sends the alert DM with three inline buttons: `VIEW_RIDE:{rideId}`, `BOOK_RIDE:{rideId}`, and `UNFOLLOW_DRIVER:{driverId}`. Tapping Unfollow calls `RatingHandler.handleUnfollowDriver()`, which removes the `UserFavorite` record and edits the alert message in-place to confirm — no menu navigation needed.
 
+### Bot: My Followers Screen
+`ProfileHandler.handleMyFollowers(ctx)` is registered as the `MY_FOLLOWERS` callback. It is accessible from the driver profile screen — `handleMyProfile` appends a "👥 My Followers (N)" button whenever `stats.driverRidesPosted() != null` (i.e., the user has a driver role). The count `N` comes from `FavoriteService.getFollowerCount(driverId)`, a separate `COUNT` query called inside the `handleMyProfile` try-catch.
+
+`FavoriteService.getFollowers(Long driverId)` is annotated `@Transactional(readOnly = true)` and returns `List<FollowerResponse>`. It calls `UserFavoriteRepository.findByFavoriteIdWithFollowerOrderByCreatedAtDesc`, which uses a `@Query` with `JOIN FETCH uf.follower` to load all follower `User` entities in a single query — avoiding the N+1 that a plain derived method would cause since `follower` is `FetchType.LAZY`.
+
+`FollowerResponse(Long userId, String fullName, String telegramHandle, LocalDateTime followedAt)` is a DTO record in `carpool-service/src/main/java/com/carpool/service/dto/response/`.
+
+The handler paginates at 8 followers per page. Pagination is encoded in callback data: `MY_FOLLOWERS:0`, `MY_FOLLOWERS:1`, etc. — `ctx.payload()` gives the page number. A static `FOLLOWED_FMT = DateTimeFormatter.ofPattern("MMM d, yyyy")` constant formats the `followedAt` date. The screen is read-only; there are no per-follower actions. `MY_FOLLOWERS` is non-flow-sensitive — `SessionRecoveryHandler` treats it like `MY_PROFILE` (fresh `UserState`, proceeds normally after a bot restart).
+
 ### Booking: Pessimistic Locking
 `BookingService.createBooking()` acquires `SELECT FOR UPDATE` on the ride row (`RideRepository.findByIdWithLock()`) to prevent double-booking the last seat. The lock is held for the full transaction duration.
 
