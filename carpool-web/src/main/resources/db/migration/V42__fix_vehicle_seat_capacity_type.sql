@@ -1,0 +1,2 @@
+ALTER TABLE vehicles
+    MODIFY COLUMN seat_capacity INT NOT NULL DEFAULT 4;
