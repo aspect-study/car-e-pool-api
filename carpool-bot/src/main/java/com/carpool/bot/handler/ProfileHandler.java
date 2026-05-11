@@ -13,10 +13,12 @@ import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.User;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.admin.AdminStatsService;
+import com.carpool.service.dto.response.FollowerResponse;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.dto.response.VehicleResponse;
+import com.carpool.service.favorite.FavoriteService;
 import com.carpool.service.hub.HubService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.rating.RatingService;
@@ -50,11 +52,12 @@ public class ProfileHandler {
     private final VehicleService    vehicleService;
     private final AdminStatsService adminStatsService;
     private final RideService       rideService;
-    private final BotFlowHelper flowHelper;
-    private final PostRideHelper postRideHelper;
+    private final BotFlowHelper     flowHelper;
+    private final PostRideHelper    postRideHelper;
     private final BotConfig         botConfig;
     private final RatingService     ratingService;
     private final HubService        hubService;
+    private final FavoriteService   favoriteService;
 
     // ── Profile ───────────────────────────────────────────────────────────
 
@@ -138,6 +141,13 @@ public class ProfileHandler {
                     BotMessageBuilder.button("🚘 My Vehicle", "VEHICLE_CHANGE"),
                     BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
             ));
+            if (stats.driverRidesPosted() != null) {
+                long followerCount = favoriteService.getFollowerCount(ctx.carpoolUserId());
+                profileRows.add(List.of(
+                        BotMessageBuilder.button(
+                                "👥 My Followers (" + followerCount + ")",
+                                "MY_FOLLOWERS:0")));
+            }
             if (isAdmin) {
                 profileRows.add(List.of(
                         BotMessageBuilder.button("📊 Admin Stats",   "ADMIN_STATS"),
@@ -151,6 +161,86 @@ public class ProfileHandler {
                     ctx.carpoolUserId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load profile. Please try again."));
+        }
+    }
+
+    // ── Followers ─────────────────────────────────────────────────────────
+
+    private static final int               FOLLOWERS_PAGE_SIZE = 8;
+    private static final DateTimeFormatter FOLLOWED_FMT =
+            DateTimeFormatter.ofPattern("MMM d, yyyy");
+
+    public void handleMyFollowers(BotContext ctx) {
+        try {
+            int page = 0;
+            try {
+                if (ctx.payload() != null) page = Integer.parseInt(ctx.payload());
+            } catch (NumberFormatException ignored) {}
+
+            List<FollowerResponse> all = favoriteService.getFollowers(ctx.carpoolUserId());
+
+            if (all.isEmpty()) {
+                ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                        "👥 <b>My Followers</b>\n\n" +
+                                "<i>No followers yet.</i>\n\n" +
+                                "Followers are passengers who have saved you as a favorite driver. " +
+                                "They receive a notification whenever you post a new ride.",
+                        List.of(List.of(
+                                BotMessageBuilder.button("👤 My Profile", "MY_PROFILE"),
+                                BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
+                        ))));
+                return;
+            }
+
+            int totalPages = (int) Math.ceil((double) all.size() / FOLLOWERS_PAGE_SIZE);
+            int safePage   = Math.max(0, Math.min(page, totalPages - 1));
+            int fromIdx    = safePage * FOLLOWERS_PAGE_SIZE;
+            int toIdx      = Math.min(fromIdx + FOLLOWERS_PAGE_SIZE, all.size());
+            List<FollowerResponse> pageItems = all.subList(fromIdx, toIdx);
+
+            StringBuilder sb = new StringBuilder("👥 <b>My Followers (")
+                    .append(all.size()).append(")</b>");
+            sb.append(" — Page ").append(safePage + 1).append("/").append(totalPages);
+            sb.append("\n\n");
+
+            for (int i = 0; i < pageItems.size(); i++) {
+                FollowerResponse f = pageItems.get(i);
+                sb.append(String.format("<b>%d.</b> %s%s\n   📅 Since %s\n\n",
+                        fromIdx + i + 1,
+                        HtmlEscapeUtil.escape(f.fullName()),
+                        f.telegramHandle() != null
+                                ? " (@" + HtmlEscapeUtil.escape(f.telegramHandle()) + ")" : "",
+                        f.followedAt() != null
+                                ? f.followedAt().format(FOLLOWED_FMT) : "—"));
+            }
+
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            if (totalPages > 1) {
+                List<InlineKeyboardButton> nav = new ArrayList<>();
+                if (safePage > 0) {
+                    nav.add(BotMessageBuilder.button("◀️ Prev", "MY_FOLLOWERS:" + (safePage - 1)));
+                }
+                nav.add(BotMessageBuilder.button(
+                        "📄 " + (safePage + 1) + "/" + totalPages, "NOOP"));
+                if (safePage < totalPages - 1) {
+                    nav.add(BotMessageBuilder.button("Next ▶️", "MY_FOLLOWERS:" + (safePage + 1)));
+                }
+                rows.add(nav);
+            }
+
+            rows.add(List.of(
+                    BotMessageBuilder.button("👤 My Profile", "MY_PROFILE"),
+                    BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
+            ));
+
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(), rows));
+
+        } catch (Exception e) {
+            log.error("Failed to load followers for userId={}: {}",
+                    ctx.carpoolUserId(), e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not load followers. Please try again."));
         }
     }
 

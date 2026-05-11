@@ -30,6 +30,16 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavorite, Long
     List<UserFavorite> findByFavoriteId(Long favoriteId);
 
     /**
+     * Get all followers of a specific user, newest first, with follower User loaded eagerly.
+     * JOIN FETCH avoids N+1 queries when accessing follower fields.
+     * Used for the "My Followers" screen in the driver profile.
+     */
+    @Query("SELECT uf FROM UserFavorite uf JOIN FETCH uf.follower " +
+           "WHERE uf.favorite.id = :favoriteId ORDER BY uf.createdAt DESC")
+    List<UserFavorite> findByFavoriteIdWithFollowerOrderByCreatedAtDesc(
+            @Param("favoriteId") Long favoriteId);
+
+    /**
      * Get follower IDs of a specific user — lightweight version.
      * Avoids loading full User entities when only IDs are needed.
      */
