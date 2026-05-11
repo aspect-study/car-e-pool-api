@@ -554,6 +554,20 @@ Access from **👤 My Profile** in the main menu.
 ❌ Cancelled by me: 1
 ```
 
+#### Viewing Your Followers
+
+Drivers see a **👥 My Followers (N)** button on their profile screen, where N is the current follower count. Tap it to see the list of passengers who have saved you as a Favorite Driver.
+
+The followers screen shows:
+- Follower name and Telegram handle (if set)
+- The date they started following you
+
+Results are paginated at 8 per page. Use **◀️ Prev** / **Next ▶️** to navigate. The screen is read-only — followers can only be removed by the follower themselves (via the **🔕 Unfollow** button on alert notifications).
+
+> **Note:** The followers button only appears for users with a Driver or Both role.
+
+---
+
 #### Managing Your Vehicles
 
 Go to **My Profile → 🚘 My Vehicle** to manage your registered vehicles.
@@ -862,6 +876,16 @@ A: The maximum is 3. Remove one of your existing vehicles first (via **My Profil
 
 **Q: Can I edit a vehicle's details?**
 A: Not in place — the system does not have an "edit vehicle" function. To correct details (e.g., a typo in the plate number), remove the incorrect vehicle and add a corrected entry.
+
+---
+
+**Q: How do I see who is following me?**
+A: Go to **My Profile** and tap **👥 My Followers (N)**. This shows all passengers who have saved you as a Favorite Driver, including their name, handle, and the date they started following. The button only appears if you have a Driver or Both role.
+
+---
+
+**Q: Can I remove a follower?**
+A: No — drivers cannot remove followers directly. A follower can remove themselves by tapping **🔕 Unfollow** on any favorite driver alert notification they have received from you.
 
 ---
 
