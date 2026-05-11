@@ -252,6 +252,17 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
         }
     }
 
+    public Integer sendReturningId(SendMessage message) {
+        try {
+            if (message.getText() == null || message.getText().isBlank()) return null;
+            Message sent = telegramClient.execute(message);
+            return sent != null ? sent.getMessageId() : null;
+        } catch (TelegramApiException e) {
+            log.error("Failed to send message to chatId={}: {}", message.getChatId(), e.getMessage());
+            return null;
+        }
+    }
+
     public void edit(EditMessageText edit) {
         try {
             telegramClient.execute(edit);
@@ -419,6 +430,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
         } catch (TelegramApiException e) {
             if (e.getMessage() != null && e.getMessage().contains("message to delete not found")) {
                 log.debug("Group message already deleted: chatId={} messageId={}", chatId, messageId);
+                return true;
             } else {
                 log.warn("Failed to delete message: chatId={} messageId={} error={}",
                         chatId, messageId, e.getMessage());

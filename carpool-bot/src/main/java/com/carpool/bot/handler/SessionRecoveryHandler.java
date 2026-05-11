@@ -31,7 +31,10 @@ public class SessionRecoveryHandler {
             "CONFIRM_POST_RIDE", "CANCEL_POST_RIDE", "VEHICLE_CONFIRM_YES",
             "VEHICLE_CONFIRM_SAVE", "NOTE_PREVIEW",
             "NOTE_APPLY", "NOTE_WRITE", "NOTE_CHOOSE_OTHER", "SKIP_NOTES",
-            "RIDE_TIME", "TIME_NAV"
+            "RIDE_TIME", "TIME_NAV",
+            "REPOST_EDIT_ORIGIN", "REPOST_EDIT_DEST", "REPOST_EDIT_SEATS",
+            "REPOST_EDIT_CONTRIBUTION", "REPOST_EDIT_NOTES",
+            "REPOST_PROCEED", "REPOST_BACK_TO_EDIT"
     );
 
     private static final Set<String> RATING_ACTIONS = Set.of(

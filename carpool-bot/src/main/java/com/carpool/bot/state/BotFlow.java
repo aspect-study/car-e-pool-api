@@ -27,6 +27,11 @@ public enum BotFlow {
     SET_VEHICLE_PLATE,            // waiting for plate number input
     POST_RIDE_CONFIRM,
 
+    // ── Repost edit ───────────────────────────────────────────────────────
+    REPOST_EDIT_SEATS,
+    REPOST_EDIT_CONTRIBUTION,
+    REPOST_EDIT_NOTES,
+
     // ── Driver: Manage active ride ────────────────────────────────────────
     MANAGE_RIDE,
 

@@ -42,6 +42,11 @@ public class UserState {
     private final BigDecimal contribution;
     private final String notes;
 
+    // ── Repost edit state ─────────────────────────────────────────────────
+    @Builder.Default
+    private final boolean repostEditMode = false;
+    private final Integer repostEditMsgId;
+
     // ── Navigation state ──────────────────────────────────────────────────
     // Used for back navigation and confirmation screens
     private final Long selectedRideId;
