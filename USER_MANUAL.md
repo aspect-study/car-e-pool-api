@@ -53,7 +53,7 @@ Passenger optionally follows driver → Gets alerts for future rides
 | **Gas Contribution** | The per-passenger cost share for fuel (set by the driver) |
 | **Favorite Driver** | A driver you follow to receive alerts when they post new rides |
 | **Group Announcement** | An automatic post in the community Telegram group when a ride is published |
-| **Direction** | HOME → WORK (morning) or WORK → HOME (evening) or OTHER |
+| **Direction** | HOME → WORK (morning) or WORK → HOME (evening) |
 
 ---
 
@@ -107,15 +107,27 @@ On your first login (and periodically if you have previously declined), the bot 
 
 The bot uses **inline keyboard buttons** — tappable options that appear beneath messages. You rarely need to type anything manually; most actions are button-driven.
 
-**Main Menu options:**
-- 🚗 **Post a Ride** — Create a new ride (drivers only)
-- 🔍 **Find a Ride** — Search for available rides (passengers)
-- 📋 **My Rides** — View your posted rides and manage bookings
-- 📦 **My Bookings** — View your booking history as a passenger
-- 👤 **My Profile** — View your stats, vehicle info, and ratings
-- ❓ **Help** — Quick help topics
+**The main menu is context-aware** — it changes based on whether you have an active ride.
+
+**When you have no active ride:**
+- 🏠 **Home to Work** | 🏢 **Work to Home** — Select your direction to post or find a ride
+- 📜 **My Bookings (N)** — Shown when you have active bookings as a passenger
+- 🔄 **Repost a Ride** — Shown when you have past completed or cancelled rides
+- 👤 **My Profile** — View your stats, vehicles, and ratings
+
+**When you have an active (posted) ride, the menu shows your ride card and:**
+- 📋 **View Bookings** | 🚀 **Start Ride**
+- ⏳ **Pending (N)** | ❌ **Cancel Ride** — Shown when you have pending booking requests
+- 📢 **Re-announce (N left)** — Shown when re-announces are still available
+- 🔍 **Find a Ride** | 👤 **My Profile**
+
+**When your ride has departed:**
+- 📋 **View Bookings** | ✅ **Complete Ride**
+- 👤 **My Profile**
 
 Press **🏠 Menu** at any time to return to the main menu and cancel the current flow.
+
+Available commands: `/start`, `/postride`, `/findride`, `/myrides`, `/mybookings`, `/profile`, `/vehicle`, `/help`.
 
 > **Session Note:** The bot maintains your current conversation step for **30 minutes** of inactivity. After 30 minutes idle, your session resets. Buttons from old messages remain visible in Telegram but will show a "session expired" prompt if tapped after a reset.
 
@@ -138,13 +150,15 @@ The bot asks: *"Which direction is this ride?"*
 |--------|---------|
 | 🏠 Home → Work | Morning commute direction |
 | 🏢 Work → Home | Evening commute direction |
-| 🚗 Other | Custom / reverse direction |
 
 #### Step 2 — Select Departure Date & Time
-A **calendar picker** appears. Tap the day you are departing, then enter the time.
+A **calendar picker** appears. Tap the day you are departing.
 
-- Accepted format: `MM/DD HH:MM` (24-hour or 12-hour)
-- Example: `05/15 07:30`
+After picking a date, an **inline time picker** appears with 10 time slots in 30-minute increments. Tap your departure time. Use **◀️ Earlier** or **Later ▶️** to shift the visible window by 2 hours.
+
+- HOME → WORK direction defaults to a 5:00 AM starting window
+- WORK → HOME direction defaults to a 4:00 PM starting window
+- To pick a time not shown in the picker, type it in the format `MM/DD HH:MM` (e.g., `05/15 07:30`)
 - **Rule:** Departure time must be in the future. Past times are rejected.
 
 #### Step 3 — Select Origin Hub (Pickup Point)
@@ -165,7 +179,7 @@ Same as Step 3. The origin hub is excluded from suggestions automatically.
 Enter how many passenger seats you are offering.
 
 - **Minimum:** 1 seat
-- **Maximum:** 8 seats
+- **Maximum:** 7 seats
 
 #### Step 6 — Gas Contribution Amount
 Enter the amount each passenger should contribute for fuel (in ₱).
@@ -175,22 +189,24 @@ Enter the amount each passenger should contribute for fuel (in ₱).
 - This is the **per-passenger** cost
 
 #### Step 7 — Add Notes (Optional)
-You may add a short message visible to passengers.
+Add details that help passengers know what to expect — exact pickup spot, en-route stops, drop-off instructions, or reminders (e.g., exact change preferred, no pets).
 
-- Examples: *"Cash only"*, *"No smoking"*, *"Music on"*
 - **Maximum:** 300 characters
-- Tap **Skip** to leave notes blank.
+- If you have used notes on previous rides, they appear as quick-select buttons (📌). Tap one to reuse it, or tap **✏️ Write new note** to write something different.
+- Tap **⏭️ Skip** to post without a note.
 
-#### Step 8 — Vehicle Confirmation
-The bot shows your registered vehicle:
+#### Step 8 — Select Vehicle
+The bot shows your saved vehicles as buttons. Tap the one you are using for this ride.
 
 ```
 🚘 Silver Toyota Vios | 🔢 ABC1234
+🚘 White Honda City   | 🔢 XYZ5678
+➕ Add New Vehicle
 ```
 
-- Tap **✅ Confirm** to proceed with this vehicle.
-- Tap **🔄 Change** to update your vehicle details now.
-- If no vehicle is registered, the bot will prompt you to add one before continuing.
+- You can save up to **3 vehicles** under your account. If you have fewer than 3, an **➕ Add New Vehicle** button appears so you can register an additional vehicle on the spot.
+- If you have **no vehicle saved yet**, the bot skips straight to the vehicle registration flow — add your vehicle details and it will be saved for future rides.
+- After selecting a vehicle, the bot proceeds to the confirmation screen.
 
 #### Step 9 — Review & Confirm
 A summary of your ride is shown. Review all details carefully.
@@ -221,15 +237,15 @@ Choose the departure time range you prefer:
 
 | Option | Time Range |
 |--------|-----------|
-| Early Bird | 1:00 AM – 4:00 AM |
-| Early Morning | 4:00 AM – 6:00 AM |
-| Morning | 6:00 AM – 9:00 AM |
-| Mid Morning | 9:00 AM – 12:00 PM |
-| Noon | 12:00 PM – 3:00 PM |
-| Afternoon | 3:00 PM – 6:00 PM |
-| Evening | 6:00 PM – 11:59 PM |
-| All Day | Full day |
-| Custom | Enter your own time |
+| 🌙 Early Bird (1-4 AM) | 1:00 AM – 4:00 AM |
+| 🌙 Early Morning (4-6 AM) | 4:00 AM – 6:00 AM |
+| 🌅 Morning Rush (6-9 AM) | 6:00 AM – 9:00 AM |
+| ☀️ Late Morning (9-12 PM) | 9:00 AM – 12:00 PM |
+| 🌤️ Noon (12-3 PM) | 12:00 PM – 3:00 PM |
+| 🌇 Afternoon (3-6 PM) | 3:00 PM – 6:00 PM |
+| 🌆 Evening (6-12 PM) | 6:00 PM – 12:00 AM |
+| 🔍 Show All | All available times for the selected date |
+| 📅 Custom Date & Time | Enter your own date and time as text |
 
 #### Step 4 — Browse Results
 
@@ -243,11 +259,11 @@ Results show available rides matching your criteria:
 👤 Juan dela Cruz ⭐ 4.8
 ```
 
-Use **◀ / ▶** to navigate pages (10 results per page).
+Use **◀️ Prev / Next ▶️** to navigate pages (3 results per page).
 
 **Filtering results:**
 
-Tap **🔧 Filter** to narrow results by:
+Tap **🔧 Adjust Filters** to narrow results by:
 - **Max Price** (₱): Only shows rides at or below this contribution amount
 - **Min Seats**: Only shows rides with at least this many available seats
 - **Sort by**: Earliest departure (default) | Cheapest | Most seats available
@@ -256,23 +272,22 @@ Tap **Reset** to clear filters.
 
 #### Step 5 — View Ride Details
 
-Tap **📌 View Details** to see the full ride card:
+Tap **View #N** (e.g., "View #1", "View #2") to see the full ride card for that result:
 
 ```
+🏠→🏢 SM Southmall → BGC High Street
+🕐 Thu, May 15 at 7:30 AM
+🪑 3 of 3 seats available
+⛽ ₱80.00 gas share/seat
 👤 Juan dela Cruz (@juandc) ⭐ 4.8
-[Member since Jan 2025 | 12 rides completed]
-
-📍 SM Southmall → BGC High Street
-📅 Thursday, May 15
-🕐 Pickup: 7:30 AM
-💺 3 seats available | 💰 ₱80.00/seat
-🚘 Silver Toyota Vios | 🔢 ABC1234
+✅ Driver | 26 rides done | Since Jan 2025
+🕓 Posted 5m ago
 📝 Cash only. AC on.
 ```
 
 #### Step 6 — Send Booking Request
 
-Tap **🎫 Book Ride**.
+Tap **✅ Book This Ride**.
 
 The bot asks: *"Any message for the driver?"* (optional)
 
@@ -298,7 +313,7 @@ Your booking request is sent. You will see:
 
 ### 3.3 Managing Your Ride (Driver)
 
-Access ride management from **📋 My Rides** in the main menu.
+When you have an active ride, all management options appear **directly on the main menu** (see §2.5). Tap **📋 View Bookings** to see all confirmed and pending passengers on your active ride.
 
 #### Viewing Pending Booking Requests
 
@@ -321,13 +336,19 @@ Tap **✅ Accept** on a pending request.
 
 Tap **❌ Decline** on a pending request.
 
-- The bot asks for an optional reason (e.g., "Ride is full", "Route changed")
-- Passenger is notified with your reason
-- The seat is freed back to your ride
+The bot shows preset decline reasons — select one:
+- 🚗 Fully booked already
+- 📍 Route change
+- 🔧 Vehicle issue
+- ❌ Other reason
 
-#### Departing Your Ride
+The passenger is notified with your selected reason, and the seat is freed back to your ride.
 
-When you are physically starting the journey, tap **🚗 Depart Ride**.
+#### Starting Your Ride
+
+When you are physically starting the journey, tap **🚀 Start Ride**.
+
+> **Rule:** You can only start the ride up to 1 hour before the scheduled departure time. Tapping too early shows a countdown to when you can start.
 
 - Ride status changes to **DEPARTED**
 - No new bookings can be accepted
@@ -345,9 +366,13 @@ After arrival at the destination, tap **✅ Complete Ride**.
 
 #### Cancelling Your Ride
 
-You may cancel from **Main Menu → My Rides** at any point before departing.
+You may cancel from the **main menu** at any point before departing.
 
-Tap **❌ Cancel Ride**. The bot asks for an optional reason.
+Tap **❌ Cancel Ride**. If you have active passengers, the bot shows preset cancellation reasons — select one:
+- 🔧 Vehicle issue
+- 📍 Route change
+- 🏠 Personal reason
+- ❌ Other reason
 
 - All pending and confirmed passengers are notified of the cancellation with your reason
 - Their bookings are marked as CANCELLED BY DRIVER
@@ -365,13 +390,31 @@ If your ride is already posted but you want to bump it back to the top of the gr
 
 #### Re-Posting a Recent Ride
 
-Your last 3 completed or cancelled rides are listed under **My Rides** with a **🔄 Repost** button. This pre-fills your previous origin and destination, so you only need to enter a new departure time.
+Your last 3 completed or cancelled rides are listed under **My Rides** with a **🔄 Repost** button. Tapping it opens an **edit screen** pre-filled with all details from the original ride:
+
+```
+🔄 Edit Ride for Repost
+
+↔️ Direction: 🏠 Home → Work
+📍 From: SM Southmall
+🏁 To: BGC High Street
+🪑 Seats: 3
+⛽ Gas share: ₱80/seat
+📝 Note: Cash only
+
+[📍 Edit Start]  [🏁 Edit End]
+[🪑 Edit Seats]  [⛽ Edit Share]
+[📝 Edit Note]
+[✅ Continue]    [❌ Cancel]
+```
+
+Tap any field button to change it. When you are satisfied, tap **✅ Continue** to pick a new departure date and time, then select your vehicle, then review and confirm.
 
 ---
 
 ### 3.4 Managing Your Bookings (Passenger)
 
-Access from **📦 My Bookings** in the main menu.
+Access from **📜 My Bookings (N)** in the main menu (the button is shown when you have active bookings).
 
 #### Viewing Active Bookings
 
@@ -511,19 +554,29 @@ Access from **👤 My Profile** in the main menu.
 ❌ Cancelled by me: 1
 ```
 
-#### Registering or Updating Your Vehicle
+#### Managing Your Vehicles
 
-To post rides, you need a registered vehicle. Go to **My Profile → 🚘 Update Vehicle**.
+Go to **My Profile → 🚘 My Vehicle** to manage your registered vehicles.
+
+You can save **up to 3 vehicles**. The screen lists all your current vehicles and lets you:
+- **🗑️ Remove** any vehicle individually.
+- **➕ Add Vehicle** — register a new vehicle (available while you have fewer than 3).
+
+If you already have 3 vehicles saved and add a new one (e.g., during the ride-posting flow), the **oldest** vehicle is automatically replaced.
+
+**Vehicle fields:**
 
 | Field | Required | Example |
 |-------|----------|---------|
+| Car Color | ❌ Optional | Silver |
 | Car Model | ✅ Yes | Toyota Vios |
 | Plate Number | ✅ Yes | ABC1234 |
-| Car Color | ❌ Optional | Silver |
+| Seat Capacity | ✅ Yes (1–7) | 4 |
 
 **Rules:**
-- Plate numbers must be unique across all users. If the plate is already registered by another user, the update will be rejected.
-- You can update your vehicle information at any time. The new details will be used on future ride announcements.
+- Plate numbers must be unique across all users. If the plate is already registered by another user, the registration will be rejected.
+- Vehicles are not edited in place — to change a vehicle's details, remove it and add a new entry.
+- The vehicle you select during a ride-posting flow is recorded with that ride. Removing a vehicle later does not affect rides already posted with it.
 
 ---
 
@@ -539,10 +592,10 @@ This section lists all system-enforced rules. These cannot be bypassed.
 | No cross-role conflict | A driver cannot post a ride while they have a PENDING or CONFIRMED booking as a passenger |
 | Future departure only | Departure time must be in the future (Manila time). Past times are rejected |
 | Origin ≠ Destination | You cannot select the same hub for both pickup and drop-off |
-| Seat range | Minimum 1, maximum 8 seats per ride |
+| Seat range | Minimum 1, maximum 7 seats per ride |
 | Contribution amount | Minimum ₱0.00 (free); no maximum |
 | Notes length | Maximum 300 characters |
-| Vehicle required | Driver must have car model and plate number registered before posting |
+| Vehicle required | Driver must select a vehicle during posting. If no vehicle is saved, the bot prompts to add one before the confirmation step. |
 
 ### 4.2 Ride Status Flow
 
@@ -645,16 +698,16 @@ These happen without any user action:
 
 | Field | Min | Max | Required | Notes |
 |-------|-----|-----|----------|-------|
-| Ride — Total Seats | 1 | 8 | ✅ | |
+| Ride — Total Seats | 1 | 7 | ✅ | |
 | Ride — Contribution Amount | ₱0.00 | — | ✅ | |
 | Ride — Notes | — | 300 chars | ❌ | |
-| Booking — Seats Reserved | 1 | 8 | ✅ | |
 | Booking — Passenger Message | — | 300 chars | ❌ | |
 | Rating — Stars | 1 | 5 | ✅ | |
 | Rating — Comment | — | 1,000 chars | ❌ | |
 | Vehicle — Car Model | — | 100 chars | ✅ (driver) | |
 | Vehicle — Plate Number | — | 20 chars | ✅ (driver) | Unique across all users |
 | Vehicle — Car Color | — | 50 chars | ❌ | |
+| Vehicle — Seat Capacity | 1 | 7 | ✅ (driver) | Max 3 vehicles per user |
 | Hub — Name | — | 150 chars | ✅ | |
 | Hub — Area | — | 100 chars | ✅ | |
 
@@ -792,8 +845,23 @@ A: Tap **🔕 Unfollow** on any alert notification from that driver. The button 
 
 ### 6.5 Vehicle & Profile
 
+**Q: Where do I add or manage my vehicles?**
+A: Go to **My Profile → 🚘 My Vehicle**. You will see all your saved vehicles and can add new ones (up to 3) or remove existing ones individually.
+
+---
+
 **Q: I cannot register my plate number — it says "already registered by another user."**
 A: Plate numbers must be unique. If you recently sold your vehicle and someone else registered it, contact your admin to resolve the conflict. If you believe it is an error, your admin can clear the other user's plate entry.
+
+---
+
+**Q: I have 3 vehicles saved and need to add another.**
+A: The maximum is 3. Remove one of your existing vehicles first (via **My Profile → 🚘 My Vehicle → 🗑️ Remove**), then add the new one. Alternatively, if you add a vehicle during the ride-posting flow while already at the 3-vehicle limit, the system automatically replaces your oldest saved vehicle.
+
+---
+
+**Q: Can I edit a vehicle's details?**
+A: Not in place — the system does not have an "edit vehicle" function. To correct details (e.g., a typo in the plate number), remove the incorrect vehicle and add a corrected entry.
 
 ---
 

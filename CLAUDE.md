@@ -58,10 +58,33 @@ Only `carpool-web` produces an executable JAR. All application config lives in `
 ### Bot: Conversation State
 `StateManager` holds per-chatId `UserState` in a Caffeine cache (30-minute write-TTL, max 10k entries). `UserState` is an immutable record with `with*()` builder methods. `BotFlow` enum defines all possible conversation steps. `BotFlowHelper.showMainMenu()` calls `stateManager.reset()`, which wipes all flow state including `direction`.
 
-**Stale button hazard:** Telegram messages stay interactive forever. A user can tap a button from an old message after their state has been reset (e.g., by returning to the main menu). All hub-selection and confirmation callbacks in `PostRideHandler` guard against this by checking that required state fields (`direction`, `originHubId`) are non-null before proceeding — missing fields mean the button is stale and a session-expired message is shown instead of crashing.
+**Stale button hazard:** Telegram messages stay interactive forever. A user can tap a button from an old message after their state has been reset (e.g., by returning to the main menu). All hub-selection and confirmation callbacks in `PostRideHandler` guard against this by checking that required state fields (`direction`, `originHubId`) are non-null before proceeding — missing fields mean the button is stale and a session-expired message is shown instead of crashing. `handleVehicleSelect` additionally checks that `departureTime`, `originHubId`, `seats`, and `contribution` are all non-null before calling `showConfirmation()` (which auto-unboxes `seats` and `contribution` and would NPE on null).
 
 ### Service: Event-Driven Notifications
 Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `NotificationService` listens with `@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)` — notifications only fire after the outer transaction commits, run in a virtual thread, and write to the `notifications` table with PENDING → SENT/FAILED status.
+
+### Multi-Vehicle Management
+`Vehicle` is a domain entity (soft-delete via `deletedAt`) with fields `user (FK LAZY)`, `plateNumber`, `model`, `color`, `seatCapacity (Integer)`. `VehicleRepository` exposes `findByUserIdAndDeletedAtIsNullOrderByCreatedAtAsc`, `findActiveByPlateForOtherUser`, and `existsByUserIdAndDeletedAtIsNull`.
+
+`VehicleService.addVehicle()` enforces three rules: (1) plate uniqueness across all active vehicles belonging to other users — throws if occupied; (2) replace-oldest policy — if the user already has 3 active vehicles, the oldest (by `createdAt`) is soft-deleted before saving the new one; (3) after saving, the User entity's legacy `carModel`, `plateNumber`, `carColor`, and `carSeatCapacity` fields are synced to the newest active vehicle for backward compatibility with any code still reading those fields.
+
+`removeVehicle(vehicleId, userId)` verifies ownership then sets `deletedAt`. `getActiveVehiclesForUser(userId)` returns `List<VehicleResponse>` ordered oldest-first (matches selection order in bot UX).
+
+DB migrations: V39 creates `vehicles` with soft-delete and FK to `users (ON DELETE CASCADE)`; V40 adds `vehicle_id` FK (nullable, `ON DELETE SET NULL`) to `rides`; V41 migrates existing user vehicle data from `users` columns into `vehicles`; V42 widens `seat_capacity` from `TINYINT` to `INT` (Hibernate schema validation requires `Types#INTEGER` for Java `Integer`).
+
+`EntityMapper` has `VehicleResponse toVehicleResponse(Vehicle vehicle)`. `RideResponse` includes a `VehicleResponse vehicle` field (may be null for rides posted before V39). `GroupNotificationService` and `BotMessageBuilder` both fall back to `ride.getDriver()` legacy fields when `ride.getVehicle()` is null.
+
+### Bot: Vehicle Selection in the Post-Ride Flow
+After the notes step, the post-ride flow calls `ProfileHandler.showVehicleSelectStep()` instead of going directly to confirmation. This shows the driver's saved vehicles as inline buttons (`VEHICLE_SELECT:{id}`), plus "➕ Add New Vehicle" if fewer than 3 exist. If no vehicles are saved yet, the flow jumps directly to `SET_VEHICLE_COLOR` (the add-vehicle input flow). The Cancel button on these screens uses `CANCEL_POST_RIDE`.
+
+`handleVehicleSelect(ctx)` resolves the chosen vehicle, builds a display label (`color + model | plate`), stores it as `selectedVehicleId` and `selectedVehicleLabel` in `UserState`, then calls `postRideHelper.showConfirmation()`. **Stale button guard:** if `departureTime`, `originHubId`, `seats`, or `contribution` is null (stale button after session reset), a session-expired message is shown and the state is reset — avoids NPE when `showConfirmation` auto-unboxes `state.getSeats()`.
+
+`handleAddVehicle(ctx)` starts the `SET_VEHICLE_COLOR → SET_VEHICLE_MODEL → SET_VEHICLE_PLATE → SET_VEHICLE_CAPACITY → VEHICLE_CONFIRM_SAVE` input flow. It checks `ctx.state().getDepartureTime() != null` to choose the cancel button: `CANCEL_POST_RIDE` (post-ride context) or `VEHICLE_CHANGE` (standalone vehicle management). The same context check applies in `showVehicleConfirmation()` for its Cancel button.
+
+`VEHICLE_SELECT` and `ADD_VEHICLE` are listed in `SessionRecoveryHandler.POST_RIDE_ACTIONS` so stale buttons after a bot restart show a context-aware "session expired" message.
+
+### Bot: Repost Edit Screen
+`PostRideHandler.handleRepostRide()` pre-fills origin, destination, direction, seats, contribution, and notes from the original ride into `UserState`, sets `repostEditMode = true`, and shows an inline edit screen via `showRepostEditScreen()`. The driver can tap any field button (📍 Edit Start, 🏁 Edit End, 🪑 Edit Seats, ⛽ Edit Share, 📝 Edit Note) to edit it; each edit returns to the same edit screen. Tapping "✅ Continue" calls `handleRepostProceed()` which shows the calendar picker. After date selection, the flow goes to vehicle selection (`showVehicleSelectStep`), then confirmation — the same path as a new ride.
 
 ### Bot: Group Announcement Lifecycle
 `GroupNotificationService.onRidePosted()` posts a ride announcement to the configured Telegram group topic and stores the returned Telegram message ID in `Ride.groupMessageId` (added by V37 migration, column `group_message_id`). The DB save for the message ID is isolated in a separate try/catch so a failure there never masks a successful group post or corrupts the ride transaction.

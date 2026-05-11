@@ -354,7 +354,7 @@ public class PostRideHandler {
             ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
                     "✅ End point: <b>" +
                             HtmlEscapeUtil.escape(hub.name()) + "</b>\n\n" +
-                            "🪑 <b>How many passengers can you take?</b> (1-8)"));
+                            "🪑 <b>How many passengers can you take?</b> (1-7)"));
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load hub. Please try again."));
@@ -389,7 +389,7 @@ public class PostRideHandler {
                                     UserState state, CarpoolBot bot) {
         try {
             int seats = Integer.parseInt(text.trim());
-            if (seats < 1 || seats > 8) {
+            if (seats < 1 || seats > 7) {
                 bot.send(BotMessageBuilder.text(chatId,
                         "⚠️ Please enter a number between 1 and 8:"));
                 return;
@@ -696,7 +696,7 @@ public class PostRideHandler {
                 .withRepostEditMsgId(null)
                 .withFlow(BotFlow.REPOST_EDIT_SEATS));
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                "🪑 <b>Edit Seats</b>\n\nHow many passengers can you take? (1–8)",
+                "🪑 <b>Edit Seats</b>\n\nHow many passengers can you take? (1–7)",
                 List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
     }
 
@@ -744,7 +744,7 @@ public class PostRideHandler {
     public void handleRepostEditSeats(Long chatId, String text, UserState state, CarpoolBot bot) {
         try {
             int seats = Integer.parseInt(text.trim());
-            if (seats < 1 || seats > 8) {
+            if (seats < 1 || seats > 7) {
                 bot.send(flowHelper.sendWithInline(chatId,
                         "⚠️ Please enter a number between 1 and 8:",
                         List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
@@ -898,7 +898,7 @@ public class PostRideHandler {
             stateManager.save(ctx.chatId(), updated);
             ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
                     "✅ End point: <b>" + HtmlEscapeUtil.escape(hub.name()) + "</b>\n\n" +
-                            "🪑 <b>How many passengers can you take?</b> (1-8)"));
+                            "🪑 <b>How many passengers can you take?</b> (1-7)"));
         } catch (Exception e) {
             log.error("Failed to suggest hub for destination: {}", e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
