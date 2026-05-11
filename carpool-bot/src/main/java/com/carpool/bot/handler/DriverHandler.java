@@ -574,7 +574,7 @@ public class DriverHandler {
                     List.of(List.of(
                             BotMessageBuilder.button("✅ Complete Ride",
                                     "COMPLETE_RIDE:" + ctx.entityId()),
-                            BotMessageBuilder.button("📜 My Bookings", "MY_BOOKINGS")
+                            BotMessageBuilder.button("📋 View Bookings", "DRIVER_BOOKINGS")
                     ))));
 
         } catch (Exception e) {
