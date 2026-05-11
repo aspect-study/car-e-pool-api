@@ -7,6 +7,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
@@ -240,8 +241,8 @@ public class MessageHandler {
                             "⚠️ <b>This ride is no longer available.</b>\n\n" +
                                     "It may have already departed or been cancelled.",
                             List.of(List.of(
-                                    BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE"),
-                                    BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU")
+                                    BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE", ButtonStyle.SUCCESS.toString()),
+                                    BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                             ))));
                     return;
                 }
@@ -250,12 +251,12 @@ public class MessageHandler {
                 List<List<InlineKeyboardButton>> rows = isDriver
                         ? List.of(List.of(
                         BotMessageBuilder.button(
-                                "📋 View Bookings", "RIDE_BOOKINGS:" + rideId),
-                        BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")))
+                                "📋 View Bookings", "RIDE_BOOKINGS:" + rideId,  ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())))
                         : List.of(List.of(
                         BotMessageBuilder.button(
-                                "✅ Book This Ride", "BOOK_RIDE:" + rideId),
-                        BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")));
+                                "✅ Book This Ride", "BOOK_RIDE:" + rideId,  ButtonStyle.SUCCESS.toString()),
+                        BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())));
 
                 stateManager.save(chatId, state.withSelectedRideId(rideId));
                 String ratingLabel = ratingService.getDriverRatingLabel(ride.driver().id());

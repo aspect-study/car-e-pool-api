@@ -2,6 +2,7 @@ package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -33,15 +34,15 @@ public class HelpHandler {
                         "What would you like to know about?",
                 List.of(
                         List.of(
-                                BotMessageBuilder.button("🚗 How to Post a Ride", "HELP:POST_RIDE"),
-                                BotMessageBuilder.button("🔍 How to Find a Ride", "HELP:FIND_RIDE")
+                                BotMessageBuilder.button("🚗 How to Post a Ride", "HELP:POST_RIDE", ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🔍 How to Find a Ride", "HELP:FIND_RIDE",  ButtonStyle.SUCCESS.toString())
                         ),
                         List.of(
-                                BotMessageBuilder.button("📋 Community Rules",    "HELP:RULES"),
-                                BotMessageBuilder.button("💡 Quick Commands",     "HELP:COMMANDS")
+                                BotMessageBuilder.button("📋 Community Rules",    "HELP:RULES", ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("💡 Quick Commands",     "HELP:COMMANDS", ButtonStyle.SUCCESS.toString())
                         ),
                         List.of(
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                         )
                 )));
     }
@@ -81,9 +82,9 @@ public class HelpHandler {
                         "once posted. You can only have one active ride at a time.</i>",
                 List.of(
                         List.of(
-                                BotMessageBuilder.button("◀️ Back", "HELP:BACK"),
-                                BotMessageBuilder.button("🚗 Post a Ride Now", "POST_RIDE"),
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                BotMessageBuilder.button("◀️ Back", "HELP:BACK",ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🚗 Post a Ride Now", "POST_RIDE", ButtonStyle.SUCCESS.toString()),
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                         )
                 )));
     }
@@ -103,9 +104,9 @@ public class HelpHandler {
                         "if unanswered.</i>",
                 List.of(
                         List.of(
-                                BotMessageBuilder.button("◀️ Back", "HELP:BACK"),
-                                BotMessageBuilder.button("🔍 Find a Ride Now", "FIND_RIDE"),
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                BotMessageBuilder.button("◀️ Back", "HELP:BACK",ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🔍 Find a Ride Now", "FIND_RIDE", ButtonStyle.SUCCESS.toString()),
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                         )
                 )));
     }
@@ -129,8 +130,8 @@ public class HelpHandler {
                         "(\"Colorum\" behavior) = permanent ban.",
                 List.of(
                         List.of(
-                                BotMessageBuilder.button("◀️ Back", "HELP:BACK"),
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                BotMessageBuilder.button("◀️ Back", "HELP:BACK", ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                         )
                 )));
     }
@@ -149,8 +150,8 @@ public class HelpHandler {
                         "/help — Open the Help Center",
                 List.of(
                         List.of(
-                                BotMessageBuilder.button("◀️ Back", "HELP:BACK"),
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                BotMessageBuilder.button("◀️ Back", "HELP:BACK",ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                         )
                 )));
     }

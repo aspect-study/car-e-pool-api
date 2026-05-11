@@ -6,6 +6,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.RideRating;
 import com.carpool.repository.UserRepository;
@@ -55,16 +56,16 @@ public class RatingHandler {
 
         var rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("⭐",     "RATE_STARS:1:" + rideId + ":" + rateeId),
-                        BotMessageBuilder.button("⭐⭐",   "RATE_STARS:2:" + rideId + ":" + rateeId),
-                        BotMessageBuilder.button("⭐⭐⭐", "RATE_STARS:3:" + rideId + ":" + rateeId)
+                        BotMessageBuilder.button("⭐",     "RATE_STARS:1:" + rideId + ":" + rateeId, ButtonStyle.DANGER.toString()),
+                        BotMessageBuilder.button("⭐⭐",   "RATE_STARS:2:" + rideId + ":" + rateeId, ButtonStyle.DANGER.toString()),
+                        BotMessageBuilder.button("⭐⭐⭐", "RATE_STARS:3:" + rideId + ":" + rateeId, ButtonStyle.PRIMARY.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("⭐⭐⭐⭐",   "RATE_STARS:4:" + rideId + ":" + rateeId),
-                        BotMessageBuilder.button("⭐⭐⭐⭐⭐", "RATE_STARS:5:" + rideId + ":" + rateeId)
+                        BotMessageBuilder.button("⭐⭐⭐⭐",   "RATE_STARS:4:" + rideId + ":" + rateeId, ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("⭐⭐⭐⭐⭐", "RATE_STARS:5:" + rideId + ":" + rateeId, ButtonStyle.SUCCESS.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("⏭️ Skip", "SKIP_RATING:" + rideId)
+                        BotMessageBuilder.button("⏭️ Skip", "SKIP_RATING:" + rideId, ButtonStyle.PRIMARY.toString())
                 )
         );
 
@@ -113,8 +114,8 @@ public class RatingHandler {
 
         var rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("⏭️ Skip comment", "SUBMIT_RATING:" + rideId),
-                        BotMessageBuilder.button("❌ Cancel",        "SKIP_RATING:"  + rideId)
+                        BotMessageBuilder.button("⏭️ Skip comment", "SUBMIT_RATING:" + rideId, ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("❌ Cancel",        "SKIP_RATING:"  + rideId, ButtonStyle.DANGER.toString())
                 )
         );
 
@@ -215,7 +216,7 @@ public class RatingHandler {
                                     HtmlEscapeUtil.escape(rateeName) +
                                     " is already in your favorites. ⭐",
                             List.of(List.of(
-                                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                             ))));
                     return;
                 }
@@ -231,8 +232,8 @@ public class RatingHandler {
                         List.of(List.of(
                                 BotMessageBuilder.button(
                                         "⭐ Save as Favorite",
-                                        "SAVE_FAVORITE:" + saved.getRatee().getId()),
-                                BotMessageBuilder.button("Skip", "SKIP_FAVORITE")
+                                        "SAVE_FAVORITE:" + saved.getRatee().getId(), ButtonStyle.SUCCESS.toString()),
+                                BotMessageBuilder.button("Skip", "SKIP_FAVORITE", ButtonStyle.PRIMARY.toString())
                         ))));
             } else {
                 // Driver rated passenger — just confirm and go to menu
@@ -242,7 +243,7 @@ public class RatingHandler {
                                 "Thanks for rating <b>" +
                                 HtmlEscapeUtil.escape(rateeName) + "</b>. 🙏",
                         List.of(List.of(
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                         ))));
             }
 
@@ -330,7 +331,7 @@ public class RatingHandler {
                     "⭐ <b>" + favName + " saved as favorite!</b>\n\n" +
                             "You'll be notified when they post a new ride. 🔔",
                     List.of(List.of(
-                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                     ))));
 
         } catch (Exception e) {
@@ -363,7 +364,7 @@ public class RatingHandler {
                     .parseMode("HTML")
                     .text("🔕 <b>Unfollowed " + favName + "</b>\n\nYou'll no longer receive alerts when they post a ride.")
                     .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
-                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                     ))))
                     .build());
 
@@ -445,7 +446,7 @@ public class RatingHandler {
                             passenger.getTelegramHandle()) + ")" : "";
                     rows.add(List.of(BotMessageBuilder.button(
                             "👤 " + HtmlEscapeUtil.escape(passenger.getFullName()) + handle,
-                            "RATE_PASSENGER:" + rideId + ":" + rateeId)));
+                            "RATE_PASSENGER:" + rideId + ":" + rateeId, ButtonStyle.PRIMARY.toString())));
                 }
             });
         }
@@ -456,7 +457,7 @@ public class RatingHandler {
             return;
         }
 
-        rows.add(List.of(BotMessageBuilder.button("⏭️ Skip", "SKIP_RATING:" + rideId)));
+        rows.add(List.of(BotMessageBuilder.button("⏭️ Skip", "SKIP_RATING:" + rideId, ButtonStyle.PRIMARY.toString())));
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                 "⭐ <b>Rate Your Passengers</b>\n\n" +

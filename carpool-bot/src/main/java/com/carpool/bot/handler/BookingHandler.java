@@ -7,6 +7,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.RideStatus;
@@ -62,8 +63,8 @@ public class BookingHandler {
                         "<i>e.g. \"I'll be at [landmark], [how to spot you]. " +
                         "[Any other info the driver should know.]\"</i>",
                 List.of(List.of(
-                        BotMessageBuilder.button("⏭️ Skip",   "BOOK_NOW:" + rideId),
-                        BotMessageBuilder.button("❌ Cancel", "MAIN_MENU")
+                        BotMessageBuilder.button("⏭️ Skip",   "BOOK_NOW:" + rideId, ButtonStyle.SUCCESS.toString()),
+                        BotMessageBuilder.button("❌ Cancel", "MAIN_MENU",  ButtonStyle.DANGER.toString())
                 ))));
     }
 
@@ -79,8 +80,8 @@ public class BookingHandler {
                             "Waiting for the driver to accept your request.\n" +
                             "You'll be notified once the driver responds.",
                     List.of(List.of(
-                            BotMessageBuilder.button("📜 My Bookings", "MY_BOOKINGS"),
-                            BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU")
+                            BotMessageBuilder.button("📜 My Bookings", "MY_BOOKINGS", ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                     ))));
 
         } catch (Exception e) {
@@ -304,15 +305,15 @@ public class BookingHandler {
         Long bookingId = ctx.entityId();
         var rows = List.of(
                 List.of(BotMessageBuilder.button("🔄 Found another ride",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":FOUND_OTHER")),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":FOUND_OTHER", null)),
                 List.of(BotMessageBuilder.button("📅 Change of plans",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":CHANGE_PLANS")),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":CHANGE_PLANS", null)),
                 List.of(BotMessageBuilder.button("⏰ Running late",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":RUNNING_LATE")),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":RUNNING_LATE", null)),
                 List.of(BotMessageBuilder.button("❌ Other reason",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":OTHER")),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":OTHER", null)),
                 List.of(BotMessageBuilder.button("◀️ Back",
-                        "VIEW_BOOKING:" + bookingId))
+                        "VIEW_BOOKING:" + bookingId, ButtonStyle.PRIMARY.toString()))
         );
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                 "❓ <b>Why are you cancelling?</b>", rows));
