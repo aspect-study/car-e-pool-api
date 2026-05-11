@@ -9,6 +9,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.User;
 import com.carpool.repository.UserRepository;
@@ -137,21 +138,21 @@ public class ProfileHandler {
             boolean isAdmin = botConfig.isAdmin(ctx.telegramId());
             List<List<InlineKeyboardButton>> profileRows = new ArrayList<>();
             profileRows.add(List.of(
-                    BotMessageBuilder.button("🔄 Refresh",    "MY_PROFILE"),
-                    BotMessageBuilder.button("🚘 My Vehicle", "VEHICLE_CHANGE"),
-                    BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
+                    BotMessageBuilder.button("🔄 Refresh",    "MY_PROFILE", null),
+                    BotMessageBuilder.button("🚘 My Vehicle", "VEHICLE_CHANGE", ButtonStyle.PRIMARY.toString()),
+                    BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU", ButtonStyle.PRIMARY.toString())
             ));
             if (stats.driverRidesPosted() != null) {
                 long followerCount = favoriteService.getFollowerCount(ctx.carpoolUserId());
                 profileRows.add(List.of(
                         BotMessageBuilder.button(
                                 "👥 My Followers (" + followerCount + ")",
-                                "MY_FOLLOWERS:0")));
+                                "MY_FOLLOWERS:0", ButtonStyle.PRIMARY.toString())));
             }
             if (isAdmin) {
                 profileRows.add(List.of(
-                        BotMessageBuilder.button("📊 Admin Stats",   "ADMIN_STATS"),
-                        BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS")));
+                        BotMessageBuilder.button("📊 Admin Stats",   "ADMIN_STATS",null),
+                        BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS", null)));
             }
 
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString(), profileRows));
@@ -186,8 +187,8 @@ public class ProfileHandler {
                                 "Followers are passengers who have saved you as a favorite driver. " +
                                 "They receive a notification whenever you post a new ride.",
                         List.of(List.of(
-                                BotMessageBuilder.button("👤 My Profile", "MY_PROFILE"),
-                                BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
+                                BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU", null)
                         ))));
                 return;
             }
@@ -219,19 +220,19 @@ public class ProfileHandler {
             if (totalPages > 1) {
                 List<InlineKeyboardButton> nav = new ArrayList<>();
                 if (safePage > 0) {
-                    nav.add(BotMessageBuilder.button("◀️ Prev", "MY_FOLLOWERS:" + (safePage - 1)));
+                    nav.add(BotMessageBuilder.button("◀️ Prev", "MY_FOLLOWERS:" + (safePage - 1), null));
                 }
                 nav.add(BotMessageBuilder.button(
-                        "📄 " + (safePage + 1) + "/" + totalPages, "NOOP"));
+                        "📄 " + (safePage + 1) + "/" + totalPages, "NOOP", null));
                 if (safePage < totalPages - 1) {
-                    nav.add(BotMessageBuilder.button("Next ▶️", "MY_FOLLOWERS:" + (safePage + 1)));
+                    nav.add(BotMessageBuilder.button("Next ▶️", "MY_FOLLOWERS:" + (safePage + 1), null));
                 }
                 rows.add(nav);
             }
 
             rows.add(List.of(
-                    BotMessageBuilder.button("👤 My Profile", "MY_PROFILE"),
-                    BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU")
+                    BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", null),
+                    BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU", ButtonStyle.PRIMARY.toString())
             ));
 
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(), rows));
@@ -398,7 +399,7 @@ public class ProfileHandler {
             ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(), colorPrompt));
         } else {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), colorPrompt, List.of(
-                    List.of(BotMessageBuilder.button("❌ Cancel", "VEHICLE_CHANGE"))
+                    List.of(BotMessageBuilder.button("❌ Cancel", "VEHICLE_CHANGE", null))
             )));
         }
     }
@@ -429,10 +430,10 @@ public class ProfileHandler {
                 ? "CANCEL_POST_RIDE" : "VEHICLE_CHANGE";
         var rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("✅ Save & Continue", "VEHICLE_CONFIRM_SAVE"),
-                        BotMessageBuilder.button("✏️ Re-enter",        "ADD_VEHICLE")
+                        BotMessageBuilder.button("✅ Save & Continue", "VEHICLE_CONFIRM_SAVE", ButtonStyle.SUCCESS.toString()),
+                        BotMessageBuilder.button("✏️ Re-enter",        "ADD_VEHICLE", ButtonStyle.PRIMARY.toString())
                 ),
-                List.of(BotMessageBuilder.button("❌ Cancel", cancelCallback))
+                List.of(BotMessageBuilder.button("❌ Cancel", cancelCallback, ButtonStyle.DANGER.toString()))
         );
         bot.send(flowHelper.sendWithInline(chatId,
                 "🚘 <b>New Vehicle</b>\n\n" + vehicleDisplay + "\n\nSave this vehicle?",
@@ -474,14 +475,14 @@ public class ProfileHandler {
                     v.color() != null ? v.color() + " " : "",
                     v.model(),
                     v.plateNumber());
-            rows.add(List.of(BotMessageBuilder.button(label, "VEHICLE_SELECT:" + v.id())));
+            rows.add(List.of(BotMessageBuilder.button(label, "VEHICLE_SELECT:" + v.id(), ButtonStyle.SUCCESS.toString())));
         }
 
         if (vehicles.size() < 3) {
-            rows.add(List.of(BotMessageBuilder.button("➕ Add New Vehicle", "ADD_VEHICLE")));
+            rows.add(List.of(BotMessageBuilder.button("➕ Add New Vehicle", "ADD_VEHICLE", ButtonStyle.PRIMARY.toString())));
         }
 
-        rows.add(List.of(BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")));
+        rows.add(List.of(BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE", ButtonStyle.DANGER.toString())));
 
         bot.send(flowHelper.sendWithInline(chatId,
                 "🚘 <b>Select Vehicle for This Ride</b>\n\n" +
@@ -497,8 +498,8 @@ public class ProfileHandler {
 
         if (vehicles.isEmpty()) {
             var rows = List.of(
-                    List.of(BotMessageBuilder.button("➕ Add Vehicle", "ADD_VEHICLE")),
-                    List.of(BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU"))
+                    List.of(BotMessageBuilder.button("➕ Add Vehicle", "ADD_VEHICLE", ButtonStyle.SUCCESS.toString())),
+                    List.of(BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString()))
             );
             bot.send(flowHelper.sendWithInline(chatId,
                     "🚘 <b>My Vehicles</b>\n\n<i>No vehicles saved yet.</i>\n\n" +
@@ -520,13 +521,13 @@ public class ProfileHandler {
                     HtmlEscapeUtil.escape(v.plateNumber()),
                     v.seatCapacity()));
             rows.add(List.of(BotMessageBuilder.button(
-                    "🗑️ Remove #" + (i + 1), "VEHICLE_REMOVE:" + v.id())));
+                    "🗑️ Remove #" + (i + 1), "VEHICLE_REMOVE:" + v.id(), ButtonStyle.DANGER.toString())));
         }
 
         if (vehicles.size() < 3) {
-            rows.add(List.of(BotMessageBuilder.button("➕ Add Vehicle", "ADD_VEHICLE")));
+            rows.add(List.of(BotMessageBuilder.button("➕ Add Vehicle", "ADD_VEHICLE", ButtonStyle.SUCCESS.toString())));
         }
-        rows.add(List.of(BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")));
+        rows.add(List.of(BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())));
 
         bot.send(flowHelper.sendWithInline(chatId, sb.toString().trim(), rows));
     }
@@ -566,8 +567,8 @@ public class ProfileHandler {
                 List.of(
                         BotMessageBuilder.urlButton("👥 Join the Group",
                                 botConfig.getGroupInviteLink()),
-                        BotMessageBuilder.button("✅ I Accept",  "TERMS_ACCEPT"),
-                        BotMessageBuilder.button("❌ Decline",   "TERMS_DECLINE")
+                        BotMessageBuilder.button("✅ I Accept",  "TERMS_ACCEPT", ButtonStyle.SUCCESS.toString()),
+                        BotMessageBuilder.button("❌ Decline",   "TERMS_DECLINE", ButtonStyle.DANGER.toString())
                 )
         );
         bot.send(flowHelper.sendWithInline(chatId, termsText, rows));
@@ -606,7 +607,7 @@ public class ProfileHandler {
                                     "👥 Join the Group",
                                     botConfig.getGroupInviteLink())),
                             List.of(BotMessageBuilder.button(
-                                    "▶️ I'm already in — Continue", "MAIN_MENU"))
+                                    "▶️ I'm already in — Continue", "MAIN_MENU", ButtonStyle.SUCCESS.toString()))
                     )));
 
         } catch (Exception e) {
@@ -629,7 +630,7 @@ public class ProfileHandler {
             });
         }
         var rows = List.of(List.of(
-                BotMessageBuilder.button("🔁 Review Terms Again", "TERMS_VIEW_AGAIN")
+                BotMessageBuilder.button("🔁 Review Terms Again", "TERMS_VIEW_AGAIN", ButtonStyle.PRIMARY.toString())
         ));
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                 "We understand if you're not ready. 🙏\n\n" +
@@ -647,8 +648,8 @@ public class ProfileHandler {
         String firstName = user.getFullName().split(" ")[0];
         var rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("📄 View Terms & Accept", "TERMS_WELCOME"),
-                        BotMessageBuilder.button("❌ Not Now",              "TERMS_DECLINE")
+                        BotMessageBuilder.button("📄 View Terms & Accept", "TERMS_WELCOME",  ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("❌ Not Now",              "TERMS_DECLINE",  ButtonStyle.DANGER.toString())
                 )
         );
         bot.send(flowHelper.sendWithInline(chatId,
@@ -667,7 +668,7 @@ public class ProfileHandler {
      */
     public void showTermsReminder(Long chatId, CarpoolBot bot) {
         var rows = List.of(List.of(
-                BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME")
+                BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME", ButtonStyle.PRIMARY.toString())
         ));
         bot.send(flowHelper.sendWithInline(chatId,
                 "⚠️ <b>Terms Acceptance Required</b>\n\n" +
@@ -705,9 +706,9 @@ public class ProfileHandler {
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), report,
                 List.of(
                         List.of(
-                                BotMessageBuilder.button("🔄 Refresh",       "ADMIN_STATS"),
-                                BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS"),
-                                BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
+                                BotMessageBuilder.button("🔄 Refresh",       "ADMIN_STATS", null),
+                                BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS", null),
+                                BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU", null)
                         )
                 )));
     }
@@ -754,8 +755,8 @@ public class ProfileHandler {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     "🏘️ <b>Pending Hub Suggestions</b>\n\n<i>No pending hubs at the moment.</i>",
                     List.of(List.of(
-                            BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS"),
-                            BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
+                            BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS", null),
+                            BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
                     ))));
             return;
         }
@@ -781,8 +782,8 @@ public class ProfileHandler {
                     HtmlEscapeUtil.escape(hub.area()),
                     hub.id()));
             rows.add(List.of(
-                    BotMessageBuilder.button("✅ #" + globalNum, "APPROVE_HUB:" + hub.id()),
-                    BotMessageBuilder.button("❌ #" + globalNum, "REJECT_HUB:"  + hub.id())
+                    BotMessageBuilder.button("✅ #" + globalNum, "APPROVE_HUB:" + hub.id(), null),
+                    BotMessageBuilder.button("❌ #" + globalNum, "REJECT_HUB:"  + hub.id(), null)
             ));
         }
 
@@ -790,19 +791,19 @@ public class ProfileHandler {
         if (totalPages > 1) {
             List<InlineKeyboardButton> nav = new ArrayList<>();
             if (safePage > 0) {
-                nav.add(BotMessageBuilder.button("◀️ Prev", "PENDING_HUBS:" + (safePage - 1)));
+                nav.add(BotMessageBuilder.button("◀️ Prev", "PENDING_HUBS:" + (safePage - 1), null));
             }
             nav.add(BotMessageBuilder.button(
-                    "📄 " + (safePage + 1) + "/" + totalPages, "NOOP"));
+                    "📄 " + (safePage + 1) + "/" + totalPages, "NOOP", null));
             if (safePage < totalPages - 1) {
-                nav.add(BotMessageBuilder.button("Next ▶️", "PENDING_HUBS:" + (safePage + 1)));
+                nav.add(BotMessageBuilder.button("Next ▶️", "PENDING_HUBS:" + (safePage + 1), null));
             }
             rows.add(nav);
         }
 
         rows.add(List.of(
-                BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS:" + safePage),
-                BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU")
+                BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS:" + safePage, null),
+                BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
         ));
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(), rows));
@@ -828,8 +829,8 @@ public class ProfileHandler {
                             HtmlEscapeUtil.escape(hub.area()),
                             hub.code()),
                     List.of(List.of(
-                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS"),
-                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
+                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS", null),
+                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU", null)
                     ))));
         } catch (Exception e) {
             log.error("Failed to approve hub id={}: {}", hubId, e.getMessage());
@@ -854,8 +855,8 @@ public class ProfileHandler {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     "❌ <b>Hub Rejected.</b>\n\nThe suggestion has been marked as rejected.",
                     List.of(List.of(
-                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS"),
-                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU")
+                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS", null),
+                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU", null)
                     ))));
         } catch (Exception e) {
             log.error("Failed to reject hub id={}: {}", hubId, e.getMessage());

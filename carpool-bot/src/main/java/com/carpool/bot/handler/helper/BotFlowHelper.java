@@ -7,6 +7,7 @@ import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotCalendarUtil;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.BotTimePickerUtil;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
@@ -84,41 +85,43 @@ public class BotFlowHelper {
 
             if (active.status() == RideStatus.DEPARTED) {
                 rows.add(List.of(
-                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
-                        BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id())
+                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id(), ButtonStyle.SUCCESS.toString())
                 ));
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")));
+                rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
 
             } else if (pendingCount > 0) {
                 rows.add(List.of(
-                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
-                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
+                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(), ButtonStyle.SUCCESS.toString())
                 ));
                 rows.add(List.of(
-                        BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS"),
-                        BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())
+                        BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS", null),
+                        BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(), ButtonStyle.DANGER.toString())
                 ));
                 if (canReannounce) {
                     rows.add(List.of(BotMessageBuilder.button(
                             "📢 Re-announce (" + (3 - active.announceCount()) + " left)",
-                            "REANNOUNCE_RIDE:" + active.id())));
+                            "REANNOUNCE_RIDE:" + active.id(),
+                            null)));
                 }
-                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")));
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE")));
+                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.PRIMARY.toString())));
+                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", null)));
 
             } else {
                 rows.add(List.of(
-                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id()),
-                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id())
+                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id(),  ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(),  ButtonStyle.SUCCESS.toString())
                 ));
-                rows.add(List.of(BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id())));
+                rows.add(List.of(BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(),  ButtonStyle.DANGER.toString())));
                 if (canReannounce) {
                     rows.add(List.of(BotMessageBuilder.button(
                             "📢 Re-announce (" + (3 - active.announceCount()) + " left)",
-                            "REANNOUNCE_RIDE:" + active.id())));
+                            "REANNOUNCE_RIDE:" + active.id(),
+                            null)));
                 }
-                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")));
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE")));
+                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.PRIMARY.toString())));
+                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", null)));
             }
 
             bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId, msg));
@@ -137,17 +140,17 @@ public class BotFlowHelper {
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
             rows.add(List.of(
-                    BotMessageBuilder.button("🏠 Home to Work", "DIRECTION:HOME_TO_WORK"),
-                    BotMessageBuilder.button("🏢 Work to Home", "DIRECTION:WORK_TO_HOME")
+                    BotMessageBuilder.button("🏠 Home to Work", "DIRECTION:HOME_TO_WORK", ButtonStyle.PRIMARY.toString()),
+                    BotMessageBuilder.button("🏢 Work to Home", "DIRECTION:WORK_TO_HOME", ButtonStyle.PRIMARY.toString())
             ));
             if (!myBookings.isEmpty()) {
                 rows.add(List.of(BotMessageBuilder.button(
-                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS")));
+                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS",  ButtonStyle.SUCCESS.toString())));
             }
             if (hasPastRides) {
-                rows.add(List.of(BotMessageBuilder.button("🔄 Repost a Ride", "MY_RIDES")));
+                rows.add(List.of(BotMessageBuilder.button("🔄 Repost a Ride", "MY_RIDES", ButtonStyle.PRIMARY.toString())));
             }
-            rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE")));
+            rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE",  ButtonStyle.PRIMARY.toString())));
 
             bot.send(sendWithInline(chatId, prompt, rows));
         }
@@ -171,16 +174,16 @@ public class BotFlowHelper {
 
         var rows = myBookings.isEmpty()
                 ? List.of(List.of(
-                BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
-                BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.PRIMARY.toString()),
+                BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE", ButtonStyle.SUCCESS.toString())
         ))
                 : List.of(
                 List.of(
-                        BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
-                        BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE")
+                        BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE", ButtonStyle.SUCCESS.toString())
                 ),
                 List.of(BotMessageBuilder.button(
-                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS"))
+                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS",  ButtonStyle.PRIMARY.toString()))
         );
 
         bot.send(sendWithInline(chatId,
@@ -264,26 +267,26 @@ public class BotFlowHelper {
 
         var rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("🌙 Early Bird (1-4 AM)",    "TIME:EARLY_BIRD"),
-                        BotMessageBuilder.button("🌙 Early Morning (4-6 AM)", "TIME:EARLY_MORNING")
+                        BotMessageBuilder.button("🌙 Early Bird (1-4 AM)",    "TIME:EARLY_BIRD", null),
+                        BotMessageBuilder.button("🌙 Early Morning (4-6 AM)", "TIME:EARLY_MORNING", null)
                 ),
                 List.of(
-                        BotMessageBuilder.button("🌅 Morning Rush (6-9 AM)",  "TIME:MORNING"),
-                        BotMessageBuilder.button("☀️ Late Morning (9-12 PM)", "TIME:MID_MORNING")
+                        BotMessageBuilder.button("🌅 Morning Rush (6-9 AM)",  "TIME:MORNING", null),
+                        BotMessageBuilder.button("☀️ Late Morning (9-12 PM)", "TIME:MID_MORNING", null)
                 ),
                 List.of(
-                        BotMessageBuilder.button("🌤️ Noon (12-3 PM)",        "TIME:NOON"),
-                        BotMessageBuilder.button("🌇 Afternoon (3-6 PM)",     "TIME:AFTERNOON")
+                        BotMessageBuilder.button("🌤️ Noon (12-3 PM)",        "TIME:NOON", null),
+                        BotMessageBuilder.button("🌇 Afternoon (3-6 PM)",     "TIME:AFTERNOON", null)
                 ),
                 List.of(
-                        BotMessageBuilder.button("🌆 Evening (6-12 PM)",      "TIME:EVENING")
+                        BotMessageBuilder.button("🌆 Evening (6-12 PM)",      "TIME:EVENING", null)
                 ),
                 List.of(
-                        BotMessageBuilder.button("📅 Custom Date & Time",     "TIME:CUSTOM"),
-                        BotMessageBuilder.button("🔍 Show All",               "TIME:ALL_TODAY")
+                        BotMessageBuilder.button("📅 Custom Date & Time",     "TIME:CUSTOM", null),
+                        BotMessageBuilder.button("🔍 Show All",               "TIME:ALL_TODAY", null)
                 ),
                 List.of(
-                        BotMessageBuilder.button("🏠 Menu",                   "MAIN_MENU")
+                        BotMessageBuilder.button("🏠 Menu",                   "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                 )
         );
 

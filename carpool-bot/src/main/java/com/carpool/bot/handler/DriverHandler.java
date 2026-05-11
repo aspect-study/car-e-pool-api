@@ -5,6 +5,7 @@ import com.carpool.bot.handler.context.BotContext;
 import com.carpool.bot.handler.helper.BotFlowHelper;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.RideDirection;
@@ -262,15 +263,15 @@ public class DriverHandler {
         Long bookingId = ctx.entityId();
         var rows = List.of(
                 List.of(BotMessageBuilder.button("🚗 Fully booked already",
-                        "DECLINE_BOOKING_REASON:" + bookingId + ":FULL")),
+                        "DECLINE_BOOKING_REASON:" + bookingId + ":FULL", null)),
                 List.of(BotMessageBuilder.button("📍 Route change",
-                        "DECLINE_BOOKING_REASON:" + bookingId + ":ROUTE_CHANGE")),
+                        "DECLINE_BOOKING_REASON:" + bookingId + ":ROUTE_CHANGE", null)),
                 List.of(BotMessageBuilder.button("🔧 Vehicle issue",
-                        "DECLINE_BOOKING_REASON:" + bookingId + ":VEHICLE_ISSUE")),
+                        "DECLINE_BOOKING_REASON:" + bookingId + ":VEHICLE_ISSUE", null)),
                 List.of(BotMessageBuilder.button("❌ Other reason",
-                        "DECLINE_BOOKING_REASON:" + bookingId + ":OTHER")),
+                        "DECLINE_BOOKING_REASON:" + bookingId + ":OTHER", null)),
                 List.of(BotMessageBuilder.button("◀️ Back",
-                        "VIEW_PENDING:" + bookingId))
+                        "VIEW_PENDING:" + bookingId, ButtonStyle.PRIMARY.toString()))
         );
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                 "❓ <b>Why are you declining this request?</b>", rows));
@@ -380,12 +381,12 @@ public class DriverHandler {
             var rows = List.of(
                     List.of(
                             BotMessageBuilder.button("✅ Accept",
-                                    "ACCEPT_BOOKING:"  + ctx.entityId()),
+                                    "ACCEPT_BOOKING:"  + ctx.entityId(), ButtonStyle.SUCCESS.toString()),
                             BotMessageBuilder.button("❌ Decline",
-                                    "DECLINE_BOOKING:" + ctx.entityId())
+                                    "DECLINE_BOOKING:" + ctx.entityId(), ButtonStyle.DANGER.toString())
                     ),
                     List.of(BotMessageBuilder.button(
-                            "◀️ Back to Pending", "PENDING_REQUESTS"))
+                            "◀️ Back to Pending", "PENDING_REQUESTS", ButtonStyle.PRIMARY.toString()))
             );
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), detail, rows));
 
@@ -437,14 +438,14 @@ public class DriverHandler {
 
                 var rows = List.of(
                         List.of(BotMessageBuilder.button("🔧 Vehicle issue",
-                                "CONFIRM_CANCEL_RIDE:" + rideId + ":VEHICLE_ISSUE")),
+                                "CONFIRM_CANCEL_RIDE:" + rideId + ":VEHICLE_ISSUE", null)),
                         List.of(BotMessageBuilder.button("📍 Route change",
-                                "CONFIRM_CANCEL_RIDE:" + rideId + ":ROUTE_CHANGE")),
+                                "CONFIRM_CANCEL_RIDE:" + rideId + ":ROUTE_CHANGE", null)),
                         List.of(BotMessageBuilder.button("🏠 Personal reason",
-                                "CONFIRM_CANCEL_RIDE:" + rideId + ":PERSONAL")),
+                                "CONFIRM_CANCEL_RIDE:" + rideId + ":PERSONAL", null)),
                         List.of(BotMessageBuilder.button("❌ Other reason",
-                                "CONFIRM_CANCEL_RIDE:" + rideId + ":OTHER")),
-                        List.of(BotMessageBuilder.button("◀️ Keep Ride", "MAIN_MENU"))
+                                "CONFIRM_CANCEL_RIDE:" + rideId + ":OTHER", null)),
+                        List.of(BotMessageBuilder.button("◀️ Keep Ride", "MAIN_MENU", ButtonStyle.PRIMARY.toString()))
                 );
                 ctx.bot().send(flowHelper.sendWithInline(
                         ctx.chatId(), sb.toString(), rows));
@@ -501,7 +502,7 @@ public class DriverHandler {
                         "✅ <b>Ride Cancelled</b>\n\n" +
                                 "No passengers were booked on this ride.",
                         List.of(List.of(
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")))));
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())))));
             } else {
                 StringBuilder sb = new StringBuilder("✅ <b>Ride Cancelled</b>\n\n");
                 sb.append(String.format("<b>%d passenger%s notified:</b>\n",
@@ -520,7 +521,7 @@ public class DriverHandler {
                 }
                 bot.send(flowHelper.sendWithInline(chatId, sb.toString(),
                         List.of(List.of(
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")))));
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())))));
             }
 
         } catch (Exception e) {
@@ -573,8 +574,8 @@ public class DriverHandler {
                             "Tap <b>Complete Ride</b> when you reach the destination.",
                     List.of(List.of(
                             BotMessageBuilder.button("✅ Complete Ride",
-                                    "COMPLETE_RIDE:" + ctx.entityId()),
-                            BotMessageBuilder.button("📋 View Bookings", "DRIVER_BOOKINGS")
+                                    "COMPLETE_RIDE:" + ctx.entityId(), ButtonStyle.SUCCESS.toString()),
+                            BotMessageBuilder.button("📋 View Bookings", "DRIVER_BOOKINGS", ButtonStyle.PRIMARY.toString())
                     ))));
 
         } catch (Exception e) {
@@ -596,8 +597,8 @@ public class DriverHandler {
                             "Thank you for driving! All passengers have been notified.\n\n" +
                             "Please collect gas share contributions from your passengers.",
                     List.of(List.of(
-                            BotMessageBuilder.button("🚗 My Rides", "MY_RIDES"),
-                            BotMessageBuilder.button("🏠 Menu",     "MAIN_MENU")
+                            BotMessageBuilder.button("🚗 My Rides", "MY_RIDES",  ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("🏠 Menu",     "MAIN_MENU", null)
                     ))));
 
         } catch (Exception e) {

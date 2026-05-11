@@ -6,6 +6,7 @@ import com.carpool.bot.handler.MessageHandler;
 import com.carpool.bot.ratelimit.BotRateLimiter;
 import com.carpool.bot.service.GroupNotificationService;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.repository.UserRepository;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -125,7 +126,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                         send(sendWithInlineInternal(gatedChatId,
                                 "Tap below to review and accept:",
                                 List.of(List.of(
-                                        BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME")
+                                        BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME", ButtonStyle.PRIMARY.toString())
                                 ))));
                         return;
                     }
@@ -177,7 +178,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                     send(sendWithInlineInternal(gatedChatId,
                             "⚠️ Please accept our community terms first.",
                             List.of(List.of(
-                                    BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME")
+                                    BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME", ButtonStyle.PRIMARY.toString())
                             ))));
                     return;
                 }
@@ -239,7 +240,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                                 "Telegram has a 4,096 character limit per message.")
                         .parseMode("HTML")
                         .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                         ))))
                         .build());
                 return;

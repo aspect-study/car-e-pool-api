@@ -2,6 +2,7 @@ package com.carpool.bot.handler;
 
 import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -88,12 +89,12 @@ public class SessionRecoveryHandler {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         if (POST_RIDE_ACTIONS.contains(action)) {
             rows.add(List.of(
-                    BotMessageBuilder.button("🚗 Post a New Ride", "POST_RIDE"),
-                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                    BotMessageBuilder.button("🚗 Post a New Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString()),
+                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", null)
             ));
         } else {
             rows.add(List.of(
-                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")
+                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", null)
             ));
         }
         return rows;

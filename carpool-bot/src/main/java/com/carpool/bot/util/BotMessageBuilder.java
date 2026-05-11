@@ -36,6 +36,7 @@ public class BotMessageBuilder {
                 InlineKeyboardButton.builder()
                         .text("🏠 Menu")
                         .callbackData("MAIN_MENU")
+                        .style("primary")
                         .build());
     }
 
@@ -77,10 +78,12 @@ public class BotMessageBuilder {
                         InlineKeyboardButton.builder()
                                 .text("🏠 Home to Work")
                                 .callbackData("DIRECTION:HOME_TO_WORK")
+                                .style("primary")
                                 .build(),
                         InlineKeyboardButton.builder()
                                 .text("🏢 Work to Home")
                                 .callbackData("DIRECTION:WORK_TO_HOME")
+                                .style("primary")
                                 .build()
                 )
         );
@@ -153,10 +156,11 @@ public class BotMessageBuilder {
                 .build();
     }
 
-    public static InlineKeyboardButton button(String text, String callbackData) {
+    public static InlineKeyboardButton button(String text, String callbackData, String style) {
         return InlineKeyboardButton.builder()
                 .text(text)
                 .callbackData(callbackData)
+                .style(style)
                 .build();
     }
 
@@ -322,13 +326,13 @@ public class BotMessageBuilder {
         String suffix = ":" + rideId + ":" + rateeId;
         return List.of(
                 List.of(
-                        button("⭐",     "RATE_STARS:1" + suffix),
-                        button("⭐⭐",   "RATE_STARS:2" + suffix),
-                        button("⭐⭐⭐", "RATE_STARS:3" + suffix)
+                        button("⭐",     "RATE_STARS:1" + suffix, ButtonStyle.DANGER.toString()),
+                        button("⭐⭐",   "RATE_STARS:2" + suffix, ButtonStyle.DANGER.toString()),
+                        button("⭐⭐⭐", "RATE_STARS:3" + suffix, ButtonStyle.DANGER.toString())
                 ),
                 List.of(
-                        button("⭐⭐⭐⭐",   "RATE_STARS:4" + suffix),
-                        button("⭐⭐⭐⭐⭐", "RATE_STARS:5" + suffix)
+                        button("⭐⭐⭐⭐",   "RATE_STARS:4" + suffix, ButtonStyle.PRIMARY.toString()),
+                        button("⭐⭐⭐⭐⭐", "RATE_STARS:5" + suffix, ButtonStyle.SUCCESS.toString())
                 )
         );
     }

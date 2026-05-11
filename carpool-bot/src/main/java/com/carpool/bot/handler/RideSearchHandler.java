@@ -8,6 +8,7 @@ import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.BotTimePickerUtil;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.service.dto.response.ProfileStatsResponse;
@@ -175,12 +176,12 @@ public class RideSearchHandler {
             String timeContext = flowHelper.buildTimeContext(from, to);
             var rows = List.of(
                     List.of(
-                            BotMessageBuilder.button("🔄 Try Different Time", "FIND_RIDE"),
-                            BotMessageBuilder.button("🔧 Adjust Filters",     "SEARCH_FILTER")
+                            BotMessageBuilder.button("🔄 Try Different Time", "FIND_RIDE", null),
+                            BotMessageBuilder.button("🔧 Adjust Filters",     "SEARCH_FILTER", null)
                     ),
                     List.of(
-                            BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE"),
-                            BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU")
+                            BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString()),
+                            BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                     )
             );
             bot.send(flowHelper.sendWithInline(chatId,
@@ -212,16 +213,16 @@ public class RideSearchHandler {
             if (isDriver) {
                 rows = List.of(List.of(
                         BotMessageBuilder.button("📋 Bookings",
-                                "RIDE_BOOKINGS:" + ctx.entityId()),
+                                "RIDE_BOOKINGS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("❌ Cancel",
-                                "CANCEL_RIDE:"   + ctx.entityId())
+                                "CANCEL_RIDE:"   + ctx.entityId(), ButtonStyle.DANGER.toString())
                 ));
             } else {
                 rows = List.of(List.of(
                         BotMessageBuilder.button("✅ Book This Ride",
-                                "BOOK_RIDE:" + ctx.entityId()),
+                                "BOOK_RIDE:" + ctx.entityId(),  ButtonStyle.SUCCESS.toString()),
                         BotMessageBuilder.button("🔍 Find a Ride",
-                                "FIND_RIDE")
+                                "FIND_RIDE", ButtonStyle.PRIMARY.toString())
                 ));
             }
             String ratingLabel  = ratingService.getDriverRatingLabel(ride.driver().id());
@@ -259,30 +260,30 @@ public class RideSearchHandler {
         String priceAnyLabel  = maxPrice == null ? "✅ Any" : "Any";
 
         var rows = List.of(
-                List.of(BotMessageBuilder.button("── Sort By ──", "NOOP")),
+                List.of(BotMessageBuilder.button("── Sort By ──", "NOOP", null)),
                 List.of(
-                        BotMessageBuilder.button(earliestLabel,  "APPLY_FILTER:SORT:EARLIEST"),
-                        BotMessageBuilder.button(cheapestLabel,  "APPLY_FILTER:SORT:CHEAPEST"),
-                        BotMessageBuilder.button(mostSeatsLabel, "APPLY_FILTER:SORT:MOST_SEATS")
+                        BotMessageBuilder.button(earliestLabel,  "APPLY_FILTER:SORT:EARLIEST", null),
+                        BotMessageBuilder.button(cheapestLabel,  "APPLY_FILTER:SORT:CHEAPEST", null),
+                        BotMessageBuilder.button(mostSeatsLabel, "APPLY_FILTER:SORT:MOST_SEATS", null)
                 ),
-                List.of(BotMessageBuilder.button("── Min Seats ──", "NOOP")),
+                List.of(BotMessageBuilder.button("── Min Seats ──", "NOOP", null)),
                 List.of(
-                        BotMessageBuilder.button(seats1Label,   "APPLY_FILTER:SEATS:1"),
-                        BotMessageBuilder.button(seats2Label,   "APPLY_FILTER:SEATS:2"),
-                        BotMessageBuilder.button(seats3Label,   "APPLY_FILTER:SEATS:3"),
-                        BotMessageBuilder.button(seatsAnyLabel, "APPLY_FILTER:SEATS:ANY")
+                        BotMessageBuilder.button(seats1Label,   "APPLY_FILTER:SEATS:1", null),
+                        BotMessageBuilder.button(seats2Label,   "APPLY_FILTER:SEATS:2", null),
+                        BotMessageBuilder.button(seats3Label,   "APPLY_FILTER:SEATS:3", null),
+                        BotMessageBuilder.button(seatsAnyLabel, "APPLY_FILTER:SEATS:ANY", null)
                 ),
-                List.of(BotMessageBuilder.button("── Max Share ──", "NOOP")),
+                List.of(BotMessageBuilder.button("── Max Share ──", "NOOP", null)),
                 List.of(
-                        BotMessageBuilder.button(price50Label,  "APPLY_FILTER:PRICE:50"),
-                        BotMessageBuilder.button(price100Label, "APPLY_FILTER:PRICE:100"),
-                        BotMessageBuilder.button(price150Label, "APPLY_FILTER:PRICE:150"),
-                        BotMessageBuilder.button(priceAnyLabel, "APPLY_FILTER:PRICE:ANY")
+                        BotMessageBuilder.button(price50Label,  "APPLY_FILTER:PRICE:50", null),
+                        BotMessageBuilder.button(price100Label, "APPLY_FILTER:PRICE:100", null),
+                        BotMessageBuilder.button(price150Label, "APPLY_FILTER:PRICE:150", null),
+                        BotMessageBuilder.button(priceAnyLabel, "APPLY_FILTER:PRICE:ANY", null)
                 ),
                 List.of(
-                        BotMessageBuilder.button("✅ Show Rides", "APPLY_FILTER:SHOW:NOW"),
-                        BotMessageBuilder.button("🔄 Reset",      "RESET_FILTER"),
-                        BotMessageBuilder.button("◀️ Back",       "MAIN_MENU")
+                        BotMessageBuilder.button("✅ Show Rides", "APPLY_FILTER:SHOW:NOW", null),
+                        BotMessageBuilder.button("🔄 Reset",      "RESET_FILTER", null),
+                        BotMessageBuilder.button("◀️ Back",       "MAIN_MENU", null)
                 )
         );
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),

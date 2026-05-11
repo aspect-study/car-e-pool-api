@@ -5,6 +5,7 @@ import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.DriverNote;
 import com.carpool.domain.enums.RideDirection;
@@ -60,8 +61,8 @@ public class PostRideHelper {
                 vehicleLine);
 
         var rows = List.of(List.of(
-                BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE"),
-                BotMessageBuilder.button("❌ Cancel",    "CANCEL_POST_RIDE")
+                BotMessageBuilder.button("✅ Post Ride", "CONFIRM_POST_RIDE", ButtonStyle.SUCCESS.toString()),
+                BotMessageBuilder.button("❌ Cancel",    "CANCEL_POST_RIDE", ButtonStyle.DANGER.toString())
         ));
 
         bot.send(sendWithInline(chatId, confirmMsg, rows));
@@ -81,12 +82,12 @@ public class PostRideHelper {
                         ? "📌 " + note.getContent().substring(0, 42) + "..."
                         : "📌 " + note.getContent();
                 rows.add(List.of(BotMessageBuilder.button(label,
-                        "NOTE_PREVIEW:" + note.getId())));
+                        "NOTE_PREVIEW:" + note.getId(), null)));
             }
-            rows.add(List.of(BotMessageBuilder.button("✏️ Write new note", "NOTE_WRITE")));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Write new note", "NOTE_WRITE", ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(
-                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
-                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES", null),
+                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE",  ButtonStyle.DANGER.toString())
             ));
 
             bot.send(sendWithInline(chatId,
@@ -95,10 +96,10 @@ public class PostRideHelper {
                             "<i>You can include pickup spot, stops, drop-off point, and reminders.</i>",
                     rows));
         } else {
-            rows.add(List.of(BotMessageBuilder.button("✏️ Write a note", "NOTE_WRITE")));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Write a note", "NOTE_WRITE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(
-                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
-                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES", null),
+                    BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE",  ButtonStyle.DANGER.toString())
             ));
 
             bot.send(sendWithInline(chatId,

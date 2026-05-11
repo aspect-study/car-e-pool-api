@@ -9,6 +9,7 @@ import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.BotTimePickerUtil;
+import com.carpool.bot.util.ButtonStyle;
 import com.carpool.bot.util.HubMatcher;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.DriverNote;
@@ -166,12 +167,12 @@ public class PostRideHandler {
             String displayText = text.trim().length() > 38
                     ? text.trim().substring(0, 38) + "…" : text.trim();
             rows.add(List.of(BotMessageBuilder.button(
-                    "✅ Use \"" + displayText + "\"", "CONFIRM_CUSTOM_ORIGIN")));
+                    "✅ Use \"" + displayText + "\"", "CONFIRM_CUSTOM_ORIGIN", ButtonStyle.SUCCESS.toString())));
             for (HubResponse h : recentHubs) {
                 rows.add(List.of(BotMessageBuilder.button(
-                        "🕐 " + h.name(), "HUB_ORIGIN:" + h.id())));
+                        "🕐 " + h.name(), "HUB_ORIGIN:" + h.id(),  ButtonStyle.PRIMARY.toString())));
             }
-            rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_ORIGIN")));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_ORIGIN",  ButtonStyle.PRIMARY.toString())));
             bot.send(flowHelper.sendWithInline(chatId,
                     "📍 <b>\"" + HtmlEscapeUtil.escape(text.trim()) +
                             "\"</b> isn't in our hub list yet.\n\n" +
@@ -217,12 +218,12 @@ public class PostRideHandler {
             String displayText = text.trim().length() > 38
                     ? text.trim().substring(0, 38) + "…" : text.trim();
             rows.add(List.of(BotMessageBuilder.button(
-                    "✅ Use \"" + displayText + "\"", "CONFIRM_CUSTOM_DEST")));
+                    "✅ Use \"" + displayText + "\"", "CONFIRM_CUSTOM_DEST", ButtonStyle.SUCCESS.toString())));
             for (HubResponse h : recentHubs) {
                 rows.add(List.of(BotMessageBuilder.button(
-                        "🕐 " + h.name(), "HUB_DEST:" + h.id())));
+                        "🕐 " + h.name(), "HUB_DEST:" + h.id(), ButtonStyle.PRIMARY.toString())));
             }
-            rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_DEST")));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Type again", "RETYPE_DEST",  ButtonStyle.PRIMARY.toString())));
             bot.send(flowHelper.sendWithInline(chatId,
                     "🏁 <b>\"" + HtmlEscapeUtil.escape(text.trim()) +
                             "\"</b> isn't in our hub list yet.\n\n" +
@@ -262,7 +263,7 @@ public class PostRideHandler {
 
         for (HubResponse s : hubs) {
             InlineKeyboardButton btn = BotMessageBuilder.button(
-                    s.name(), callbackPrefix + ":" + s.id());
+                    s.name(), callbackPrefix + ":" + s.id(), null);
             if (s.name().length() > 20) {
                 if (!pair.isEmpty()) {
                     rows.add(new ArrayList<>(pair));
@@ -278,7 +279,7 @@ public class PostRideHandler {
             }
         }
         if (!pair.isEmpty()) rows.add(new ArrayList<>(pair));
-        rows.add(List.of(BotMessageBuilder.button("✏️ Type again", retypeAction)));
+        rows.add(List.of(BotMessageBuilder.button("✏️ Type again", retypeAction, ButtonStyle.PRIMARY.toString())));
         return rows;
     }
 
@@ -471,14 +472,14 @@ public class PostRideHandler {
                     ctx.state().withSelectedNoteId(ctx.entityId()));
             var rows = List.of(
                     List.of(BotMessageBuilder.button(
-                            "✅ Use this", "NOTE_APPLY:" + ctx.entityId())),
+                            "✅ Use this", "NOTE_APPLY:" + ctx.entityId(), ButtonStyle.SUCCESS.toString())),
                     List.of(
-                            BotMessageBuilder.button("🔄 Other notes", "NOTE_CHOOSE_OTHER"),
-                            BotMessageBuilder.button("✏️ Write new",   "NOTE_WRITE")
+                            BotMessageBuilder.button("🔄 Other notes", "NOTE_CHOOSE_OTHER",  ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("✏️ Write new",   "NOTE_WRITE", ButtonStyle.PRIMARY.toString())
                     ),
                     List.of(
-                            BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
-                            BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+                            BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES", ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE", ButtonStyle.DANGER.toString())
                     )
             );
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
@@ -513,8 +514,8 @@ public class PostRideHandler {
                 "✏️ <b>Add details for your passengers:</b>\n\n" +
                         "<i>Include pickup spot, stops along the way, drop-off point, or any reminders.</i>",
                 List.of(List.of(
-                        BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES"),
-                        BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")
+                        BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE", ButtonStyle.DANGER.toString())
                 ))));
     }
 
@@ -645,17 +646,17 @@ public class PostRideHandler {
 
         List<List<InlineKeyboardButton>> rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("📍 Edit Start", "REPOST_EDIT_ORIGIN"),
-                        BotMessageBuilder.button("🏁 Edit End",   "REPOST_EDIT_DEST")
+                        BotMessageBuilder.button("📍 Edit Start", "REPOST_EDIT_ORIGIN", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🏁 Edit End",   "REPOST_EDIT_DEST", ButtonStyle.PRIMARY.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("🪑 Edit Seats", "REPOST_EDIT_SEATS"),
-                        BotMessageBuilder.button("⛽ Edit Share", "REPOST_EDIT_CONTRIBUTION")
+                        BotMessageBuilder.button("🪑 Edit Seats", "REPOST_EDIT_SEATS", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("⛽ Edit Share", "REPOST_EDIT_CONTRIBUTION",  ButtonStyle.PRIMARY.toString())
                 ),
-                List.of(BotMessageBuilder.button("📝 Edit Note", "REPOST_EDIT_NOTES")),
+                List.of(BotMessageBuilder.button("📝 Edit Note", "REPOST_EDIT_NOTES", ButtonStyle.PRIMARY.toString())),
                 List.of(
-                        BotMessageBuilder.button("✅ Continue", "REPOST_PROCEED"),
-                        BotMessageBuilder.button("❌ Cancel",   "MAIN_MENU")
+                        BotMessageBuilder.button("✅ Continue", "REPOST_PROCEED",  ButtonStyle.SUCCESS.toString()),
+                        BotMessageBuilder.button("❌ Cancel",   "MAIN_MENU", ButtonStyle.DANGER.toString())
                 )
         );
 
@@ -697,7 +698,7 @@ public class PostRideHandler {
                 .withFlow(BotFlow.REPOST_EDIT_SEATS));
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                 "🪑 <b>Edit Seats</b>\n\nHow many passengers can you take? (1–7)",
-                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
     }
 
     public void handleRepostEditContributionCallback(BotContext ctx) {
@@ -708,7 +709,7 @@ public class PostRideHandler {
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                 "⛽ <b>Edit Gas Share</b>\n\nEnter the suggested gas contribution per seat.\n" +
                         "Enter <code>0</code> for a free ride. Example: <code>50</code>",
-                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
     }
 
     public void handleRepostEditNotesCallback(BotContext ctx) {
@@ -719,7 +720,7 @@ public class PostRideHandler {
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                 "📝 <b>Edit Note</b>\n\nWrite a note for passengers (max 300 characters).\n" +
                         "Example: <i>AC, no pets, exits at Filinvest</i>",
-                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
     }
 
     public void handleRepostProceed(BotContext ctx) {
@@ -747,7 +748,7 @@ public class PostRideHandler {
             if (seats < 1 || seats > 7) {
                 bot.send(flowHelper.sendWithInline(chatId,
                         "⚠️ Please enter a number between 1 and 8:",
-                        List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                        List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
                 return;
             }
             UserState updated = state.withSeats(seats).withFlow(BotFlow.IDLE);
@@ -756,7 +757,7 @@ public class PostRideHandler {
         } catch (NumberFormatException e) {
             bot.send(flowHelper.sendWithInline(chatId,
                     "⚠️ Please enter a valid number (1–8):",
-                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
         }
     }
 
@@ -767,7 +768,7 @@ public class PostRideHandler {
             if (amount.compareTo(BigDecimal.ZERO) < 0) {
                 bot.send(flowHelper.sendWithInline(chatId,
                         "⚠️ Contribution cannot be negative:",
-                        List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                        List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
                 return;
             }
             UserState updated = state.withContribution(amount).withFlow(BotFlow.IDLE);
@@ -776,7 +777,7 @@ public class PostRideHandler {
         } catch (NumberFormatException e) {
             bot.send(flowHelper.sendWithInline(chatId,
                     "⚠️ Please enter a valid amount (e.g. <code>100</code> or <code>0</code>):",
-                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
         }
     }
 
@@ -784,7 +785,7 @@ public class PostRideHandler {
         if (text.trim().length() > 300) {
             bot.send(flowHelper.sendWithInline(chatId,
                     "⚠️ Note is too long (max 300 characters). Please shorten it:",
-                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
             return;
         }
         UserState updated = state.withNotes(text.trim()).withFlow(BotFlow.IDLE);
