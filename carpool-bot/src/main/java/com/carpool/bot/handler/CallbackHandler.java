@@ -131,6 +131,7 @@ public class CallbackHandler {
 
         // ── Profile ───────────────────────────────────────────────────────
         commands.put("MY_PROFILE",      ctx -> profileHandler.handleMyProfile(ctx));
+        commands.put("MY_FOLLOWERS",    ctx -> profileHandler.handleMyFollowers(ctx));
         commands.put("ADMIN_STATS",     ctx -> profileHandler.handleAdminStats(ctx));
         commands.put("REANNOUNCE_RIDE", ctx -> profileHandler.handleReannounceRide(ctx));
         commands.put("PENDING_HUBS",    ctx -> profileHandler.handlePendingHubs(ctx));

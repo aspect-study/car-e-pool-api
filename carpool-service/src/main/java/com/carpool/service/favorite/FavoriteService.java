@@ -4,6 +4,7 @@ import com.carpool.domain.entity.User;
 import com.carpool.domain.entity.UserFavorite;
 import com.carpool.repository.UserFavoriteRepository;
 import com.carpool.repository.UserRepository;
+import com.carpool.service.dto.response.FollowerResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -116,5 +117,21 @@ public class FavoriteService {
      */
     public long getFollowerCount(Long favoriteId) {
         return favoriteRepository.countByFavoriteId(favoriteId);
+    }
+
+    /**
+     * Returns all followers of a driver as DTOs, newest first.
+     * Used for the "My Followers" bot screen.
+     */
+    @Transactional(readOnly = true)
+    public List<FollowerResponse> getFollowers(Long driverId) {
+        return favoriteRepository.findByFavoriteIdWithFollowerOrderByCreatedAtDesc(driverId)
+                .stream()
+                .map(uf -> new FollowerResponse(
+                        uf.getFollower().getId(),
+                        uf.getFollower().getFullName(),
+                        uf.getFollower().getTelegramHandle(),
+                        uf.getCreatedAt()))
+                .toList();
     }
 }
