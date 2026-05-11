@@ -36,7 +36,7 @@ public class SessionRecoveryHandler {
             "REPOST_EDIT_ORIGIN", "REPOST_EDIT_DEST", "REPOST_EDIT_SEATS",
             "REPOST_EDIT_CONTRIBUTION", "REPOST_EDIT_NOTES",
             "REPOST_PROCEED", "REPOST_BACK_TO_EDIT",
-            "VEHICLE_SELECT", "ADD_VEHICLE"
+            "VEHICLE_SELECT"
     );
 
     private static final Set<String> RATING_ACTIONS = Set.of(
