@@ -86,6 +86,10 @@ public class Ride extends BaseEntity {
     @Column(name = "group_message_id")
     private Integer groupMessageId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
+
     /**
      * Ordered waypoints between origin and destination.
      * CascadeType.ALL: waypoints are lifecycle-managed with the ride.

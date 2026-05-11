@@ -23,5 +23,6 @@ public record RideResponse(
         List<WaypointResponse> waypoints,
         Instant createdAt,
         Integer announceCount,
+        VehicleResponse vehicle,
         Double driverAvgRating
 ) {}

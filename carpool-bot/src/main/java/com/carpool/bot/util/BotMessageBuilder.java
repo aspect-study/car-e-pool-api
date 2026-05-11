@@ -225,11 +225,18 @@ public class BotMessageBuilder {
                     : "";
 
             // Vehicle — compact: color + model only, no plate in list view
-            String vehicle = ride.driver().carModel() != null
-                    ? " | 🚘 " + (ride.driver().carColor() != null
-                                 ? HtmlEscapeUtil.escape(ride.driver().carColor()) + " " : "")
-                      + HtmlEscapeUtil.escape(ride.driver().carModel())
-                    : "";
+            String vehicle;
+            if (ride.vehicle() != null) {
+                vehicle = " | 🚘 " + (ride.vehicle().color() != null
+                        ? HtmlEscapeUtil.escape(ride.vehicle().color()) + " " : "")
+                        + HtmlEscapeUtil.escape(ride.vehicle().model());
+            } else if (ride.driver().carModel() != null) {
+                vehicle = " | 🚘 " + (ride.driver().carColor() != null
+                        ? HtmlEscapeUtil.escape(ride.driver().carColor()) + " " : "")
+                        + HtmlEscapeUtil.escape(ride.driver().carModel());
+            } else {
+                vehicle = "";
+            }
 
             sb.append(String.format(
                     "<b>%d.</b> 📍 %s → %s\n" +

@@ -33,19 +33,9 @@ public class PostRideHelper {
         String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
                 ? "🏠 Home → Work" : "🏢 Work → Home";
 
-        // Build vehicle line — show pending (just entered) or saved (from DB)
-        String vehicleLine;
-        if (state.getPendingCarModel() != null && state.getPendingPlateNumber() != null) {
-            // Driver just entered new vehicle info in this flow
-            vehicleLine = String.format("🚘 %s%s | 🔢 %s",
-                    state.getPendingCarColor() != null
-                            ? HtmlEscapeUtil.escape(state.getPendingCarColor()) + " " : "",
-                    HtmlEscapeUtil.escape(state.getPendingCarModel()),
-                    HtmlEscapeUtil.escape(state.getPendingPlateNumber()));
-        } else {
-            // No vehicle info in state — will show "Not set" on confirmation
-            vehicleLine = "<i>No vehicle info set</i>";
-        }
+        String vehicleLine = state.getSelectedVehicleLabel() != null
+                ? "🚘 " + state.getSelectedVehicleLabel()
+                : "<i>No vehicle selected</i>";
 
         String confirmMsg = String.format(
                 "📋 <b>Review Your Ride</b>\n\n" +
