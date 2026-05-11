@@ -293,6 +293,15 @@ public class PostRideHandler {
         }
         try {
             var hub = rideService.getHubById(ctx.entityId());
+            if (ctx.state().isRepostEditMode()) {
+                UserState updated = ctx.state()
+                        .withOriginHubId(hub.id())
+                        .withOriginHubName(hub.name())
+                        .withFlow(BotFlow.IDLE);
+                Integer newMsgId = showRepostEditScreen(ctx.chatId(), updated, ctx.bot());
+                stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(newMsgId));
+                return;
+            }
             UserState updated = ctx.state()
                     .withOriginHubId(hub.id())
                     .withOriginHubName(hub.name())
@@ -325,6 +334,15 @@ public class PostRideHandler {
             if (hub.id().equals(ctx.state().getOriginHubId())) {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                         "⚠️ Destination cannot be the same as pickup. Try again:"));
+                return;
+            }
+            if (ctx.state().isRepostEditMode()) {
+                UserState updated = ctx.state()
+                        .withDestinationHubId(hub.id())
+                        .withDestinationHubName(hub.name())
+                        .withFlow(BotFlow.IDLE);
+                Integer newMsgId = showRepostEditScreen(ctx.chatId(), updated, ctx.bot());
+                stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(newMsgId));
                 return;
             }
             UserState updated = ctx.state()
@@ -578,27 +596,6 @@ public class PostRideHandler {
     public void handleRepostRide(BotContext ctx) {
         try {
             RideResponse original = rideService.getRideById(ctx.entityId());
-            String dirLabel = original.direction() == RideDirection.HOME_TO_WORK
-                    ? "🏠 Home → Work" : "🏢 Work → Home";
-
-            String notesLine = original.notes() != null && !original.notes().isBlank()
-                    ? "📝 Notes: " + HtmlEscapeUtil.escape(original.notes()) + "\n\n" : "";
-
-            // Show ride summary first
-            ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
-                    "🔄 <b>Review Ride to Repost</b>\n\n" +
-                            "Direction: <b>" + dirLabel + "</b>\n" +
-                            "📍 <b>" +
-                            HtmlEscapeUtil.escape(original.originHub().name()) +
-                            " → " +
-                            HtmlEscapeUtil.escape(original.destinationHub().name()) +
-                            "</b>\n" +
-                            "🪑 " + original.totalSeats() + " seat(s)\n" +
-                            "⛽ ₱" + original.contributionAmount().toPlainString() +
-                            " gas share/seat\n" + notesLine +
-                            "<i>Only the departure time will be updated.</i>"));
-
-            // Set up state with repost data
             LocalDate today = LocalDate.now(ZoneId.of("Asia/Manila"));
             int windowStart = BotTimePickerUtil.defaultWindowStart(original.direction());
 
@@ -613,15 +610,185 @@ public class PostRideHandler {
                     .withNotes(original.notes())
                     .withSearchDay(today)
                     .withTimeWindowStart(windowStart)
-                    .withFlow(BotFlow.POST_RIDE_SELECT_DATE);
-            stateManager.save(ctx.chatId(), updated);
+                    .withRepostEditMode(true)
+                    .withFlow(BotFlow.IDLE);
 
-            flowHelper.showCalendar(ctx.chatId(), null, YearMonth.now(ZoneId.of("Asia/Manila")), ctx.bot());
+            Integer msgId = showRepostEditScreen(ctx.chatId(), updated, ctx.bot());
+            stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(msgId));
 
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load ride details for repost."));
         }
+    }
+
+    // ── Repost edit screen ────────────────────────────────────────────────
+
+    private Integer showRepostEditScreen(Long chatId, UserState state, CarpoolBot bot) {
+        String dirLabel = state.getDirection() == RideDirection.HOME_TO_WORK
+                ? "🏠 Home → Work" : "🏢 Work → Home";
+        String notesValue = (state.getNotes() != null && !state.getNotes().isBlank())
+                ? HtmlEscapeUtil.escape(state.getNotes()) : "<i>None</i>";
+
+        String seatsValue      = state.getSeats()         != null ? String.valueOf(state.getSeats()) : "?";
+        String gasValue        = state.getContribution()   != null ? "₱" + state.getContribution().toPlainString() + "/seat" : "?";
+
+        String text = "🔄 <b>Edit Ride for Repost</b>\n\n" +
+                "↔️ Direction: <b>" + dirLabel + "</b>\n" +
+                "📍 <b>From:</b> " + HtmlEscapeUtil.escape(state.getOriginHubName()) + "\n" +
+                "🏁 <b>To:</b> " + HtmlEscapeUtil.escape(state.getDestinationHubName()) + "\n" +
+                "🪑 <b>Seats:</b> " + seatsValue + "\n" +
+                "⛽ <b>Gas share:</b> " + gasValue + "\n" +
+                "📝 <b>Note:</b> " + notesValue + "\n\n" +
+                "<i>Edit any field, then tap Continue to pick a departure time.</i>";
+
+        List<List<InlineKeyboardButton>> rows = List.of(
+                List.of(
+                        BotMessageBuilder.button("📍 Edit Start", "REPOST_EDIT_ORIGIN"),
+                        BotMessageBuilder.button("🏁 Edit End",   "REPOST_EDIT_DEST")
+                ),
+                List.of(
+                        BotMessageBuilder.button("🪑 Edit Seats", "REPOST_EDIT_SEATS"),
+                        BotMessageBuilder.button("⛽ Edit Share", "REPOST_EDIT_CONTRIBUTION")
+                ),
+                List.of(BotMessageBuilder.button("📝 Edit Note", "REPOST_EDIT_NOTES")),
+                List.of(
+                        BotMessageBuilder.button("✅ Continue", "REPOST_PROCEED"),
+                        BotMessageBuilder.button("❌ Cancel",   "MAIN_MENU")
+                )
+        );
+
+        return bot.sendReturningId(flowHelper.sendWithInline(chatId, text, rows));
+    }
+
+    // ── Repost edit callbacks ─────────────────────────────────────────────
+
+    public void handleRepostEditOrigin(BotContext ctx) {
+        String example = ctx.state().getDirection() == RideDirection.HOME_TO_WORK
+                ? "SM Southmall" : "BGC";
+        ctx.bot().deleteMessage(ctx.chatId(), ctx.messageId());
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withRepostEditMsgId(null)
+                .withFlow(BotFlow.POST_RIDE_ORIGIN));
+        ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                "📍 <b>Edit Pickup Point</b>\n\n" +
+                        "Type a nearby landmark as your pickup point.\n" +
+                        "Example: <code>" + example + "</code>"));
+    }
+
+    public void handleRepostEditDest(BotContext ctx) {
+        String example = ctx.state().getDirection() == RideDirection.HOME_TO_WORK
+                ? "BGC" : "SM Southmall";
+        ctx.bot().deleteMessage(ctx.chatId(), ctx.messageId());
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withRepostEditMsgId(null)
+                .withFlow(BotFlow.POST_RIDE_DESTINATION));
+        ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                "🏁 <b>Edit Drop-off Point</b>\n\n" +
+                        "Type a nearby landmark as your drop-off point.\n" +
+                        "Example: <code>" + example + "</code>"));
+    }
+
+    public void handleRepostEditSeatsCallback(BotContext ctx) {
+        ctx.bot().deleteMessage(ctx.chatId(), ctx.messageId());
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withRepostEditMsgId(null)
+                .withFlow(BotFlow.REPOST_EDIT_SEATS));
+        ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                "🪑 <b>Edit Seats</b>\n\nHow many passengers can you take? (1–8)",
+                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+    }
+
+    public void handleRepostEditContributionCallback(BotContext ctx) {
+        ctx.bot().deleteMessage(ctx.chatId(), ctx.messageId());
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withRepostEditMsgId(null)
+                .withFlow(BotFlow.REPOST_EDIT_CONTRIBUTION));
+        ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                "⛽ <b>Edit Gas Share</b>\n\nEnter the suggested gas contribution per seat.\n" +
+                        "Enter <code>0</code> for a free ride. Example: <code>50</code>",
+                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+    }
+
+    public void handleRepostEditNotesCallback(BotContext ctx) {
+        ctx.bot().deleteMessage(ctx.chatId(), ctx.messageId());
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withRepostEditMsgId(null)
+                .withFlow(BotFlow.REPOST_EDIT_NOTES));
+        ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                "📝 <b>Edit Note</b>\n\nWrite a note for passengers (max 300 characters).\n" +
+                        "Example: <i>AC, no pets, exits at Filinvest</i>",
+                List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+    }
+
+    public void handleRepostProceed(BotContext ctx) {
+        YearMonth month = YearMonth.now(ZoneId.of("Asia/Manila"));
+        UserState updated = ctx.state()
+                .withRepostEditMode(false)
+                .withRepostEditMsgId(null)
+                .withCalendarMonth(month)
+                .withFlow(BotFlow.POST_RIDE_SELECT_DATE);
+        stateManager.save(ctx.chatId(), updated);
+        flowHelper.showCalendar(ctx.chatId(), null, month, ctx.bot());
+    }
+
+    public void handleRepostBackToEdit(BotContext ctx) {
+        UserState updated = ctx.state().withFlow(BotFlow.IDLE);
+        Integer newMsgId = showRepostEditScreen(ctx.chatId(), updated, ctx.bot());
+        stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(newMsgId));
+    }
+
+    // ── Repost edit text handlers ─────────────────────────────────────────
+
+    public void handleRepostEditSeats(Long chatId, String text, UserState state, CarpoolBot bot) {
+        try {
+            int seats = Integer.parseInt(text.trim());
+            if (seats < 1 || seats > 8) {
+                bot.send(flowHelper.sendWithInline(chatId,
+                        "⚠️ Please enter a number between 1 and 8:",
+                        List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                return;
+            }
+            UserState updated = state.withSeats(seats).withFlow(BotFlow.IDLE);
+            Integer newMsgId = showRepostEditScreen(chatId, updated, bot);
+            stateManager.save(chatId, updated.withRepostEditMsgId(newMsgId));
+        } catch (NumberFormatException e) {
+            bot.send(flowHelper.sendWithInline(chatId,
+                    "⚠️ Please enter a valid number (1–8):",
+                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+        }
+    }
+
+    public void handleRepostEditContribution(Long chatId, String text,
+                                             UserState state, CarpoolBot bot) {
+        try {
+            BigDecimal amount = new BigDecimal(text.trim());
+            if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                bot.send(flowHelper.sendWithInline(chatId,
+                        "⚠️ Contribution cannot be negative:",
+                        List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+                return;
+            }
+            UserState updated = state.withContribution(amount).withFlow(BotFlow.IDLE);
+            Integer newMsgId = showRepostEditScreen(chatId, updated, bot);
+            stateManager.save(chatId, updated.withRepostEditMsgId(newMsgId));
+        } catch (NumberFormatException e) {
+            bot.send(flowHelper.sendWithInline(chatId,
+                    "⚠️ Please enter a valid amount (e.g. <code>100</code> or <code>0</code>):",
+                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+        }
+    }
+
+    public void handleRepostEditNotes(Long chatId, String text, UserState state, CarpoolBot bot) {
+        if (text.trim().length() > 300) {
+            bot.send(flowHelper.sendWithInline(chatId,
+                    "⚠️ Note is too long (max 300 characters). Please shorten it:",
+                    List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT")))));
+            return;
+        }
+        UserState updated = state.withNotes(text.trim()).withFlow(BotFlow.IDLE);
+        Integer newMsgId = showRepostEditScreen(chatId, updated, bot);
+        stateManager.save(chatId, updated.withRepostEditMsgId(newMsgId));
     }
 
     // ── Direction callback ────────────────────────────────────────────────
@@ -675,6 +842,15 @@ public class PostRideHandler {
         try {
             HubResponse hub = hubService.suggestHub(
                     new SuggestHubRequest(customName, "Unverified"), ctx.carpoolUserId());
+            if (ctx.state().isRepostEditMode()) {
+                UserState updated = ctx.state()
+                        .withOriginHubId(hub.id())
+                        .withOriginHubName(hub.name())
+                        .withFlow(BotFlow.IDLE);
+                Integer newMsgId = showRepostEditScreen(ctx.chatId(), updated, ctx.bot());
+                stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(newMsgId));
+                return;
+            }
             UserState updated = ctx.state()
                     .withOriginHubId(hub.id())
                     .withOriginHubName(hub.name())
@@ -705,6 +881,15 @@ public class PostRideHandler {
         try {
             HubResponse hub = hubService.suggestHub(
                     new SuggestHubRequest(customName, "Unverified"), ctx.carpoolUserId());
+            if (ctx.state().isRepostEditMode()) {
+                UserState updated = ctx.state()
+                        .withDestinationHubId(hub.id())
+                        .withDestinationHubName(hub.name())
+                        .withFlow(BotFlow.IDLE);
+                Integer newMsgId = showRepostEditScreen(ctx.chatId(), updated, ctx.bot());
+                stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(newMsgId));
+                return;
+            }
             UserState updated = ctx.state()
                     .withDestinationHubId(hub.id())
                     .withDestinationHubName(hub.name())

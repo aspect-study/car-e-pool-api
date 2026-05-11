@@ -73,8 +73,15 @@ public class CallbackHandler {
         commands.put("NOTE_WRITE",        ctx -> postRideHandler.handleNoteWrite(ctx));
         commands.put("NOTE_CHOOSE_OTHER", ctx -> postRideHandler.handleNoteChooseOther(ctx));
         commands.put("SKIP_NOTES",        ctx -> postRideHandler.handleSkipNotes(ctx));
-        commands.put("REPOST_RIDE",       ctx -> postRideHandler.handleRepostRide(ctx));
-        commands.put("RIDE_TIME",         ctx -> postRideHandler.handleRideTimeSelected(ctx));  // ← add
+        commands.put("REPOST_RIDE",              ctx -> postRideHandler.handleRepostRide(ctx));
+        commands.put("REPOST_EDIT_ORIGIN",       ctx -> postRideHandler.handleRepostEditOrigin(ctx));
+        commands.put("REPOST_EDIT_DEST",         ctx -> postRideHandler.handleRepostEditDest(ctx));
+        commands.put("REPOST_EDIT_SEATS",        ctx -> postRideHandler.handleRepostEditSeatsCallback(ctx));
+        commands.put("REPOST_EDIT_CONTRIBUTION", ctx -> postRideHandler.handleRepostEditContributionCallback(ctx));
+        commands.put("REPOST_EDIT_NOTES",        ctx -> postRideHandler.handleRepostEditNotesCallback(ctx));
+        commands.put("REPOST_PROCEED",           ctx -> postRideHandler.handleRepostProceed(ctx));
+        commands.put("REPOST_BACK_TO_EDIT",      ctx -> postRideHandler.handleRepostBackToEdit(ctx));
+        commands.put("RIDE_TIME",                ctx -> postRideHandler.handleRideTimeSelected(ctx));  // ← add
         commands.put("TIME_NAV",          ctx -> postRideHandler.handleTimeNavigation(ctx));
 
         // ── Find ride ─────────────────────────────────────────────────────
