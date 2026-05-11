@@ -165,18 +165,21 @@ public class GroupNotificationService {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRideDeparted(RideEvents.RideDepartedEvent event) {
         deleteGroupAnnouncement(event.ride());
     }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRideCompleted(RideEvents.RideCompletedEvent event) {
         deleteGroupAnnouncement(event.ride());
     }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRideCancelled(RideEvents.RideCancelledEvent event) {
         deleteGroupAnnouncement(event.ride());
     }
@@ -189,8 +192,19 @@ public class GroupNotificationService {
                     ride.getId(), messageId);
             return;
         }
-        carpoolBot.deleteMessage(botConfig.getGroupChatId(), messageId);
-        log.info("Deleted group announcement: rideId={} messageId={}", ride.getId(), messageId);
+        boolean deleted = carpoolBot.deleteMessage(botConfig.getGroupChatId(), messageId);
+        if (deleted) {
+            log.info("Deleted group announcement: rideId={} messageId={}", ride.getId(), messageId);
+            try {
+                rideRepository.findById(ride.getId()).ifPresent(r -> {
+                    r.setGroupMessageId(null);
+                    rideRepository.save(r);
+                });
+            } catch (Exception e) {
+                log.error("Failed to clear groupMessageId after deletion: rideId={} error={}",
+                        ride.getId(), e.getMessage());
+            }
+        }
     }
 
     // ── Message formatter ─────────────────────────────────────────────────

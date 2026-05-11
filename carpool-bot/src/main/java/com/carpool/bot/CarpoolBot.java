@@ -409,15 +409,21 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                 .build();
     }
 
-    public void deleteMessage(Long chatId, Integer messageId) {
+    public boolean deleteMessage(Long chatId, Integer messageId) {
         try {
             telegramClient.execute(DeleteMessage.builder()
                     .chatId(chatId)
                     .messageId(messageId)
                     .build());
+            return true;
         } catch (TelegramApiException e) {
-            log.warn("Failed to delete message: chatId={} messageId={} error={}",
-                    chatId, messageId, e.getMessage());
+            if (e.getMessage() != null && e.getMessage().contains("message to delete not found")) {
+                log.debug("Group message already deleted: chatId={} messageId={}", chatId, messageId);
+            } else {
+                log.warn("Failed to delete message: chatId={} messageId={} error={}",
+                        chatId, messageId, e.getMessage());
+            }
+            return false;
         }
     }
 
