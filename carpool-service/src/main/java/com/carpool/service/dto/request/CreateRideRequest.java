@@ -37,5 +37,8 @@ public record CreateRideRequest(
 
         // Optional ordered waypoints between origin and destination
         @Valid
-        List<WaypointRequest> waypoints
+        List<WaypointRequest> waypoints,
+
+        // Optional — vehicle selected by driver at post time
+        Long vehicleId
 ) {}

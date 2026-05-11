@@ -16,6 +16,7 @@ import com.carpool.service.admin.AdminStatsService;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.dto.response.VehicleResponse;
 import com.carpool.service.hub.HubService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.rating.RatingService;
@@ -155,42 +156,31 @@ public class ProfileHandler {
 
     // ── Vehicle flows ─────────────────────────────────────────────────────
 
+    /**
+     * VEHICLE_CHANGE callback — shows vehicle management screen.
+     * Outside post-ride flow this lets drivers view/add/remove their vehicles.
+     */
     public void handleVehicleChange(BotContext ctx) {
-        UserState updated = ctx.state()
-                .withPendingCarColor(null)
-                .withPendingCarModel(null)
-                .withPendingPlateNumber(null)
-                .withFlow(BotFlow.SET_VEHICLE_COLOR);
-        stateManager.save(ctx.chatId(), updated);
-
-        ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
-                "🎨 <b>What color is your vehicle?</b>\n\n" +
-                        "Example: <code>Silver</code>, <code>White</code>, <code>Black</code>"));
+        showVehicleManagementScreen(ctx.chatId(), ctx.carpoolUserId(), ctx.state(), ctx.bot());
     }
 
+    /**
+     * VEHICLE_CONFIRM_YES — legacy callback, repurposed to vehicle select step.
+     * Still guarded so stale buttons from old sessions fail gracefully.
+     */
     public void handleVehicleConfirmYes(BotContext ctx) {
-        // Guard — VEHICLE_CONFIRM_YES is only valid inside the post ride flow
         if (ctx.state().getDepartureTime() == null) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ This action is no longer valid. Please start again from the main menu."));
             stateManager.reset(ctx.chatId());
             return;
         }
-        var userOpt = userRepository.findById(ctx.carpoolUserId());
-        if (userOpt.isEmpty()) {
-            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ User not found."));
-            return;
-        }
-        var user = userOpt.get();
-        UserState updated = ctx.state()
-                .withPendingCarColor(user.getCarColor())
-                .withPendingCarModel(user.getCarModel())
-                .withPendingPlateNumber(user.getPlateNumber())
-                .withFlow(BotFlow.POST_RIDE_CONFIRM);
-        stateManager.save(ctx.chatId(), updated);
-        postRideHelper.showConfirmation(ctx.chatId(), updated, ctx.bot());
+        showVehicleSelectStep(ctx.chatId(), ctx.carpoolUserId(), ctx.state(), ctx.bot());
     }
 
+    /**
+     * VEHICLE_CONFIRM_SAVE — saves the newly entered vehicle, then returns to select screen.
+     */
     @CacheEvict(value = "profileStats", key = "#ctx.carpoolUserId()")
     public void handleVehicleConfirmSave(BotContext ctx) {
         if (ctx.state().getPendingCarModel() == null
@@ -200,162 +190,255 @@ public class ProfileHandler {
             return;
         }
         try {
-            vehicleService.updateVehicle(
+            vehicleService.addVehicle(
                     ctx.carpoolUserId(),
-                    ctx.state().getPendingCarColor() != null
-                            ? ctx.state().getPendingCarColor() : "",
                     ctx.state().getPendingCarModel(),
-                    ctx.state().getPendingPlateNumber());
+                    ctx.state().getPendingCarColor(),
+                    ctx.state().getPendingPlateNumber(),
+                    ctx.state().getPendingSeatCapacity() != null
+                            ? ctx.state().getPendingSeatCapacity() : 4);
 
-            UserState updated = ctx.state().withFlow(BotFlow.POST_RIDE_CONFIRM);
-            stateManager.save(ctx.chatId(), updated);
+            UserState cleared = ctx.state()
+                    .withPendingCarColor(null)
+                    .withPendingCarModel(null)
+                    .withPendingPlateNumber(null)
+                    .withPendingSeatCapacity(null);
 
-            ctx.bot().send(BotMessageBuilder.textNoMenu(ctx.chatId(),
-                    "✅ Vehicle saved: " +
-                            (ctx.state().getPendingCarColor() != null
-                                    ? "🎨 " + HtmlEscapeUtil.escape(ctx.state().getPendingCarColor()) + " "
-                                    : "") +
-                            "🚘 " + HtmlEscapeUtil.escape(ctx.state().getPendingCarModel()) +
-                            " | 🔢 " + HtmlEscapeUtil.escape(ctx.state().getPendingPlateNumber())));
-
-            if (ctx.state().getOriginHubId() != null
-                    && ctx.state().getDepartureTime() != null) {
-                postRideHelper.showConfirmation(ctx.chatId(), updated, ctx.bot());
+            if (ctx.state().getDepartureTime() != null) {
+                ctx.bot().send(BotMessageBuilder.textNoMenu(ctx.chatId(),
+                        "✅ Vehicle saved! Now select it for your ride."));
+                showVehicleSelectStep(ctx.chatId(), ctx.carpoolUserId(), cleared, ctx.bot());
             } else {
-                stateManager.reset(ctx.chatId());
-                flowHelper.showMainMenu(ctx.chatId(), ctx.carpoolUserId(), updated, ctx.bot());
+                ctx.bot().send(BotMessageBuilder.textNoMenu(ctx.chatId(), "✅ Vehicle saved!"));
+                stateManager.save(ctx.chatId(), cleared.withFlow(BotFlow.IDLE));
+                showVehicleManagementScreen(ctx.chatId(), ctx.carpoolUserId(), cleared, ctx.bot());
             }
 
         } catch (Exception e) {
             log.error("Failed to save vehicle for userId={}: {}",
                     ctx.carpoolUserId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not save vehicle info. " +
-                            "Plate number may already be in use."));
-        }
-    }
-
-    public void handleVehicleRemove(BotContext ctx) {
-        try {
-            vehicleService.clearVehicle(ctx.carpoolUserId());
-            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "✅ Vehicle info removed."));
-        } catch (Exception e) {
-            log.error("Failed to remove vehicle for userId={}: {}",
-                    ctx.carpoolUserId(), e.getMessage());
-            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not remove vehicle info. Please try again."));
+                    "⚠️ Could not save vehicle: " +
+                            HtmlEscapeUtil.escape(e.getMessage())));
         }
     }
 
     /**
-     * Handles /vehicle command — shows current vehicle with update/remove options.
+     * VEHICLE_REMOVE:{vehicleId} — soft-deletes one specific vehicle.
+     */
+    public void handleVehicleRemove(BotContext ctx) {
+        Long vehicleId = ctx.entityId();
+        if (vehicleId == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Invalid vehicle."));
+            return;
+        }
+        try {
+            vehicleService.removeVehicle(vehicleId, ctx.carpoolUserId());
+            ctx.bot().send(BotMessageBuilder.textNoMenu(ctx.chatId(), "✅ Vehicle removed."));
+            showVehicleManagementScreen(ctx.chatId(), ctx.carpoolUserId(), ctx.state(), ctx.bot());
+        } catch (Exception e) {
+            log.error("Failed to remove vehicleId={} for userId={}: {}",
+                    vehicleId, ctx.carpoolUserId(), e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not remove vehicle. Please try again."));
+        }
+    }
+
+    /**
+     * VEHICLE_SELECT:{vehicleId} — driver picks a vehicle for the ride being posted.
+     */
+    public void handleVehicleSelect(BotContext ctx) {
+        Long vehicleId = ctx.entityId();
+        if (vehicleId == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Invalid vehicle."));
+            return;
+        }
+
+        // Guard against stale buttons — seats/contribution must be set
+        if (ctx.state().getDepartureTime() == null
+                || ctx.state().getOriginHubId() == null
+                || ctx.state().getSeats() == null
+                || ctx.state().getContribution() == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ This action is no longer valid. Please start again from the main menu."));
+            stateManager.reset(ctx.chatId());
+            return;
+        }
+
+        var vehicles = vehicleService.getActiveVehiclesForUser(ctx.carpoolUserId());
+        var selected = vehicles.stream()
+                .filter(v -> v.id().equals(vehicleId))
+                .findFirst()
+                .orElse(null);
+
+        if (selected == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Vehicle not found. Please try again."));
+            return;
+        }
+
+        String label = String.format("%s%s | 🔢 %s",
+                selected.color() != null
+                        ? HtmlEscapeUtil.escape(selected.color()) + " " : "",
+                HtmlEscapeUtil.escape(selected.model()),
+                HtmlEscapeUtil.escape(selected.plateNumber()));
+
+        UserState updated = ctx.state()
+                .withSelectedVehicleId(selected.id())
+                .withSelectedVehicleLabel(label)
+                .withFlow(BotFlow.POST_RIDE_CONFIRM);
+        stateManager.save(ctx.chatId(), updated);
+        postRideHelper.showConfirmation(ctx.chatId(), updated, ctx.bot());
+    }
+
+    /**
+     * ADD_VEHICLE callback — starts the vehicle input flow.
+     */
+    public void handleAddVehicle(BotContext ctx) {
+        UserState cleared = ctx.state()
+                .withPendingCarColor(null)
+                .withPendingCarModel(null)
+                .withPendingPlateNumber(null)
+                .withPendingSeatCapacity(null)
+                .withFlow(BotFlow.SET_VEHICLE_COLOR);
+        stateManager.save(ctx.chatId(), cleared);
+        String colorPrompt = "🎨 <b>What color is your vehicle?</b>\n\n" +
+                "Example: <code>Silver</code>, <code>White</code>, <code>Black</code>";
+        if (ctx.state().getDepartureTime() != null) {
+            ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(), colorPrompt));
+        } else {
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), colorPrompt, List.of(
+                    List.of(BotMessageBuilder.button("❌ Cancel", "VEHICLE_CHANGE"))
+            )));
+        }
+    }
+
+    /**
+     * /vehicle command — shows multi-vehicle management screen.
      */
     public void handleVehicleCommand(Long chatId, Long carpoolUserId,
                                      UserState state, CarpoolBot bot) {
-        var userOpt = userRepository.findById(carpoolUserId);
-        if (userOpt.isEmpty()) {
-            bot.send(BotMessageBuilder.text(chatId, "⚠️ User not found."));
-            return;
-        }
-        var user = userOpt.get();
-
-        if (user.hasVehicleInfo()) {
-            String current = String.format("%s%s | 🔢 %s",
-                    user.getCarColor() != null
-                            ? "🎨 " + HtmlEscapeUtil.escape(user.getCarColor()) + " "
-                            : "",
-                    HtmlEscapeUtil.escape(user.getCarModel()),
-                    HtmlEscapeUtil.escape(user.getPlateNumber()));
-
-            var rows = List.of(
-                    List.of(
-                            BotMessageBuilder.button("📝 Update Vehicle", "VEHICLE_CHANGE"),
-                            BotMessageBuilder.button("🗑️ Remove",         "VEHICLE_REMOVE")
-                    ),
-                    List.of(BotMessageBuilder.button("🏠 Menu", "MAIN_MENU"))
-            );
-            bot.send(flowHelper.sendWithInline(chatId,
-                    "🚘 <b>Your Vehicle</b>\n\n" + current, rows));
-        } else {
-            var rows = List.of(List.of(
-                    BotMessageBuilder.button("🚘 Add Vehicle", "VEHICLE_CHANGE"),
-                    BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU")
-            ));
-            bot.send(flowHelper.sendWithInline(chatId,
-                    "🚘 <b>Your Vehicle</b>\n\n" +
-                            "<i>No vehicle info yet.</i>\n\n" +
-                            "Add your vehicle so passengers know what to look for.",
-                    rows));
-        }
+        showVehicleManagementScreen(chatId, carpoolUserId, state, bot);
     }
 
     /**
-     * Shows vehicle confirmation screen after plate input.
+     * Shows the new-vehicle confirmation screen after the capacity step.
+     * Displays pending vehicle details — Save & Continue or re-add.
      */
     public void showVehicleConfirmation(Long chatId, UserState state, CarpoolBot bot) {
-        String vehicleDisplay = String.format("%s%s | 🔢 %s",
+        int capacity = state.getPendingSeatCapacity() != null ? state.getPendingSeatCapacity() : 4;
+        String vehicleDisplay = String.format("%s%s | 🔢 %s | 💺 %d seats",
                 state.getPendingCarColor() != null
                         ? "🎨 " + HtmlEscapeUtil.escape(state.getPendingCarColor()) + " "
                         : "",
                 HtmlEscapeUtil.escape(state.getPendingCarModel()),
-                HtmlEscapeUtil.escape(state.getPendingPlateNumber()));
+                HtmlEscapeUtil.escape(state.getPendingPlateNumber()),
+                capacity);
 
+        String cancelCallback = state.getDepartureTime() != null
+                ? "CANCEL_POST_RIDE" : "VEHICLE_CHANGE";
         var rows = List.of(
                 List.of(
                         BotMessageBuilder.button("✅ Save & Continue", "VEHICLE_CONFIRM_SAVE"),
-                        BotMessageBuilder.button("✏️ Change",          "VEHICLE_CHANGE")
+                        BotMessageBuilder.button("✏️ Re-enter",        "ADD_VEHICLE")
                 ),
-                List.of(BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE"))
+                List.of(BotMessageBuilder.button("❌ Cancel", cancelCallback))
         );
         bot.send(flowHelper.sendWithInline(chatId,
-                "🚘 <b>Vehicle Details</b>\n\n" +
-                        vehicleDisplay + "\n\nSave this vehicle info?",
+                "🚘 <b>New Vehicle</b>\n\n" + vehicleDisplay + "\n\nSave this vehicle?",
                 rows));
     }
 
     /**
-     * Vehicle confirmation step in post ride flow.
-     * If no saved vehicle → goes straight to vehicle input.
+     * Vehicle selection step in the post-ride flow.
+     * Shows existing vehicles as selection buttons, plus "Add New Vehicle".
+     * If no vehicles saved yet → jumps straight to the vehicle input flow.
      */
-    public void showVehicleConfirmStep(Long chatId, Long carpoolUserId,
-                                       UserState state, CarpoolBot bot) {
-        var userOpt = userRepository.findById(carpoolUserId);
-        if (userOpt.isEmpty()) {
-            bot.send(BotMessageBuilder.text(chatId, "⚠️ User not found."));
-            return;
-        }
-        var user = userOpt.get();
-        UserState updated = state.withFlow(BotFlow.POST_RIDE_VEHICLE_CONFIRM);
-        stateManager.save(chatId, updated);
+    public void showVehicleSelectStep(Long chatId, Long carpoolUserId,
+                                      UserState state, CarpoolBot bot) {
+        var vehicles = vehicleService.getActiveVehiclesForUser(carpoolUserId);
 
-        if (user.hasVehicleInfo()) {
-            String vehicleDisplay = String.format("%s%s | 🔢 %s",
-                    user.getCarColor() != null
-                            ? "🎨 " + HtmlEscapeUtil.escape(user.getCarColor()) + " "
-                            : "",
-                    HtmlEscapeUtil.escape(user.getCarModel()),
-                    HtmlEscapeUtil.escape(user.getPlateNumber()));
-
-            var rows = List.of(List.of(
-                    BotMessageBuilder.button("✅ Yes, Proceed",  "VEHICLE_CONFIRM_YES"),
-                    BotMessageBuilder.button("📝 Change Vehicle", "VEHICLE_CHANGE")
-            ));
-            bot.send(flowHelper.sendWithInline(chatId,
-                    "🚘 <b>Vehicle Confirmation</b>\n\n" +
-                            "You are currently using:\n<b>" + vehicleDisplay +
-                            "</b>\n\nUse this for your ride?",
-                    rows));
-        } else {
-            UserState vehicleState = updated
+        if (vehicles.isEmpty()) {
+            // No vehicles — go straight to add flow
+            UserState addState = state
                     .withPendingCarColor(null)
                     .withPendingCarModel(null)
                     .withPendingPlateNumber(null)
+                    .withPendingSeatCapacity(null)
                     .withFlow(BotFlow.SET_VEHICLE_COLOR);
-            stateManager.save(chatId, vehicleState);
+            stateManager.save(chatId, addState);
             bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "🎨 <b>What color is your vehicle?</b>\n\n" +
+                    "🚘 <b>No vehicle saved yet.</b>\n\n" +
+                            "Let's add your vehicle first.\n\n" +
+                            "🎨 <b>What color is your vehicle?</b>\n\n" +
                             "Example: <code>Silver</code>, <code>White</code>, <code>Black</code>"));
+            return;
         }
+
+        UserState updated = state.withFlow(BotFlow.POST_RIDE_VEHICLE_SELECT);
+        stateManager.save(chatId, updated);
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (var v : vehicles) {
+            String label = String.format("🚘 %s%s | 🔢 %s",
+                    v.color() != null ? v.color() + " " : "",
+                    v.model(),
+                    v.plateNumber());
+            rows.add(List.of(BotMessageBuilder.button(label, "VEHICLE_SELECT:" + v.id())));
+        }
+
+        if (vehicles.size() < 3) {
+            rows.add(List.of(BotMessageBuilder.button("➕ Add New Vehicle", "ADD_VEHICLE")));
+        }
+
+        rows.add(List.of(BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE")));
+
+        bot.send(flowHelper.sendWithInline(chatId,
+                "🚘 <b>Select Vehicle for This Ride</b>\n\n" +
+                        "Choose one of your saved vehicles:",
+                rows));
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────
+
+    private void showVehicleManagementScreen(Long chatId, Long carpoolUserId,
+                                              UserState state, CarpoolBot bot) {
+        var vehicles = vehicleService.getActiveVehiclesForUser(carpoolUserId);
+
+        if (vehicles.isEmpty()) {
+            var rows = List.of(
+                    List.of(BotMessageBuilder.button("➕ Add Vehicle", "ADD_VEHICLE")),
+                    List.of(BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU"))
+            );
+            bot.send(flowHelper.sendWithInline(chatId,
+                    "🚘 <b>My Vehicles</b>\n\n<i>No vehicles saved yet.</i>\n\n" +
+                            "Add up to 3 vehicles.",
+                    rows));
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("🚘 <b>My Vehicles (")
+                .append(vehicles.size()).append("/3)</b>\n\n");
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (int i = 0; i < vehicles.size(); i++) {
+            var v = vehicles.get(i);
+            sb.append(String.format("%d. %s%s | 🔢 %s · 💺 %d seats\n",
+                    i + 1,
+                    v.color() != null ? "🎨 " + HtmlEscapeUtil.escape(v.color()) + " " : "",
+                    HtmlEscapeUtil.escape(v.model()),
+                    HtmlEscapeUtil.escape(v.plateNumber()),
+                    v.seatCapacity()));
+            rows.add(List.of(BotMessageBuilder.button(
+                    "🗑️ Remove #" + (i + 1), "VEHICLE_REMOVE:" + v.id())));
+        }
+
+        if (vehicles.size() < 3) {
+            rows.add(List.of(BotMessageBuilder.button("➕ Add Vehicle", "ADD_VEHICLE")));
+        }
+        rows.add(List.of(BotMessageBuilder.button("🏠 Menu", "MAIN_MENU")));
+
+        bot.send(flowHelper.sendWithInline(chatId, sb.toString().trim(), rows));
     }
 
     // ── Terms ─────────────────────────────────────────────────────────────

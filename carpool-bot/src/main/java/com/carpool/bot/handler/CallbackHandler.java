@@ -126,6 +126,8 @@ public class CallbackHandler {
         commands.put("VEHICLE_CONFIRM_SAVE", ctx -> profileHandler.handleVehicleConfirmSave(ctx));
         commands.put("VEHICLE_CHANGE",       ctx -> profileHandler.handleVehicleChange(ctx));
         commands.put("VEHICLE_REMOVE",       ctx -> profileHandler.handleVehicleRemove(ctx));
+        commands.put("VEHICLE_SELECT",       ctx -> profileHandler.handleVehicleSelect(ctx));
+        commands.put("ADD_VEHICLE",          ctx -> profileHandler.handleAddVehicle(ctx));
 
         // ── Profile ───────────────────────────────────────────────────────
         commands.put("MY_PROFILE",      ctx -> profileHandler.handleMyProfile(ctx));

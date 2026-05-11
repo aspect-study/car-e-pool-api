@@ -228,15 +228,24 @@ public class GroupNotificationService {
                 ? "\n\n" + HtmlEscapeUtil.escape(ride.getNotes())
                 : "";
 
-        String vehicleLine = (ride.getDriver().getCarModel() != null
-                && ride.getDriver().getPlateNumber() != null)
-                ? String.format("🚘 %s%s | 🔢 %s\n",
-                ride.getDriver().getCarColor() != null
-                ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " "
-                : "",
-                HtmlEscapeUtil.escape(ride.getDriver().getCarModel()),
-                HtmlEscapeUtil.escape(ride.getDriver().getPlateNumber()))
-                : "";
+        String vehicleLine;
+        if (ride.getVehicle() != null) {
+            vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+                    ride.getVehicle().getColor() != null
+                            ? HtmlEscapeUtil.escape(ride.getVehicle().getColor()) + " " : "",
+                    HtmlEscapeUtil.escape(ride.getVehicle().getModel()),
+                    HtmlEscapeUtil.escape(ride.getVehicle().getPlateNumber()));
+        } else if (ride.getDriver().getCarModel() != null
+                && ride.getDriver().getPlateNumber() != null) {
+            // Fallback for rides created before multi-vehicle migration
+            vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+                    ride.getDriver().getCarColor() != null
+                            ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " " : "",
+                    HtmlEscapeUtil.escape(ride.getDriver().getCarModel()),
+                    HtmlEscapeUtil.escape(ride.getDriver().getPlateNumber()));
+        } else {
+            vehicleLine = "";
+        }
 
         return String.format(
                 "\uD83D\uDFE2 🚗 <b>New Ride Available!</b> — %s\n\n" +

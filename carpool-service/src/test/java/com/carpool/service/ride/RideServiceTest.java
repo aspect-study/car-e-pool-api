@@ -7,6 +7,7 @@ import com.carpool.repository.BookingRepository;
 import com.carpool.repository.HubRepository;
 import com.carpool.repository.RideRepository;
 import com.carpool.repository.UserRepository;
+import com.carpool.repository.VehicleRepository;
 import com.carpool.service.dto.request.CreateRideRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.RideResponse;
@@ -42,6 +43,7 @@ class RideServiceTest {
     @Mock private HubRepository       hubRepository;
     @Mock private UserRepository      userRepository;
     @Mock private BookingRepository   bookingRepository;
+    @Mock private VehicleRepository   vehicleRepository;
     @Mock private EntityMapper        mapper;
     @Mock private ApplicationEventPublisher eventPublisher;
 
@@ -91,7 +93,7 @@ class RideServiceTest {
             var request = new CreateRideRequest(
                     10L, 11L, RideDirection.HOME_TO_WORK,
                     LocalDateTime.now().plusHours(2),
-                    3, new BigDecimal("150.00"), "Meet at 7-Eleven", null);
+                    3, new BigDecimal("150.00"), "Meet at 7-Eleven", null, null);
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(driver));
             when(hubRepository.findById(10L)).thenReturn(Optional.of(originHub));
@@ -120,7 +122,7 @@ class RideServiceTest {
             var request = new CreateRideRequest(
                     10L, 11L, RideDirection.HOME_TO_WORK,
                     LocalDateTime.now().plusHours(2),
-                    3, new BigDecimal("150.00"), null, null);
+                    3, new BigDecimal("150.00"), null, null, null);
 
             when(userRepository.findById(2L)).thenReturn(Optional.of(passenger));
 
@@ -135,7 +137,7 @@ class RideServiceTest {
             var request = new CreateRideRequest(
                     10L, 10L, RideDirection.HOME_TO_WORK, // same hub ID
                     LocalDateTime.now().plusHours(2),
-                    3, new BigDecimal("150.00"), null, null);
+                    3, new BigDecimal("150.00"), null, null, null);
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(driver));
             when(hubRepository.findById(10L)).thenReturn(Optional.of(originHub));
@@ -150,7 +152,7 @@ class RideServiceTest {
             var request = new CreateRideRequest(
                     10L, 11L, RideDirection.HOME_TO_WORK,
                     LocalDateTime.now().minusHours(1), // past time
-                    3, new BigDecimal("150.00"), null, null);
+                    3, new BigDecimal("150.00"), null, null, null);
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(driver));
             when(hubRepository.findById(10L)).thenReturn(Optional.of(originHub));

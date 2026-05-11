@@ -188,6 +188,8 @@ public class MessageHandler {
                     handleSetVehicleModel(chatId, text, state, bot);
             case SET_VEHICLE_PLATE ->
                     handleSetVehiclePlate(chatId, text, state, carpoolUserId, bot);
+            case SET_VEHICLE_CAPACITY ->
+                    handleSetVehicleCapacity(chatId, text, state, bot);
             case RATING_COMMENT ->
                     ratingHandler.handleRatingComment(
                             chatId, text, state, carpoolUserId, bot);
@@ -388,8 +390,32 @@ public class MessageHandler {
                     "⚠️ Please enter a valid plate number (max 20 characters):"));
             return;
         }
-        UserState updated = state
+        stateManager.save(chatId, state
                 .withPendingPlateNumber(plate)
+                .withFlow(BotFlow.SET_VEHICLE_CAPACITY));
+        bot.send(BotMessageBuilder.textWithCancel(chatId,
+                "💺 <b>How many passenger seats does your vehicle have?</b>\n\n" +
+                        "Enter a number from 1 to 7.\n" +
+                        "Example: <code>3</code> for a 4-seater (driver + 3 passengers)"));
+    }
+
+    private void handleSetVehicleCapacity(Long chatId, String text,
+                                          UserState state, CarpoolBot bot) {
+        int capacity;
+        try {
+            capacity = Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please enter a number between 1 and 7:"));
+            return;
+        }
+        if (capacity < 1 || capacity > 7) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Seat count must be between 1 and 7. Please try again:"));
+            return;
+        }
+        UserState updated = state
+                .withPendingSeatCapacity(capacity)
                 .withFlow(BotFlow.POST_RIDE_VEHICLE_CONFIRM);
         stateManager.save(chatId, updated);
         profileHandler.showVehicleConfirmation(chatId, updated, bot);

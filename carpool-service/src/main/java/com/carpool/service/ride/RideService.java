@@ -9,6 +9,7 @@ import com.carpool.repository.HubRepository;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.RideRepository;
 import com.carpool.repository.UserRepository;
+import com.carpool.repository.VehicleRepository;
 import com.carpool.service.dto.request.CreateRideRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.request.WaypointRequest;
@@ -46,6 +47,7 @@ public class RideService {
     private final HubRepository       hubRepository;
     private final UserRepository      userRepository;
     private final BookingRepository   bookingRepository;
+    private final VehicleRepository   vehicleRepository;
     private final EntityMapper        mapper;
     private final ApplicationEventPublisher eventPublisher;
     private final RatingService       ratingService;
@@ -98,6 +100,14 @@ public class RideService {
             throw new DeparturePastException();
         }
 
+        Vehicle vehicle = null;
+        if (request.vehicleId() != null) {
+            vehicle = vehicleRepository.findById(request.vehicleId()).orElse(null);
+            if (vehicle != null && !vehicle.getUser().getId().equals(driverUserId)) {
+                vehicle = null; // silently ignore — not the driver's vehicle
+            }
+        }
+
         Ride ride = Ride.builder()
                 .driver(driver)
                 .originHub(origin)
@@ -109,6 +119,7 @@ public class RideService {
                 .contributionAmount(request.contributionAmount())
                 .notes(request.notes())
                 .status(RideStatus.DRAFT)
+                .vehicle(vehicle)
                 .build();
 
         // Build waypoints if provided
@@ -505,7 +516,7 @@ public class RideService {
                 r.direction(), r.departureTime(), r.totalSeats(),
                 r.availableSeats(), r.contributionAmount(), r.notes(),
                 r.status(), r.waypoints(), r.createdAt(),
-                r.announceCount(), avg);
+                r.announceCount(), r.vehicle(), avg);
     }
 
 }

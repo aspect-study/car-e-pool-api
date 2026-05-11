@@ -444,7 +444,7 @@ public class PostRideHandler {
         }
         UserState updated = state.withNotes(text.trim());
         stateManager.save(chatId, updated);
-        profileHandler.showVehicleConfirmStep(
+        profileHandler.showVehicleSelectStep(
                 chatId, state.getCarpoolUserId(), updated, bot);
     }
 
@@ -461,7 +461,7 @@ public class PostRideHandler {
         driverNoteService.saveOrUpdate(carpoolUserId, notes);
         UserState updated = state.withNotes(notes);
         stateManager.save(chatId, updated);
-        profileHandler.showVehicleConfirmStep(chatId, carpoolUserId, updated, bot);
+        profileHandler.showVehicleSelectStep(chatId, carpoolUserId, updated, bot);
     }
 
     public void handleNotePreview(BotContext ctx) {
@@ -498,7 +498,7 @@ public class PostRideHandler {
                     .withNotes(note.getContent())
                     .withSelectedNoteId(null);
             stateManager.save(ctx.chatId(), updated);
-            profileHandler.showVehicleConfirmStep(
+            profileHandler.showVehicleSelectStep(
                     ctx.chatId(), ctx.carpoolUserId(), updated, ctx.bot());
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -526,7 +526,7 @@ public class PostRideHandler {
     public void handleSkipNotes(BotContext ctx) {
         UserState updated = ctx.state().withNotes(null);
         stateManager.save(ctx.chatId(), updated);
-        profileHandler.showVehicleConfirmStep(
+        profileHandler.showVehicleSelectStep(
                 ctx.chatId(), ctx.carpoolUserId(), updated, ctx.bot());
     }
 
@@ -559,7 +559,8 @@ public class PostRideHandler {
                     ctx.state().getContribution() != null
                             ? ctx.state().getContribution() : BigDecimal.ZERO,
                     ctx.state().getNotes(),
-                    null);
+                    null,
+                    ctx.state().getSelectedVehicleId());
 
             RideResponse ride = rideService.createRide(request, ctx.carpoolUserId());
             rideService.updateRideStatus(ride.id(),
@@ -950,14 +951,16 @@ public class PostRideHandler {
                 return;
             }
 
-            // Repost flow — hubs already set, skip to confirmation
+            // Repost flow — hubs already set, go to vehicle selection then confirmation
             if (ctx.state().getOriginHubId() != null
                     && ctx.state().getDestinationHubId() != null) {
                 UserState updated = ctx.state()
                         .withDepartureTime(departure)
-                        .withFlow(BotFlow.POST_RIDE_CONFIRM);
+                        .withSelectedVehicleId(null)
+                        .withSelectedVehicleLabel(null);
                 stateManager.save(ctx.chatId(), updated);
-                postRideHelper.showConfirmation(ctx.chatId(), updated, ctx.bot());
+                profileHandler.showVehicleSelectStep(
+                        ctx.chatId(), ctx.carpoolUserId(), updated, ctx.bot());
                 return;
             }
 

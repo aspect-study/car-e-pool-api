@@ -68,9 +68,14 @@ public class UserState {
     // ── Vehicle state ─────────────────────────────────────────────────
     // Temporary storage during vehicle input flow
     // Cleared after save or cancel — never persisted in state long-term
-    private final String pendingCarColor;
-    private final String pendingCarModel;
-    private final String pendingPlateNumber;
+    private final String  pendingCarColor;
+    private final String  pendingCarModel;
+    private final String  pendingPlateNumber;
+    private final Integer pendingSeatCapacity;
+
+    // Selected vehicle for the current ride being posted
+    private final Long   selectedVehicleId;
+    private final String selectedVehicleLabel;  // formatted for display, avoids re-fetch
 
     // ── Rating temporary state ────────────────────────────────────────────────
     // Cleared after rating is submitted or skipped.
