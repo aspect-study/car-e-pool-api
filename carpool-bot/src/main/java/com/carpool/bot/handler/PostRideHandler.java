@@ -150,6 +150,11 @@ public class PostRideHandler {
                             "Example: <code>" + hint + "</code>"));
             return;
         }
+        if (text.trim().length() > 150) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Hub name is too long (max 150 characters). Please try a shorter name."));
+            return;
+        }
 
         List<HubResponse> suggestions = hubMatcher.suggest(text);
 
@@ -194,6 +199,11 @@ public class PostRideHandler {
             bot.send(BotMessageBuilder.textWithCancel(chatId,
                     "⚠️ Please type at least 3 characters to search.\n\n" +
                             "Example: <code>" + hint + "</code>"));
+            return;
+        }
+        if (text.trim().length() > 150) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Hub name is too long (max 150 characters). Please try a shorter name."));
             return;
         }
 
