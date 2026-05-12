@@ -357,7 +357,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                             ),
                             List.of(
                                     InlineKeyboardButton.builder()
-                                            .text("⭐ Follow Driver")
+                                            .text("⭐ Get Ride Alerts")
                                             .url("https://t.me/" + botConfig.getBotUsername()
                                                     + "?start=FOLLOW_RIDE_" + driverId + "_" + rideId)
                                             .style(ButtonStyle.PRIMARY.toString())
