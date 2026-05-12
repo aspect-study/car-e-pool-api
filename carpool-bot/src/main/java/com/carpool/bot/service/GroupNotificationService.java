@@ -83,7 +83,9 @@ public class GroupNotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRidePosted(RideEvents.RidePostedEvent event) {
-        Ride ride = event.ride();
+        Ride ride = rideRepository.findById(event.ride().getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Ride not found for group announcement: id=" + event.ride().getId()));
         try {
             if (ride.getGroupMessageId() != null) {
                 try {
@@ -148,6 +150,11 @@ public class GroupNotificationService {
                 for (Long followerTelegramId : followerTelegramIds) {
                     try {
                         carpoolBot.sendToUser(followerTelegramId, alertMsg, ride.getId(), ride.getDriver().getId());
+                        Thread.sleep(50);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.warn("Follower alert interrupted: rideId={}", ride.getId());
+                        break;
                     } catch (Exception e) {
                         log.warn("Failed to send favorite alert to telegramId={} rideId={}: {}",
                                 followerTelegramId, ride.getId(), e.getMessage());

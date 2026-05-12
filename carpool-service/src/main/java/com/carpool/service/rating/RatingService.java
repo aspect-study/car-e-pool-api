@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -238,6 +239,10 @@ public class RatingService {
     public boolean hasRatedPassenger(Long rideId, Long raterId, Long rateeId) {
         return ratingRepository.existsByRideIdAndRaterIdAndRateeId(
                 rideId, raterId, rateeId);
+    }
+
+    public Set<Long> getRatedPassengerIds(Long rideId, Long raterId) {
+        return ratingRepository.findRateeIdsByRideIdAndRaterId(rideId, raterId);
     }
 
     /**

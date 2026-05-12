@@ -392,7 +392,7 @@ public class PostRideHandler {
             int seats = Integer.parseInt(text.trim());
             if (seats < 1 || seats > 7) {
                 bot.send(BotMessageBuilder.text(chatId,
-                        "⚠️ Please enter a number between 1 and 8:"));
+                        "⚠️ Please enter a number between 1 and 7:"));
                 return;
             }
             stateManager.save(chatId, state
@@ -538,6 +538,7 @@ public class PostRideHandler {
     public void handleConfirmPostRide(BotContext ctx) {
         if (ctx.state() == null
                 || ctx.state().getOriginHubId() == null
+                || ctx.state().getDestinationHubId() == null
                 || ctx.state().getDirection() == null) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Session expired. Please start again with /start."));
@@ -583,8 +584,7 @@ public class PostRideHandler {
             log.error("Failed to post ride for userId={}: {}",
                     ctx.carpoolUserId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Failed to post ride: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Failed to post ride. Please try again."));
             stateManager.reset(ctx.chatId());
         }
     }
@@ -755,7 +755,7 @@ public class PostRideHandler {
             int seats = Integer.parseInt(text.trim());
             if (seats < 1 || seats > 7) {
                 bot.send(flowHelper.sendWithInline(chatId,
-                        "⚠️ Please enter a number between 1 and 8:",
+                        "⚠️ Please enter a number between 1 and 7:",
                         List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
                 return;
             }

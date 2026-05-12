@@ -9,6 +9,7 @@ import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.RideRating;
+import com.carpool.domain.entity.User;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.favorite.FavoriteService;
 import com.carpool.service.rating.RatingService;
@@ -20,6 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Handles the full rating and favorite flow.
@@ -251,8 +253,7 @@ public class RatingHandler {
             log.error("Rating submission failed: userId={} error={}",
                     carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Could not submit rating: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not submit rating. Please try again."));
             stateManager.reset(chatId);
         }
     }
@@ -437,18 +438,16 @@ public class RatingHandler {
                                               List<Long> rateeIds) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        for (Long rateeId : rateeIds) {
-            userRepository.findById(rateeId).ifPresent(passenger -> {
-                // Skip already rated passengers
-                if (!ratingService.hasRatedPassenger(rideId, ctx.carpoolUserId(), rateeId)) {
-                    String handle = passenger.getTelegramHandle() != null
-                            ? " (@" + HtmlEscapeUtil.escape(
-                            passenger.getTelegramHandle()) + ")" : "";
-                    rows.add(List.of(BotMessageBuilder.button(
-                            "👤 " + HtmlEscapeUtil.escape(passenger.getFullName()) + handle,
-                            "RATE_PASSENGER:" + rideId + ":" + rateeId, ButtonStyle.PRIMARY.toString())));
-                }
-            });
+        List<User> passengers = userRepository.findAllById(rateeIds);
+        Set<Long> alreadyRated = ratingService.getRatedPassengerIds(rideId, ctx.carpoolUserId());
+
+        for (User passenger : passengers) {
+            if (alreadyRated.contains(passenger.getId())) continue;
+            String handle = passenger.getTelegramHandle() != null
+                    ? " (@" + HtmlEscapeUtil.escape(passenger.getTelegramHandle()) + ")" : "";
+            rows.add(List.of(BotMessageBuilder.button(
+                    "👤 " + HtmlEscapeUtil.escape(passenger.getFullName()) + handle,
+                    "RATE_PASSENGER:" + rideId + ":" + passenger.getId(), ButtonStyle.PRIMARY.toString())));
         }
 
         if (rows.isEmpty()) {
