@@ -18,7 +18,6 @@ import com.carpool.service.dto.response.FollowerResponse;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
-import com.carpool.service.dto.response.VehicleResponse;
 import com.carpool.service.favorite.FavoriteService;
 import com.carpool.service.hub.HubService;
 import com.carpool.service.profile.ProfileService;
@@ -182,10 +181,13 @@ public class ProfileHandler {
 
             if (all.isEmpty()) {
                 ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                        "👥 <b>My Followers</b>\n\n" +
-                                "<i>No followers yet.</i>\n\n" +
-                                "Followers are passengers who have saved you as a favorite driver. " +
-                                "They receive a notification whenever you post a new ride.",
+                        """
+                                👥 <b>My Followers</b>
+                                
+                                <i>No followers yet.</i>
+                                
+                                Followers are passengers who have saved you as a favorite driver. \
+                                They receive a notification whenever you post a new ride.""",
                         List.of(List.of(
                                 BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString()),
                                 BotMessageBuilder.button("🏠 Menu",       "MAIN_MENU", null)
@@ -194,7 +196,7 @@ public class ProfileHandler {
             }
 
             int totalPages = (int) Math.ceil((double) all.size() / FOLLOWERS_PAGE_SIZE);
-            int safePage   = Math.max(0, Math.min(page, totalPages - 1));
+            int safePage   = Math.clamp(page, 0, totalPages - 1);
             int fromIdx    = safePage * FOLLOWERS_PAGE_SIZE;
             int toIdx      = Math.min(fromIdx + FOLLOWERS_PAGE_SIZE, all.size());
             List<FollowerResponse> pageItems = all.subList(fromIdx, toIdx);
@@ -393,8 +395,10 @@ public class ProfileHandler {
                 .withPendingSeatCapacity(null)
                 .withFlow(BotFlow.SET_VEHICLE_COLOR);
         stateManager.save(ctx.chatId(), cleared);
-        String colorPrompt = "🎨 <b>What color is your vehicle?</b>\n\n" +
-                "Example: <code>Silver</code>, <code>White</code>, <code>Black</code>";
+        String colorPrompt = """
+                🎨 <b>What color is your vehicle?</b>
+                
+                Example: <code>Silver</code>, <code>White</code>, <code>Black</code>""";
         if (ctx.state().getDepartureTime() != null) {
             ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(), colorPrompt));
         } else {
@@ -459,10 +463,14 @@ public class ProfileHandler {
                     .withFlow(BotFlow.SET_VEHICLE_COLOR);
             stateManager.save(chatId, addState);
             bot.send(BotMessageBuilder.textWithCancel(chatId,
-                    "🚘 <b>No vehicle saved yet.</b>\n\n" +
-                            "Let's add your vehicle first.\n\n" +
-                            "🎨 <b>What color is your vehicle?</b>\n\n" +
-                            "Example: <code>Silver</code>, <code>White</code>, <code>Black</code>"));
+                    """
+                            🚘 <b>No vehicle saved yet.</b>
+                            
+                            Let's add your vehicle first.
+                            
+                            🎨 <b>What color is your vehicle?</b>
+                            
+                            Example: <code>Silver</code>, <code>White</code>, <code>Black</code>"""));
             return;
         }
 
@@ -485,15 +493,17 @@ public class ProfileHandler {
         rows.add(List.of(BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE", ButtonStyle.DANGER.toString())));
 
         bot.send(flowHelper.sendWithInline(chatId,
-                "🚘 <b>Select Vehicle for This Ride</b>\n\n" +
-                        "Choose one of your saved vehicles:",
+                """
+                        🚘 <b>Select Vehicle for This Ride</b>
+                        
+                        Choose one of your saved vehicles:""",
                 rows));
     }
 
     // ── Private helpers ───────────────────────────────────────────────────
 
     private void showVehicleManagementScreen(Long chatId, Long carpoolUserId,
-                                              UserState state, CarpoolBot bot) {
+                                             UserState ignoredState, CarpoolBot bot) {
         var vehicles = vehicleService.getActiveVehiclesForUser(carpoolUserId);
 
         if (vehicles.isEmpty()) {
@@ -502,8 +512,12 @@ public class ProfileHandler {
                     List.of(BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString()))
             );
             bot.send(flowHelper.sendWithInline(chatId,
-                    "🚘 <b>My Vehicles</b>\n\n<i>No vehicles saved yet.</i>\n\n" +
-                            "Add up to 3 vehicles.",
+                    """
+                            🚘 <b>My Vehicles</b>
+                            
+                            <i>No vehicles saved yet.</i>
+                            
+                            Add up to 3 vehicles.""",
                     rows));
             return;
         }
@@ -589,19 +603,25 @@ public class ProfileHandler {
             });
 
             ctx.bot().send(BotMessageBuilder.textNoMenu(ctx.chatId(),
-                    "🎉 <b>Welcome to the community!</b>\n\n" +
-                            "Thank you for accepting the terms. You're now part of the " +
-                            "Car-e-Pool Carpooling Community.\n\n" +
-                            "Let's get started! 🚗"));
+                    """
+                            🎉 <b>Welcome to the community!</b>
+                            
+                            Thank you for accepting the terms. You're now part of the \
+                            Car-e-Pool Carpooling Community.
+                            
+                            Let's get started! 🚗"""));
 
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    "━━━━━━━━━━━━━━━━━━━━━\n" +
-                            "👥 <b>JOIN OUR COMMUNITY GROUP</b>\n" +
-                            "━━━━━━━━━━━━━━━━━━━━━\n\n" +
-                            "🚗 Rides are posted in the group in real time.\n" +
-                            "📢 Drivers announce their rides there.\n" +
-                            "🔍 Passengers spot rides before they fill up.\n\n" +
-                            "<b>Don't miss out — join now!</b>",
+                    """
+                            ━━━━━━━━━━━━━━━━━━━━━
+                            👥 <b>JOIN OUR COMMUNITY GROUP</b>
+                            ━━━━━━━━━━━━━━━━━━━━━
+                            
+                            🚗 Rides are posted in the group in real time.
+                            📢 Drivers announce their rides there.
+                            🔍 Passengers spot rides before they fill up.
+                            
+                            <b>Don't miss out — join now!</b>""",
                     List.of(
                             List.of(BotMessageBuilder.urlButton(
                                     "👥 Join the Group",
@@ -633,9 +653,11 @@ public class ProfileHandler {
                 BotMessageBuilder.button("🔁 Review Terms Again", "TERMS_VIEW_AGAIN", ButtonStyle.PRIMARY.toString())
         ));
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                "We understand if you're not ready. 🙏\n\n" +
-                        "You'll need to accept the terms to use this bot. " +
-                        "You can review them again anytime.",
+                """
+                        We understand if you're not ready. 🙏
+                        
+                        You'll need to accept the terms to use this bot. \
+                        You can review them again anytime.""",
                 rows));
     }
 
@@ -671,9 +693,12 @@ public class ProfileHandler {
                 BotMessageBuilder.button("📄 Review Terms", "TERMS_WELCOME", ButtonStyle.PRIMARY.toString())
         ));
         bot.send(flowHelper.sendWithInline(chatId,
-                "⚠️ <b>Terms Acceptance Required</b>\n\n" +
-                        "You'll need to accept our community terms to use this bot.\n\n" +
-                        "Tap below to review and accept.",
+                """
+                        ⚠️ <b>Terms Acceptance Required</b>
+                        
+                        You'll need to accept our community terms to use this bot.
+                        
+                        Tap below to review and accept.""",
                 rows));
     }
 
@@ -689,12 +714,20 @@ public class ProfileHandler {
         AdminStatsService.AdminStats s = adminStatsService.getStats();
 
         String report = String.format(
-                "📊 <b>Admin Stats</b>\n<i>%s</i>\n\n" +
-                        "👥 <b>Users</b>\nTotal: <b>%d</b> | New today: <b>%d</b>\n\n" +
-                        "🚗 <b>Rides</b>\nActive now: <b>%d</b> | Posted today: <b>%d</b>\n" +
-                        "Total: <b>%d</b> | Completed: <b>%d</b> | Cancelled: <b>%d</b>\n\n" +
-                        "📋 <b>Bookings</b>\nPending now: <b>%d</b> | Made today: <b>%d</b>\n" +
-                        "Total: <b>%d</b> | Completed: <b>%d</b>",
+                """
+                        📊 <b>Admin Stats</b>
+                        <i>%s</i>
+                        
+                        👥 <b>Users</b>
+                        Total: <b>%d</b> | New today: <b>%d</b>
+                        
+                        🚗 <b>Rides</b>
+                        Active now: <b>%d</b> | Posted today: <b>%d</b>
+                        Total: <b>%d</b> | Completed: <b>%d</b> | Cancelled: <b>%d</b>
+                        
+                        📋 <b>Bookings</b>
+                        Pending now: <b>%d</b> | Made today: <b>%d</b>
+                        Total: <b>%d</b> | Completed: <b>%d</b>""",
                 LocalDateTime.now(ZoneId.of("Asia/Manila"))
                         .format(DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")),
                 s.totalUsers(), s.newUsersToday(),
@@ -706,9 +739,9 @@ public class ProfileHandler {
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), report,
                 List.of(
                         List.of(
-                                BotMessageBuilder.button("🔄 Refresh",       "ADMIN_STATS", null),
-                                BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS", null),
-                                BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU", null)
+                                BotMessageBuilder.button("🔄 Refresh",       "ADMIN_STATS", ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🏘️ Pending Hubs", "PENDING_HUBS", ButtonStyle.PRIMARY.toString()),
+                                BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU", ButtonStyle.SUCCESS.toString())
                         )
                 )));
     }
@@ -762,7 +795,7 @@ public class ProfileHandler {
         }
 
         int totalPages = (int) Math.ceil((double) pending.size() / HUB_PAGE_SIZE);
-        int safePage   = Math.max(0, Math.min(page, totalPages - 1));
+        int safePage   = Math.clamp(page, 0, totalPages - 1);
         int fromIdx    = safePage * HUB_PAGE_SIZE;
         int toIdx      = Math.min(fromIdx + HUB_PAGE_SIZE, pending.size());
         List<HubResponse> pageItems = pending.subList(fromIdx, toIdx);
@@ -823,8 +856,11 @@ public class ProfileHandler {
         try {
             HubResponse hub = hubService.approveHub(hubId, null);
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    String.format("✅ <b>Hub Approved!</b>\n\n" +
-                            "📍 <b>%s</b> — %s\n🔑 Code: <code>%s</code>",
+                    String.format("""
+                                    ✅ <b>Hub Approved!</b>
+                                    
+                                    📍 <b>%s</b> — %s
+                                    🔑 Code: <code>%s</code>""",
                             HtmlEscapeUtil.escape(hub.name()),
                             HtmlEscapeUtil.escape(hub.area()),
                             hub.code()),

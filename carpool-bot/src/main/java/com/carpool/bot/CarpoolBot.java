@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
 /**
  * Main Telegram bot entry point.
  * Implements SpringLongPollingBot for Spring Boot 3.x/4.x compatibility (telegrambots 8.x).
- *
+ * <p>
  * Receives all updates from Telegram and routes them to:
  *   - MessageHandler  — for text messages and commands
  *   - CallbackHandler — for inline button taps
@@ -139,17 +139,23 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                     String text = update.getMessage().getText().trim();
                     if (!text.equals("/start")) {
                         send(BotMessageBuilder.textNoMenu(gatedChatId,
-                                "🚫 <b>Telegram Username Required</b>\n\n" +
-                                        "You need a Telegram @username to use this bot.\n\n" +
-                                        "📌 <b>Why is this required?</b>\n" +
-                                        "Drivers and passengers need to contact each other " +
-                                        "directly outside the bot to coordinate pickups.\n\n" +
-                                        "⚙️ <b>How to set your username:</b>\n" +
-                                        "1️⃣ Open <b>Telegram Settings</b>\n" +
-                                        "2️⃣ Tap your <b>Profile</b>\n" +
-                                        "3️⃣ Tap <b>Username</b> and set one\n\n" +
-                                        "✅ Once done, send /start and you're good to go!\n\n" +
-                                        "<i>Already set it? Just send /start and the bot will detect it automatically.</i>"));
+                                """
+                                        🚫 <b>Telegram Username Required</b>
+                                        
+                                        You need a Telegram @username to use this bot.
+                                        
+                                        📌 <b>Why is this required?</b>
+                                        Drivers and passengers need to contact each other \
+                                        directly outside the bot to coordinate pickups.
+                                        
+                                        ⚙️ <b>How to set your username:</b>
+                                        1️⃣ Open <b>Telegram Settings</b>
+                                        2️⃣ Tap your <b>Profile</b>
+                                        3️⃣ Tap <b>Username</b> and set one
+                                        
+                                        ✅ Once done, send /start and you're good to go!
+                                        
+                                        <i>Already set it? Just send /start and the bot will detect it automatically.</i>"""));
                         return;
                     }
                 }
@@ -189,17 +195,23 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                     Long gatedChatId = update.getCallbackQuery().getMessage().getChatId();
                     answerCallback(update.getCallbackQuery().getId());
                     send(BotMessageBuilder.textNoMenu(gatedChatId,
-                            "🚫 <b>Telegram Username Required</b>\n\n" +
-                                    "You need a Telegram @username to use this bot.\n\n" +
-                                    "📌 <b>Why is this required?</b>\n" +
-                                    "Drivers and passengers need to contact each other " +
-                                    "directly outside the bot to coordinate pickups.\n\n" +
-                                    "⚙️ <b>How to set your username:</b>\n" +
-                                    "1️⃣ Open <b>Telegram Settings</b>\n" +
-                                    "2️⃣ Tap your <b>Profile</b>\n" +
-                                    "3️⃣ Tap <b>Username</b> and set one\n\n" +
-                                    "✅ Once done, send /start and you're good to go!\n\n" +
-                                    "<i>Already set it? Just send /start and the bot will detect it automatically.</i>"));
+                            """
+                                    🚫 <b>Telegram Username Required</b>
+                                    
+                                    You need a Telegram @username to use this bot.
+                                    
+                                    📌 <b>Why is this required?</b>
+                                    Drivers and passengers need to contact each other \
+                                    directly outside the bot to coordinate pickups.
+                                    
+                                    ⚙️ <b>How to set your username:</b>
+                                    1️⃣ Open <b>Telegram Settings</b>
+                                    2️⃣ Tap your <b>Profile</b>
+                                    3️⃣ Tap <b>Username</b> and set one
+                                    
+                                    ✅ Once done, send /start and you're good to go!
+                                    
+                                    <i>Already set it? Just send /start and the bot will detect it automatically.</i>"""));
                     return;
                 }
 
@@ -224,7 +236,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
 
     public void send(SendMessage message) {
         try {
-            if (message.getText() == null || message.getText().isBlank()) {
+            if (message.getText().isBlank()) {
                 log.warn("Attempted to send empty message to chatId={} — skipped",
                         message.getChatId());
                 return;
@@ -236,8 +248,10 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                         message.getText().length(), message.getChatId());
                 telegramClient.execute(SendMessage.builder()
                         .chatId(message.getChatId())
-                        .text("⚠️ Message too long to display.\n\n" +
-                                "Telegram has a 4,096 character limit per message.")
+                        .text("""
+                                ⚠️ Message too long to display.
+                                
+                                Telegram has a 4,096 character limit per message.""")
                         .parseMode("HTML")
                         .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
                                 BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
@@ -255,7 +269,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
 
     public Integer sendReturningId(SendMessage message) {
         try {
-            if (message.getText() == null || message.getText().isBlank()) return null;
+            if (message.getText().isBlank()) return null;
             Message sent = telegramClient.execute(message);
             return sent != null ? sent.getMessageId() : null;
         } catch (TelegramApiException e) {
@@ -334,7 +348,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                     .parseMode("HTML")
                     .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
                             InlineKeyboardButton.builder()
-                                    .text("\uD83D\uDE98#"+rideId +" ❯❯❯❯ | View | Book a Ride")
+                                    .text("\uD83D\uDE98#"+rideId +" ❯❯❯❯ | View | Request a Seat")
                                     .url("https://t.me/" + botConfig.getBotUsername()
                                             + "?start=RIDE_" + rideId)
                                     .style(ButtonStyle.SUCCESS.toString())

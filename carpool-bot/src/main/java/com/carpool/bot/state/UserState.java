@@ -12,10 +12,10 @@ import java.time.YearMonth;
 
 /**
  * Immutable per-user conversation state stored in Caffeine cache.
- *
- * @With (Lombok) generates withXxx() methods that return a new instance
+ * <p>
+ * &#064;With  (Lombok) generates withXxx() methods that return a new instance
  * with the specified field changed — keeps state transitions explicit and safe.
- *
+ * <p>
  * Stored in StateManager keyed by Telegram chat ID (Long).
  */
 @Getter

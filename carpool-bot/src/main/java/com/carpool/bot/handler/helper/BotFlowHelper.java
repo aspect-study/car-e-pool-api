@@ -36,7 +36,7 @@ import java.util.List;
  * Eliminates duplication of showMainMenu, askForTimeWindow, etdExample,
  * handleDirectionSelected, buildFilterSummary, buildTimeContext, sendWithInline
  * which previously existed in both CallbackHandler and MessageHandler.
- *
+ * <p>
  * No handler dependencies — only services and infrastructure.
  * This is the lowest layer in the handler hierarchy.
  */
@@ -58,7 +58,7 @@ public class BotFlowHelper {
      * Renders the main menu — context-aware based on driver active ride state.
      * Single source of truth for main menu logic across all handlers.
      */
-    public void showMainMenu(Long chatId, Long carpoolUserId, UserState state, CarpoolBot bot) {
+    public void showMainMenu(Long chatId, Long carpoolUserId, UserState ignoredState, CarpoolBot bot) {
         stateManager.reset(chatId);
 
         List<RideResponse> myRides = rideService.getMyRides(carpoolUserId);
@@ -96,7 +96,7 @@ public class BotFlowHelper {
                         BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(), ButtonStyle.SUCCESS.toString())
                 ));
                 rows.add(List.of(
-                        BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS", null),
+                        BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS", ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(), ButtonStyle.DANGER.toString())
                 ));
                 if (canReannounce) {
@@ -105,8 +105,8 @@ public class BotFlowHelper {
                             "REANNOUNCE_RIDE:" + active.id(),
                             null)));
                 }
-                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.PRIMARY.toString())));
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", null)));
+                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
+                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
 
             } else {
                 rows.add(List.of(
@@ -120,8 +120,8 @@ public class BotFlowHelper {
                             "REANNOUNCE_RIDE:" + active.id(),
                             null)));
                 }
-                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.PRIMARY.toString())));
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", null)));
+                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
+                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
             }
 
             bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId, msg));
@@ -148,7 +148,7 @@ public class BotFlowHelper {
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS",  ButtonStyle.SUCCESS.toString())));
             }
             if (hasPastRides) {
-                rows.add(List.of(BotMessageBuilder.button("🔄 Repost a Ride", "MY_RIDES", ButtonStyle.PRIMARY.toString())));
+                rows.add(List.of(BotMessageBuilder.button("🔄 Repost a Ride", "MY_RIDES", ButtonStyle.SUCCESS.toString())));
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE",  ButtonStyle.PRIMARY.toString())));
 
@@ -267,26 +267,26 @@ public class BotFlowHelper {
 
         var rows = List.of(
                 List.of(
-                        BotMessageBuilder.button("🌙 Early Bird (1-4 AM)",    "TIME:EARLY_BIRD", null),
-                        BotMessageBuilder.button("🌙 Early Morning (4-6 AM)", "TIME:EARLY_MORNING", null)
+                        BotMessageBuilder.button("🌙 Early Bird (1-4 AM)",    "TIME:EARLY_BIRD", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🌙 Early Morning (4-6 AM)", "TIME:EARLY_MORNING", ButtonStyle.PRIMARY.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("🌅 Morning Rush (6-9 AM)",  "TIME:MORNING", null),
-                        BotMessageBuilder.button("☀️ Late Morning (9-12 PM)", "TIME:MID_MORNING", null)
+                        BotMessageBuilder.button("🌅 Morning Rush (6-9 AM)",  "TIME:MORNING", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("☀️ Late Morning (9-12 PM)", "TIME:MID_MORNING", ButtonStyle.PRIMARY.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("🌤️ Noon (12-3 PM)",        "TIME:NOON", null),
-                        BotMessageBuilder.button("🌇 Afternoon (3-6 PM)",     "TIME:AFTERNOON", null)
+                        BotMessageBuilder.button("🌤️ Noon (12-3 PM)",        "TIME:NOON", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🌇 Afternoon (3-6 PM)",     "TIME:AFTERNOON", ButtonStyle.PRIMARY.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("🌆 Evening (6-12 PM)",      "TIME:EVENING", null)
+                        BotMessageBuilder.button("🌆 Evening (6-12 PM)",      "TIME:EVENING", ButtonStyle.PRIMARY.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("📅 Custom Date & Time",     "TIME:CUSTOM", null),
-                        BotMessageBuilder.button("🔍 Show All",               "TIME:ALL_TODAY", null)
+                        BotMessageBuilder.button("📅 Custom Date & Time",     "TIME:CUSTOM", ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🔍 Show All",               "TIME:ALL_TODAY", ButtonStyle.PRIMARY.toString())
                 ),
                 List.of(
-                        BotMessageBuilder.button("🏠 Menu",                   "MAIN_MENU", ButtonStyle.PRIMARY.toString())
+                        BotMessageBuilder.button("🏠 Menu",                   "MAIN_MENU", ButtonStyle.SUCCESS.toString())
                 )
         );
 

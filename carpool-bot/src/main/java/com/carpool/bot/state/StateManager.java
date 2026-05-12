@@ -9,10 +9,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Manages per-user conversation state using an in-memory Caffeine cache.
- *
+ * <p>
  * Key   = Telegram chat ID (Long)
  * Value = UserState (immutable, replaced on each transition)
- *
+ * <p>
  * TTL: 30 minutes of inactivity resets the user to IDLE.
  * This handles the case where a user abandons a flow mid-way.
  */
@@ -56,11 +56,4 @@ public class StateManager {
         log.debug("State reset: chatId={}", chatId);
     }
 
-    /**
-     * Completely remove state — used on unrecoverable errors.
-     */
-    public void clear(Long chatId) {
-        cache.invalidate(chatId);
-        log.debug("State cleared: chatId={}", chatId);
-    }
 }

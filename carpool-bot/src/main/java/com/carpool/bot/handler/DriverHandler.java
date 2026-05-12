@@ -68,8 +68,10 @@ public class DriverHandler {
 
         if (recent.isEmpty()) {
             bot.send(BotMessageBuilder.text(chatId,
-                    "🚗 <b>My Rides</b>\n\n" +
-                            "<i>No completed or cancelled rides yet.</i>"));
+                    """
+                            🚗 <b>My Rides</b>
+                            
+                            <i>No completed or cancelled rides yet.</i>"""));
             return;
         }
 
@@ -116,8 +118,10 @@ public class DriverHandler {
 
         if (bookings.isEmpty()) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "📋 <b>Ride Bookings</b>\n\n" +
-                            "<i>No passengers have booked your ride yet.</i>"));
+                    """
+                            📋 <b>Ride Bookings</b>
+                            
+                            <i>No passengers have booked your ride yet.</i>"""));
             return;
         }
 
@@ -179,7 +183,7 @@ public class DriverHandler {
             }
         }
 
-        rows.add(List.of(BotMessageBuilder.menuButtonRow().get(0)));
+        rows.add(List.of(BotMessageBuilder.menuButtonRow().getFirst()));
 
         ctx.bot().send(SendMessage.builder()
                 .chatId(ctx.chatId())
@@ -210,8 +214,14 @@ public class DriverHandler {
             };
 
             String detail = String.format(
-                    "👤 <b>Passenger Details</b>\n\nName: <b>%s</b>%s\n" +
-                            "🪑 Seats: %d\n⛽ Share: ₱%.2f\n💳 Settlement: %s\n%s📊 Status: %s",
+                    """
+                            👤 <b>Passenger Details</b>
+                            
+                            Name: <b>%s</b>%s
+                            🪑 Seats: %d
+                            ⛽ Share: ₱%.2f
+                            💳 Settlement: %s
+                            %s📊 Status: %s""",
                     HtmlEscapeUtil.escape(b.passenger().fullName()),
                     b.passenger().telegramHandle() != null
                             ? " (@" + HtmlEscapeUtil.escape(
@@ -248,8 +258,10 @@ public class DriverHandler {
         try {
             bookingService.acceptBooking(ctx.entityId(), ctx.carpoolUserId());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "✅ <b>Booking Accepted!</b>\n\n" +
-                            "The passenger has been notified and their seat is confirmed."));
+                    """
+                            ✅ <b>Booking Accepted!</b>
+                            
+                            The passenger has been notified and their seat is confirmed."""));
         } catch (Exception e) {
             log.error("Accept booking failed: bookingId={} userId={} error={}",
                     ctx.entityId(), ctx.carpoolUserId(), e.getMessage());
@@ -302,8 +314,10 @@ public class DriverHandler {
         try {
             bookingService.declineBooking(bookingId, ctx.carpoolUserId(), reason);
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "❌ <b>Booking Declined</b>\n\n" +
-                            "The passenger has been notified and their seat has been released."));
+                    """
+                            ❌ <b>Booking Declined</b>
+                            
+                            The passenger has been notified and their seat has been released."""));
         } catch (Exception e) {
             log.error("Decline booking failed: bookingId={} userId={} error={}",
                     bookingId, ctx.carpoolUserId(), e.getMessage());
@@ -321,8 +335,10 @@ public class DriverHandler {
 
         if (pending.isEmpty()) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⏳ <b>Pending Requests</b>\n\n" +
-                            "<i>No pending booking requests.</i>"));
+                    """
+                            ⏳ <b>Pending Requests</b>
+                            
+                            <i>No pending booking requests.</i>"""));
             return;
         }
 
@@ -346,7 +362,7 @@ public class DriverHandler {
                     .callbackData("VIEW_PENDING:" + b.id())
                     .build()));
         }
-        rows.add(List.of(BotMessageBuilder.menuButtonRow().get(0)));
+        rows.add(List.of(BotMessageBuilder.menuButtonRow().getFirst()));
 
         ctx.bot().send(SendMessage.builder()
                 .chatId(ctx.chatId()).text(sb.toString()).parseMode("HTML")
@@ -367,8 +383,13 @@ public class DriverHandler {
                     b.passenger().telegramHandle()) + ")" : "";
 
             String detail = String.format(
-                    "🔔 <b>Booking Request</b>\n\n👤 <b>%s</b>%s\n" +
-                            "🪑 Seats: %d\n⛽ Suggested share: ₱%.2f\n%s⏰ Expires in: %d minutes",
+                    """
+                            🔔 <b>Booking Request</b>
+                            
+                            👤 <b>%s</b>%s
+                            🪑 Seats: %d
+                            ⛽ Suggested share: ₱%.2f
+                            %s⏰ Expires in: %d minutes""",
                     HtmlEscapeUtil.escape(b.passenger().fullName()),
                     paxHandle,
                     b.seatsReserved(),
@@ -404,8 +425,10 @@ public class DriverHandler {
             RideResponse ride = rideService.getRideById(rideId);
             if (ride.status() == RideStatus.DEPARTED) {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                        "⚠️ Your ride has already started.\n\n" +
-                                "Please tap <b>Complete Ride</b> when you reach the destination."));
+                        """
+                                ⚠️ Your ride has already started.
+                                
+                                Please tap <b>Complete Ride</b> when you reach the destination."""));
                 return;
             }
 
@@ -467,7 +490,7 @@ public class DriverHandler {
                     "⚠️ Invalid cancel request."));
             return;
         }
-        Long rideId;
+        long rideId;
         try {
             rideId = Long.parseLong(ctx.parts()[1]);
         } catch (NumberFormatException e) {
@@ -499,8 +522,10 @@ public class DriverHandler {
 
             if (affected.isEmpty()) {
                 bot.send(flowHelper.sendWithInline(chatId,
-                        "✅ <b>Ride Cancelled</b>\n\n" +
-                                "No passengers were booked on this ride.",
+                        """
+                                ✅ <b>Ride Cancelled</b>
+                                
+                                No passengers were booked on this ride.""",
                         List.of(List.of(
                                 BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())))));
             } else {
@@ -542,8 +567,10 @@ public class DriverHandler {
 
             if (ride.status() != RideStatus.ACTIVE && ride.status() != RideStatus.FULL) {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                        "⚠️ This ride cannot be started.\n\n" +
-                                "Only ACTIVE or FULL rides can be departed."));
+                        """
+                                ⚠️ This ride cannot be started.
+                                
+                                Only ACTIVE or FULL rides can be departed."""));
                 return;
             }
 
@@ -570,8 +597,11 @@ public class DriverHandler {
             stateManager.reset(ctx.chatId());
 
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    "🚀 <b>Ride Started!</b>\n\nYour ride is now in progress.\n" +
-                            "Tap <b>Complete Ride</b> when you reach the destination.",
+                    """
+                            🚀 <b>Ride Started!</b>
+                            
+                            Your ride is now in progress.
+                            Tap <b>Complete Ride</b> when you reach the destination.""",
                     List.of(List.of(
                             BotMessageBuilder.button("✅ Complete Ride",
                                     "COMPLETE_RIDE:" + ctx.entityId(), ButtonStyle.SUCCESS.toString()),
@@ -593,9 +623,12 @@ public class DriverHandler {
             stateManager.reset(ctx.chatId());
 
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    "✅ <b>Ride Completed!</b>\n\n" +
-                            "Thank you for driving! All passengers have been notified.\n\n" +
-                            "Please collect gas share contributions from your passengers.",
+                    """
+                            ✅ <b>Ride Completed!</b>
+                            
+                            Thank you for driving! All passengers have been notified.
+                            
+                            Please collect gas share contributions from your passengers.""",
                     List.of(List.of(
                             BotMessageBuilder.button("🚗 My Rides", "MY_RIDES",  ButtonStyle.PRIMARY.toString()),
                             BotMessageBuilder.button("🏠 Menu",     "MAIN_MENU", null)

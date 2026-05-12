@@ -1,6 +1,5 @@
 package com.carpool.bot.util;
 
-import com.carpool.repository.HubAliasRepository;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.hub.HubService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +12,7 @@ import java.util.Optional;
 
 /**
  * Fuzzy-matches user free-text input to a known Hub.
- *
+ * <p>
  * Strategy (in order):
  *   1. Alias match            — "moa" → SM Mall of Asia
  *   2. Exact name match       — "SM Aura Premier" → SM Aura Premier
@@ -27,62 +26,9 @@ import java.util.Optional;
 public class HubMatcher {
 
     private final HubService         hubService;
-    private final HubAliasRepository hubAliasRepository;
 
     private static final int MAX_SUGGESTIONS = 10;
     private static final int MAX_LEVENSHTEIN = 2;
-
-    /**
-     * Attempt to match free text to a single hub.
-     * Returns empty if no reasonable match found.
-     */
-    public Optional<HubResponse> match(String input) {
-        if (input == null || input.isBlank()) return Optional.empty();
-
-        // Minimum 3 characters required — single/double char input is too ambiguous
-        if (input.trim().length() < 3) return Optional.empty();
-
-        String normalized = input.trim().toLowerCase();
-        log.debug("HubMatcher: normalized input='{}'", normalized);
-
-        // Layer 1: Alias match — "moa", "bgc", "atc", etc.
-        Optional<HubResponse> aliasMatch = hubAliasRepository
-                .findByAliasIgnoreCase(normalized)
-                .map(alias -> hubService.getHubById(alias.getHub().getId()));
-        if (aliasMatch.isPresent()) {
-            log.debug("HubMatcher: alias match '{}' → '{}'", input, aliasMatch.get().name());
-            return aliasMatch;
-        }
-
-        // Layer 2+3+4: DB-side search (cached in HubService)
-        List<HubResponse> candidates = hubService.searchHubs(normalized);
-
-        if (candidates.size() == 1) {
-            log.debug("HubMatcher: single match '{}' for input='{}'",
-                    candidates.get(0).name(), input);
-            return Optional.of(candidates.get(0));
-        }
-
-        if (candidates.size() > 1) {
-            String[] inputWords = normalized.split("\\s+");
-            HubResponse best = candidates.stream()
-                    .max(Comparator.comparingInt(hub -> scoreHub(hub, inputWords)))
-                    .orElse(candidates.get(0));
-            log.debug("HubMatcher: word-score match '{}' → '{}'", input, best.name());
-            return Optional.of(best);
-        }
-
-        // Layer 5: Levenshtein fallback — typo tolerance
-        List<HubResponse> all = hubService.getAllHubs();
-        return all.stream()
-                .filter(hub -> levenshtein(normalized, hub.name().toLowerCase()) <= MAX_LEVENSHTEIN)
-                .min(Comparator.comparingInt(hub ->
-                        levenshtein(normalized, hub.name().toLowerCase())))
-                .map(hub -> {
-                    log.debug("HubMatcher: levenshtein match '{}' → '{}'", input, hub.name());
-                    return hub;
-                });
-    }
 
     /**
      * Returns up to MAX_SUGGESTIONS hubs that partially match the input.
