@@ -14,6 +14,8 @@ import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.UserRepository;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.common.util.HtmlEscapeUtil;
+import com.carpool.service.favorite.FavoriteService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
@@ -47,12 +49,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MessageHandler {
 
-    private final StateManager   stateManager;
-    private final UserRepository userRepository;
-    private final RideService    rideService;
-    private final RatingService  ratingService;
-    private final ProfileService profileService;
-    private final HelpHandler    helpHandler;
+    private final StateManager    stateManager;
+    private final UserRepository  userRepository;
+    private final RideService     rideService;
+    private final RatingService   ratingService;
+    private final ProfileService  profileService;
+    private final FavoriteService favoriteService;
+    private final HelpHandler     helpHandler;
 
     // ── Sub-handlers ──────────────────────────────────────────────────────
     private final BotFlowHelper flowHelper;
@@ -276,7 +279,86 @@ public class MessageHandler {
                         "⚠️ Could not load this ride. It may no longer exist."));
                 flowHelper.showMainMenu(chatId, carpoolUserId, state, bot);
             }
+        } else if (parts.length > 1 && parts[1].startsWith("FOLLOW_RIDE_")) {
+            handleFollowAndViewRide(parts[1].substring(12), chatId, carpoolUserId, state, bot);
         } else {
+            flowHelper.showMainMenu(chatId, carpoolUserId, state, bot);
+        }
+    }
+
+    private void handleFollowAndViewRide(String param, Long chatId, Long carpoolUserId,
+                                         UserState state, CarpoolBot bot) {
+        try {
+            String[] segments = param.split("_");
+            if (segments.length < 2) throw new NumberFormatException("malformed");
+            Long rideId = Long.parseLong(segments[1]);
+
+            RideResponse ride = rideService.getRideById(rideId);
+
+            if (ride.status() != RideStatus.ACTIVE && ride.status() != RideStatus.FULL) {
+                bot.send(flowHelper.sendWithInline(chatId,
+                        """
+                                ⚠️ <b>This ride is no longer available.</b>
+
+                                It may have already departed or been cancelled.""",
+                        List.of(List.of(
+                                BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE", ButtonStyle.SUCCESS.toString()),
+                                BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString())
+                        ))));
+                return;
+            }
+
+            boolean isDriver = ride.driver().id().equals(carpoolUserId);
+            boolean followed = false;
+
+            if (!isDriver) {
+                try {
+                    if (!favoriteService.isFavorite(carpoolUserId, ride.driver().id())) {
+                        favoriteService.saveFavorite(carpoolUserId, ride.driver().id());
+                        followed = true;
+                    }
+                } catch (Exception ignored) {
+                    // unexpected error — show ride card without follow confirmation
+                }
+            }
+
+            stateManager.save(chatId, state.withSelectedRideId(rideId));
+            String ratingLabel = ratingService.getDriverRatingLabel(ride.driver().id());
+            ProfileStatsResponse stats = profileService.getProfileStats(ride.driver().id());
+            String memberBadge = BotMessageBuilder.buildMemberBadge(stats);
+            String rideCard = BotMessageBuilder.formatRideCard(ride, ratingLabel, memberBadge);
+
+            String text;
+            List<List<InlineKeyboardButton>> rows;
+
+            if (isDriver) {
+                text = rideCard;
+                rows = List.of(List.of(
+                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + rideId, ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU",               ButtonStyle.PRIMARY.toString())));
+            } else if (followed) {
+                String driverName = HtmlEscapeUtil.escape(ride.driver().fullName());
+                text = "⭐ <b>You're now following " + driverName + "!</b>\n" +
+                       "You'll be notified when they post new rides.\n\n" + rideCard;
+                rows = List.of(
+                        List.of(BotMessageBuilder.button("✅ Book This Ride",  "BOOK_RIDE:" + rideId,         ButtonStyle.SUCCESS.toString())),
+                        List.of(BotMessageBuilder.button("🔕 Unfollow Driver", "UNFOLLOW_DRIVER:" + ride.driver().id(), ButtonStyle.DANGER.toString()),
+                                BotMessageBuilder.button("🏠 Menu",            "MAIN_MENU",                   ButtonStyle.PRIMARY.toString())));
+            } else {
+                text = rideCard;
+                rows = List.of(List.of(
+                        BotMessageBuilder.button("✅ Book This Ride", "BOOK_RIDE:" + rideId, ButtonStyle.SUCCESS.toString()),
+                        BotMessageBuilder.button("🏠 Menu",           "MAIN_MENU",           ButtonStyle.PRIMARY.toString())));
+            }
+
+            bot.send(flowHelper.sendWithInline(chatId, text, rows));
+
+        } catch (NumberFormatException e) {
+            log.warn("Invalid follow-ride deep link: {}", param);
+            flowHelper.showMainMenu(chatId, carpoolUserId, state, bot);
+        } catch (Exception e) {
+            log.error("Follow-ride deep link failed: error={}", e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Could not load this ride. It may no longer exist."));
             flowHelper.showMainMenu(chatId, carpoolUserId, state, bot);
         }
     }

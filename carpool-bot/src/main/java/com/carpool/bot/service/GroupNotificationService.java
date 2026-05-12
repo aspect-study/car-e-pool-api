@@ -97,7 +97,7 @@ public class GroupNotificationService {
             }
 
             String message = buildRidePostedMessage(ride);
-            Integer messageId = carpoolBot.sendToGroup(message, ride.getId(), resolveTopicId(ride));
+            Integer messageId = carpoolBot.sendToGroup(message, ride.getId(), ride.getDriver().getId(), resolveTopicId(ride));
             log.info("Ride announcement posted to group: rideId={}", ride.getId());
 
             if (messageId != null) {
@@ -262,7 +262,7 @@ public class GroupNotificationService {
                         🔖 Ride #%d\
                         %s
                         
-                        Tap <b>View | Book a Ride</b> to see details and book your seat. 👇""",
+                        Tap <b>View | Request a Seat</b> to see details and book your seat. 👇""",
                 departureDate,
                 driverName,
                 ratingLabel,

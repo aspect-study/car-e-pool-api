@@ -339,21 +339,31 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
      * Failures are logged but never propagate — group posting must not
      * affect the driver's experience.
      */
-    public Integer sendToGroup(String text, Long rideId, Integer topicId) {
+    public Integer sendToGroup(String text, Long rideId, Long driverId, Integer topicId) {
         try {
             SendMessage message = SendMessage.builder()
                     .chatId(botConfig.getGroupChatId())
                     .messageThreadId(topicId)
                     .text(text)
                     .parseMode("HTML")
-                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
-                            InlineKeyboardButton.builder()
+                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(
+                            List.of(
+                                    InlineKeyboardButton.builder()
                                     .text("\uD83D\uDE98#"+rideId +" ❯❯❯❯ | View | Request a Seat")
-                                    .url("https://t.me/" + botConfig.getBotUsername()
-                                            + "?start=RIDE_" + rideId)
-                                    .style(ButtonStyle.SUCCESS.toString())
-                                    .build()
-                    ))))
+                                            .url("https://t.me/" + botConfig.getBotUsername()
+                                                    + "?start=RIDE_" + rideId)
+                                            .style(ButtonStyle.SUCCESS.toString())
+                                            .build()
+                            ),
+                            List.of(
+                                    InlineKeyboardButton.builder()
+                                            .text("⭐ Follow Driver")
+                                            .url("https://t.me/" + botConfig.getBotUsername()
+                                                    + "?start=FOLLOW_RIDE_" + driverId + "_" + rideId)
+                                            .style(ButtonStyle.PRIMARY.toString())
+                                            .build()
+                            )
+                    )))
                     .build();
             Message sent = telegramClient.execute(message);
             if (sent == null) {
