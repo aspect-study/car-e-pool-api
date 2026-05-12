@@ -93,8 +93,7 @@ public class BookingHandler {
             log.error("Booking failed: rideId={} userId={} error={}",
                     rideId, carpoolUserId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Could not book this ride: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not book this ride. Please try again."));
         }
     }
 
@@ -179,7 +178,7 @@ public class BookingHandler {
 
     public void handleViewBooking(BotContext ctx) {
         try {
-            BookingResponse b = bookingService.getBookingById(ctx.entityId());
+            BookingResponse b = bookingService.getBookingById(ctx.entityId(), ctx.carpoolUserId());
 
             String statusLabel = switch (b.status().name()) {
                 case "CONFIRMED"              -> "✅ Confirmed";
@@ -369,8 +368,7 @@ public class BookingHandler {
             log.error("Cancel booking failed: bookingId={} userId={} error={}",
                     bookingId, ctx.carpoolUserId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not cancel booking: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not cancel booking. Please try again."));
         }
     }
 }

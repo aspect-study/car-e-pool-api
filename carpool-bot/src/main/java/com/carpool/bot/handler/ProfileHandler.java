@@ -311,8 +311,7 @@ public class ProfileHandler {
             log.error("Failed to save vehicle for userId={}: {}",
                     ctx.carpoolUserId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not save vehicle: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not save vehicle. Please try again."));
         }
     }
 
@@ -350,6 +349,7 @@ public class ProfileHandler {
         // Guard against stale buttons — seats/contribution must be set
         if (ctx.state().getDepartureTime() == null
                 || ctx.state().getOriginHubId() == null
+                || ctx.state().getDestinationHubId() == null
                 || ctx.state().getSeats() == null
                 || ctx.state().getContribution() == null) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -642,13 +642,10 @@ public class ProfileHandler {
      * Terms declined — store declined_at for weekly re-prompt logic.
      */
     public void handleTermsDecline(BotContext ctx) {
-        UserState state = stateManager.get(ctx.chatId());
-        if (state != null) {
-            userRepository.findById(state.getCarpoolUserId()).ifPresent(user -> {
-                user.setTermsDeclinedAt(LocalDateTime.now());
-                userRepository.save(user);
-            });
-        }
+        userRepository.findById(ctx.carpoolUserId()).ifPresent(user -> {
+            user.setTermsDeclinedAt(LocalDateTime.now());
+            userRepository.save(user);
+        });
         var rows = List.of(List.of(
                 BotMessageBuilder.button("🔁 Review Terms Again", "TERMS_VIEW_AGAIN", ButtonStyle.PRIMARY.toString())
         ));
@@ -761,8 +758,7 @@ public class ProfileHandler {
                             "<i>" + remainingText + "</i>"));
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not re-announce ride: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not re-announce ride. Please try again."));
         }
     }
 
@@ -871,7 +867,7 @@ public class ProfileHandler {
         } catch (Exception e) {
             log.error("Failed to approve hub id={}: {}", hubId, e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not approve hub. " + HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not approve hub. Please try again."));
         }
     }
 
@@ -897,7 +893,7 @@ public class ProfileHandler {
         } catch (Exception e) {
             log.error("Failed to reject hub id={}: {}", hubId, e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not reject hub. " + HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not reject hub. Please try again."));
         }
     }
 }

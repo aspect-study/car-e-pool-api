@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface RideRatingRepository extends JpaRepository<RideRating, Long> {
@@ -79,6 +80,13 @@ public interface RideRatingRepository extends JpaRepository<RideRating, Long> {
      * Used for multi-passenger rides — driver can rate each passenger independently.
      */
     boolean existsByRideIdAndRaterIdAndRateeId(Long rideId, Long raterId, Long rateeId);
+
+    /**
+     * Batch fetch all ratee IDs already rated by a given rater on a ride.
+     * Used to avoid N+1 in the passenger selection screen.
+     */
+    @Query("SELECT r.ratee.id FROM RideRating r WHERE r.ride.id = :rideId AND r.rater.id = :raterId")
+    Set<Long> findRateeIdsByRideIdAndRaterId(@Param("rideId") Long rideId, @Param("raterId") Long raterId);
 
     /**
      * Batch fetch average driver ratings for a list of driver IDs.

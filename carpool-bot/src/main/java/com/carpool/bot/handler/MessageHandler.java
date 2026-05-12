@@ -76,26 +76,29 @@ public class MessageHandler {
         Long telegramId = message.getFrom().getId();
         String text     = message.getText().trim();
 
-        boolean isNewUser = !userRepository.existsByTelegramId(telegramId);
+        User found    = userRepository.findByTelegramId(telegramId).orElse(null);
+        boolean isNewUser = (found == null);
 
-        final User user = userRepository.findByTelegramId(telegramId)
-                .orElseGet(() -> {
-                    try {
-                        String firstName = message.getFrom().getFirstName();
-                        String lastName  = message.getFrom().getLastName();
-                        String handle    = message.getFrom().getUserName();
-                        String fullName  = (lastName != null) ? firstName + " " + lastName : firstName;
-                        log.info("Auto-registered new user telegramId={} name={}",telegramId, fullName);
-                        return userRepository.save(User.builder()
-                                .telegramId(telegramId)
-                                .telegramHandle(handle)
-                                .fullName(fullName)
-                                .build());
-                    } catch (DataIntegrityViolationException e) {
-                        return userRepository.findByTelegramId(telegramId)
-                                .orElseThrow(() -> new RuntimeException("User registration failed. Please try again. /start"));
-                    }
-                });
+        User user;
+        if (found != null) {
+            user = found;
+        } else {
+            try {
+                String firstName = message.getFrom().getFirstName();
+                String lastName  = message.getFrom().getLastName();
+                String handle    = message.getFrom().getUserName();
+                String fullName  = (lastName != null) ? firstName + " " + lastName : firstName;
+                log.info("Auto-registered new user telegramId={} name={}", telegramId, fullName);
+                user = userRepository.save(User.builder()
+                        .telegramId(telegramId)
+                        .telegramHandle(handle)
+                        .fullName(fullName)
+                        .build());
+            } catch (DataIntegrityViolationException e) {
+                user = userRepository.findByTelegramId(telegramId)
+                        .orElseThrow(() -> new RuntimeException("User registration failed. Please try again. /start"));
+            }
+        }
 
         // Sync Telegram profile changes on every message — lightweight
         syncProfile(user, message);
@@ -317,8 +320,9 @@ public class MessageHandler {
                         favoriteService.saveFavorite(carpoolUserId, ride.driver().id());
                         followed = true;
                     }
-                } catch (Exception ignored) {
-                    // unexpected error — show ride card without follow confirmation
+                } catch (Exception e) {
+                    log.warn("Follow failed for carpoolUserId={} driverId={}: {}",
+                            carpoolUserId, ride.driver().id(), e.getMessage());
                 }
             }
 

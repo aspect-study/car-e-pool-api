@@ -6,6 +6,7 @@ import com.carpool.bot.handler.helper.BotFlowHelper;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.ButtonStyle;
+import com.carpool.common.exception.NotRideOwnerException;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.RideDirection;
@@ -198,7 +199,7 @@ public class DriverHandler {
 
     public void handleViewDriverBooking(BotContext ctx) {
         try {
-            BookingResponse b = bookingService.getBookingById(ctx.entityId());
+            BookingResponse b = bookingService.getBookingById(ctx.entityId(), ctx.carpoolUserId());
 
             String statusLabel = switch (b.status().name()) {
                 case "CONFIRMED"              -> "✅ Confirmed";
@@ -266,8 +267,7 @@ public class DriverHandler {
             log.error("Accept booking failed: bookingId={} userId={} error={}",
                     ctx.entityId(), ctx.carpoolUserId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not accept booking: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not accept booking. Please try again."));
         }
     }
 
@@ -322,8 +322,7 @@ public class DriverHandler {
             log.error("Decline booking failed: bookingId={} userId={} error={}",
                     bookingId, ctx.carpoolUserId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not decline booking: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not decline booking. Please try again."));
         }
     }
 
@@ -375,7 +374,7 @@ public class DriverHandler {
 
     public void handleViewPendingRequest(BotContext ctx) {
         try {
-            BookingResponse b = bookingService.getBookingById(ctx.entityId());
+            BookingResponse b = bookingService.getBookingById(ctx.entityId(), ctx.carpoolUserId());
             long remaining = b.expiresAt() != null
                     ? Duration.between(Instant.now(), b.expiresAt()).toMinutes() : 0;
             String paxHandle = b.passenger().telegramHandle() != null
@@ -479,8 +478,7 @@ public class DriverHandler {
 
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not cancel ride: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not cancel ride. Please try again."));
         }
     }
 
@@ -551,8 +549,7 @@ public class DriverHandler {
 
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
-                    "⚠️ Could not cancel ride: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not cancel ride. Please try again."));
         }
     }
 
@@ -564,6 +561,12 @@ public class DriverHandler {
             LocalDateTime departure = ride.departureTime();
             LocalDateTime now       = LocalDateTime.now(MANILA);
             LocalDateTime earliest  = departure.minusHours(1);
+
+            if (!ride.driver().id().equals(ctx.carpoolUserId())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ This is not your ride."));
+                return;
+            }
 
             if (ride.status() != RideStatus.ACTIVE && ride.status() != RideStatus.FULL) {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -610,8 +613,7 @@ public class DriverHandler {
 
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not start ride: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not start ride. Please try again."));
         }
     }
 
@@ -636,10 +638,12 @@ public class DriverHandler {
                             BotMessageBuilder.button("❌ No, Thanks",          "MAIN_MENU", ButtonStyle.DANGER.toString())
                     ))));
 
+        } catch (NotRideOwnerException e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ This is not your ride."));
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ Could not complete ride: " +
-                            HtmlEscapeUtil.escape(e.getMessage())));
+                    "⚠️ Could not complete ride. Please try again."));
         }
     }
 }

@@ -159,6 +159,12 @@ public class RideSearchHandler {
             return;
         }
 
+        if (from == null || to == null) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Session expired. Please search again from the main menu."));
+            return;
+        }
+
         List<RideResponse> rides = rideService.getRidesByDirection(
                 state.getDirection(), carpoolUserId, from, to,
                 state.getFilterMaxPrice(),

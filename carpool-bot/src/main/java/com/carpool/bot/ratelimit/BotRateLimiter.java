@@ -68,16 +68,17 @@ public class BotRateLimiter {
      * @return true if warning should be sent, false if already warned recently
      */
     public boolean shouldWarn(Long chatId) {
-        Instant now         = Instant.now();
-        Instant lastWarnAt  = lastWarned.get(chatId);
-
-        if (lastWarnAt == null ||
-                Duration.between(lastWarnAt, now).getSeconds() >= warnIntervalSeconds) {
-            lastWarned.put(chatId, now);
-            return true;
-        }
-
-        return false;
+        Instant now = Instant.now();
+        boolean[] fired = {false};
+        lastWarned.compute(chatId, (id, lastWarnAt) -> {
+            if (lastWarnAt == null ||
+                    Duration.between(lastWarnAt, now).getSeconds() >= warnIntervalSeconds) {
+                fired[0] = true;
+                return now;
+            }
+            return lastWarnAt;
+        });
+        return fired[0];
     }
 
     private Bucket createBucket(Long chatId) {

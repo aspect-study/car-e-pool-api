@@ -204,6 +204,7 @@ public class BotMessageBuilder {
                                                 String filterSummary) {
         int pageSize   = 3;
         int totalPages = (int) Math.ceil((double) allRides.size() / pageSize);
+        if (totalPages == 0) totalPages = 1;
         int safePage   = Math.clamp(page, 0, totalPages - 1);
         int fromIdx    = safePage * pageSize;
         int toIdx      = Math.min(fromIdx + pageSize, allRides.size());

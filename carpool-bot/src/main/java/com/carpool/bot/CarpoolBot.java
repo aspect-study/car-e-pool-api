@@ -29,6 +29,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main Telegram bot entry point.
@@ -175,11 +176,18 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                 String callbackData = update.getCallbackQuery().getData();
                 var userOpt = userRepository.findByTelegramId(telegramId);
 
+                // getMessage() is null for channel-post callbacks — nothing to reply to
+                var cbMessage = update.getCallbackQuery().getMessage();
+                if (cbMessage == null) {
+                    answerCallback(update.getCallbackQuery().getId());
+                    return;
+                }
+                Long gatedChatId = cbMessage.getChatId();
+
                 boolean isTermsCallback = callbackData != null && (
                         callbackData.startsWith("TERMS_") );
 
                 if (userOpt.isPresent() && !userOpt.get().isTermsAccepted() && !isTermsCallback) {
-                    Long gatedChatId = update.getCallbackQuery().getMessage().getChatId();
                     answerCallback(update.getCallbackQuery().getId());
                     send(sendWithInlineInternal(gatedChatId,
                             "⚠️ Please accept our community terms first.",
@@ -192,7 +200,6 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                 // Handle gate for callbacks
                 if (userOpt.isPresent() && userOpt.get().isTermsAccepted()
                         && userOpt.get().getTelegramHandle() == null) {
-                    Long gatedChatId = update.getCallbackQuery().getMessage().getChatId();
                     answerCallback(update.getCallbackQuery().getId());
                     send(BotMessageBuilder.textNoMenu(gatedChatId,
                             """
@@ -219,6 +226,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                 if (userOpt.isPresent() && userOpt.get().isDeleted()) {
                     log.warn("Deleted account attempted bot access telegramId={}",
                             update.getCallbackQuery().getFrom().getId());
+                    answerCallback(update.getCallbackQuery().getId());
                     return;
                 }
 
@@ -431,7 +439,8 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
             return update.getMessage().getChatId();
         }
         if (update.hasCallbackQuery()) {
-            return update.getCallbackQuery().getMessage().getChatId();
+            var msg = update.getCallbackQuery().getMessage();
+            return msg != null ? msg.getChatId() : null;
         }
         return null;
     }
@@ -473,5 +482,14 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
     public void shutdown() {
         log.info("Shutting down Virtual Thread Executor...");
         executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                log.warn("Forced shutdown after 5s — some in-flight tasks may have been dropped");
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }
