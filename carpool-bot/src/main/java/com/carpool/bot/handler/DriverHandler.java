@@ -625,13 +625,15 @@ public class DriverHandler {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     """
                             ✅ <b>Ride Completed!</b>
-                            
+
                             Thank you for driving! All passengers have been notified.
-                            
-                            Please collect gas share contributions from your passengers.""",
+
+                            Please collect gas share contributions from your passengers.
+
+                            Would you like to post another ride?""",
                     List.of(List.of(
-                            BotMessageBuilder.button("🚗 My Rides", "MY_RIDES",  ButtonStyle.PRIMARY.toString()),
-                            BotMessageBuilder.button("🏠 Menu",     "MAIN_MENU", null)
+                            BotMessageBuilder.button("🚗 Yes, Post New Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString()),
+                            BotMessageBuilder.button("❌ No, Thanks",          "MAIN_MENU", ButtonStyle.DANGER.toString())
                     ))));
 
         } catch (Exception e) {
