@@ -254,12 +254,10 @@ public class GroupNotificationService {
                         \uD83D\uDFE2 🚗 <b>New Ride Available!</b> — %s
                         
                         👤 Driver: <b>%s</b>%s
-                        %s
+                        %s | 🕐 Pickup start: <b>%s</b>
                         📍 <b>%s → %s</b>
-                        🕐 Pickup start: %s
-                        💺 Seats: <b>%d</b>
                         %s\
-                        🔖 Ride #%d\
+                        🔖 Ride #%d  | 💺 Seats: <b>%d</b>\
                         %s
                         
                         Tap <b>View | Request a Seat</b> to see details and book your seat. 👇""",
@@ -267,12 +265,12 @@ public class GroupNotificationService {
                 driverName,
                 ratingLabel,
                 dirLabel,
+                departureTime,
                 HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
                 HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
-                departureTime,
-                ride.getAvailableSeats(),
                 vehicleLine,
                 ride.getId(),
+                ride.getAvailableSeats(),
                 notesLine.replace("@", "")
         );
     }
