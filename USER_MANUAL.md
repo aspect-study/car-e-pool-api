@@ -107,6 +107,14 @@ On your first login (and periodically if you have previously declined), the bot 
 
 The bot uses **inline keyboard buttons** — tappable options that appear beneath messages. You rarely need to type anything manually; most actions are button-driven.
 
+Buttons are **color-coded** by intent:
+
+| Color | Meaning | Examples |
+|-------|---------|---------|
+| 🔵 Blue (Primary) | Navigation or neutral action | 🏠 Menu, ◀️ Back |
+| 🟢 Green (Success) | Confirm or positive action | ✅ Post Ride, ✅ Book This Ride, ➕ Add Vehicle |
+| 🔴 Red (Danger) | Cancel or destructive action | ❌ Cancel, ❌ Decline |
+
 **The main menu is context-aware** — it changes based on whether you have an active ride.
 
 **When you have no active ride:**

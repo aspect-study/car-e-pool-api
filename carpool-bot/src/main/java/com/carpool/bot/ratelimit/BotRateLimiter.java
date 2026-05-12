@@ -12,13 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Per-chatId rate limiter for the Telegram bot.
- *
+ * <p>
  * Uses Bucket4j token bucket algorithm — consistent with RateLimitFilter
  * on the REST API layer.
- *
+ * <p>
  * Each chatId gets its own bucket. Buckets are created lazily on first request.
  * Warning messages are throttled to once per warn-interval to avoid pile-up.
- *
+ * <p>
  * Single-instance assumption: state is in-memory.
  * For multi-instance deployment, replace ConcurrentHashMap with Redis-backed Bucket4j.
  */

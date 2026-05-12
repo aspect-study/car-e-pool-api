@@ -18,7 +18,7 @@ import java.util.List;
  * Utility class for building Telegram SendMessage objects.
  * Uses HTML parse mode throughout — safer than Markdown for usernames
  * and special characters.
- *
+ * <p>
  * HTML tags supported: <b>, <i>, <u>, <code>, <pre>
  * Special chars to HtmlEscapeUtil.escape: & → &amp;  < → &lt;  > → &gt;
  */
@@ -123,13 +123,14 @@ public class BotMessageBuilder {
         }
 
         return String.format(
-                "%s <b>%s → %s</b>\n" +
-                        "🕐 %s\n" +
-                        "🪑 %s\n" +
-                        "⛽ ₱%.2f gas share/seat\n" +
-                        "👤 %s%s\n" +
-                        "🕓 Posted %s" +
-                        "%s",
+                """
+                        %s <b>%s → %s</b>
+                        🕐 %s
+                        🪑 %s
+                        ⛽ ₱%.2f gas share/seat
+                        👤 %s%s
+                        🕓 Posted %s\
+                        %s""",
                 directionEmoji,
                 HtmlEscapeUtil.escape(ride.originHub().name()),
                 HtmlEscapeUtil.escape(ride.destinationHub().name()),
@@ -203,7 +204,7 @@ public class BotMessageBuilder {
                                                 String filterSummary) {
         int pageSize   = 3;
         int totalPages = (int) Math.ceil((double) allRides.size() / pageSize);
-        int safePage   = Math.max(0, Math.min(page, totalPages - 1));
+        int safePage   = Math.clamp(page, 0, totalPages - 1);
         int fromIdx    = safePage * pageSize;
         int toIdx      = Math.min(fromIdx + pageSize, allRides.size());
 
@@ -245,9 +246,12 @@ public class BotMessageBuilder {
             }
 
             sb.append(String.format(
-                    "<b>%d.</b> 📍 %s → %s\n" +
-                            "   🕐 %s | 🪑 %d %s | ⛽ ₱%s\n" +
-                            "   👤 %s%s%s\n\n",
+                    """
+                            <b>%d.</b> 📍 %s → %s
+                               🕐 %s | 🪑 %d %s | ⛽ ₱%s
+                               👤 %s%s%s
+                            
+                            """,
                     fromIdx + i + 1,
                     HtmlEscapeUtil.escape(ride.originHub().name()),
                     HtmlEscapeUtil.escape(ride.destinationHub().name()),
@@ -319,27 +323,6 @@ public class BotMessageBuilder {
     }
 
     /**
-     * Builds a row of star rating buttons for the rating flow.
-     * Returns two rows — first row: 1-3 stars, second row: 4-5 stars.
-     * Keeps buttons readable on mobile without wrapping.
-     */
-    public static List<List<InlineKeyboardButton>> starRatingRows(
-            Long rideId, Long rateeId) {
-        String suffix = ":" + rideId + ":" + rateeId;
-        return List.of(
-                List.of(
-                        button("⭐",     "RATE_STARS:1" + suffix, ButtonStyle.DANGER.toString()),
-                        button("⭐⭐",   "RATE_STARS:2" + suffix, ButtonStyle.DANGER.toString()),
-                        button("⭐⭐⭐", "RATE_STARS:3" + suffix, ButtonStyle.DANGER.toString())
-                ),
-                List.of(
-                        button("⭐⭐⭐⭐",   "RATE_STARS:4" + suffix, ButtonStyle.PRIMARY.toString()),
-                        button("⭐⭐⭐⭐⭐", "RATE_STARS:5" + suffix, ButtonStyle.SUCCESS.toString())
-                )
-        );
-    }
-
-    /**
      * Detail-view card — includes driver rating label and member verification badge.
      * memberBadge example: "✅ 🚗 Driver | 15 rides done | Since Apr 2025"
      */
@@ -375,14 +358,15 @@ public class BotMessageBuilder {
                 ? memberBadge + "\n" : "";
 
         return String.format(
-                "%s <b>%s → %s</b>\n" +
-                        "🕐 %s\n" +
-                        "🪑 %s\n" +
-                        "⛽ ₱%.2f gas share/seat\n" +
-                        "👤 %s%s%s\n" +
-                        "%s" +
-                        "🕓 Posted %s" +
-                        "%s",
+                """
+                        %s <b>%s → %s</b>
+                        🕐 %s
+                        🪑 %s
+                        ⛽ ₱%.2f gas share/seat
+                        👤 %s%s%s
+                        %s\
+                        🕓 Posted %s\
+                        %s""",
                 directionEmoji,
                 HtmlEscapeUtil.escape(ride.originHub().name()),
                 HtmlEscapeUtil.escape(ride.destinationHub().name()),
@@ -393,62 +377,6 @@ public class BotMessageBuilder {
                 driverHandle,
                 rating,
                 badgeLine,
-                postedAgo,
-                ride.notes() != null && !ride.notes().isBlank()
-                        ? "\n📝 " + HtmlEscapeUtil.escape(ride.notes())
-                        : "");
-    }
-
-    /**
-     * Overloaded version that includes driver rating label on the ride card.
-     * Pass null for ratingLabel if no rating data is available.
-     * Example ratingLabel: "⭐ 4.8" or ""
-     */
-    public static String formatRideCard(RideResponse ride, String ratingLabel) {
-        String directionEmoji = switch (ride.direction()) {
-            case HOME_TO_WORK -> "🏠→🏢";
-            case WORK_TO_HOME -> "🏢→🏠";
-            case OTHER        -> "🚗";
-        };
-
-        String seatsInfo = ride.availableSeats() + " of " +
-                ride.totalSeats() + " seats available";
-
-        String driverHandle = ride.driver().telegramHandle() != null
-                ? " (@" + HtmlEscapeUtil.escape(ride.driver().telegramHandle()) + ")"
-                : "";
-
-        String rating = (ratingLabel != null && !ratingLabel.isBlank())
-                ? " " + ratingLabel : "";
-
-        long minutesAgo = java.time.Duration.between(
-                ride.createdAt(), java.time.Instant.now()).toMinutes();
-        String postedAgo;
-        if (minutesAgo < 60) {
-            postedAgo = minutesAgo + "m ago";
-        } else if (minutesAgo < 1440) {
-            postedAgo = (minutesAgo / 60) + "h ago";
-        } else {
-            postedAgo = (minutesAgo / 1440) + "d ago";
-        }
-
-        return String.format(
-                "%s <b>%s → %s</b>\n" +
-                        "🕐 %s\n" +
-                        "🪑 %s\n" +
-                        "⛽ ₱%.2f gas share/seat\n" +
-                        "👤 %s%s%s\n" +
-                        "🕓 Posted %s" +
-                        "%s",
-                directionEmoji,
-                HtmlEscapeUtil.escape(ride.originHub().name()),
-                HtmlEscapeUtil.escape(ride.destinationHub().name()),
-                ride.departureTime().atZone(MANILA).format(DISPLAY_FMT),
-                seatsInfo,
-                ride.contributionAmount(),
-                HtmlEscapeUtil.escape(ride.driver().fullName()),
-                driverHandle,
-                rating,
                 postedAgo,
                 ride.notes() != null && !ride.notes().isBlank()
                         ? "\n📝 " + HtmlEscapeUtil.escape(ride.notes())

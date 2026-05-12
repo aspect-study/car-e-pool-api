@@ -11,11 +11,11 @@ import java.util.List;
 
 /**
  * Builds an inline time picker keyboard for departure time selection.
- *
+ * <p>
  * Shows 10 time slots (5 rows of 2) in 30-minute increments.
  * Direction-aware defaults — HOME_TO_WORK starts at 5 AM, WORK_TO_HOME at 4 PM.
  * Earlier/Later navigation shifts the window by 2 hours.
- *
+ * <p>
  * No static state — windowStart is passed in from UserState on every render.
  * Thread-safe by design.
  */
@@ -36,14 +36,14 @@ public class BotTimePickerUtil {
     /**
      * Builds the time picker inline keyboard.
      *
-     * @param direction    ride direction — used for default window
+     * @param ignoredDirection    ride direction — used for default window
      * @param windowStart  first hour to show (0-23)
-     * @param selectedDate selected date — for context display
+     * @param ignoredSelectedDate selected date — for context display
      * @return             InlineKeyboardMarkup ready to attach to a message
      */
-    public static InlineKeyboardMarkup buildTimePicker(RideDirection direction,
+    public static InlineKeyboardMarkup buildTimePicker(RideDirection ignoredDirection,
                                                        int windowStart,
-                                                       LocalDate selectedDate) {
+                                                       LocalDate ignoredSelectedDate) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         // ── Time slots — 10 slots in 30-min increments ────────────────────

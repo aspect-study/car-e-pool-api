@@ -58,9 +58,11 @@ public class RideSearchHandler {
 
         if (activeCount > 0) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ <b>You have an active ride posted.</b>\n\n" +
-                            "Please cancel or complete your ride first before " +
-                            "looking for a ride as a passenger."));
+                    """
+                            ⚠️ <b>You have an active ride posted.</b>
+                            
+                            Please cancel or complete your ride first before \
+                            looking for a ride as a passenger."""));
             return;
         }
 
@@ -294,16 +296,7 @@ public class RideSearchHandler {
         if (ctx.parts().length < 3) return;
 
         String filterType  = ctx.parts()[1];
-        String filterValue = ctx.parts()[2];
-
-        UserState updated = switch (filterType) {
-            case "SORT"  -> ctx.state().withFilterSortBy(filterValue);
-            case "SEATS" -> ctx.state().withFilterMinSeats(
-                    filterValue.equals("ANY") ? null : Integer.parseInt(filterValue));
-            case "PRICE" -> ctx.state().withFilterMaxPrice(
-                    filterValue.equals("ANY") ? null : new BigDecimal(filterValue));
-            default      -> ctx.state();
-        };
+        UserState updated = getUserState(ctx, filterType);
 
         stateManager.save(ctx.chatId(), updated);
 
@@ -317,6 +310,19 @@ public class RideSearchHandler {
         handleSearchFilter(new BotContext(
                 ctx.chatId(), ctx.carpoolUserId(), ctx.telegramId(),
                 updated, ctx.payload(), ctx.parts(), ctx.bot(), ctx.messageId()));
+    }
+
+    private static UserState getUserState(BotContext ctx, String filterType) {
+        String filterValue = ctx.parts()[2];
+
+        return switch (filterType) {
+            case "SORT"  -> ctx.state().withFilterSortBy(filterValue);
+            case "SEATS" -> ctx.state().withFilterMinSeats(
+                    filterValue.equals("ANY") ? null : Integer.parseInt(filterValue));
+            case "PRICE" -> ctx.state().withFilterMaxPrice(
+                    filterValue.equals("ANY") ? null : new BigDecimal(filterValue));
+            default      -> ctx.state();
+        };
     }
 
     public void handleResetFilter(BotContext ctx) {

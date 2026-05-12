@@ -39,16 +39,19 @@ public class PostRideHelper {
                 : "<i>No vehicle selected</i>";
 
         String confirmMsg = String.format(
-                "📋 <b>Review Your Ride</b>\n\n" +
-                        "Direction: %s\n" +
-                        "📍 Start: <b>%s</b>\n" +
-                        "🏁 End: <b>%s</b>\n" +
-                        "🕐 Departure: <b>%s</b>\n" +
-                        "🪑 Seats available: <b>%d</b>\n" +
-                        "⛽ Gas share: <b>₱%s / seat</b>\n" +
-                        "%s\n" +
-                        "🚘 Vehicle: %s\n\n" +
-                        "Looks good? Post this ride?",
+                """
+                        📋 <b>Review Your Ride</b>
+                        
+                        Direction: %s
+                        📍 Start: <b>%s</b>
+                        🏁 End: <b>%s</b>
+                        🕐 Departure: <b>%s</b>
+                        💺 Seats available: <b>%d</b>
+                        ⛽ Gas share: <b>₱%s / seat</b>
+                        %s
+                        🚘 Vehicle: %s
+                        
+                        Looks good? Post this ride?""",
                 dirLabel,
                 HtmlEscapeUtil.escape(state.getOriginHubName()),
                 HtmlEscapeUtil.escape(state.getDestinationHubName()),
@@ -91,9 +94,11 @@ public class PostRideHelper {
             ));
 
             bot.send(sendWithInline(chatId,
-                    "📝 <b>Any details for your passengers?</b>\n\n" +
-                            "Tap a saved note or write a new one.\n" +
-                            "<i>You can include pickup spot, stops, drop-off point, and reminders.</i>",
+                    """
+                            📝 <b>Any details for your passengers?</b>
+                            
+                            Tap a saved note or write a new one.
+                            <i>You can include pickup spot, stops, drop-off point, and reminders.</i>""",
                     rows));
         } else {
             rows.add(List.of(BotMessageBuilder.button("✏️ Write a note", "NOTE_WRITE",  ButtonStyle.SUCCESS.toString())));
@@ -103,12 +108,14 @@ public class PostRideHelper {
             ));
 
             bot.send(sendWithInline(chatId,
-                    "📝 <b>Any details for your passengers?</b>\n\n" +
-                            "<i>e.g.\n" +
-                            "📍 Pickup: In front of Mercury Drug, gate 2\n" +
-                            "🛑 Stop: Alabang Town Center (quick stop)\n" +
-                            "🏁 Drop-off: BGC High Street, near Fully Booked\n" +
-                            "📌 Note: Exact change preferred. No strong food inside the car.</i>",
+                    """
+                            📝 <b>Any details for your passengers?</b>
+                            
+                            <i>e.g.
+                            📍 Pickup: In front of Mercury Drug, gate 2
+                            🛑 Stop: Alabang Town Center (quick stop)
+                            🏁 Drop-off: BGC High Street, near Fully Booked
+                            📌 Note: Exact change preferred. No strong food inside the car.</i>""",
                     rows));
         }
     }

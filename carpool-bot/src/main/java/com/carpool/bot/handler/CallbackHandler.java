@@ -20,10 +20,10 @@ import java.util.Map;
 /**
  * Thin callback router — parses incoming callback data, builds BotContext,
  * and delegates to the registered BotCommand.
- *
+ * <p>
  * No business logic lives here. Adding a new callback action = one new
  * commands.put() entry in registerCommands(). This class never changes again.
- *
+ * <p>
  * Pattern: Command (Map registry) + Facade (sub-handler delegation)
  */
 @Slf4j
@@ -53,110 +53,110 @@ public class CallbackHandler {
         // ── Navigation ────────────────────────────────────────────────────
         commands.put("MAIN_MENU", ctx -> flowHelper.showMainMenu(
                 ctx.chatId(), ctx.carpoolUserId(), ctx.state(), ctx.bot()));
-        commands.put("NOOP", ctx -> { /* page indicator — intentional no-op */ });
+        commands.put("NOOP", _ -> { /* page indicator — intentional no-op */ });
 
         // ── Direction ─────────────────────────────────────────────────────
-        commands.put("DIRECTION", ctx -> postRideHandler.handleDirectionCallback(ctx));
+        commands.put("DIRECTION", postRideHandler::handleDirectionCallback);
 
         // ── Post ride ─────────────────────────────────────────────────────
-        commands.put("POST_RIDE",         ctx -> postRideHandler.handleStartPostRide(ctx));
-        commands.put("CONFIRM_POST_RIDE", ctx -> postRideHandler.handleConfirmPostRide(ctx));
-        commands.put("CANCEL_POST_RIDE",  ctx -> postRideHandler.handleCancelPostRide(ctx));
-        commands.put("HUB_ORIGIN",           ctx -> postRideHandler.handleHubOriginSelected(ctx));
-        commands.put("HUB_DEST",             ctx -> postRideHandler.handleHubDestSelected(ctx));
-        commands.put("RETYPE_ORIGIN",        ctx -> postRideHandler.handleRetypeOrigin(ctx));
-        commands.put("RETYPE_DEST",          ctx -> postRideHandler.handleRetypeDest(ctx));
-        commands.put("CONFIRM_CUSTOM_ORIGIN", ctx -> postRideHandler.handleConfirmCustomOrigin(ctx));
-        commands.put("CONFIRM_CUSTOM_DEST",   ctx -> postRideHandler.handleConfirmCustomDest(ctx));
-        commands.put("NOTE_PREVIEW",      ctx -> postRideHandler.handleNotePreview(ctx));
-        commands.put("NOTE_APPLY",        ctx -> postRideHandler.handleNoteApply(ctx));
-        commands.put("NOTE_WRITE",        ctx -> postRideHandler.handleNoteWrite(ctx));
-        commands.put("NOTE_CHOOSE_OTHER", ctx -> postRideHandler.handleNoteChooseOther(ctx));
-        commands.put("SKIP_NOTES",        ctx -> postRideHandler.handleSkipNotes(ctx));
-        commands.put("REPOST_RIDE",              ctx -> postRideHandler.handleRepostRide(ctx));
-        commands.put("REPOST_EDIT_ORIGIN",       ctx -> postRideHandler.handleRepostEditOrigin(ctx));
-        commands.put("REPOST_EDIT_DEST",         ctx -> postRideHandler.handleRepostEditDest(ctx));
-        commands.put("REPOST_EDIT_SEATS",        ctx -> postRideHandler.handleRepostEditSeatsCallback(ctx));
-        commands.put("REPOST_EDIT_CONTRIBUTION", ctx -> postRideHandler.handleRepostEditContributionCallback(ctx));
-        commands.put("REPOST_EDIT_NOTES",        ctx -> postRideHandler.handleRepostEditNotesCallback(ctx));
-        commands.put("REPOST_PROCEED",           ctx -> postRideHandler.handleRepostProceed(ctx));
-        commands.put("REPOST_BACK_TO_EDIT",      ctx -> postRideHandler.handleRepostBackToEdit(ctx));
-        commands.put("RIDE_TIME",                ctx -> postRideHandler.handleRideTimeSelected(ctx));  // ← add
-        commands.put("TIME_NAV",          ctx -> postRideHandler.handleTimeNavigation(ctx));
+        commands.put("POST_RIDE", postRideHandler::handleStartPostRide);
+        commands.put("CONFIRM_POST_RIDE", postRideHandler::handleConfirmPostRide);
+        commands.put("CANCEL_POST_RIDE", postRideHandler::handleCancelPostRide);
+        commands.put("HUB_ORIGIN", postRideHandler::handleHubOriginSelected);
+        commands.put("HUB_DEST", postRideHandler::handleHubDestSelected);
+        commands.put("RETYPE_ORIGIN", postRideHandler::handleRetypeOrigin);
+        commands.put("RETYPE_DEST", postRideHandler::handleRetypeDest);
+        commands.put("CONFIRM_CUSTOM_ORIGIN", postRideHandler::handleConfirmCustomOrigin);
+        commands.put("CONFIRM_CUSTOM_DEST", postRideHandler::handleConfirmCustomDest);
+        commands.put("NOTE_PREVIEW", postRideHandler::handleNotePreview);
+        commands.put("NOTE_APPLY", postRideHandler::handleNoteApply);
+        commands.put("NOTE_WRITE", postRideHandler::handleNoteWrite);
+        commands.put("NOTE_CHOOSE_OTHER", postRideHandler::handleNoteChooseOther);
+        commands.put("SKIP_NOTES", postRideHandler::handleSkipNotes);
+        commands.put("REPOST_RIDE", postRideHandler::handleRepostRide);
+        commands.put("REPOST_EDIT_ORIGIN", postRideHandler::handleRepostEditOrigin);
+        commands.put("REPOST_EDIT_DEST", postRideHandler::handleRepostEditDest);
+        commands.put("REPOST_EDIT_SEATS", postRideHandler::handleRepostEditSeatsCallback);
+        commands.put("REPOST_EDIT_CONTRIBUTION", postRideHandler::handleRepostEditContributionCallback);
+        commands.put("REPOST_EDIT_NOTES", postRideHandler::handleRepostEditNotesCallback);
+        commands.put("REPOST_PROCEED", postRideHandler::handleRepostProceed);
+        commands.put("REPOST_BACK_TO_EDIT", postRideHandler::handleRepostBackToEdit);
+        commands.put("RIDE_TIME", postRideHandler::handleRideTimeSelected);  // ← add
+        commands.put("TIME_NAV", postRideHandler::handleTimeNavigation);
 
         // ── Find ride ─────────────────────────────────────────────────────
-        commands.put("FIND_RIDE",     ctx -> rideSearchHandler.handleStartFindRide(ctx));
-        commands.put("VIEW_RIDE",     ctx -> rideSearchHandler.handleViewRide(ctx));
-        commands.put("CAL_NAV",       ctx -> rideSearchHandler.handleCalendarNav(ctx));   // ← add
-        commands.put("CAL_DATE",      ctx -> rideSearchHandler.handleDateSelected(ctx));
-        commands.put("TIME",          ctx -> rideSearchHandler.handleTimeSelection(ctx));
-        commands.put("SEARCH_FILTER", ctx -> rideSearchHandler.handleSearchFilter(ctx));
-        commands.put("APPLY_FILTER",  ctx -> rideSearchHandler.handleApplyFilter(ctx));
-        commands.put("RESET_FILTER",  ctx -> rideSearchHandler.handleResetFilter(ctx));
-        commands.put("RIDE_PAGE",     ctx -> rideSearchHandler.handleRidePage(ctx));
+        commands.put("FIND_RIDE", rideSearchHandler::handleStartFindRide);
+        commands.put("VIEW_RIDE", rideSearchHandler::handleViewRide);
+        commands.put("CAL_NAV", rideSearchHandler::handleCalendarNav);   // ← add
+        commands.put("CAL_DATE", rideSearchHandler::handleDateSelected);
+        commands.put("TIME", rideSearchHandler::handleTimeSelection);
+        commands.put("SEARCH_FILTER", rideSearchHandler::handleSearchFilter);
+        commands.put("APPLY_FILTER", rideSearchHandler::handleApplyFilter);
+        commands.put("RESET_FILTER", rideSearchHandler::handleResetFilter);
+        commands.put("RIDE_PAGE", rideSearchHandler::handleRidePage);
 
         // ── Booking (passenger) ───────────────────────────────────────────
-        commands.put("BOOK_RIDE",   ctx -> bookingHandler.handleBookRide(ctx));
+        commands.put("BOOK_RIDE", bookingHandler::handleBookRide);
         commands.put("BOOK_NOW",    ctx -> bookingHandler.executeBooking(
                 ctx.chatId(), ctx.entityId(), ctx.carpoolUserId(), null, ctx.bot()));
-        commands.put("MY_BOOKINGS",           ctx -> bookingHandler.handleMyBookings(ctx));
-        commands.put("VIEW_BOOKING",          ctx -> bookingHandler.handleViewBooking(ctx));
-        commands.put("PAST_BOOKINGS",         ctx -> bookingHandler.handlePastBookings(ctx));
-        commands.put("CANCEL_BOOKING",        ctx -> bookingHandler.handleCancelBooking(ctx));
-        commands.put("CANCEL_BOOKING_REASON", ctx -> bookingHandler.handleCancelBookingWithReason(ctx));
+        commands.put("MY_BOOKINGS", bookingHandler::handleMyBookings);
+        commands.put("VIEW_BOOKING", bookingHandler::handleViewBooking);
+        commands.put("PAST_BOOKINGS", bookingHandler::handlePastBookings);
+        commands.put("CANCEL_BOOKING", bookingHandler::handleCancelBooking);
+        commands.put("CANCEL_BOOKING_REASON", bookingHandler::handleCancelBookingWithReason);
 
         // ── Driver management ─────────────────────────────────────────────
         commands.put("MY_RIDES",     ctx -> driverHandler.showMyRides(
                 ctx.chatId(), ctx.carpoolUserId(), ctx.bot()));
-        commands.put("RIDE_BOOKINGS",          ctx -> driverHandler.handleDriverBookings(ctx));
-        commands.put("DRIVER_BOOKINGS",        ctx -> driverHandler.handleDriverBookings(ctx));
-        commands.put("VIEW_DRIVER_BOOKING",    ctx -> driverHandler.handleViewDriverBooking(ctx));
-        commands.put("ACCEPT_BOOKING",         ctx -> driverHandler.handleAcceptBooking(ctx));
-        commands.put("DECLINE_BOOKING",        ctx -> driverHandler.handleDeclineBooking(ctx));
-        commands.put("DECLINE_BOOKING_REASON", ctx -> driverHandler.handleDeclineBookingWithReason(ctx));
-        commands.put("PENDING_REQUESTS",       ctx -> driverHandler.handlePendingRequests(ctx));
-        commands.put("VIEW_PENDING",           ctx -> driverHandler.handleViewPendingRequest(ctx));
-        commands.put("CANCEL_RIDE",            ctx -> driverHandler.handleCancelRide(ctx));
-        commands.put("CONFIRM_CANCEL_RIDE",    ctx -> driverHandler.handleConfirmCancelRide(ctx));
-        commands.put("DEPART_RIDE",            ctx -> driverHandler.handleDepartRide(ctx));
-        commands.put("COMPLETE_RIDE",          ctx -> driverHandler.handleCompleteRide(ctx));
+        commands.put("RIDE_BOOKINGS", driverHandler::handleDriverBookings);
+        commands.put("DRIVER_BOOKINGS", driverHandler::handleDriverBookings);
+        commands.put("VIEW_DRIVER_BOOKING", driverHandler::handleViewDriverBooking);
+        commands.put("ACCEPT_BOOKING", driverHandler::handleAcceptBooking);
+        commands.put("DECLINE_BOOKING", driverHandler::handleDeclineBooking);
+        commands.put("DECLINE_BOOKING_REASON", driverHandler::handleDeclineBookingWithReason);
+        commands.put("PENDING_REQUESTS", driverHandler::handlePendingRequests);
+        commands.put("VIEW_PENDING", driverHandler::handleViewPendingRequest);
+        commands.put("CANCEL_RIDE", driverHandler::handleCancelRide);
+        commands.put("CONFIRM_CANCEL_RIDE", driverHandler::handleConfirmCancelRide);
+        commands.put("DEPART_RIDE", driverHandler::handleDepartRide);
+        commands.put("COMPLETE_RIDE", driverHandler::handleCompleteRide);
 
         // ── Vehicle ───────────────────────────────────────────────────────
-        commands.put("VEHICLE_CONFIRM_YES",  ctx -> profileHandler.handleVehicleConfirmYes(ctx));
-        commands.put("VEHICLE_CONFIRM_SAVE", ctx -> profileHandler.handleVehicleConfirmSave(ctx));
-        commands.put("VEHICLE_CHANGE",       ctx -> profileHandler.handleVehicleChange(ctx));
-        commands.put("VEHICLE_REMOVE",       ctx -> profileHandler.handleVehicleRemove(ctx));
-        commands.put("VEHICLE_SELECT",       ctx -> profileHandler.handleVehicleSelect(ctx));
-        commands.put("ADD_VEHICLE",          ctx -> profileHandler.handleAddVehicle(ctx));
+        commands.put("VEHICLE_CONFIRM_YES", profileHandler::handleVehicleConfirmYes);
+        commands.put("VEHICLE_CONFIRM_SAVE", profileHandler::handleVehicleConfirmSave);
+        commands.put("VEHICLE_CHANGE", profileHandler::handleVehicleChange);
+        commands.put("VEHICLE_REMOVE", profileHandler::handleVehicleRemove);
+        commands.put("VEHICLE_SELECT", profileHandler::handleVehicleSelect);
+        commands.put("ADD_VEHICLE", profileHandler::handleAddVehicle);
 
         // ── Profile ───────────────────────────────────────────────────────
-        commands.put("MY_PROFILE",      ctx -> profileHandler.handleMyProfile(ctx));
-        commands.put("MY_FOLLOWERS",    ctx -> profileHandler.handleMyFollowers(ctx));
-        commands.put("ADMIN_STATS",     ctx -> profileHandler.handleAdminStats(ctx));
-        commands.put("REANNOUNCE_RIDE", ctx -> profileHandler.handleReannounceRide(ctx));
-        commands.put("PENDING_HUBS",    ctx -> profileHandler.handlePendingHubs(ctx));
-        commands.put("APPROVE_HUB",     ctx -> profileHandler.handleApproveHub(ctx));
-        commands.put("REJECT_HUB",      ctx -> profileHandler.handleRejectHub(ctx));
+        commands.put("MY_PROFILE", profileHandler::handleMyProfile);
+        commands.put("MY_FOLLOWERS", profileHandler::handleMyFollowers);
+        commands.put("ADMIN_STATS", profileHandler::handleAdminStats);
+        commands.put("REANNOUNCE_RIDE", profileHandler::handleReannounceRide);
+        commands.put("PENDING_HUBS", profileHandler::handlePendingHubs);
+        commands.put("APPROVE_HUB", profileHandler::handleApproveHub);
+        commands.put("REJECT_HUB", profileHandler::handleRejectHub);
 
         // ── Terms ─────────────────────────────────────────────────────────
         commands.put("TERMS_WELCOME",    ctx -> profileHandler.handleTermsWelcome(
                 ctx.chatId(), ctx.bot()));
         commands.put("TERMS_VIEW_AGAIN", ctx -> profileHandler.handleTermsWelcome(
                 ctx.chatId(), ctx.bot()));
-        commands.put("TERMS_ACCEPT",     ctx -> profileHandler.handleTermsAccept(ctx));
-        commands.put("TERMS_DECLINE",    ctx -> profileHandler.handleTermsDecline(ctx));
+        commands.put("TERMS_ACCEPT", profileHandler::handleTermsAccept);
+        commands.put("TERMS_DECLINE", profileHandler::handleTermsDecline);
 
         // ── Rating ────────────────────────────────────────────────────────────────
-        commands.put("RATE_RIDE",      ctx -> ratingHandler.handleRateRide(ctx));
-        commands.put("RATE_STARS",     ctx -> ratingHandler.handleStarSelected(ctx));
-        commands.put("SUBMIT_RATING",  ctx -> ratingHandler.handleSubmitRating(ctx));
-        commands.put("SKIP_RATING",    ctx -> ratingHandler.handleSkipRating(ctx));
-        commands.put("RATE_PASSENGER", ctx -> ratingHandler.handleRatePassenger(ctx));
+        commands.put("RATE_RIDE", ratingHandler::handleRateRide);
+        commands.put("RATE_STARS", ratingHandler::handleStarSelected);
+        commands.put("SUBMIT_RATING", ratingHandler::handleSubmitRating);
+        commands.put("SKIP_RATING", ratingHandler::handleSkipRating);
+        commands.put("RATE_PASSENGER", ratingHandler::handleRatePassenger);
 
         // ── Favorites ─────────────────────────────────────────────────────────────
-        commands.put("SAVE_FAVORITE",    ctx -> ratingHandler.handleSaveFavorite(ctx));
-        commands.put("SKIP_FAVORITE",    ctx -> ratingHandler.handleSkipFavorite(ctx));
-        commands.put("UNFOLLOW_DRIVER",  ctx -> ratingHandler.handleUnfollowDriver(ctx));
+        commands.put("SAVE_FAVORITE", ratingHandler::handleSaveFavorite);
+        commands.put("SKIP_FAVORITE", ratingHandler::handleSkipFavorite);
+        commands.put("UNFOLLOW_DRIVER", ratingHandler::handleUnfollowDriver);
 
         // ── Help ──────────────────────────────────────────────────────────
         commands.put("HELP", ctx -> helpHandler.handleTopic(

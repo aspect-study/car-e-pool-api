@@ -57,11 +57,14 @@ public class BookingHandler {
                 .withFlow(BotFlow.BOOKING_MESSAGE));
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                "💬 <b>Any message for the driver?</b>\n\n" +
-                        "This is your chance to introduce yourself and give the driver " +
-                        "important details before they accept your booking.\n\n" +
-                        "<i>e.g. \"I'll be at [landmark], [how to spot you]. " +
-                        "[Any other info the driver should know.]\"</i>",
+                """
+                        💬 <b>Any message for the driver?</b>
+                        
+                        This is your chance to introduce yourself and give the driver \
+                        important details before they accept your booking.
+                        
+                        <i>e.g. "I'll be at [landmark], [how to spot you]. \
+                        [Any other info the driver should know.]"</i>""",
                 List.of(List.of(
                         BotMessageBuilder.button("⏭️ Skip",   "BOOK_NOW:" + rideId, ButtonStyle.SUCCESS.toString()),
                         BotMessageBuilder.button("❌ Cancel", "MAIN_MENU",  ButtonStyle.DANGER.toString())
@@ -76,9 +79,11 @@ public class BookingHandler {
                     carpoolUserId);
 
             bot.send(flowHelper.sendWithInline(chatId,
-                    "⏳ <b>Booking Request Sent!</b>\n\n" +
-                            "Waiting for the driver to accept your request.\n" +
-                            "You'll be notified once the driver responds.",
+                    """
+                            ⏳ <b>Booking Request Sent!</b>
+                            
+                            Waiting for the driver to accept your request.
+                            You'll be notified once the driver responds.""",
                     List.of(List.of(
                             BotMessageBuilder.button("📜 My Bookings", "MY_BOOKINGS", ButtonStyle.PRIMARY.toString()),
                             BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString())
@@ -202,11 +207,17 @@ public class BookingHandler {
             }
 
             String detail = String.format(
-                    "📋 <b>Booking Details</b>\n\n" +
-                            "🚗 %s → %s\n🕐 %s\n" +
-                            "🚏 Pickup: <b>%s</b>\n🏁 Dropoff: <b>%s</b>\n" +
-                            "🪑 Seats: %d\n⛽ Suggested share: ₱%.2f\n" +
-                            "👤 Driver: %s%s\n%s📊 Status: %s%s",
+                    """
+                            📋 <b>Booking Details</b>
+                            
+                            🚗 %s → %s
+                            🕐 %s
+                            🚏 Pickup: <b>%s</b>
+                            🏁 Dropoff: <b>%s</b>
+                            🪑 Seats: %d
+                            ⛽ Suggested share: ₱%.2f
+                            👤 Driver: %s%s
+                            %s📊 Status: %s%s""",
                     HtmlEscapeUtil.escape(b.ride().originHub().name()),
                     HtmlEscapeUtil.escape(b.ride().destinationHub().name()),
                     b.ride().departureTime()
@@ -235,19 +246,21 @@ public class BookingHandler {
                 rows.add(List.of(InlineKeyboardButton.builder()
                         .text("❌ Cancel Booking")
                         .callbackData("CANCEL_BOOKING:" + ctx.entityId())
+                        .style(ButtonStyle.DANGER.toString())
                         .build()));
             }
             rows.add(List.of(InlineKeyboardButton.builder()
                     .text("◀️ Back to My Bookings")
-                    .callbackData("MY_BOOKINGS").build()));
+                    .callbackData("MY_BOOKINGS")
+                    .style(ButtonStyle.SUCCESS.toString())
+                    .build()));
 
             ctx.bot().send(SendMessage.builder()
                     .chatId(ctx.chatId())
                     .text(detail)
                     .parseMode("HTML")
                     .replyMarkup(InlineKeyboardMarkup.builder()
-                            .keyboard(rows.stream()
-                                    .map(InlineKeyboardRow::new).toList())
+                            .keyboard(rows.stream().map(InlineKeyboardRow::new).toList())
                             .build())
                     .build());
 
@@ -294,7 +307,9 @@ public class BookingHandler {
                         .keyboard(List.of(new InlineKeyboardRow(
                                 InlineKeyboardButton.builder()
                                         .text("◀️ Back to My Bookings")
-                                        .callbackData("MY_BOOKINGS").build())))
+                                        .callbackData("MY_BOOKINGS")
+                                        .style(ButtonStyle.SUCCESS.toString())
+                                        .build())))
                         .build())
                 .build());
     }
@@ -305,13 +320,13 @@ public class BookingHandler {
         Long bookingId = ctx.entityId();
         var rows = List.of(
                 List.of(BotMessageBuilder.button("🔄 Found another ride",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":FOUND_OTHER", null)),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":FOUND_OTHER", ButtonStyle.PRIMARY.toString())),
                 List.of(BotMessageBuilder.button("📅 Change of plans",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":CHANGE_PLANS", null)),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":CHANGE_PLANS", ButtonStyle.PRIMARY.toString())),
                 List.of(BotMessageBuilder.button("⏰ Running late",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":RUNNING_LATE", null)),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":RUNNING_LATE", ButtonStyle.PRIMARY.toString())),
                 List.of(BotMessageBuilder.button("❌ Other reason",
-                        "CANCEL_BOOKING_REASON:" + bookingId + ":OTHER", null)),
+                        "CANCEL_BOOKING_REASON:" + bookingId + ":OTHER", ButtonStyle.PRIMARY.toString())),
                 List.of(BotMessageBuilder.button("◀️ Back",
                         "VIEW_BOOKING:" + bookingId, ButtonStyle.PRIMARY.toString()))
         );
@@ -346,8 +361,10 @@ public class BookingHandler {
             bookingService.cancelBooking(bookingId, ctx.carpoolUserId(), reason);
             stateManager.reset(ctx.chatId());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "✅ <b>Booking Cancelled</b>\n\n" +
-                            "Your booking has been cancelled. The driver has been notified."));
+                    """
+                            ✅ <b>Booking Cancelled</b>
+                            
+                            Your booking has been cancelled. The driver has been notified."""));
         } catch (Exception e) {
             log.error("Cancel booking failed: bookingId={} userId={} error={}",
                     bookingId, ctx.carpoolUserId(), e.getMessage());

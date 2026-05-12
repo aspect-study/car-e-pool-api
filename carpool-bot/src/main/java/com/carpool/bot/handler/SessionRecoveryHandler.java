@@ -14,10 +14,10 @@ import java.util.Set;
 
 /**
  * Handles session expiry gracefully when UserState is lost after bot restart.
- *
+ * <p>
  * Detects which flow the user was in based on the callback action,
  * then shows a context-aware message with appropriate recovery buttons.
- *
+ * <p>
  * This keeps CallbackHandler clean — session recovery is a distinct concern.
  */
 @Slf4j
@@ -71,18 +71,27 @@ public class SessionRecoveryHandler {
 
     private String buildMessage(String action) {
         if (POST_RIDE_ACTIONS.contains(action)) {
-            return "⏳ <b>Session expired.</b>\n\n" +
-                    "Sorry for the interruption! 🙏\n\n" +
-                    "Would you like to post a new ride?";
+            return """
+                    ⏳ <b>Session expired.</b>
+                    
+                    Sorry for the interruption! 🙏
+                    
+                    Would you like to post a new ride?""";
         }
         if (RATING_ACTIONS.contains(action)) {
-            return "⏳ <b>Session expired.</b>\n\n" +
-                    "Sorry for the interruption! 🙏\n\n" +
-                    "The rating session has expired. Please go to the main menu.";
+            return """
+                    ⏳ <b>Session expired.</b>
+                    
+                    Sorry for the interruption! 🙏
+                    
+                    The rating session has expired. Please go to the main menu.""";
         }
-        return "⏳ <b>Session expired.</b>\n\n" +
-                "Sorry for the interruption! 🙏\n\n" +
-                "Please start again from the main menu.";
+        return """
+                ⏳ <b>Session expired.</b>
+                
+                Sorry for the interruption! 🙏
+                
+                Please start again from the main menu.""";
     }
 
     private List<List<InlineKeyboardButton>> buildRecoveryButtons(String action) {

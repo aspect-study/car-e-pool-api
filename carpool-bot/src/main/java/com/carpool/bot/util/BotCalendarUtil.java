@@ -4,7 +4,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -16,10 +15,10 @@ import java.util.Locale;
 
 /**
  * Builds an inline calendar keyboard for date selection.
- *
+ * <p>
  * Designed for ride search — only allows selection of today and up to 7 days ahead.
  * Past dates and dates beyond the allowed range are rendered as NOOP (non-selectable).
- *
+ * <p>
  * No static state — calendarMonth is passed in from UserState on every render.
  * Thread-safe by design.
  */

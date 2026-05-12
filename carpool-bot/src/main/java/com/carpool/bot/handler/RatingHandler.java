@@ -411,7 +411,7 @@ public class RatingHandler {
 
             if (rateeIds.size() == 1) {
                 // Single ratee — go straight to star rating
-                Long rateeId = rateeIds.get(0);
+                Long rateeId = rateeIds.getFirst();
                 var ratee    = userRepository.findById(rateeId).orElseThrow();
                 showRatingPrompt(ctx.chatId(), rideId, rateeId,
                         ratee.getFullName(), ctx.state(), ctx.bot());
@@ -460,8 +460,10 @@ public class RatingHandler {
         rows.add(List.of(BotMessageBuilder.button("⏭️ Skip", "SKIP_RATING:" + rideId, ButtonStyle.PRIMARY.toString())));
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                "⭐ <b>Rate Your Passengers</b>\n\n" +
-                        "Select a passenger to rate:",
+                """
+                        ⭐ <b>Rate Your Passengers</b>
+                        
+                        Select a passenger to rate:""",
                 rows));
     }
 }

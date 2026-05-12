@@ -35,11 +35,11 @@ import java.util.Set;
 /**
  * Thin message/command router — handles text messages and bot commands.
  * Delegates all business logic to sub-handlers via BotFlowHelper.
- *
+ * <p>
  * No business logic lives here. The flow switch maps BotFlow state to
  * the correct sub-handler method. Adding a new flow step = one new
  * case in the flow switch + implementation in the relevant sub-handler.
- *
+ * <p>
  * Pattern: Command (flow dispatch) + Facade (sub-handler delegation)
  */
 @Slf4j
@@ -238,8 +238,10 @@ public class MessageHandler {
                 if (ride.status() != RideStatus.ACTIVE
                         && ride.status() != RideStatus.FULL) {
                     bot.send(flowHelper.sendWithInline(chatId,
-                            "⚠️ <b>This ride is no longer available.</b>\n\n" +
-                                    "It may have already departed or been cancelled.",
+                            """
+                                    ⚠️ <b>This ride is no longer available.</b>
+                                    
+                                    It may have already departed or been cancelled.""",
                             List.of(List.of(
                                     BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE", ButtonStyle.SUCCESS.toString()),
                                     BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString())
@@ -307,17 +309,21 @@ public class MessageHandler {
             // HH:MM only and past time — auto-adjust to now
             if (!input.matches("\\d{2}/\\d{2} \\d{2}:\\d{2}") && from.isBefore(now)) {
                 bot.send(BotMessageBuilder.textNoMenu(chatId,
-                        "⚠️ That time has already passed.\n\n" +
-                                "Showing available rides from <b>now</b> onwards instead."));
+                        """
+                                ⚠️ That time has already passed.
+                                
+                                Showing available rides from <b>now</b> onwards instead."""));
                 from = now;
             }
 
             // MM/DD HH:MM with explicit past date — block
             if (input.matches("\\d{2}/\\d{2} \\d{2}:\\d{2}") && from.isBefore(now)) {
                 bot.send(BotMessageBuilder.textWithCancel(chatId,
-                        "⚠️ That date and time has already passed.\n\n" +
-                                "Please enter a future date and time:\n" +
-                                "Format: <code>MM/DD HH:MM</code>"));
+                        """
+                                ⚠️ That date and time has already passed.
+                                
+                                Please enter a future date and time:
+                                Format: <code>MM/DD HH:MM</code>"""));
                 return;
             }
 
@@ -363,8 +369,10 @@ public class MessageHandler {
                 .withPendingCarColor(color)
                 .withFlow(BotFlow.SET_VEHICLE_MODEL));
         bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "🚘 <b>What's your car model?</b>\n\n" +
-                        "Example: <code>Toyota Vios</code>, <code>Honda City</code>"));
+                """
+                        🚘 <b>What's your car model?</b>
+                        
+                        Example: <code>Toyota Vios</code>, <code>Honda City</code>"""));
     }
 
     private void handleSetVehicleModel(Long chatId, String text,
@@ -379,12 +387,14 @@ public class MessageHandler {
                 .withPendingCarModel(model)
                 .withFlow(BotFlow.SET_VEHICLE_PLATE));
         bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "🔢 <b>What's your plate number?</b>\n\n" +
-                        "Example: <code>ABC 1234</code>"));
+                """
+                        🔢 <b>What's your plate number?</b>
+                        
+                        Example: <code>ABC 1234</code>"""));
     }
 
     private void handleSetVehiclePlate(Long chatId, String text, UserState state,
-                                       Long carpoolUserId, CarpoolBot bot) {
+                                       Long ignoredCarpoolUserId, CarpoolBot bot) {
         String plate = text.trim().toUpperCase();
         if (plate.isBlank() || plate.length() > 20) {
             bot.send(BotMessageBuilder.textWithCancel(chatId,
@@ -395,9 +405,11 @@ public class MessageHandler {
                 .withPendingPlateNumber(plate)
                 .withFlow(BotFlow.SET_VEHICLE_CAPACITY));
         bot.send(BotMessageBuilder.textWithCancel(chatId,
-                "💺 <b>How many passenger seats does your vehicle have?</b>\n\n" +
-                        "Enter a number from 1 to 7.\n" +
-                        "Example: <code>3</code> for a 4-seater (driver + 3 passengers)"));
+                """
+                        💺 <b>How many passenger seats does your vehicle have?</b>
+                        
+                        Enter a number from 1 to 7.
+                        Example: <code>3</code> for a 4-seater (driver + 3 passengers)"""));
     }
 
     private void handleSetVehicleCapacity(Long chatId, String text,
@@ -449,8 +461,12 @@ public class MessageHandler {
 
     // ── Context builder helper ────────────────────────────────────────────
 
-    private BotContext buildCtx(Long chatId, Long carpoolUserId, Long telegramId,
-                                UserState state, String payload, CarpoolBot bot) {
+    private BotContext buildCtx(Long chatId,
+                                Long carpoolUserId,
+                                Long telegramId,
+                                UserState state,
+                                String payload,
+                                CarpoolBot bot) {
         return new BotContext(chatId, carpoolUserId, telegramId, state, payload,
                 payload != null ? new String[]{payload} : new String[]{}, bot, null);
     }

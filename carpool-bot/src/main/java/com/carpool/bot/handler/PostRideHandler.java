@@ -511,8 +511,10 @@ public class PostRideHandler {
         stateManager.save(ctx.chatId(),
                 ctx.state().withFlow(BotFlow.POST_RIDE_NOTES_WRITE));
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                "✏️ <b>Add details for your passengers:</b>\n\n" +
-                        "<i>Include pickup spot, stops along the way, drop-off point, or any reminders.</i>",
+                """
+                        ✏️ <b>Add details for your passengers:</b>
+                        
+                        <i>Include pickup spot, stops along the way, drop-off point, or any reminders.</i>""",
                 List.of(List.of(
                         BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES", ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE", ButtonStyle.DANGER.toString())
@@ -707,8 +709,11 @@ public class PostRideHandler {
                 .withRepostEditMsgId(null)
                 .withFlow(BotFlow.REPOST_EDIT_CONTRIBUTION));
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                "⛽ <b>Edit Gas Share</b>\n\nEnter the suggested gas contribution per seat.\n" +
-                        "Enter <code>0</code> for a free ride. Example: <code>50</code>",
+                """
+                        ⛽ <b>Edit Gas Share</b>
+                        
+                        Enter the suggested gas contribution per seat.
+                        Enter <code>0</code> for a free ride. Example: <code>50</code>""",
                 List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
     }
 
@@ -718,8 +723,11 @@ public class PostRideHandler {
                 .withRepostEditMsgId(null)
                 .withFlow(BotFlow.REPOST_EDIT_NOTES));
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                "📝 <b>Edit Note</b>\n\nWrite a note for passengers (max 300 characters).\n" +
-                        "Example: <i>AC, no pets, exits at Filinvest</i>",
+                """
+                        📝 <b>Edit Note</b>
+                        
+                        Write a note for passengers (max 300 characters).
+                        Example: <i>AC, no pets, exits at Filinvest</i>""",
                 List.of(List.of(BotMessageBuilder.button("◀️ Back", "REPOST_BACK_TO_EDIT", null)))));
     }
 
