@@ -41,6 +41,7 @@ Passenger searches → Sends booking request to driver
 Driver accepts → Both receive confirmation
 Ride departs & completes → Both parties rate each other
 Passenger optionally follows driver → Gets alerts for future rides
+Group members can tap ⭐ Follow Driver on any announcement → Follow driver + view ride in one tap
 ```
 
 ### 1.4 Key Concepts
@@ -372,6 +373,13 @@ After arrival at the destination, tap **✅ Complete Ride**.
 - Both you and all confirmed passengers receive a **rating prompt**
 - The group announcement is deleted (if still present)
 
+The bot then asks: *"Would you like to post another ride?"*
+
+| Button | Action |
+|--------|--------|
+| 🚗 **Yes, Post New Ride** | Starts the post-ride flow immediately (direction select) |
+| ❌ **No, Thanks** | Returns to the main menu |
+
 #### Cancelling Your Ride
 
 You may cancel from the **main menu** at any point before departing.
@@ -466,6 +474,23 @@ Ratings are permanent and contribute to each user's public rating displayed on r
 - You can only rate once per ride as a passenger
 - Drivers can rate each of their passengers once per ride
 - Rating is only available for COMPLETED rides you participated in
+
+#### Following a Driver from the Community Group
+
+Every ride announcement posted in the community group includes a **⭐ Follow Driver | View Ride** button. Tapping it opens the bot in a private chat and does two things in one step:
+
+1. **Follows the driver** — adds them to your Favorite Drivers list so you receive alerts when they post new rides.
+2. **Shows the full ride card** — with a Book This Ride button so you can request a seat immediately.
+
+| Scenario | What You See |
+|----------|-------------|
+| First time following this driver | "⭐ You're now following [Driver Name]!" + ride card + Unfollow button |
+| Already following this driver | Ride card only (no duplicate follow action taken) |
+| You are the driver | Your driver ride card with View Bookings button |
+
+> **Note:** The follow happens automatically when you tap the button — there is no separate confirmation step.
+
+---
 
 #### Saving a Driver as Favorite
 
@@ -715,6 +740,7 @@ These happen without any user action:
 | Re-announce | Replaces the existing group post (old deleted, new posted); maximum 2 re-announces per ride |
 | Auto-delete | Announcement is deleted when ride is DEPARTED, COMPLETED, or CANCELLED |
 | 48-hour safety | Announcements for rides older than 48 hours are NOT deleted (Telegram API limitation) |
+| Follow button | Each announcement includes "⭐ Follow Driver \| View Ride" — tapping opens the bot privately, follows the driver if not already following, and shows the full ride card |
 
 ### 4.10 Field Validation Reference
 
