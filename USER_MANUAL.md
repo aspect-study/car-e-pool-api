@@ -701,6 +701,7 @@ PENDING
 | Star range | 1 (minimum) to 5 (maximum) |
 | Comment | Optional, maximum 1,000 characters |
 | Duplicate prevention | Second rating attempt for the same ride/person combination is rejected |
+| Per-ride scope | Ratings are per-ride. The same driver and passenger may rate each other again on each separate completed ride. |
 
 ### 4.6 Hub Rules
 
@@ -883,6 +884,11 @@ A: Ratings are only available after the ride status is **COMPLETED**. If the dri
 
 **Q: I accidentally tapped "Skip" on the rating prompt. Can I rate later?**
 A: Currently, the rating prompt is only shown once immediately after ride completion. If skipped, the option does not reappear from the menu. Contact your admin if you need a rating reopened.
+
+---
+
+**Q: I rode with the same driver again on a different ride. Can I rate them again?**
+A: Yes. Ratings are per-ride, not per person. Each completed ride is an independent rating opportunity. If you and the same driver share 10 rides, you each leave 10 separate ratings — all of which contribute to each other's running average.
 
 ---
 

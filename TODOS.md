@@ -104,14 +104,18 @@ This is a safe 1-file-in carpool-common + 3-file import update.
 **Effort:** Human ~15 min / CC ~2 min.
 **Priority:** P3.
 
-### Notification follower DM batching
-**What:** `GroupNotificationService.onRidePosted()` sends one Telegram API call per follower
-sequentially on the async event thread. For a driver with 100 followers, this is 100 sequential
-HTTP calls before the thread completes.
-**Why:** No functional bug today at low follower counts, but the latency scales linearly.
-**Context:** Telegram does not support bulk sends. Mitigation: parallel virtual thread dispatch
-per follower (each send in its own `CompletableFuture`), with a semaphore cap (e.g., 10
-concurrent) to avoid exhausting the connection pool.
-**Effort:** Human ~2 hours / CC ~10 min.
-**Trigger:** Build when a driver accumulates 50+ followers.
+### Rating analytics SQL
+**What:** Add 5 analytics queries to `RideRatingRepository` as `@Query(nativeQuery = true)` methods:
+(1) star distribution per driver, (2) top-rated drivers leaderboard (min 3 ratings),
+(3) monthly rating trend per driver, (4) rating completion rate (% of completed rides rated),
+(5) drivers with recent rating drop (last 30d vs all-time avg, drop > 0.5).
+**Why:** All current queries serve per-user display only. No aggregate visibility into community
+rating health, driver quality trends, or completion rates exists today.
+**Context:** All five queries are read-only MySQL aggregates on `ride_ratings` joined to `users`
+and `rides`. Add as `@Transactional(readOnly = true)` methods with projection interfaces or
+`List<Object[]>` return types. Expose via a new `RatingAnalyticsService` or extend
+`RatingService` — the latter is simpler since `RatingService` already owns the domain.
+Useful for the P3 web admin dashboard when that ships.
+**Effort:** Human ~1 hour / CC ~5 min.
+**Trigger:** Build when the web admin dashboard (P3) is started, or on-demand for manual SQL analysis.
 **Priority:** P3.
