@@ -11,8 +11,10 @@ import com.carpool.repository.VehicleRepository;
 import com.carpool.service.dto.request.CreateRideRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.dto.response.UserResponse;
 import com.carpool.service.event.RideEvents;
 import com.carpool.service.mapper.EntityMapper;
+import com.carpool.service.rating.RatingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,6 +31,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -46,6 +49,7 @@ class RideServiceTest {
     @Mock private VehicleRepository   vehicleRepository;
     @Mock private EntityMapper        mapper;
     @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private RatingService       ratingService;
 
     @InjectMocks
     private RideService rideService;
@@ -182,8 +186,7 @@ class RideServiceTest {
                     new UpdateRideStatusRequest(RideStatus.ACTIVE), 1L);
 
             assertThat(activeRide.getStatus()).isEqualTo(RideStatus.ACTIVE);
-            // No event published for ACTIVE transition
-            verifyNoInteractions(eventPublisher);
+            verify(eventPublisher).publishEvent(any(RideEvents.RidePostedEvent.class));
         }
 
         @Test
@@ -226,8 +229,7 @@ class RideServiceTest {
             assertThatThrownBy(() -> rideService.updateRideStatus(100L,
                     new UpdateRideStatusRequest(RideStatus.COMPLETED), 1L))
                     .isInstanceOf(InvalidRideStateException.class)
-                    .hasMessageContaining("DRAFT")
-                    .hasMessageContaining("COMPLETED");
+                    .hasMessageContaining("publish");
         }
 
         @Test
@@ -282,12 +284,11 @@ class RideServiceTest {
                     .build();
 
             when(rideRepository.findStaleActiveRides(any())).thenReturn(List.of(staleRide));
-            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             rideService.expireStaleRides();
 
             assertThat(staleRide.getStatus()).isEqualTo(RideStatus.DEPARTED);
-            verify(rideRepository).save(staleRide);
+            verify(rideRepository).saveAll(List.of(staleRide));
         }
 
         @Test
@@ -322,13 +323,12 @@ class RideServiceTest {
                     .build();
 
             when(rideRepository.findStaleActiveRides(any())).thenReturn(List.of(staleRide1, staleRide2));
-            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             rideService.expireStaleRides();
 
             assertThat(staleRide1.getStatus()).isEqualTo(RideStatus.DEPARTED);
             assertThat(staleRide2.getStatus()).isEqualTo(RideStatus.DEPARTED);
-            verify(rideRepository, times(2)).save(any());
+            verify(rideRepository).saveAll(List.of(staleRide1, staleRide2));
         }
     }
 
@@ -361,15 +361,13 @@ class RideServiceTest {
                     eq(RideStatus.DEPARTED), any())).thenReturn(List.of(departedRide));
             when(bookingRepository.findActiveBookingsForRide(300L))
                     .thenReturn(List.of(confirmedBooking));
-            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-            when(bookingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             rideService.completeStaleRides();
 
             assertThat(departedRide.getStatus()).isEqualTo(RideStatus.COMPLETED);
             assertThat(confirmedBooking.getStatus()).isEqualTo(BookingStatus.COMPLETED);
-            verify(rideRepository).save(departedRide);
-            verify(bookingRepository).save(confirmedBooking);
+            verify(rideRepository).saveAll(List.of(departedRide));
+            verify(bookingRepository).saveAll(List.of(confirmedBooking));
         }
 
         @Test
@@ -399,12 +397,11 @@ class RideServiceTest {
             when(rideRepository.findByStatusAndDepartureTimeBefore(
                     eq(RideStatus.DEPARTED), any())).thenReturn(List.of(departedRide));
             when(bookingRepository.findActiveBookingsForRide(301L)).thenReturn(List.of());
-            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             rideService.completeStaleRides();
 
             assertThat(departedRide.getStatus()).isEqualTo(RideStatus.COMPLETED);
-            verify(rideRepository).save(departedRide);
+            verify(rideRepository).saveAll(List.of(departedRide));
             verify(bookingRepository, never()).save(any());
         }
     }
@@ -456,7 +453,11 @@ class RideServiceTest {
                     .thenReturn(List.of(cheapRide, expensiveRide));
 
             RideResponse cheapResponse = mock(RideResponse.class);
+            UserResponse mockDriver1 = mock(UserResponse.class);
+            when(mockDriver1.id()).thenReturn(1L);
+            when(cheapResponse.driver()).thenReturn(mockDriver1);
             when(mapper.toRideResponse(cheapRide)).thenReturn(cheapResponse);
+            when(ratingService.getAverageRatingsByDriverIds(any())).thenReturn(Map.of());
 
             List<RideResponse> result = rideService.getRidesByDirection(
                     RideDirection.HOME_TO_WORK, 99L,
@@ -477,8 +478,12 @@ class RideServiceTest {
                     .thenReturn(List.of(fullRide, availableRide));
 
             RideResponse availableResponse = mock(RideResponse.class);
+            UserResponse mockDriver2 = mock(UserResponse.class);
+            when(mockDriver2.id()).thenReturn(1L);
+            when(availableResponse.driver()).thenReturn(mockDriver2);
             when(availableResponse.availableSeats()).thenReturn(3);
             when(mapper.toRideResponse(availableRide)).thenReturn(availableResponse);
+            when(ratingService.getAverageRatingsByDriverIds(any())).thenReturn(Map.of());
 
             List<RideResponse> result = rideService.getRidesByDirection(
                     RideDirection.HOME_TO_WORK, 99L,
@@ -505,11 +510,17 @@ class RideServiceTest {
             RideResponse lateResponse  = mock(RideResponse.class);
             RideResponse earlyResponse = mock(RideResponse.class);
 
+            UserResponse mockDriver3 = mock(UserResponse.class);
+            when(mockDriver3.id()).thenReturn(1L);
+            when(lateResponse.driver()).thenReturn(mockDriver3);
+            when(earlyResponse.driver()).thenReturn(mockDriver3);
+
             when(lateResponse.departureTime()).thenReturn(late);
             when(earlyResponse.departureTime()).thenReturn(early);
 
             when(mapper.toRideResponse(lateRide)).thenReturn(lateResponse);
             when(mapper.toRideResponse(earlyRide)).thenReturn(earlyResponse);
+            when(ratingService.getAverageRatingsByDriverIds(any())).thenReturn(Map.of());
 
             List<RideResponse> result = rideService.getRidesByDirection(
                     RideDirection.HOME_TO_WORK, 99L,
@@ -532,11 +543,17 @@ class RideServiceTest {
             RideResponse expResponse   = mock(RideResponse.class);
             RideResponse cheapResponse = mock(RideResponse.class);
 
+            UserResponse mockDriver4 = mock(UserResponse.class);
+            when(mockDriver4.id()).thenReturn(1L);
+            when(expResponse.driver()).thenReturn(mockDriver4);
+            when(cheapResponse.driver()).thenReturn(mockDriver4);
+
             when(expResponse.contributionAmount()).thenReturn(new BigDecimal("150"));
             when(cheapResponse.contributionAmount()).thenReturn(new BigDecimal("50"));
 
             when(mapper.toRideResponse(expRide)).thenReturn(expResponse);
             when(mapper.toRideResponse(cheapRide)).thenReturn(cheapResponse);
+            when(ratingService.getAverageRatingsByDriverIds(any())).thenReturn(Map.of());
 
             List<RideResponse> result = rideService.getRidesByDirection(
                     RideDirection.HOME_TO_WORK, 99L,
@@ -561,11 +578,17 @@ class RideServiceTest {
             RideResponse fewResponse  = mock(RideResponse.class);
             RideResponse manyResponse = mock(RideResponse.class);
 
+            UserResponse mockDriver5 = mock(UserResponse.class);
+            when(mockDriver5.id()).thenReturn(1L);
+            when(fewResponse.driver()).thenReturn(mockDriver5);
+            when(manyResponse.driver()).thenReturn(mockDriver5);
+
             when(fewResponse.availableSeats()).thenReturn(1);
             when(manyResponse.availableSeats()).thenReturn(4);
 
             when(mapper.toRideResponse(fewSeatsRide)).thenReturn(fewResponse);
             when(mapper.toRideResponse(manySeatsRide)).thenReturn(manyResponse);
+            when(ratingService.getAverageRatingsByDriverIds(any())).thenReturn(Map.of());
 
             List<RideResponse> result = rideService.getRidesByDirection(
                     RideDirection.HOME_TO_WORK, 99L,
