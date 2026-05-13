@@ -318,6 +318,7 @@ public class PostRideHandler {
                             "Type a nearby landmark as your drop-off point.\n" +
                             "Example: <code>" + destExample + "</code>"));
         } catch (Exception e) {
+            log.warn("Could not load origin hub id={}: {}", ctx.entityId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load hub. Please try again."));
         }
@@ -357,6 +358,7 @@ public class PostRideHandler {
                             HtmlEscapeUtil.escape(hub.name()) + "</b>\n\n" +
                             "🪑 <b>How many passengers can you take?</b> (1-7)"));
         } catch (Exception e) {
+            log.warn("Could not load destination hub id={}: {}", ctx.entityId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load hub. Please try again."));
         }
@@ -487,6 +489,7 @@ public class PostRideHandler {
                             HtmlEscapeUtil.escape(note.getContent()) + "\"",
                     rows));
         } catch (Exception e) {
+            log.warn("Could not load note id={}: {}", ctx.entityId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load note. Please try again."));
         }
@@ -502,6 +505,7 @@ public class PostRideHandler {
             profileHandler.showVehicleSelectStep(
                     ctx.chatId(), ctx.carpoolUserId(), updated, ctx.bot());
         } catch (Exception e) {
+            log.warn("Could not apply note id={}: {}", ctx.entityId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not apply note. Please try again."));
         }
@@ -621,6 +625,7 @@ public class PostRideHandler {
             stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(msgId));
 
         } catch (Exception e) {
+            log.warn("Could not load ride for repost id={}: {}", ctx.entityId(), e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load ride details for repost."));
         }
