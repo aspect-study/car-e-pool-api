@@ -477,7 +477,7 @@ Ratings are permanent and contribute to each user's public rating displayed on r
 
 #### Following a Driver from the Community Group
 
-Every ride announcement posted in the community group includes a **⭐ Follow Driver | View Ride** button. Tapping it opens the bot in a private chat and does two things in one step:
+Every ride announcement posted in the community group includes a **⭐ Follow Me | Request a Ride** button. Tapping it opens the bot in a private chat and does two things in one step:
 
 1. **Follows the driver** — adds them to your Favorite Drivers list so you receive alerts when they post new rides.
 2. **Shows the full ride card** — with a Book This Ride button so you can request a seat immediately.
