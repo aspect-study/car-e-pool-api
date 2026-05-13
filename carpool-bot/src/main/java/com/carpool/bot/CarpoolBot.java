@@ -357,15 +357,13 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                     .replyMarkup(BotMessageBuilder.inlineButtons(List.of(
                             List.of(
                                     InlineKeyboardButton.builder()
-                                    .text("\uD83D\uDE98#"+rideId +" ❯❯❯❯ | View | Request a Seat")
+                                    .text("🚘#"+rideId +" - Request a Seat")
                                             .url("https://t.me/" + botConfig.getBotUsername()
                                                     + "?start=RIDE_" + rideId)
                                             .style(ButtonStyle.SUCCESS.toString())
-                                            .build()
-                            ),
-                            List.of(
+                                            .build(),
                                     InlineKeyboardButton.builder()
-                                            .text("⭐ Get Ride Alerts")
+                                            .text("✚ Follow")
                                             .url("https://t.me/" + botConfig.getBotUsername()
                                                     + "?start=FOLLOW_RIDE_" + driverId + "_" + rideId)
                                             .style(ButtonStyle.PRIMARY.toString())

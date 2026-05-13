@@ -240,20 +240,20 @@ public class GroupNotificationService {
         String departureTime = ride.getDepartureTime().format(DateTimeFormatter.ofPattern("h:mm a"));
 
         String dirLabel = switch (ride.getDirection()) {
-            case HOME_TO_WORK -> "🏠 Home → Work";
-            case WORK_TO_HOME -> "🏢 Work → Home";
+            case HOME_TO_WORK -> "🏠 Home → 🏢 Work";
+            case WORK_TO_HOME -> "🏢 Work → 🏠 Home";
             default           -> "🚗 Carpool Ride";
         };
 
         String driverName = HtmlEscapeUtil.escape(ride.getDriver().getFullName());
 
         String notesLine = (ride.getNotes() != null && !ride.getNotes().isBlank())
-                ? "\n\n" + HtmlEscapeUtil.escape(ride.getNotes())
+                ? "\n" + HtmlEscapeUtil.escape(ride.getNotes())
                 : "";
 
         String vehicleLine;
         if (ride.getVehicle() != null) {
-            vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+            vehicleLine = String.format("%s%s (%s)\n",
                     ride.getVehicle().getColor() != null
                             ? HtmlEscapeUtil.escape(ride.getVehicle().getColor()) + " " : "",
                     HtmlEscapeUtil.escape(ride.getVehicle().getModel()),
@@ -261,7 +261,7 @@ public class GroupNotificationService {
         } else if (ride.getDriver().getCarModel() != null
                 && ride.getDriver().getPlateNumber() != null) {
             // Fallback for rides created before multi-vehicle migration
-            vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+            vehicleLine = String.format("%s%s (%s)\n",
                     ride.getDriver().getCarColor() != null
                             ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " " : "",
                     HtmlEscapeUtil.escape(ride.getDriver().getCarModel()),
@@ -272,26 +272,25 @@ public class GroupNotificationService {
 
         return String.format(
                 """
-                        \uD83D\uDFE2 🚗 <b>New Ride Available!</b> — %s
+                        <b>%s</b> — %s
                         
-                        👤 Driver: <b>%s</b>%s
-                        %s | 🕐 Pickup start: <b>%s</b>
-                        📍 <b>%s → %s</b>
-                        %s\
-                        🔖 Ride #%d  | 💺 Seats: <b>%d</b>\
+                        🔖 Ride #%d — <b>%s</b>%s
+                        🕐 Pickup: <b>%s</b> | Seats: <b>%d</b>
+                        🚘 Vehicle: %s\
+                        📍 Route: <b>%s → %s</b>
                         %s
                         
-                        Tap <b>View | Request a Seat</b> to see details and book your seat. 👇""",
+                        Tap <b>Request a Seat</b> to see details and book your seat. 👇""",
+                dirLabel,
                 departureDate,
+                ride.getId(),
                 driverName,
                 ratingLabel,
-                dirLabel,
                 departureTime,
+                ride.getAvailableSeats(),
+                vehicleLine,
                 HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
                 HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
-                vehicleLine,
-                ride.getId(),
-                ride.getAvailableSeats(),
                 notesLine.replace("@", "")
         );
     }
