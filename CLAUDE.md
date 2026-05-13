@@ -95,6 +95,8 @@ When a ride is departed, completed, or cancelled, `GroupNotificationService` lis
 
 **Favorite driver alerts:** `CarpoolBot.sendToUser(telegramId, text, rideId, driverId)` sends the alert DM with three inline buttons: `VIEW_RIDE:{rideId}`, `BOOK_RIDE:{rideId}`, and `UNFOLLOW_DRIVER:{driverId}`. Tapping Unfollow calls `RatingHandler.handleUnfollowDriver()`, which removes the `UserFavorite` record and edits the alert message in-place to confirm — no menu navigation needed.
 
+**Follower DM dispatch:** The follower alert loop in `onRidePosted()` uses parallel virtual thread dispatch — each follower DM runs in its own virtual thread via `Executors.newVirtualThreadPerTaskExecutor()` (try-with-resources). A `Semaphore(10)` caps concurrent Telegram API calls to respect rate limits. `CompletableFuture.allOf(...).join()` waits for all sends before the method returns. 100 followers completes in ~4s instead of ~35s. The sequential `Thread.sleep(50)` loop was removed.
+
 **Group announcement buttons:** `CarpoolBot.sendToGroup(text, rideId, driverId, topicId)` attaches two URL button rows to every group post: `🚘#N ❯❯❯❯ | View | Request a Seat` deep-links to `?start=RIDE_{rideId}`; `⭐ Follow Driver | View Ride` deep-links to `?start=FOLLOW_RIDE_{driverId}_{rideId}`. The `FOLLOW_RIDE_` parameter is handled in `MessageHandler.handleStart()` by the private `handleFollowAndViewRide()` method. It fetches the ride from DB using only `rideId` (the `driverId` in the URL is not trusted for any operation — `ride.driver().id()` is used throughout). It calls `favoriteService.isFavorite()` before `saveFavorite()` so existing followers do not see a false "now following" confirmation. New followers see "⭐ You're now following [driver]!" + ride card + Unfollow button. Existing followers see the ride card normally. The driver tapping their own link sees the driver ride card (View Bookings). Malformed deep links throw `NumberFormatException` caught at WARN level, and the user is sent to the main menu.
 
 **Post-completion prompt:** `DriverHandler.handleCompleteRide()` resets state then shows "Would you like to post another ride?" with two buttons: `🚗 Yes, Post New Ride` → `POST_RIDE` (starts the normal post-ride direction-select flow with a clean state) and `❌ No, Thanks` → `MAIN_MENU`.
@@ -130,6 +132,17 @@ All entity→DTO mapping uses a single `EntityMapper` (MapStruct, compile-time g
 `HubService.approveHub(id, null)` auto-generates a unique code from the hub name (uppercase + underscores, suffix `_2`/`_3`/… for collisions) when no explicit code is provided. Approval evicts both `hubs` and `hub-search` caches.
 
 Admin hub management (list pending, approve, reject) is available in the bot under `MY_PROFILE → 🏘️ Pending Hubs` — gated by `BotConfig.isAdmin()`. No admin web UI exists yet.
+
+### Rating System
+Ratings are **per-ride**, not per user-pair. The same driver and passenger can rate each other again on every new completed ride — there is no "already rated this person" global block.
+
+**Duplicate check scope:**
+- Passenger rater: `existsByRideIdAndRaterId` — one rating per ride total (one driver per ride).
+- Driver rater: `existsByRideIdAndRaterIdAndRateeId` — one rating per passenger per ride. A driver with 3 passengers submits 3 independent ratings and is only blocked per-ratee, not per-ride.
+
+**Role stored on save:** `raterRole` is `"DRIVER"` or `"PASSENGER"` (set from `ride.driver.id.equals(raterId)`). The repository queries `raterRole` to separate driver-received ratings from passenger-received ratings — `findAverageDriverRatingByRateeId` filters `raterRole = 'PASSENGER'` (passenger rated the driver), `findAveragePassengerRatingByRateeId` filters `raterRole = 'DRIVER'`.
+
+**Analytics queries (P3 TODO):** Five MySQL aggregate queries are documented for future `RideRatingRepository` addition: star distribution, top-rated drivers leaderboard (min 3 ratings), monthly trend per driver, completion rate (% of completed rides that got rated), and rating drop detection (last-30d avg vs all-time avg, drop > 0.5).
 
 ### Ride Card: Member Verification Badge
 `BotMessageBuilder.formatRideCard(ride, ratingLabel, memberBadge)` renders a badge line between the driver name and "Posted X ago". The badge is built by `BotMessageBuilder.buildMemberBadge(ProfileStatsResponse)` and shows role, completed ride count, and member-since date. Applied in both `RideSearchHandler.handleViewRide()` (bot search flow) and `MessageHandler.handleStart()` (group deep-link flow).
