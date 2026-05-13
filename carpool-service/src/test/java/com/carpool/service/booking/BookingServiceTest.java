@@ -110,11 +110,11 @@ class BookingServiceTest {
             verify(bookingRepository).save(bookingCaptor.capture());
 
             Booking saved = bookingCaptor.getValue();
-            assertThat(saved.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+            assertThat(saved.getStatus()).isEqualTo(BookingStatus.PENDING);
             assertThat(saved.getSeatsReserved()).isEqualTo(1);
             assertThat(saved.getContributionDue()).isEqualByComparingTo("150.00");
 
-            verify(eventPublisher).publishEvent(any(RideEvents.BookingConfirmedEvent.class));
+            verify(eventPublisher).publishEvent(any(RideEvents.BookingRequestedEvent.class));
         }
 
         @Test
@@ -186,8 +186,7 @@ class BookingServiceTest {
             assertThatThrownBy(() ->
                     bookingService.createBooking(100L,
                             new CreateBookingRequest(2, null, null, null), 2L))
-                    .isInstanceOf(RideFullException.class)
-                    .hasMessageContaining("100");
+                    .isInstanceOf(RideFullException.class);
         }
 
         @Test

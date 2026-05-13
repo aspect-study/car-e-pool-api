@@ -11,19 +11,18 @@ import com.carpool.domain.enums.NotificationTypes;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.NotificationRepository;
 import com.carpool.repository.RideRepository;
-import com.carpool.service.config.RestClientConfig;
 import com.carpool.service.event.RideEvents;
-import jakarta.annotation.PostConstruct;
+import com.carpool.service.port.TelegramNotificationPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -50,21 +49,14 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final BookingRepository      bookingRepository;
-    private final RestClientConfig client;
     private final RideRepository rideRepository;
+
+    @Autowired @Lazy
+    private TelegramNotificationPort telegramPort;
 
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a")
                     .withZone(ZoneId.of("Asia/Manila"));
-
-    @Value("${carpool.telegram.bot-token}")
-    private String botToken;
-    private String telegramApiBase;
-
-    @PostConstruct
-    private void init() {
-        this.telegramApiBase = "https://api.telegram.org/bot" + botToken;
-    }
 
     // ── Event Listeners ───────────────────────────────────────────────────────
 
@@ -242,13 +234,17 @@ public class NotificationService {
                             "Tap below to leave a rating:",
                     HtmlEscapeUtil.escape(ride.getDriver().getFullName()));
 
-            sendTelegramMessageWithButtons(
-                    booking.getPassenger().getTelegramId(),
-                    passengerRatingMsg,
-                    List.of(List.of(
-                            Map.of("text",          "⭐ Rate Now",
-                                    "callback_data", "RATE_RIDE:" + ride.getId())
-                    )));
+            try {
+                telegramPort.sendMessageWithKeyboard(
+                        booking.getPassenger().getTelegramId(),
+                        passengerRatingMsg,
+                        List.of(List.of(
+                                new TelegramNotificationPort.InlineButton("⭐ Rate Now", "RATE_RIDE:" + ride.getId())
+                        )));
+            } catch (Exception e) {
+                log.error("Failed to send rating prompt to passenger: rideId={} passengerId={} error={}",
+                        ride.getId(), booking.getPassenger().getId(), e.getMessage());
+            }
 
             // Prompt driver to rate passenger
             String driverRatingMsg = String.format(
@@ -257,13 +253,17 @@ public class NotificationService {
                             "Tap below to leave a rating:",
                     HtmlEscapeUtil.escape(booking.getPassenger().getFullName()));
 
-            sendTelegramMessageWithButtons(
-                    ride.getDriver().getTelegramId(),
-                    driverRatingMsg,
-                    List.of(List.of(
-                            Map.of("text",          "⭐ Rate Now",
-                                    "callback_data", "RATE_RIDE:" + ride.getId())
-                    )));
+            try {
+                telegramPort.sendMessageWithKeyboard(
+                        ride.getDriver().getTelegramId(),
+                        driverRatingMsg,
+                        List.of(List.of(
+                                new TelegramNotificationPort.InlineButton("⭐ Rate Now", "RATE_RIDE:" + ride.getId())
+                        )));
+            } catch (Exception e) {
+                log.error("Failed to send rating prompt to driver: rideId={} driverId={} error={}",
+                        ride.getId(), ride.getDriver().getId(), e.getMessage());
+            }
         }
         log.info("Rating prompts sent: rideId={} passengers={}",
                 ride.getId(), activeBookings.size());
@@ -348,20 +348,22 @@ public class NotificationService {
         User pax    = booking.getPassenger();
 
         // Notify driver with Accept/Decline buttons
-        sendTelegramMessageWithButtons(driver.getTelegramId(),
-                buildDriverBookingRequestMessage(booking),
-                List.of(
-                        List.of(
-                                Map.of("text", "✅ Accept",
-                                        "callback_data", "ACCEPT_BOOKING:" + booking.getId()),
-                                Map.of("text", "❌ Decline",
-                                        "callback_data", "DECLINE_BOOKING:" + booking.getId())
-                        ),
-                        List.of(
-                                Map.of("text", "🏠 Go to Menu",
-                                        "callback_data", "MAIN_MENU")
-                        )
-                ));
+        try {
+            telegramPort.sendMessageWithKeyboard(driver.getTelegramId(),
+                    buildDriverBookingRequestMessage(booking),
+                    List.of(
+                            List.of(
+                                    new TelegramNotificationPort.InlineButton("✅ Accept", "ACCEPT_BOOKING:" + booking.getId()),
+                                    new TelegramNotificationPort.InlineButton("❌ Decline", "DECLINE_BOOKING:" + booking.getId())
+                            ),
+                            List.of(
+                                    new TelegramNotificationPort.InlineButton("🏠 Go to Menu", "MAIN_MENU")
+                            )
+                    ));
+        } catch (Exception e) {
+            log.error("Failed to send booking request to driver: bookingId={} driverId={} error={}",
+                    booking.getId(), driver.getId(), e.getMessage());
+        }
 
         // Record notification for driver
         Notification notification = Notification.builder()
@@ -506,19 +508,21 @@ public class NotificationService {
                 booking.getContributionDue(),
                 Math.max(0, remainingMinutes));
 
-        sendTelegramMessageWithButtons(driver.getTelegramId(), msg,
-                List.of(
-                        List.of(
-                                Map.of("text", "✅ Accept",
-                                        "callback_data", "ACCEPT_BOOKING:" + booking.getId()),
-                                Map.of("text", "❌ Decline",
-                                        "callback_data", "DECLINE_BOOKING:" + booking.getId())
-                        ),
-                        List.of(
-                                Map.of("text", "🏠 Go to Menu",
-                                        "callback_data", "MAIN_MENU")
-                        )
-                ));
+        try {
+            telegramPort.sendMessageWithKeyboard(driver.getTelegramId(), msg,
+                    List.of(
+                            List.of(
+                                    new TelegramNotificationPort.InlineButton("✅ Accept", "ACCEPT_BOOKING:" + booking.getId()),
+                                    new TelegramNotificationPort.InlineButton("❌ Decline", "DECLINE_BOOKING:" + booking.getId())
+                            ),
+                            List.of(
+                                    new TelegramNotificationPort.InlineButton("🏠 Go to Menu", "MAIN_MENU")
+                            )
+                    ));
+        } catch (Exception e) {
+            log.error("Failed to send booking reminder to driver: bookingId={} driverId={} error={}",
+                    booking.getId(), driver.getId(), e.getMessage());
+        }
 
         // Record reminder notification
         Notification notification = Notification.builder()
@@ -547,7 +551,7 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
 
         try {
-            sendTelegramMessage(recipient.getTelegramId(), message);
+            telegramPort.sendMessage(recipient.getTelegramId(), message);
             notification.setStatus(NotificationStatus.SENT);
             notification.setSentAt(Instant.now());
             log.debug("Notification sent: type={} userId={}", type, recipient.getId());
@@ -558,44 +562,6 @@ public class NotificationService {
         }
 
         notificationRepository.save(notification);
-    }
-
-    private void sendTelegramMessage(Long chatId, String text) {
-        sendTelegramMessage(chatId, text, true);
-    }
-
-    private void sendTelegramMessage(Long chatId, String text, boolean withMenuButton) {
-        if (botToken == null || botToken.isBlank()) {
-            log.warn("Telegram bot token not configured — skipping message to chatId={}", chatId);
-            return;
-        }
-
-        log.info("Sending Telegram notification to chatId={}", chatId);
-
-        String url = telegramApiBase + "/sendMessage";
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("chat_id",    chatId);
-        body.put("text",       text);
-        body.put("parse_mode", "HTML");
-
-        if (withMenuButton) {
-            body.put("reply_markup", Map.of(
-                    "inline_keyboard", List.of(
-                            List.of(Map.of(
-                                    "text",          "🏠 Go to Menu",
-                                    "callback_data", "MAIN_MENU"
-                            ))
-                    )
-            ));
-        }
-
-        client.restClient().post()
-                .uri(url)
-                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .body(body)
-                .retrieve()
-                .toBodilessEntity();
     }
 
     // ── Message builders ──────────────────────────────────────────────────────
@@ -637,34 +603,6 @@ public class NotificationService {
                 ride.getNotes() != null
                         ? "📝 Note: " + HtmlEscapeUtil.escape(ride.getNotes())
                         : "");
-    }
-
-    private void sendTelegramMessageWithButtons(Long chatId, String text,
-                                                List<List<Map<String, String>>> keyboard) {
-        if (botToken == null || botToken.isBlank()) {
-            log.warn("Telegram bot token not configured — skipping message to chatId={}", chatId);
-            return;
-        }
-
-        String url = telegramApiBase + "/sendMessage";
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("chat_id",    chatId);
-        body.put("text",       text);
-        body.put("parse_mode", "HTML");
-        body.put("reply_markup", Map.of("inline_keyboard", keyboard));
-
-        try {
-            client.restClient().post()
-                    .uri(url)
-                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                    .body(body)
-                    .retrieve()
-                    .toBodilessEntity();
-        } catch (Exception e) {
-            log.error("Failed to send Telegram message with buttons to chatId={}: {}",
-                    chatId, e.getMessage());
-        }
     }
 
     private String buildDriverBookingRequestMessage(Booking booking) {
@@ -797,7 +735,7 @@ public class NotificationService {
         driverNotif = notificationRepository.save(driverNotif);
 
         try {
-            sendTelegramMessage(ride.getDriver().getTelegramId(), driverMsg);
+            telegramPort.sendMessage(ride.getDriver().getTelegramId(), driverMsg);
             driverNotif.setStatus(NotificationStatus.SENT);
             driverNotif.setSentAt(Instant.now());
         } catch (Exception e) {
