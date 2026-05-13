@@ -22,7 +22,11 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 /**
@@ -147,18 +151,28 @@ public class GroupNotificationService {
                         departureDate,
                         departureTime);
 
-                for (Long followerTelegramId : followerTelegramIds) {
-                    try {
-                        carpoolBot.sendToUser(followerTelegramId, alertMsg, ride.getId(), ride.getDriver().getId());
-                        Thread.sleep(50);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        log.warn("Follower alert interrupted: rideId={}", ride.getId());
-                        break;
-                    } catch (Exception e) {
-                        log.warn("Failed to send favorite alert to telegramId={} rideId={}: {}",
-                                followerTelegramId, ride.getId(), e.getMessage());
+                Semaphore sem = new Semaphore(10);
+                List<CompletableFuture<Void>> futures = new ArrayList<>();
+                try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                    for (Long followerTelegramId : followerTelegramIds) {
+                        futures.add(CompletableFuture.runAsync(() -> {
+                            try {
+                                sem.acquire();
+                                try {
+                                    carpoolBot.sendToUser(followerTelegramId, alertMsg, ride.getId(), ride.getDriver().getId());
+                                } finally {
+                                    sem.release();
+                                }
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                log.warn("Follower alert interrupted: rideId={}", ride.getId());
+                            } catch (Exception e) {
+                                log.warn("Failed to send favorite alert to telegramId={} rideId={}: {}",
+                                        followerTelegramId, ride.getId(), e.getMessage());
+                            }
+                        }, executor));
                     }
+                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
                 }
                 log.info("Favorite alerts sent: rideId={} followers={}",
                         ride.getId(), followerTelegramIds.size());
