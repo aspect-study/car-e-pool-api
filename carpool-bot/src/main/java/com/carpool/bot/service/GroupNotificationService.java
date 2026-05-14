@@ -218,7 +218,6 @@ public class GroupNotificationService {
         try {
             if (ride.getAvailableSeats() == 0) {
                 deleteGroupAnnouncement(ride);
-                log.info("Deleted FULL ride group announcement after booking confirmed: rideId={}", rideId);
                 return;
             }
 
