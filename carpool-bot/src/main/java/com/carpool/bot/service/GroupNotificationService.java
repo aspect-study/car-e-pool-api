@@ -207,6 +207,49 @@ public class GroupNotificationService {
         deleteGroupAnnouncement(event.ride());
     }
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingConfirmed(RideEvents.BookingConfirmedEvent event) {
+        Long rideId = event.booking().getRide().getId();
+        Ride ride = rideRepository.findById(rideId).orElse(null);
+        if (ride == null || ride.getGroupMessageId() == null) return;
+
+        try {
+            if (ride.getAvailableSeats() == 0) {
+                deleteGroupAnnouncement(ride);
+                log.info("Deleted FULL ride group announcement after booking confirmed: rideId={}", rideId);
+                return;
+            }
+
+            try {
+                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+            } catch (Exception e) {
+                log.warn("Could not delete old group post before booking repost: rideId={} error={}",
+                        rideId, e.getMessage());
+            }
+
+            String message = buildRidePostedMessage(ride);
+            Integer messageId = carpoolBot.sendToGroup(message, ride.getId(), ride.getDriver().getId(), resolveTopicId(ride));
+            log.info("Group announcement refreshed after booking confirmed: rideId={}", rideId);
+
+            if (messageId != null) {
+                try {
+                    rideRepository.findById(rideId).ifPresent(r -> {
+                        r.setGroupMessageId(messageId);
+                        rideRepository.save(r);
+                    });
+                } catch (Exception e) {
+                    log.error("Failed to store groupMessageId after booking repost: rideId={} messageId={} error={}",
+                            rideId, messageId, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to refresh group announcement after booking confirmed: rideId={} error={}",
+                    rideId, e.getMessage());
+        }
+    }
+
     private void deleteGroupAnnouncement(Ride ride) {
         Integer messageId = ride.getGroupMessageId();
         if (messageId == null) return;
