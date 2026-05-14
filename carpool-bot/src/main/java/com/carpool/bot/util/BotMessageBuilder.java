@@ -126,7 +126,7 @@ public class BotMessageBuilder {
                 """
                         %s <b>%s → %s</b>
                         🕐 %s
-                        🪑 %s
+                        💺 %s
                         ⛽ ₱%.2f gas share/seat
                         👤 %s%s
                         🕓 Posted %s\

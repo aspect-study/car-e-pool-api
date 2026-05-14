@@ -103,7 +103,7 @@ public class PostRideHelper {
         } else {
             rows.add(List.of(BotMessageBuilder.button("✏️ Write a note", "NOTE_WRITE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(
-                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES", null),
+                    BotMessageBuilder.button("⏭️ Skip",   "SKIP_NOTES", ButtonStyle.PRIMARY.toString()),
                     BotMessageBuilder.button("❌ Cancel", "CANCEL_POST_RIDE",  ButtonStyle.DANGER.toString())
             ));
 

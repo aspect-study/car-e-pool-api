@@ -103,7 +103,7 @@ public class BotFlowHelper {
                     rows.add(List.of(BotMessageBuilder.button(
                             "📢 Re-announce (" + (3 - active.announceCount()) + " left)",
                             "REANNOUNCE_RIDE:" + active.id(),
-                            null)));
+                            ButtonStyle.PRIMARY.toString())));
                 }
                 rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
                 rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));

@@ -605,21 +605,7 @@ public class PostRideHandler {
         try {
             RideResponse original = rideService.getRideById(ctx.entityId());
             LocalDate today = LocalDate.now(ZoneId.of("Asia/Manila"));
-            int windowStart = BotTimePickerUtil.defaultWindowStart(original.direction());
-
-            UserState updated = ctx.state()
-                    .withOriginHubId(original.originHub().id())
-                    .withOriginHubName(original.originHub().name())
-                    .withDestinationHubId(original.destinationHub().id())
-                    .withDestinationHubName(original.destinationHub().name())
-                    .withDirection(original.direction())
-                    .withSeats(original.totalSeats())
-                    .withContribution(original.contributionAmount())
-                    .withNotes(original.notes())
-                    .withSearchDay(today)
-                    .withTimeWindowStart(windowStart)
-                    .withRepostEditMode(true)
-                    .withFlow(BotFlow.IDLE);
+            UserState updated = getUserState(ctx, original, today);
 
             Integer msgId = showRepostEditScreen(ctx.chatId(), updated, ctx.bot());
             stateManager.save(ctx.chatId(), updated.withRepostEditMsgId(msgId));
@@ -629,6 +615,24 @@ public class PostRideHandler {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not load ride details for repost."));
         }
+    }
+
+    private static UserState getUserState(BotContext ctx, RideResponse original, LocalDate today) {
+        int windowStart = BotTimePickerUtil.defaultWindowStart(original.direction());
+
+        return ctx.state()
+                .withOriginHubId(original.originHub().id())
+                .withOriginHubName(original.originHub().name())
+                .withDestinationHubId(original.destinationHub().id())
+                .withDestinationHubName(original.destinationHub().name())
+                .withDirection(original.direction())
+                .withSeats(original.totalSeats())
+                .withContribution(original.contributionAmount())
+                .withNotes(original.notes())
+                .withSearchDay(today)
+                .withTimeWindowStart(windowStart)
+                .withRepostEditMode(true)
+                .withFlow(BotFlow.IDLE);
     }
 
     // ── Repost edit screen ────────────────────────────────────────────────

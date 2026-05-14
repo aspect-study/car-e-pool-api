@@ -357,7 +357,7 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
                     .replyMarkup(BotMessageBuilder.inlineButtons(List.of(
                             List.of(
                                     InlineKeyboardButton.builder()
-                                    .text("🚘#"+rideId +" - Request a Seat")
+                                    .text("🚘#"+rideId +" - Request 💺")
                                             .url("https://t.me/" + botConfig.getBotUsername()
                                                     + "?start=RIDE_" + rideId)
                                             .style(ButtonStyle.SUCCESS.toString())

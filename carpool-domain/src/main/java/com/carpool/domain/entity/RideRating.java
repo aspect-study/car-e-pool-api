@@ -7,15 +7,16 @@ import java.time.LocalDateTime;
 
 /**
  * Represents a rating given by one user to another after a completed ride.
- * One rating per person per ride — enforced at DB and service level.
+ * One rating per (rater, ratee) pair per ride — enforced at DB and service level.
+ * This allows a driver to rate each passenger independently on multi-passenger rides.
  * raterRole distinguishes whether the rater was acting as DRIVER or PASSENGER.
  */
 @Entity
 @Table(
         name = "ride_ratings",
         uniqueConstraints = @UniqueConstraint(
-                name = "uq_rating_ride_rater",
-                columnNames = {"ride_id", "rater_id"}
+                name = "uq_rating_ride_rater_ratee",
+                columnNames = {"ride_id", "rater_id", "ratee_id"}
         )
 )
 @Getter
