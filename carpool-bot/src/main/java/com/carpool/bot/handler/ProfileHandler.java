@@ -59,6 +59,9 @@ public class ProfileHandler {
     private final HubService        hubService;
     private final FavoriteService   favoriteService;
 
+    private static final int               FOLLOWERS_PAGE_SIZE = 8;
+    private static final DateTimeFormatter FOLLOWED_FMT = DateTimeFormatter.ofPattern("MMM d, yyyy");
+
     // ── Profile ───────────────────────────────────────────────────────────
 
     public void handleMyProfile(BotContext ctx) {
@@ -165,10 +168,6 @@ public class ProfileHandler {
     }
 
     // ── Followers ─────────────────────────────────────────────────────────
-
-    private static final int               FOLLOWERS_PAGE_SIZE = 8;
-    private static final DateTimeFormatter FOLLOWED_FMT =
-            DateTimeFormatter.ofPattern("MMM d, yyyy");
 
     public void handleMyFollowers(BotContext ctx) {
         try {
