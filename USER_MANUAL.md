@@ -738,6 +738,8 @@ These happen without any user action:
 |------|--------|
 | Auto-post | When a ride is published (ACTIVE), an announcement is posted to the community group |
 | Topic routing | HOME → WORK rides go to the morning topic; WORK → HOME to the evening topic |
+| Auto-refresh on booking | When a driver accepts a booking, the group post is automatically refreshed to show the updated available seat count |
+| Auto-delete on FULL | When the last seat is filled (ride becomes FULL), the group post is deleted automatically |
 | Re-announce | Replaces the existing group post (old deleted, new posted); maximum 2 re-announces per ride |
 | Auto-delete | Announcement is deleted when ride is DEPARTED, COMPLETED, or CANCELLED |
 | 48-hour safety | Announcements for rides older than 48 hours are NOT deleted (Telegram API limitation) |

@@ -86,6 +86,21 @@ After the notes step, the post-ride flow calls `ProfileHandler.showVehicleSelect
 ### Bot: Repost Edit Screen
 `PostRideHandler.handleRepostRide()` pre-fills origin, destination, direction, seats, contribution, and notes from the original ride into `UserState`, sets `repostEditMode = true`, and shows an inline edit screen via `showRepostEditScreen()`. The driver can tap any field button (📍 Edit Start, 🏁 Edit End, 🪑 Edit Seats, ⛽ Edit Share, 📝 Edit Note) to edit it; each edit returns to the same edit screen. Tapping "✅ Continue" calls `handleRepostProceed()` which shows the calendar picker. After date selection, the flow goes to vehicle selection (`showVehicleSelectStep`), then confirmation — the same path as a new ride.
 
+### Bot: AI Natural Language Ride Posting
+`com.carpool.service.ai.AiService` is a thin Spring AI `ChatClient` wrapper around the local Ollama LLM (model `llama3.1:8b-instruct-q4_K_M`). `parseRideRequest(String userMessage)` sends the message to Ollama with a structured system prompt and maps the JSON response to `ParsedRideRequest` — a record with fields `direction`, `departureTime` (HH:mm), `departureDate` (YYYY-MM-DD or "tomorrow"), `seats`, `contribution`, `originHint`, `destinationHint`, and `notes`. On any failure (model unreachable, null entity, bad JSON) it returns `ParsedRideRequest.empty()` — the bot flow is never hard-dependent on AI availability.
+
+`MessageHandler.isNaturalLanguageRidePost(String text)` triggers the AI path when the message contains a posting-intent keyword (`post`, `ride`, `magpost`) **and** at least one location or time keyword (e.g., `sucat`, `bgc`, `bukas`, `7am`, `home`, `work`). When triggered, `handleNaturalLanguageRidePost()` sends an "⏳ Analyzing your message…" interim reply, calls `aiService.parseRideRequest()`, and either:
+- **Has usable data:** Hydrates `UserState` with all extracted fields, shows a "✨ Got it! Here's what I found:" summary, then calls `routeToNextPostRideStep()` which jumps to whichever step is still missing (direction → departure time → origin → destination → seats → contribution → vehicle select).
+- **No usable data:** Shows a fallback message directing the user to use the normal menu.
+
+Ollama config lives in `application-local.properties` and `application-prod.properties`:
+```
+spring.ai.ollama.base-url=http://ollama:8082      # internal Docker network in prod
+spring.ai.ollama.chat.options.model=llama3.1:8b-instruct-q4_K_M
+spring.ai.ollama.client.read-timeout=60s
+```
+The `carpool-bot` module depends on `carpool-service` which holds `AiService`; `carpool-web` adds `spring-ai-starter-model-ollama`.
+
 ### Bot: Group Announcement Lifecycle
 `GroupNotificationService.onRidePosted()` posts a ride announcement to the configured Telegram group topic and stores the returned Telegram message ID in `Ride.groupMessageId` (added by V37 migration, column `group_message_id`). The DB save for the message ID is isolated in a separate try/catch so a failure there never masks a successful group post or corrupts the ride transaction.
 
@@ -98,6 +113,8 @@ When a ride is departed, completed, or cancelled, `GroupNotificationService` lis
 **Follower DM dispatch:** The follower alert loop in `onRidePosted()` uses parallel virtual thread dispatch — each follower DM runs in its own virtual thread via `Executors.newVirtualThreadPerTaskExecutor()` (try-with-resources). A `Semaphore(10)` caps concurrent Telegram API calls to respect rate limits. `CompletableFuture.allOf(...).join()` waits for all sends before the method returns. 100 followers completes in ~4s instead of ~35s. The sequential `Thread.sleep(50)` loop was removed.
 
 **Group announcement buttons:** `CarpoolBot.sendToGroup(text, rideId, driverId, topicId)` attaches two URL button rows to every group post: `🚘#N ❯❯❯❯ | View | Request a Seat` deep-links to `?start=RIDE_{rideId}`; `⭐ Follow Driver | View Ride` deep-links to `?start=FOLLOW_RIDE_{driverId}_{rideId}`. The `FOLLOW_RIDE_` parameter is handled in `MessageHandler.handleStart()` by the private `handleFollowAndViewRide()` method. It fetches the ride from DB using only `rideId` (the `driverId` in the URL is not trusted for any operation — `ride.driver().id()` is used throughout). It calls `favoriteService.isFavorite()` before `saveFavorite()` so existing followers do not see a false "now following" confirmation. New followers see "⭐ You're now following [driver]!" + ride card + Unfollow button. Existing followers see the ride card normally. The driver tapping their own link sees the driver ride card (View Bookings). Malformed deep links throw `NumberFormatException` caught at WARN level, and the user is sent to the main menu.
+
+**Booking-acceptance auto-refresh:** `GroupNotificationService.onBookingConfirmed(BookingConfirmedEvent)` listens `@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)`. When a driver accepts a booking it deletes the old group post and reposts a fresh announcement reflecting the updated available seat count. If `ride.getAvailableSeats() == 0` (ride is now FULL) the old post is simply deleted instead — consistent with departed/completed/cancelled behaviour. This listener does **not** increment `announceCount` (the driver's manual re-announce quota is unaffected) and does **not** trigger follower DMs.
 
 **Post-completion prompt:** `DriverHandler.handleCompleteRide()` resets state then shows "Would you like to post another ride?" with two buttons: `🚗 Yes, Post New Ride` → `POST_RIDE` (starts the normal post-ride direction-select flow with a clean state) and `❌ No, Thanks` → `MAIN_MENU`.
 
@@ -139,6 +156,8 @@ Ratings are **per-ride**, not per user-pair. The same driver and passenger can r
 **Duplicate check scope:**
 - Passenger rater: `existsByRideIdAndRaterId` — one rating per ride total (one driver per ride).
 - Driver rater: `existsByRideIdAndRaterIdAndRateeId` — one rating per passenger per ride. A driver with 3 passengers submits 3 independent ratings and is only blocked per-ratee, not per-ride.
+
+V43 Flyway migration widens the DB unique constraint on `ride_ratings` from `(ride_id, rater_id)` to `(ride_id, rater_id, ratee_id)`, matching the repository query above. The JPA `@Table(uniqueConstraints = …)` annotation was updated in step.
 
 **Role stored on save:** `raterRole` is `"DRIVER"` or `"PASSENGER"` (set from `ride.driver.id.equals(raterId)`). The repository queries `raterRole` to separate driver-received ratings from passenger-received ratings — `findAverageDriverRatingByRateeId` filters `raterRole = 'PASSENGER'` (passenger rated the driver), `findAveragePassengerRatingByRateeId` filters `raterRole = 'DRIVER'`.
 
