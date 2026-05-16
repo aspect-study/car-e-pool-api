@@ -322,7 +322,7 @@ public class GroupNotificationService {
                         📍 Route: <b>%s → %s</b>
                         %s
                         
-                        Tap <b>Request a Seat</b> to see details and book your seat. 👇""",
+                        Tap <b>Request 💺</b> to see details and book your seat. 👇""",
                 dirLabel,
                 departureDate,
                 ride.getId(),
