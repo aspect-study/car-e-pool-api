@@ -6,6 +6,7 @@ import com.carpool.bot.handler.helper.BotFlowHelper;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.ButtonStyle;
+import com.carpool.common.exception.InvalidRideStateException;
 import com.carpool.common.exception.NotRideOwnerException;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.BookingStatus;
@@ -256,16 +257,26 @@ public class DriverHandler {
     // ── Accept / Decline ──────────────────────────────────────────────────
 
     public void handleAcceptBooking(BotContext ctx) {
+        Long bookingId = ctx.entityId();
+        Long driverId  = ctx.carpoolUserId();
         try {
-            bookingService.acceptBooking(ctx.entityId(), ctx.carpoolUserId());
+            var result = bookingService.acceptBooking(bookingId, driverId);
+            log.info("Booking accepted: bookingId={} driverId={} passengerId={}",
+                    bookingId, driverId, result.passenger().id());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     """
                             ✅ <b>Booking Accepted!</b>
-                            
+
                             The passenger has been notified and their seat is confirmed."""));
+        } catch (InvalidRideStateException e) {
+            // Driver tapped Accept twice — booking is already confirmed, not an error
+            log.warn("Duplicate accept attempt ignored: bookingId={} driverId={}",
+                    bookingId, driverId);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "✅ This booking has already been accepted."));
         } catch (Exception e) {
-            log.error("Accept booking failed: bookingId={} userId={} error={}",
-                    ctx.entityId(), ctx.carpoolUserId(), e.getMessage());
+            log.error("Accept booking failed: bookingId={} driverId={} error={}",
+                    bookingId, driverId, e.getMessage());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not accept booking. Please try again."));
         }
