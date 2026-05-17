@@ -81,16 +81,19 @@ Send via `TelegramNotificationPort` (once the TelegramPort refactor ships).
 
 ## P3 — Lower priority
 
-### Web admin dashboard
-**What:** A simple read-only + moderation web UI at `/admin` —
-hub approvals with context, ride volume by corridor, top drivers, flagged users.
+### Web admin dashboard — complete carpool-admin module
+**What:** A web UI at port 8082 — hub approvals with context, ride volume by corridor, top drivers, flagged users.
 **Why:** Bot-only admin is a ceiling. At ~500+ active users, admin work needs
 bulk operations, audit logs, and multi-person access.
-**Context:** REST controllers already exist in `carpool-web`. The admin UI
-consumes existing endpoints. Spring MVC with Thymeleaf templates is the path
-of least resistance (no separate frontend build). Add `ADMIN` role gate on all
-`/admin/**` paths in `SecurityConfig`.
-**Effort:** Human ~3-4 days / CC ~1 hour.
+**Status (2026-05-17):** `carpool-admin` webforJ module scaffolded on branch `development-webforj-frontend`.
+Login, Dashboard, and Hub Approval views are built and the app starts cleanly.
+**Remaining deployment wiring (branch: `development-webforj-frontend`):**
+1. Create `Dockerfile.admin` — mirrors main `Dockerfile` but builds `-pl carpool-admin -am`, copies `carpool-admin/target/carpool-admin-*.jar`, `EXPOSE 8082`.
+2. Patch main `Dockerfile` — add `COPY carpool-admin/pom.xml carpool-admin/` so `dependency:go-offline` resolves the admin module's pom.
+3. Add `carpool-admin` service to `docker-compose.yml` — `dockerfile: Dockerfile.admin`, `ports: 127.0.0.1:8082:8082`, `depends_on: mysql_db`, env vars: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
+**Known gaps:** CSRF is disabled in `AdminSecurityConfig` (logout CSRF attack possible — fix before exposing to internet).
+**Context:** `carpool-admin` depends on `carpool-service` only. `AdminBeanConfig` stubs out `TelegramNotificationPort`. Security uses `WebforjSecurityConfigurer` — do not add manual `authorizeHttpRequests()` blocks.
+**Effort remaining:** Human ~30 min / CC ~5 min.
 **Trigger:** Build when bot admin panel becomes a bottleneck (~500 active users).
 **Priority:** P3.
 

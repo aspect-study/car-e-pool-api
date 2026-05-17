@@ -38,13 +38,15 @@ carpool-domain   — JPA entities, enums (no Spring, no repositories)
 carpool-repository — Spring Data JPA repositories
        ↓
 carpool-service  — business logic, DTOs, MapStruct mapper, schedulers, event system
-       ↓
-carpool-bot      — Telegram bot (LongPolling, handlers, state machine)
+       ↓                              ↓
+carpool-bot                      carpool-admin — webforJ admin panel (port 8082)
        ↓
 carpool-web      — Spring Boot entry point, REST controllers, security, Flyway migrations
 ```
 
-Only `carpool-web` produces an executable JAR. All application config lives in `carpool-web/src/main/resources/`. Schema migrations are in `carpool-web/src/main/resources/db/migration/` (Flyway `V#__description.sql`).
+Only `carpool-web` and `carpool-admin` produce executable JARs. All application config for the main app lives in `carpool-web/src/main/resources/`. Schema migrations are in `carpool-web/src/main/resources/db/migration/` (Flyway `V#__description.sql`).
+
+`carpool-admin` is a second Spring Boot module (port 8082) built with the **webforJ** UI framework. It depends on `carpool-service` only — it does not pull in `carpool-bot` or `carpool-web`. `AdminBeanConfig` provides a no-op `TelegramNotificationPort` bean to satisfy the interface without the Telegram adapter. Security is delegated entirely to `WebforjSecurityConfigurer.webforj().loginPage("/login", "/login").logout("/logout", "/login")` — do not add manual `.authorizeHttpRequests()` blocks after it (the configurer internally adds `anyRequest()`, causing a startup conflict). CSRF is currently disabled (`csrf.disable()`) — a known gap.
 
 ## Key Architectural Patterns
 
@@ -82,6 +84,23 @@ After the notes step, the post-ride flow calls `ProfileHandler.showVehicleSelect
 `handleAddVehicle(ctx)` starts the `SET_VEHICLE_COLOR → SET_VEHICLE_MODEL → SET_VEHICLE_PLATE → SET_VEHICLE_CAPACITY → VEHICLE_CONFIRM_SAVE` input flow. It checks `ctx.state().getDepartureTime() != null` to choose the cancel button: `CANCEL_POST_RIDE` (post-ride context) or `VEHICLE_CHANGE` (standalone vehicle management). The same context check applies in `showVehicleConfirmation()` for its Cancel button.
 
 `VEHICLE_SELECT` is listed in `SessionRecoveryHandler.POST_RIDE_ACTIONS` so stale buttons after a bot restart show a context-aware "session expired" message. `ADD_VEHICLE` is intentionally excluded — `handleAddVehicle` handles both post-ride and standalone contexts via the `departureTime` null check, so it works safely with a fresh `UserState`.
+
+### Bot: Time Picker (BotTimePickerUtil)
+`BotTimePickerUtil` renders an inline keyboard time picker for departure time selection. Key design rules:
+
+- **Fixed non-overlapping pages:** each page covers exactly 300 minutes (5 hours). `PAGE_SIZE_MIN = 300`. Page starts are multiples of 300: 0, 300, 600, 900, 1200.
+- **20 slots × 15-minute increments per page.** `SLOTS_PER_PAGE = 20`, `SLOT_INCREMENT_MIN = 15`.
+- **Today filtering:** past slots are omitted when `selectedDate == today` (Asia/Manila). `buildTimePicker` auto-advances to the first page with available slots via `adjustWindowForToday`.
+- **Direction defaults:** `defaultWindowStart(direction)` returns 300 (HOME_TO_WORK) or 900 (WORK_TO_HOME). `defaultWindowStart(direction, selectedDate)` returns the page containing the next 15-min slot for today.
+- **`adjustWindowForToday(windowStart, selectedDate)`** advances `windowStart` forward until the page has at least one available slot. No-op for future dates.
+- **`buildTimePicker(int windowStart, LocalDate selectedDate)`** — direction parameter was removed; it was never read inside the method. Callers use `defaultWindowStart(direction)` separately.
+
+**Critical invariant:** `UserState.timeWindowStart` must always be set to `adjustWindowForToday(defaultWindowStart(direction), selectedDate)` — never the raw `defaultWindowStart` — so the stored value always matches the page `buildTimePicker` displays. Divergence causes the first Later/Earlier tap to re-render the same page (Telegram rejects the edit with "message not modified").
+
+This invariant is enforced in:
+- `RideSearchHandler.handleDateSelected` — initial page on date selection
+- `PostRideHandler.getUserState` — initial page for repost flow
+- `PostRideHandler.handleTimeNavigation` — null-fallback case when `getTimeWindowStart() == null`
 
 ### Bot: Repost Edit Screen
 `PostRideHandler.handleRepostRide()` pre-fills origin, destination, direction, seats, contribution, and notes from the original ride into `UserState`, sets `repostEditMode = true`, and shows an inline edit screen via `showRepostEditScreen()`. The driver can tap any field button (📍 Edit Start, 🏁 Edit End, 🪑 Edit Seats, ⛽ Edit Share, 📝 Edit Note) to edit it; each edit returns to the same edit screen. Tapping "✅ Continue" calls `handleRepostProceed()` which shows the calendar picker. After date selection, the flow goes to vehicle selection (`showVehicleSelectStep`), then confirmation — the same path as a new ride.

@@ -1,5 +1,5 @@
 # Car-E-Pool — User Manual
-**Version 1.0 | May 2026**
+**Version 1.1 | May 2026**
 
 ---
 
@@ -163,10 +163,11 @@ The bot asks: *"Which direction is this ride?"*
 #### Step 2 — Select Departure Date & Time
 A **calendar picker** appears. Tap the day you are departing.
 
-After picking a date, an **inline time picker** appears with 10 time slots in 30-minute increments. Tap your departure time. Use **◀️ Earlier** or **Later ▶️** to shift the visible window by 2 hours.
+After picking a date, an **inline time picker** appears with up to 20 time slots in 15-minute increments. Tap your departure time. Use **◀️ Earlier** or **Later ▶️** to shift the visible window by 5 hours.
 
 - HOME → WORK direction defaults to a 5:00 AM starting window
-- WORK → HOME direction defaults to a 4:00 PM starting window
+- WORK → HOME direction defaults to a 3:00 PM starting window
+- If **today** is selected, the picker automatically opens on the page containing the next available time slot — past times are hidden and you will never land on an empty page
 - To pick a time not shown in the picker, type it in the format `MM/DD HH:MM` (e.g., `05/15 07:30`)
 - **Rule:** Departure time must be in the future. Past times are rejected.
 
