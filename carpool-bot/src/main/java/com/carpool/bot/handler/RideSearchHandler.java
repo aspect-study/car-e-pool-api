@@ -401,14 +401,14 @@ public class RideSearchHandler {
 
             // Post ride flow — show time picker
             if (ctx.state().getFlow() == BotFlow.POST_RIDE_SELECT_DATE) {
-                int windowStart = BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection());
+                int windowStart = BotTimePickerUtil.adjustWindowForToday(
+                        BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection()), selected);
                 UserState updated = ctx.state()
                         .withSearchDay(selected)
                         .withTimeWindowStart(windowStart)
                         .withFlow(BotFlow.POST_RIDE_TIME_PICK);
                 stateManager.save(ctx.chatId(), updated);
-                flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(),
-                        ctx.state().getDirection(), windowStart, selected, ctx.bot());
+                flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(), windowStart, selected, ctx.bot());
                 return;
             }
 

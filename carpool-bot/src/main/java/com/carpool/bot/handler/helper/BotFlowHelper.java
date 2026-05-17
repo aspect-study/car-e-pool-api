@@ -220,7 +220,7 @@ public class BotFlowHelper {
      * Used in both Post Ride and Repost Ride flows.
      * Edits the existing message if messageId is provided, otherwise sends a new one.
      */
-    public void showTimePicker(Long chatId, Integer messageId, RideDirection direction,
+    public void showTimePicker(Long chatId, Integer messageId,
                                int windowStart, LocalDate selectedDate, CarpoolBot bot) {
         LocalDate today = LocalDate.now(MANILA);
         String dateLabel = selectedDate.equals(today)
@@ -230,8 +230,7 @@ public class BotFlowHelper {
         String text = "🕐 <b>What time are you leaving?</b>\n📅 " + dateLabel +
                 "\n\nSelect your departure time:";
 
-        InlineKeyboardMarkup markup = BotTimePickerUtil.buildTimePicker(
-                direction, windowStart, selectedDate);
+        InlineKeyboardMarkup markup = BotTimePickerUtil.buildTimePicker(windowStart, selectedDate);
 
         if (messageId != null) {
             bot.edit(EditMessageText.builder()

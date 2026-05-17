@@ -618,7 +618,8 @@ public class PostRideHandler {
     }
 
     private static UserState getUserState(BotContext ctx, RideResponse original, LocalDate today) {
-        int windowStart = BotTimePickerUtil.defaultWindowStart(original.direction());
+        int windowStart = BotTimePickerUtil.adjustWindowForToday(
+                BotTimePickerUtil.defaultWindowStart(original.direction()), today);
 
         return ctx.state()
                 .withOriginHubId(original.originHub().id())
@@ -925,23 +926,28 @@ public class PostRideHandler {
     }
 
     public void handleTimeNavigation(BotContext ctx) {
-        int current = ctx.state().getTimeWindowStart() != null
-                ? ctx.state().getTimeWindowStart()
-                : BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection());
-
-        int updated = "EARLIER".equals(ctx.payload())
-                ? Math.max(0, current - 2)
-                : Math.min(22, current + 2);
-
-        UserState newState = ctx.state().withTimeWindowStart(updated);
-        stateManager.save(ctx.chatId(), newState);
-
         LocalDate selectedDate = ctx.state().getSearchDay() != null
                 ? ctx.state().getSearchDay()
                 : LocalDate.now(ZoneId.of("Asia/Manila"));
 
-        flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(),
-                ctx.state().getDirection(), updated, selectedDate, ctx.bot());
+        int current = ctx.state().getTimeWindowStart() != null
+                ? ctx.state().getTimeWindowStart()
+                : BotTimePickerUtil.adjustWindowForToday(
+                      BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection()),
+                      selectedDate);
+
+        int updated = "EARLIER".equals(ctx.payload())
+                ? Math.max(0, current - BotTimePickerUtil.PAGE_SIZE_MIN)
+                : Math.min(1200, current + BotTimePickerUtil.PAGE_SIZE_MIN);
+
+        // For today: advance to the first page that actually has slots so the
+        // stored value always matches what buildTimePicker displays
+        int adjusted = BotTimePickerUtil.adjustWindowForToday(updated, selectedDate);
+
+        UserState newState = ctx.state().withTimeWindowStart(adjusted);
+        stateManager.save(ctx.chatId(), newState);
+
+        flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(), adjusted, selectedDate, ctx.bot());
     }
 
     public void handleRideTimeSelected(BotContext ctx) {
@@ -964,8 +970,7 @@ public class PostRideHandler {
                 LocalDate selectedSearchDate = ctx.state().getSearchDay() != null
                         ? ctx.state().getSearchDay()
                         : LocalDate.now(ZoneId.of("Asia/Manila"));
-                flowHelper.showTimePicker(ctx.chatId(), null,
-                        ctx.state().getDirection(), windowStart, selectedSearchDate, ctx.bot());
+                flowHelper.showTimePicker(ctx.chatId(), null, windowStart, selectedSearchDate, ctx.bot());
                 return;
             }
 
