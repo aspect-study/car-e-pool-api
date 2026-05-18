@@ -79,7 +79,7 @@ public class BotFlowHelper {
                     "\n\nWhat would you like to do?";
 
             long pendingCount = bookingService.countPendingRequestsForDriver(carpoolUserId);
-            boolean canReannounce = active.announceCount() != null && active.announceCount() < 3;
+            boolean canReannounce = active.announceCount() != null && active.announceCount() < 10;
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
@@ -101,7 +101,7 @@ public class BotFlowHelper {
                 ));
                 if (canReannounce) {
                     rows.add(List.of(BotMessageBuilder.button(
-                            "📢 Re-announce (" + (3 - active.announceCount()) + " left)",
+                            "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
                             "REANNOUNCE_RIDE:" + active.id(),
                             ButtonStyle.PRIMARY.toString())));
                 }
@@ -116,7 +116,7 @@ public class BotFlowHelper {
                 rows.add(List.of(BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(),  ButtonStyle.DANGER.toString())));
                 if (canReannounce) {
                     rows.add(List.of(BotMessageBuilder.button(
-                            "📢 Re-announce (" + (3 - active.announceCount()) + " left)",
+                            "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
                             "REANNOUNCE_RIDE:" + active.id(),
                             null)));
                 }

@@ -504,9 +504,9 @@ public class RideService {
                     "Only ACTIVE or FULL rides can be re-announced.");
         }
 
-        if (ride.getAnnounceCount() == null || ride.getAnnounceCount() >= 3) {
+        if (ride.getAnnounceCount() == null || ride.getAnnounceCount() >= 10) {
             throw new InvalidRideStateException(
-                    "This ride has already been announced 3 times. Maximum reached.");
+                    "This ride has already been announced 10 times. Maximum reached.");
         }
 
         ride.setAnnounceCount(ride.getAnnounceCount() + 1);

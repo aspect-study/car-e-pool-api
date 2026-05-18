@@ -749,7 +749,7 @@ public class ProfileHandler {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
                 return;
             }
-            int remaining = Math.max(0, 3 - ride.announceCount());
+            int remaining = Math.max(0, 10 - ride.announceCount());
             String prompt = String.format(
                     """
                             📢 <b>Re-announce Ride</b>
@@ -779,7 +779,7 @@ public class ProfileHandler {
     public void handleConfirmReannounce(BotContext ctx) {
         try {
             RideResponse ride = rideService.reannounceRide(ctx.entityId(), ctx.carpoolUserId());
-            int remaining = Math.max(0, 3 - ride.announceCount());
+            int remaining = Math.max(0, 10 - ride.announceCount());
             String remainingText = remaining == 0
                     ? "No more re-announcements available."
                     : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
@@ -832,7 +832,7 @@ public class ProfileHandler {
             rideService.updateAvailableSeats(rideId, newSeats, carpoolUserId);
             RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
             stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
-            int remaining = Math.max(0, 3 - ride.announceCount());
+            int remaining = Math.max(0, 10 - ride.announceCount());
             String remainingText = remaining == 0
                     ? "No more re-announcements available."
                     : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
