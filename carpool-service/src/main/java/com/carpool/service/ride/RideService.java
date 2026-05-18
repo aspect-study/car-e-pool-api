@@ -170,14 +170,20 @@ public class RideService {
 
         // Publish events for state transitions that affect passengers
         if (request.status() == RideStatus.CANCELLED) {
-            // Cancel all active bookings on this ride
+            // Capture IDs before status change — only these passengers should be notified.
+            // Previously-removed passengers already have CANCELLED_BY_DRIVER status and
+            // must not receive a second "ride cancelled" notification.
             List<Booking> activeBookings = bookingRepository.findActiveBookingsForRide(rideId);
+            List<Long> affectedBookingIds = activeBookings.stream()
+                    .map(Booking::getId)
+                    .toList();
             activeBookings.forEach(b -> {
                 b.setStatus(BookingStatus.CANCELLED_BY_DRIVER);
                 bookingRepository.save(b);
             });
             log.info("Cancelled {} bookings for rideId={}", activeBookings.size(), rideId);
-            eventPublisher.publishEvent(new RideEvents.RideCancelledEvent(saved, cancellationReason));
+            eventPublisher.publishEvent(
+                    new RideEvents.RideCancelledEvent(saved, cancellationReason, affectedBookingIds));
         } else if (request.status() == RideStatus.COMPLETED) {
             log.info("Ride completed: id={} by driverId={}", rideId, requestingUserId);
 

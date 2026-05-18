@@ -3,6 +3,8 @@ package com.carpool.service.event;
 import com.carpool.domain.entity.Booking;
 import com.carpool.domain.entity.Ride;
 
+import java.util.List;
+
 /**
  * Spring ApplicationEvents published by service layer.
  * NotificationEventListener handles these asynchronously — decoupling
@@ -28,9 +30,11 @@ public final class RideEvents {
 
     /**
      * Published when a driver cancels an entire ride.
-     * Triggers: notify ALL confirmed passengers (ride cancelled).
+     * affectedBookingIds contains only the bookings that were ACTIVE (CONFIRMED/PENDING)
+     * at the moment of cancellation — previously-removed passengers are excluded.
+     * Triggers: notify those specific passengers (ride cancelled).
      */
-    public record RideCancelledEvent(Ride ride, String reason) {}
+    public record RideCancelledEvent(Ride ride, String reason, List<Long> affectedBookingIds) {}
 
     /**
      * Published when a driver marks a ride as completed.

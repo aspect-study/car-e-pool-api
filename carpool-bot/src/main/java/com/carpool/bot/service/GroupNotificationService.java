@@ -106,10 +106,8 @@ public class GroupNotificationService {
             // Ride is FULL — old post already removed above; skip posting a new one
             if (ride.getAvailableSeats() == 0) {
                 try {
-                    rideRepository.findById(ride.getId()).ifPresent(r -> {
-                        r.setGroupMessageId(null);
-                        rideRepository.save(r);
-                    });
+                    ride.setGroupMessageId(null);
+                    rideRepository.save(ride);
                 } catch (Exception e) {
                     log.error("Failed to clear groupMessageId for FULL ride: rideId={} error={}", ride.getId(), e.getMessage());
                 }

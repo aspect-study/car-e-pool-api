@@ -830,17 +830,18 @@ public class ProfileHandler {
         try {
             int newSeats = Integer.parseInt(text.trim());
             rideService.updateAvailableSeats(rideId, newSeats, carpoolUserId);
-            stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
 
             if (newSeats == 0) {
                 // Ride is now FULL — reannounce fires RidePostedEvent which removes the group post
                 rideService.reannounceRide(rideId, carpoolUserId);
+                stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
                 bot.send(BotMessageBuilder.text(chatId,
                         "🚫 <b>Ride Marked as Full</b>\n\n" +
                                 "Your ride now shows <b>0 available seats</b>.\n" +
                                 "The group announcement has been removed."));
             } else {
                 RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
+                stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
                 int remaining = Math.max(0, 10 - ride.announceCount());
                 String remainingText = remaining == 0
                         ? "No more re-announcements available."

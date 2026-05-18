@@ -28,8 +28,10 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Listens to domain events and dispatches Telegram notifications.
@@ -144,9 +146,18 @@ public class NotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRideCancelled(RideEvents.RideCancelledEvent event) {
-        // Fetch CANCELLED_BY_DRIVER bookings — just cancelled by driver
-        List<Booking> cancelledBookings = bookingRepository
-                .findCancelledByDriverBookingsForRide(event.ride().getId());
+        // Use only the booking IDs that were active at the moment of cancellation.
+        // Re-querying by CANCELLED_BY_DRIVER status would also include passengers
+        // previously removed by the driver, who must not receive this notification.
+        // findCancelledByDriverBookingsForRide uses JOIN FETCH (no N+1); filter by
+        // the captured IDs to exclude passengers removed before this cancellation.
+        Set<Long> affectedIds = new HashSet<>(event.affectedBookingIds());
+        List<Booking> cancelledBookings = affectedIds.isEmpty()
+                ? List.of()
+                : bookingRepository.findCancelledByDriverBookingsForRide(event.ride().getId())
+                        .stream()
+                        .filter(b -> affectedIds.contains(b.getId()))
+                        .toList();
 
         if (cancelledBookings.isEmpty()) {
             log.info("Ride {} cancelled with no affected passengers", event.ride().getId());

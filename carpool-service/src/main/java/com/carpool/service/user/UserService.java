@@ -90,9 +90,16 @@ public class UserService {
 
         // Cancel active ride if exists
         rideRepository.findActiveRideByDriverId(userId).ifPresent(ride -> {
+            List<Booking> rideBookings = bookingRepository.findActiveBookingsForRide(ride.getId());
+            List<Long> affectedBookingIds = rideBookings.stream().map(Booking::getId).toList();
+            rideBookings.forEach(b -> {
+                b.setStatus(BookingStatus.CANCELLED_BY_DRIVER);
+                bookingRepository.save(b);
+            });
             ride.setStatus(RideStatus.CANCELLED);
             rideRepository.save(ride);
-            eventPublisher.publishEvent(new RideEvents.RideCancelledEvent(ride, "Account deleted"));
+            eventPublisher.publishEvent(
+                    new RideEvents.RideCancelledEvent(ride, "Account deleted", affectedBookingIds));
             log.info("Cancelled active ride rideId={} due to account deletion", ride.getId());
         });
 
