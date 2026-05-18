@@ -18,8 +18,11 @@ import com.carpool.service.event.RideEvents;
 import com.carpool.service.mapper.EntityMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
@@ -41,6 +44,9 @@ public class BookingService {
     private final UserRepository       userRepository;
     private final EntityMapper         mapper;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired @Lazy
+    private BookingService self; // for REQUIRES_NEW self-calls — avoids direct self-invocation
 
     /**
      * ══════════════════════════════════════════════════════════════════════
@@ -275,6 +281,22 @@ public class BookingService {
 
         eventPublisher.publishEvent(new RideEvents.BookingConfirmedEvent(saved));
 
+        // Feature 5: auto-cancel other pending bookings by this passenger on other rides.
+        // Each cancel runs in its own REQUIRES_NEW transaction via self-proxy so that
+        // a failure in one cancel is fully isolated — no dirty entities bleed into this session.
+        Long passengerId     = booking.getPassenger().getId();
+        Long confirmedRideId = booking.getRide().getId();
+        List<Booking> otherPending =
+                bookingRepository.findOtherActivePendingByPassenger(passengerId, confirmedRideId);
+        for (Booking other : otherPending) {
+            try {
+                self.autoCancelOtherPending(other.getId());
+            } catch (Exception e) {
+                log.error("Failed to auto-cancel bookingId={} for passengerId={}: {}",
+                        other.getId(), passengerId, e.getMessage());
+            }
+        }
+
         return mapper.toBookingResponse(saved);
     }
 
@@ -465,6 +487,30 @@ public class BookingService {
     }
 
     /**
+     * Cancels a single other-pending booking in its own transaction.
+     * Called via self-proxy from acceptBooking so any JPA failure is fully
+     * isolated — if this rolls back, the outer accept transaction is unaffected.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void autoCancelOtherPending(Long bookingId) {
+        Booking other = bookingRepository.findByIdWithDetails(bookingId).orElse(null);
+        if (other == null || other.getStatus() != BookingStatus.PENDING) return;
+
+        Ride otherRide = rideRepository.findByIdWithLock(other.getRide().getId()).orElse(null);
+        if (otherRide == null) return;
+
+        other.setStatus(BookingStatus.CANCELLED_BY_PASSENGER);
+        int restored = otherRide.getAvailableSeats() + other.getSeatsReserved();
+        otherRide.setAvailableSeats(restored);
+        if (otherRide.getStatus() == RideStatus.FULL) otherRide.setStatus(RideStatus.ACTIVE);
+        rideRepository.save(otherRide);
+        bookingRepository.save(other);
+        eventPublisher.publishEvent(new RideEvents.BookingAutoSyncedEvent(other));
+        log.info("Auto-synced: cancelled pending bookingId={} passengerId={}",
+                bookingId, other.getPassenger().getId());
+    }
+
+    /**
      * Returns all CONFIRMED and PENDING bookings for a ride — unpaged.
      * Used internally for cancel notification summary.
      */
@@ -475,5 +521,52 @@ public class BookingService {
                 .stream()
                 .map(mapper::toBookingResponse)
                 .toList();
+    }
+
+    /**
+     * Driver removes an individual confirmed passenger.
+     * Restores their seats to the ride — transitions FULL → ACTIVE if seats freed.
+     */
+    @Transactional
+    public BookingResponse cancelBookingByDriver(Long bookingId, Long driverUserId) {
+        Booking booking = bookingRepository.findByIdWithDetails(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+        if (!booking.getRide().getDriver().getId().equals(driverUserId)) {
+            throw new NotBookingOwnerException();
+        }
+
+        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new InvalidRideStateException(
+                    "Only confirmed bookings can be removed.");
+        }
+
+        Ride ride = rideRepository.findByIdWithLock(booking.getRide().getId())
+                .orElseThrow(() -> new RideNotFoundException(booking.getRide().getId()));
+
+        if (ride.getStatus() == RideStatus.DEPARTED || ride.getStatus() == RideStatus.COMPLETED) {
+            throw new InvalidRideStateException(
+                    "Cannot remove passengers once the ride has started.");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED_BY_DRIVER);
+
+        int restoredSeats = ride.getAvailableSeats() + booking.getSeatsReserved();
+        ride.setAvailableSeats(restoredSeats);
+
+        if (ride.getStatus() == RideStatus.FULL) {
+            ride.setStatus(RideStatus.ACTIVE);
+            log.info("Ride {} re-opened to ACTIVE after driver removed passenger", ride.getId());
+        }
+
+        rideRepository.save(ride);
+        Booking saved = bookingRepository.save(booking);
+
+        log.info("Booking cancelled by driver: bookingId={} rideId={} passengerId={}",
+                bookingId, ride.getId(), booking.getPassenger().getId());
+
+        eventPublisher.publishEvent(new RideEvents.BookingCancelledByDriverEvent(saved));
+
+        return mapper.toBookingResponse(saved);
     }
 }

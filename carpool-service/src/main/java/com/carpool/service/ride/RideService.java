@@ -451,6 +451,45 @@ public class RideService {
                 .toList();
     }
 
+    /**
+     * Updates the available seat count on an active ride.
+     * Used by re-announce flow to let the driver adjust seat count before bumping the post.
+     */
+    @Transactional
+    public RideResponse updateAvailableSeats(Long rideId, int newSeats, Long driverUserId) {
+        Ride ride = rideRepository.findByIdWithLock(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(driverUserId)) {
+            throw new NotRideOwnerException();
+        }
+
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
+            throw new InvalidRideStateException("Only ACTIVE or FULL rides can be updated.");
+        }
+
+        int reservedSeats = bookingRepository.sumReservedSeats(rideId);
+        int maxAllowed    = ride.getTotalSeats() - reservedSeats;
+        if (newSeats < 0 || newSeats > maxAllowed) {
+            throw new InvalidRideStateException(
+                    "Seat count must be between 0 and " + maxAllowed +
+                    " (" + reservedSeats + " seat(s) already reserved).");
+        }
+
+        ride.setAvailableSeats(newSeats);
+
+        if (newSeats == 0) {
+            ride.setStatus(RideStatus.FULL);
+        } else if (ride.getStatus() == RideStatus.FULL) {
+            ride.setStatus(RideStatus.ACTIVE);
+        }
+
+        log.info("Available seats updated: rideId={} newSeats={} driverId={}",
+                rideId, newSeats, driverUserId);
+
+        return mapper.toRideResponse(rideRepository.save(ride));
+    }
+
     @Transactional
     public RideResponse reannounceRide(Long rideId, Long requestingUserId) {
         Ride ride = rideRepository.findByIdWithLock(rideId)

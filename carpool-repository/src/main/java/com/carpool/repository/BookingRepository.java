@@ -127,7 +127,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     /**
      * Find PENDING bookings that need a reminder — reminder_count < 3
      * and the next reminder interval has passed.
-     * Reminder schedule: 5 min, 10 min, 15 min after creation.
+     * Reminder schedule: 15 min, 30 min, 45 min after creation.
      */
     @Query("""
     SELECT b FROM Booking b
@@ -136,9 +136,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     JOIN FETCH b.passenger
     WHERE b.status = 'PENDING'
       AND b.reminderCount < 3
-      AND b.expiresAt > :now
     """)
-    List<Booking> findPendingNeedingReminder(@Param("now") Instant now);
+    List<Booking> findPendingNeedingReminder();
 
     /**
      * Find PENDING bookings that have exceeded their expiry time
@@ -272,6 +271,26 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("driverId") Long driverId,
             @Param("bookingStatuses") List<BookingStatus> bookingStatuses,
             @Param("rideStatuses") List<RideStatus> rideStatuses);
+
+    /**
+     * Find all PENDING bookings by a passenger on rides other than the given ride.
+     * Used to auto-cancel a passenger's other pending requests when one is confirmed.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.ride r
+    JOIN FETCH r.driver
+    JOIN FETCH r.originHub
+    JOIN FETCH r.destinationHub
+    JOIN FETCH b.passenger
+    WHERE b.passenger.id = :passengerId
+      AND b.status = 'PENDING'
+      AND r.id <> :excludeRideId
+      AND r.status IN ('ACTIVE', 'FULL')
+    """)
+    List<Booking> findOtherActivePendingByPassenger(
+            @Param("passengerId")   Long passengerId,
+            @Param("excludeRideId") Long excludeRideId);
 
     /**
      * Count active bookings for a passenger — used to prevent posting a ride

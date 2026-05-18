@@ -744,13 +744,45 @@ public class ProfileHandler {
 
     public void handleReannounceRide(BotContext ctx) {
         try {
+            RideResponse ride = rideService.getRideById(ctx.entityId());
+            if (!ride.driver().id().equals(ctx.carpoolUserId())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+                return;
+            }
+            int remaining = Math.max(0, 3 - ride.announceCount());
+            String prompt = String.format(
+                    """
+                            📢 <b>Re-announce Ride</b>
+
+                            Currently showing: <b>%d seat(s) available</b>
+
+                            Re-announce as-is, or update the seat count first?
+                            <i>%d re-announcement(s) remaining.</i>""",
+                    ride.availableSeats(), remaining);
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button(
+                                    "📢 Re-announce (" + ride.availableSeats() + " seats)",
+                                    "CONFIRM_REANNOUNCE:" + ctx.entityId(), ButtonStyle.SUCCESS.toString()),
+                            BotMessageBuilder.button("✏️ Edit Seats",
+                                    "REANNOUNCE_EDIT_SEATS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString())
+                    ),
+                    List.of(BotMessageBuilder.button("◀️ Cancel", "MAIN_MENU", ButtonStyle.DANGER.toString()))
+            );
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), prompt, rows));
+        } catch (Exception e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not load ride. Please try again."));
+        }
+    }
+
+    public void handleConfirmReannounce(BotContext ctx) {
+        try {
             RideResponse ride = rideService.reannounceRide(ctx.entityId(), ctx.carpoolUserId());
-            int remaining = 3 - ride.announceCount();
+            int remaining = Math.max(0, 3 - ride.announceCount());
             String remainingText = remaining == 0
                     ? "No more re-announcements available."
-                    : remaining + " re-announcement" +
-                      (remaining == 1 ? "" : "s") + " remaining.";
-
+                    : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "📢 <b>Ride Re-announced!</b>\n\n" +
                             "Your ride has been posted to the group again.\n" +
@@ -758,6 +790,64 @@ public class ProfileHandler {
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not re-announce ride. Please try again."));
+        }
+    }
+
+    public void handleReannounceEditSeatsStart(BotContext ctx) {
+        try {
+            RideResponse ride = rideService.getRideById(ctx.entityId());
+            if (!ride.driver().id().equals(ctx.carpoolUserId())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+                return;
+            }
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withSelectedRideId(ctx.entityId())
+                    .withFlow(BotFlow.REANNOUNCE_EDIT_SEATS));
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    String.format(
+                            "✏️ <b>Edit Seat Count</b>\n\n" +
+                            "Current: <b>%d available</b> of %d total\n\n" +
+                            "Enter the new available seat count (0–%d):",
+                            ride.availableSeats(), ride.totalSeats(), ride.availableSeats()),
+                    List.of(List.of(
+                            BotMessageBuilder.button("◀️ Cancel", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
+                    ))));
+        } catch (Exception e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not load ride. Please try again."));
+        }
+    }
+
+    public void handleReannounceEditSeatsText(Long chatId, String text,
+                                              UserState state, Long carpoolUserId,
+                                              CarpoolBot bot) {
+        Long rideId = state.getSelectedRideId();
+        if (rideId == null) {
+            stateManager.reset(chatId);
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Session expired. Please try again."));
+            return;
+        }
+        try {
+            int newSeats = Integer.parseInt(text.trim());
+            rideService.updateAvailableSeats(rideId, newSeats, carpoolUserId);
+            RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
+            stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
+            int remaining = Math.max(0, 3 - ride.announceCount());
+            String remainingText = remaining == 0
+                    ? "No more re-announcements available."
+                    : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+            bot.send(BotMessageBuilder.text(chatId,
+                    "📢 <b>Ride Re-announced!</b>\n\n" +
+                            "Seat count updated to <b>" + newSeats + "</b> and ride posted to group.\n" +
+                            "<i>" + remainingText + "</i>"));
+        } catch (NumberFormatException e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Please enter a valid number."));
+        } catch (com.carpool.common.exception.InvalidRideStateException e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ " + e.getMessage()));
+        } catch (Exception e) {
+            log.warn("Reannounce seat edit failed for rideId={}: {}", rideId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not update seat count. Please try again."));
         }
     }
 

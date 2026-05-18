@@ -116,6 +116,8 @@ public class CallbackHandler {
         commands.put("DECLINE_BOOKING_REASON", driverHandler::handleDeclineBookingWithReason);
         commands.put("PENDING_REQUESTS", driverHandler::handlePendingRequests);
         commands.put("VIEW_PENDING", driverHandler::handleViewPendingRequest);
+        commands.put("REMOVE_PASSENGER", driverHandler::handleRemovePassenger);
+        commands.put("CONFIRM_REMOVE_PASSENGER", driverHandler::handleConfirmRemovePassenger);
         commands.put("CANCEL_RIDE", driverHandler::handleCancelRide);
         commands.put("CONFIRM_CANCEL_RIDE", driverHandler::handleConfirmCancelRide);
         commands.put("DEPART_RIDE", driverHandler::handleDepartRide);
@@ -134,6 +136,8 @@ public class CallbackHandler {
         commands.put("MY_FOLLOWERS", profileHandler::handleMyFollowers);
         commands.put("ADMIN_STATS", profileHandler::handleAdminStats);
         commands.put("REANNOUNCE_RIDE", profileHandler::handleReannounceRide);
+        commands.put("CONFIRM_REANNOUNCE", profileHandler::handleConfirmReannounce);
+        commands.put("REANNOUNCE_EDIT_SEATS", profileHandler::handleReannounceEditSeatsStart);
         commands.put("PENDING_HUBS", profileHandler::handlePendingHubs);
         commands.put("APPROVE_HUB", profileHandler::handleApproveHub);
         commands.put("REJECT_HUB", profileHandler::handleRejectHub);

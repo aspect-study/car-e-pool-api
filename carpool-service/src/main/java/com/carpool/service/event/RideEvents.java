@@ -85,4 +85,18 @@ public final class RideEvents {
      * Triggers: notify all confirmed passengers (driver is on the way).
      */
     public record RideDepartedEvent(Ride ride) {}
+
+    /**
+     * Published when a driver removes an individual confirmed passenger.
+     * Triggers: notify the removed passenger, refresh group announcement.
+     */
+    public record BookingCancelledByDriverEvent(Booking booking) {}
+
+    /**
+     * Published when the system auto-cancels a passenger's OTHER pending bookings
+     * after one of their requests is confirmed by a driver.
+     * Distinct from BookingCancelledByPassengerEvent — the passenger did not choose to cancel.
+     * Triggers: notify the other ride's driver with correct context.
+     */
+    public record BookingAutoSyncedEvent(Booking booking) {}
 }

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import com.carpool.domain.enums.RideStatus;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
@@ -210,6 +211,67 @@ public class GroupNotificationService {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingCancelledByPassenger(RideEvents.BookingCancelledByPassengerEvent event) {
+        refreshGroupPostAfterSeatFreed(event.booking().getRide().getId(), "passenger cancellation");
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingCancelledByDriver(RideEvents.BookingCancelledByDriverEvent event) {
+        refreshGroupPostAfterSeatFreed(event.booking().getRide().getId(), "driver removal");
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingAutoSynced(RideEvents.BookingAutoSyncedEvent event) {
+        refreshGroupPostAfterSeatFreed(event.booking().getRide().getId(), "auto-sync cancellation");
+    }
+
+    private void refreshGroupPostAfterSeatFreed(Long rideId, String reason) {
+        Ride ride = rideRepository.findById(rideId).orElse(null);
+        if (ride == null || ride.getGroupMessageId() == null) return;
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) return;
+        if (ride.getCreatedAt().isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
+            log.warn("Skipping group refresh ({}) — announcement older than 48h: rideId={}",
+                    reason, rideId);
+            return;
+        }
+
+        try {
+            try {
+                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+            } catch (Exception e) {
+                log.warn("Could not delete old group post before refresh ({}): rideId={} error={}",
+                        reason, rideId, e.getMessage());
+            }
+
+            String message = buildRidePostedMessage(ride);
+            Integer messageId = carpoolBot.sendToGroup(
+                    message, ride.getId(), ride.getDriver().getId(), resolveTopicId(ride));
+            log.info("Group announcement refreshed after {}: rideId={}", reason, rideId);
+
+            if (messageId != null) {
+                try {
+                    rideRepository.findById(rideId).ifPresent(r -> {
+                        r.setGroupMessageId(messageId);
+                        rideRepository.save(r);
+                    });
+                } catch (Exception e) {
+                    log.error("Failed to store groupMessageId after {}: rideId={} error={}",
+                            reason, rideId, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to refresh group announcement after {}: rideId={} error={}",
+                    reason, rideId, e.getMessage());
+        }
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onBookingConfirmed(RideEvents.BookingConfirmedEvent event) {
         Long rideId = event.booking().getRide().getId();
         Ride ride = rideRepository.findById(rideId).orElse(null);
@@ -314,20 +376,21 @@ public class GroupNotificationService {
 
         return String.format(
                 """
-                        <b>%s</b> — %s
-                        
+                        <b>%s</b>
+
                         🔖 Ride #%d — <b>%s</b>%s
+                        📅 <b>%s</b>
                         🕐 Pickup: <b>%s</b> | Seats: <b>%d</b>
                         🚘 Vehicle: %s\
                         📍 Route: <b>%s → %s</b>
                         %s
-                        
+
                         Tap <b>Request 💺</b> to see details and book your seat. 👇""",
                 dirLabel,
-                departureDate,
                 ride.getId(),
                 driverName,
                 ratingLabel,
+                departureDate,
                 departureTime,
                 ride.getAvailableSeats(),
                 vehicleLine,

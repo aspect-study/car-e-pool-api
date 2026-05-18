@@ -22,8 +22,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -198,17 +196,10 @@ public class BookingHandler {
                     ? b.dropoffWaypoint().hub().name()
                     : b.ride().destinationHub().name();
 
-            String expiryInfo = "";
-            if (b.status() == BookingStatus.PENDING && b.expiresAt() != null) {
-                long remaining = Duration.between(Instant.now(), b.expiresAt()).toMinutes();
-                expiryInfo = "\n⏰ Auto-declines in: " +
-                        Math.max(0, remaining) + " minutes";
-            }
-
             String detail = String.format(
                     """
                             📋 <b>Booking Details</b>
-                            
+
                             🚗 %s → %s
                             🕐 %s
                             🚏 Pickup: <b>%s</b>
@@ -216,7 +207,7 @@ public class BookingHandler {
                             🪑 Seats: %d
                             ⛽ Suggested share: ₱%.2f
                             👤 Driver: %s%s
-                            %s📊 Status: %s%s""",
+                            %s📊 Status: %s""",
                     HtmlEscapeUtil.escape(b.ride().originHub().name()),
                     HtmlEscapeUtil.escape(b.ride().destinationHub().name()),
                     b.ride().departureTime()
@@ -233,8 +224,7 @@ public class BookingHandler {
                     b.passengerMessage() != null
                             ? "💬 Your message: \"" +
                             HtmlEscapeUtil.escape(b.passengerMessage()) + "\"\n" : "",
-                    statusLabel,
-                    expiryInfo);
+                    statusLabel);
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
             boolean rideNotStarted = b.ride().status() != RideStatus.DEPARTED

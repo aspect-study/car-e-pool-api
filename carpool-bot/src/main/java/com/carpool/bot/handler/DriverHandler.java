@@ -26,7 +26,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -167,16 +166,13 @@ public class DriverHandler {
                 String paxHandle = b.passenger().telegramHandle() != null
                         ? " (@" + HtmlEscapeUtil.escape(
                         b.passenger().telegramHandle()) + ")" : "";
-                long remaining = b.expiresAt() != null
-                        ? Duration.between(Instant.now(), b.expiresAt()).toMinutes() : 0;
                 sb.append(String.format(
-                        "<b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share | ⏰ %d min\n",
+                        "<b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share\n",
                         index,
                         HtmlEscapeUtil.escape(b.passenger().fullName()),
                         paxHandle,
                         b.seatsReserved(),
-                        b.contributionDue(),
-                        Math.max(0, remaining)));
+                        b.contributionDue()));
                 rows.add(List.of(InlineKeyboardButton.builder()
                         .text("⏳ #" + index + " — " + b.passenger().fullName())
                         .callbackData("VIEW_PENDING:" + b.id())
@@ -236,7 +232,13 @@ public class DriverHandler {
                             HtmlEscapeUtil.escape(b.passengerMessage()) + "\"\n" : "",
                     statusLabel);
 
-            var rows = List.of(List.of(InlineKeyboardButton.builder()
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            if (b.status() == BookingStatus.CONFIRMED) {
+                rows.add(List.of(BotMessageBuilder.button(
+                        "🚫 Remove Passenger",
+                        "REMOVE_PASSENGER:" + ctx.entityId(), ButtonStyle.DANGER.toString())));
+            }
+            rows.add(List.of(InlineKeyboardButton.builder()
                     .text("◀️ Back to Bookings")
                     .callbackData("RIDE_BOOKINGS:0").build()));
 
@@ -358,15 +360,12 @@ public class DriverHandler {
 
         for (int i = 0; i < pending.size(); i++) {
             BookingResponse b = pending.get(i);
-            long remaining = b.expiresAt() != null
-                    ? Duration.between(Instant.now(), b.expiresAt()).toMinutes() : 0;
             sb.append(String.format(
-                    "<b>%d.</b> %s | 🪑 %d | ⛽ ₱%.2f share | ⏰ %d min\n",
+                    "<b>%d.</b> %s | 🪑 %d | ⛽ ₱%.2f share\n",
                     i + 1,
                     HtmlEscapeUtil.escape(b.passenger().fullName()),
                     b.seatsReserved(),
-                    b.contributionDue(),
-                    Math.max(0, remaining)));
+                    b.contributionDue()));
             rows.add(List.of(InlineKeyboardButton.builder()
                     .text("View #" + (i + 1) + " — " + b.passenger().fullName())
                     .callbackData("VIEW_PENDING:" + b.id())
@@ -386,8 +385,6 @@ public class DriverHandler {
     public void handleViewPendingRequest(BotContext ctx) {
         try {
             BookingResponse b = bookingService.getBookingById(ctx.entityId(), ctx.carpoolUserId());
-            long remaining = b.expiresAt() != null
-                    ? Duration.between(Instant.now(), b.expiresAt()).toMinutes() : 0;
             String paxHandle = b.passenger().telegramHandle() != null
                     ? " (@" + HtmlEscapeUtil.escape(
                     b.passenger().telegramHandle()) + ")" : "";
@@ -395,19 +392,18 @@ public class DriverHandler {
             String detail = String.format(
                     """
                             🔔 <b>Booking Request</b>
-                            
+
                             👤 <b>%s</b>%s
                             🪑 Seats: %d
                             ⛽ Suggested share: ₱%.2f
-                            %s⏰ Expires in: %d minutes""",
+                            %s""",
                     HtmlEscapeUtil.escape(b.passenger().fullName()),
                     paxHandle,
                     b.seatsReserved(),
                     b.contributionDue(),
                     b.passengerMessage() != null
                             ? "💬 Message: \"" +
-                            HtmlEscapeUtil.escape(b.passengerMessage()) + "\"\n" : "",
-                    Math.max(0, remaining));
+                            HtmlEscapeUtil.escape(b.passengerMessage()) + "\"" : "");
 
             var rows = List.of(
                     List.of(
@@ -561,6 +557,65 @@ public class DriverHandler {
         } catch (Exception e) {
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not cancel ride. Please try again."));
+        }
+    }
+
+    // ── Remove confirmed passenger ────────────────────────────────────────
+
+    public void handleRemovePassenger(BotContext ctx) {
+        try {
+            BookingResponse b = bookingService.getBookingById(ctx.entityId(), ctx.carpoolUserId());
+            if (b.status() != BookingStatus.CONFIRMED) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ Only confirmed bookings can be removed."));
+                return;
+            }
+            String paxHandle = b.passenger().telegramHandle() != null
+                    ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")" : "";
+            String msg = String.format(
+                    """
+                            ⚠️ <b>Remove Passenger?</b>
+
+                            👤 <b>%s</b>%s
+                            🪑 %d seat(s) | ⛽ ₱%.2f share
+
+                            This passenger will be notified and their seat(s) freed. This cannot be undone.""",
+                    HtmlEscapeUtil.escape(b.passenger().fullName()),
+                    paxHandle,
+                    b.seatsReserved(),
+                    b.contributionDue());
+            var rows = List.of(
+                    List.of(
+                            BotMessageBuilder.button("✅ Yes, Remove",
+                                    "CONFIRM_REMOVE_PASSENGER:" + ctx.entityId(), ButtonStyle.DANGER.toString()),
+                            BotMessageBuilder.button("◀️ Cancel",
+                                    "VIEW_DRIVER_BOOKING:" + ctx.entityId(), ButtonStyle.PRIMARY.toString())
+                    )
+            );
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), msg, rows));
+        } catch (Exception e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Could not load booking."));
+        }
+    }
+
+    public void handleConfirmRemovePassenger(BotContext ctx) {
+        try {
+            bookingService.cancelBookingByDriver(ctx.entityId(), ctx.carpoolUserId());
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    """
+                            ✅ <b>Passenger Removed</b>
+
+                            The passenger has been notified and their seat(s) have been freed.
+                            Your ride announcement has been updated.""",
+                    List.of(List.of(
+                            BotMessageBuilder.button("📋 View Bookings", "DRIVER_BOOKINGS", ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
+                    ))));
+        } catch (Exception e) {
+            log.error("Remove passenger failed: bookingId={} driverId={} error={}",
+                    ctx.entityId(), ctx.carpoolUserId(), e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not remove passenger. Please try again."));
         }
     }
 

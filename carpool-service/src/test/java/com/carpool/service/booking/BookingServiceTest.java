@@ -39,6 +39,7 @@ class BookingServiceTest {
     @Mock private UserRepository            userRepository;
     @Mock private EntityMapper              mapper;
     @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private BookingService            self;
 
     @InjectMocks
     private BookingService bookingService;
@@ -53,6 +54,8 @@ class BookingServiceTest {
 
     @BeforeEach
     void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(bookingService, "self", self);
+
         driver = User.builder()
                 .id(1L).telegramId(111L).fullName("Driver Juan")
                 .role(UserRole.DRIVER).status(UserStatus.ACTIVE)

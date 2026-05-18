@@ -487,17 +487,13 @@ public class NotificationService {
                 ? " (@" + HtmlEscapeUtil.escape(pax.getTelegramHandle()) + ")"
                 : "";
 
-        // Compute remaining minutes
-        long remainingMinutes = java.time.Duration.between(
-                Instant.now(), booking.getExpiresAt()).toMinutes();
-
         String msg = String.format(
                 "⏰ <b>Reminder %d/3 — Pending Booking Request</b>\n\n" +
                         "👤 <b>%s</b>%s is waiting for your response.\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
                         "🪑 %d seat(s) | ⛽ ₱%.2f share\n\n" +
-                        "⚠️ Auto-declines in ~%d minutes if no response.",
+                        "Please accept or decline this request.",
                 event.reminderNumber(),
                 HtmlEscapeUtil.escape(pax.getFullName()),
                 paxHandle,
@@ -505,8 +501,7 @@ public class NotificationService {
                 HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
                 TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
                 booking.getSeatsReserved(),
-                booking.getContributionDue(),
-                Math.max(0, remainingMinutes));
+                booking.getContributionDue());
 
         try {
             telegramPort.sendMessageWithKeyboard(driver.getTelegramId(), msg,
@@ -535,6 +530,82 @@ public class NotificationService {
                 .sentAt(Instant.now())
                 .build();
         notificationRepository.save(notification);
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingCancelledByDriver(RideEvents.BookingCancelledByDriverEvent event) {
+        Booking booking = bookingRepository.findByIdWithDetails(event.booking().getId())
+                .orElse(null);
+        if (booking == null) return;
+
+        Ride ride = booking.getRide();
+        User pax  = booking.getPassenger();
+
+        String driverHandle = ride.getDriver().getTelegramHandle() != null
+                ? " (@" + HtmlEscapeUtil.escape(ride.getDriver().getTelegramHandle()) + ")"
+                : "";
+
+        String msg = String.format(
+                "⚠️ <b>Removed from Ride</b>\n\n" +
+                        "You have been removed from the following ride:\n\n" +
+                        "👤 Driver: <b>%s</b>%s\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n" +
+                        "🪑 %d seat(s) | ⛽ ₱%.2f share\n\n" +
+                        "Please look for another available ride.",
+                HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
+                driverHandle,
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
+                TIME_FMT.format(ride.getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
+                booking.getSeatsReserved(),
+                booking.getContributionDue());
+
+        sendAndRecord(pax, NotificationTypes.BOOKING_CANCELLED_BY_DRIVER, msg,
+                Map.of("bookingId", booking.getId(), "rideId", ride.getId()));
+
+        log.info("Driver-removal notification sent to passenger: bookingId={} passengerId={}",
+                booking.getId(), pax.getId());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingAutoSynced(RideEvents.BookingAutoSyncedEvent event) {
+        Booking booking = bookingRepository.findByIdWithDetails(event.booking().getId())
+                .orElse(null);
+        if (booking == null) return;
+
+        User driver = booking.getRide().getDriver();
+        User pax    = booking.getPassenger();
+
+        String paxHandle = pax.getTelegramHandle() != null
+                ? " (@" + HtmlEscapeUtil.escape(pax.getTelegramHandle()) + ")"
+                : "";
+
+        String msg = String.format(
+                "ℹ️ <b>Booking Request Withdrawn</b>\n\n" +
+                        "👤 <b>%s</b>%s\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 %s\n" +
+                        "🪑 %d seat(s) | ⛽ ₱%.2f share\n\n" +
+                        "This passenger confirmed a seat on another ride. " +
+                        "Their request has been automatically withdrawn and the seat(s) freed.",
+                HtmlEscapeUtil.escape(pax.getFullName()),
+                paxHandle,
+                HtmlEscapeUtil.escape(booking.getRide().getOriginHub().getName()),
+                HtmlEscapeUtil.escape(booking.getRide().getDestinationHub().getName()),
+                TIME_FMT.format(booking.getRide().getDepartureTime().atZone(ZoneId.of("Asia/Manila"))),
+                booking.getSeatsReserved(),
+                booking.getContributionDue());
+
+        sendAndRecord(driver, NotificationTypes.BOOKING_CANCELLED_BY_PASSENGER, msg,
+                Map.of("bookingId", booking.getId(), "passengerName", pax.getFullName()));
+
+        log.info("Auto-sync notification sent to driver: bookingId={} driverId={}",
+                booking.getId(), driver.getId());
     }
 
     // ── Core send + record ────────────────────────────────────────────────────
@@ -617,16 +688,12 @@ public class NotificationService {
                 ? booking.getPickupWaypoint().getHub().getName()
                 : ride.getOriginHub().getName();
 
-        long expiresInMinutes = java.time.Duration.between(
-                Instant.now(), booking.getExpiresAt()).toMinutes();
-
         return String.format(
                 "🔔 <b>New Booking Request</b>\n\n" +
                         "👤 <b>%s</b>%s\n" +
                         "🚏 Pickup at: <b>%s</b>\n" +
                         "🪑 Seats: %d | ⛽ ₱%.2f share\n" +
-                        "%s\n" +
-                        "⏰ Expires in %d minutes",
+                        "%s",
                 HtmlEscapeUtil.escape(pax.getFullName()),
                 paxHandle,
                 HtmlEscapeUtil.escape(pickupPoint),
@@ -634,8 +701,7 @@ public class NotificationService {
                 booking.getContributionDue(),
                 booking.getPassengerMessage() != null
                         ? "💬 \"" + HtmlEscapeUtil.escape(booking.getPassengerMessage()) + "\"\n"
-                        : "",
-                Math.max(0, expiresInMinutes));
+                        : "");
     }
 
     // ── HTML escape ───────────────────────────────────────────────────────────

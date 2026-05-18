@@ -184,6 +184,9 @@ public class MessageHandler {
                     postRideHandler.handleRepostEditContribution(chatId, text, state, bot);
             case REPOST_EDIT_NOTES ->
                     postRideHandler.handleRepostEditNotes(chatId, text, state, bot);
+            case REANNOUNCE_EDIT_SEATS ->
+                    profileHandler.handleReannounceEditSeatsText(
+                            chatId, text, state, carpoolUserId, bot);
             case SEARCH_SELECT_TIME ->
                     handleCustomTimeInput(chatId, text, state, carpoolUserId, bot);
             case BOOKING_MESSAGE ->
