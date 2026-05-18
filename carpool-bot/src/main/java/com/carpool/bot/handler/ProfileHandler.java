@@ -830,16 +830,26 @@ public class ProfileHandler {
         try {
             int newSeats = Integer.parseInt(text.trim());
             rideService.updateAvailableSeats(rideId, newSeats, carpoolUserId);
-            RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
             stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
-            int remaining = Math.max(0, 10 - ride.announceCount());
-            String remainingText = remaining == 0
-                    ? "No more re-announcements available."
-                    : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
-            bot.send(BotMessageBuilder.text(chatId,
-                    "📢 <b>Ride Re-announced!</b>\n\n" +
-                            "Seat count updated to <b>" + newSeats + "</b> and ride posted to group.\n" +
-                            "<i>" + remainingText + "</i>"));
+
+            if (newSeats == 0) {
+                // Ride is now FULL — reannounce fires RidePostedEvent which removes the group post
+                rideService.reannounceRide(rideId, carpoolUserId);
+                bot.send(BotMessageBuilder.text(chatId,
+                        "🚫 <b>Ride Marked as Full</b>\n\n" +
+                                "Your ride now shows <b>0 available seats</b>.\n" +
+                                "The group announcement has been removed."));
+            } else {
+                RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
+                int remaining = Math.max(0, 10 - ride.announceCount());
+                String remainingText = remaining == 0
+                        ? "No more re-announcements available."
+                        : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+                bot.send(BotMessageBuilder.text(chatId,
+                        "📢 <b>Ride Re-announced!</b>\n\n" +
+                                "Seat count updated to <b>" + newSeats + "</b> and ride posted to group.\n" +
+                                "<i>" + remainingText + "</i>"));
+            }
         } catch (NumberFormatException e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Please enter a valid number."));
         } catch (com.carpool.common.exception.InvalidRideStateException e) {

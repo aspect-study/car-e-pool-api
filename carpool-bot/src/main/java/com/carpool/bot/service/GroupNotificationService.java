@@ -103,6 +103,20 @@ public class GroupNotificationService {
                 }
             }
 
+            // Ride is FULL — old post already removed above; skip posting a new one
+            if (ride.getAvailableSeats() == 0) {
+                try {
+                    rideRepository.findById(ride.getId()).ifPresent(r -> {
+                        r.setGroupMessageId(null);
+                        rideRepository.save(r);
+                    });
+                } catch (Exception e) {
+                    log.error("Failed to clear groupMessageId for FULL ride: rideId={} error={}", ride.getId(), e.getMessage());
+                }
+                log.info("Ride is FULL — group announcement removed, not reposted: rideId={}", ride.getId());
+                return;
+            }
+
             String message = buildRidePostedMessage(ride);
             Integer messageId = carpoolBot.sendToGroup(message, ride.getId(), ride.getDriver().getId(), resolveTopicId(ride));
             log.info("Ride announcement posted to group: rideId={}", ride.getId());
