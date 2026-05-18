@@ -47,11 +47,13 @@ All business logic lives here. Key services:
 ### `RideService`
 - `createRide()` — creates ride as DRAFT; validates driver has no active ride or booking conflict
 - `updateRideStatus()` — handles all status transitions; publishes `RidePostedEvent` on DRAFT→ACTIVE
-- `reannounceRide()` — increments `announceCount` (max 3) and re-fires `RidePostedEvent`
+- `reannounceRide()` — increments `announceCount` (max 10) and re-fires `RidePostedEvent`
+- `updateAvailableSeats()` — updates seat count and transitions ride status (0 → FULL, ≥1 → ACTIVE)
 
 ### `BookingService`
 - `createBooking()` — acquires `SELECT FOR UPDATE` pessimistic lock on the ride row to prevent double-booking the last seat
-- `respondToBooking()` — ACCEPT/DECLINE with reason; decrements available seats on accept
+- `respondToBooking()` — ACCEPT/DECLINE with reason; decrements available seats on accept; on accept, if ride becomes FULL, auto-cancels all remaining PENDING bookings and publishes `BookingAutoSyncedEvent` for each
+- `removePassenger(bookingId, driverId)` — driver-initiated removal of a confirmed passenger; cancels booking as `CANCELLED_BY_DRIVER`, increments `availableSeats`, transitions ride FULL→ACTIVE if needed, notifies passenger, publishes `BookingCancelledByDriverEvent`
 
 ### `FavoriteService`
 - `saveFavorite()` — idempotent (silently ignores duplicates); throws `IllegalArgumentException` for self-follow
@@ -70,10 +72,14 @@ Services publish `RideEvents.*` records via Spring's `ApplicationEventPublisher`
 
 | Event | Trigger |
 |-------|---------|
-| `RidePostedEvent` | DRAFT → ACTIVE status transition |
+| `RidePostedEvent` | DRAFT → ACTIVE status transition, or re-announce |
 | `RideDepartedEvent` | ACTIVE/FULL → DEPARTED |
 | `RideCompletedEvent` | DEPARTED → COMPLETED |
 | `RideCancelledEvent` | Any → CANCELLED |
+| `BookingConfirmedEvent` | Driver accepts a booking |
+| `BookingCancelledByPassengerEvent` | Passenger cancels their booking |
+| `BookingCancelledByDriverEvent` | Driver removes a confirmed passenger |
+| `BookingAutoSyncedEvent` | Pending booking auto-cancelled when ride becomes FULL |
 
 Listeners use `@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)` — guaranteed to fire only after the DB transaction commits, on a virtual thread.
 
@@ -84,7 +90,7 @@ All use `fixedDelay` with staggered `initialDelay` to prevent startup overlap:
 | Scheduler | Frequency | What It Does |
 |-----------|-----------|-------------|
 | `RideExpiryScheduler` | Every 30 min | Auto-cancels expired ACTIVE/FULL rides; auto-completes DEPARTED rides 2h+ old |
-| `PendingBookingScheduler` | Every 60 sec | Sends driver reminders at 15/30/45 min; auto-declines at 60 min |
+| `PendingBookingScheduler` | Every 60 sec | Sends driver reminders at 15/30/45 min; marks unanswered requests TIMED_OUT at 60 min (no auto-decline with reason) |
 | `RideDepartureReminderScheduler` | Every 5 min | One-shot 30-min-before reminder to driver + confirmed passengers |
 
 ---
@@ -189,6 +195,17 @@ Group post includes two URL button rows:
 **`onRideDeparted` / `onRideCompleted` / `onRideCancelled`**
 - Deletes the group announcement via `CarpoolBot.deleteMessage()`
 - Skipped if `groupMessageId` is null or the ride was created more than 48 hours ago (Telegram API limitation)
+
+**`onBookingConfirmed`**
+- Refreshes group post to show updated seat count after a driver accepts a booking
+- If `availableSeats == 0` (ride FULL), deletes the post instead
+
+**`onBookingCancelledByDriver` / `onBookingAutoSynced` / `onBookingCancelledByPassenger`**
+- All call `refreshGroupPostAfterSeatFreed(rideId, reason)` — deletes old group post and reposts with updated seat count
+- Guards: `groupMessageId` non-null, ride status ACTIVE or FULL, ride not older than 48h
+
+**0-seats guard in `onRidePosted`**
+- When re-announcing a ride with 0 available seats (entered via the seat-count-edit flow), the old post is deleted, `Ride.groupMessageId` is cleared, and the method returns early without posting a new announcement
 
 ---
 

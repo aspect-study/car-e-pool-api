@@ -1,5 +1,5 @@
 # Car-E-Pool — User Manual
-**Version 1.1 | May 2026**
+**Version 1.2 | May 2026**
 
 ---
 
@@ -341,6 +341,7 @@ Tap **✅ Accept** on a pending request.
 - Passenger receives a confirmation notification with your vehicle info and contact
 - The seat count on your ride decreases
 - If your last seat is filled, your ride status changes from **ACTIVE** to **FULL**
+- Any other **PENDING** booking requests on the same ride are automatically cancelled and those passengers are notified
 
 #### Declining a Booking
 
@@ -403,7 +404,26 @@ If your ride is already posted but you want to bump it back to the top of the gr
 
 - The previous group announcement is **deleted** and a fresh one is posted in its place — no duplicate posts.
 - **Follower alerts are not re-sent** on re-announces. Your followers already received a DM when you first posted; they will not be notified again.
-- You may re-announce a maximum of **2 times** after the initial post (3 group posts total). The button shows how many are remaining: `📢 Re-announce (2 left)`. Once the limit is reached the button disappears.
+- You may re-announce a maximum of **9 times** after the initial post (10 group posts total). The button shows how many are remaining: `📢 Re-announce (9 left)`. Once the limit is reached the button disappears.
+
+#### Re-Announce with Seat Count Edit
+
+When you tap **📢 Re-announce**, the bot asks: *"How many available seats do you want to show?"* Type the number and send it.
+
+- **Enter a number ≥ 1:** The seat count on your ride is updated and a fresh group announcement is posted. The bot confirms "📢 Ride Re-announced!" with the number of re-announces remaining.
+- **Enter 0:** Your ride is marked as **FULL** — the existing group announcement is removed and no new one is posted. The bot confirms "🚫 Ride Marked as Full." The ride remains open in the system; if a confirmed passenger later cancels, the group post will be automatically refreshed.
+
+> **Tip:** Use the 0-seats option to close bookings without cancelling the ride entirely.
+
+#### Removing a Confirmed Passenger
+
+In your **View Bookings** list, each confirmed passenger has a **🗑️ Remove** button. Tapping it removes that passenger from your ride.
+
+- The removed passenger is notified immediately.
+- Their seat is freed back to your ride (FULL rides revert to ACTIVE).
+- The community group announcement is automatically refreshed to show the newly available seat.
+
+> **Note:** Only confirmed passengers can be removed. Pending requests can be declined normally.
 
 #### Re-Posting a Recent Ride
 
@@ -675,7 +695,7 @@ ACTIVE ◄────────────► FULL (no seats available)
 | Seat availability | Cannot book if no seats are available |
 | Booking message | Optional, maximum 300 characters |
 | Response deadline | Driver has 60 minutes to respond; 3 reminders sent at 15, 30, 45 min |
-| Auto-decline | After 60 minutes with no response, the booking is automatically marked TIMED OUT |
+| Timeout | After 60 minutes with no response, the booking is automatically marked **TIMED OUT** (no explicit decline reason is set) |
 
 ### 4.4 Booking Status Flow
 
@@ -730,7 +750,7 @@ These happen without any user action:
 |-----------|-----------|--------------|
 | Ride Expiry | Every 30 min | Marks ACTIVE/FULL rides whose departure time has passed as CANCELLED |
 | Ride Auto-Complete | Every 30 min | Marks rides that departed 2+ hours ago as COMPLETED automatically |
-| Booking Reminders | Every 60 sec | Sends driver reminders at 15, 30, 45 min for unanswered requests; auto-declines at 60 min |
+| Booking Reminders | Every 60 sec | Sends driver reminders at 15, 30, and 45 min for unanswered requests; marks as TIMED OUT at 60 min |
 | Departure Reminder | Every 5 min | Notifies driver and confirmed passengers 30 minutes before departure (once per ride) |
 
 ### 4.9 Group Announcement Rules
@@ -741,7 +761,9 @@ These happen without any user action:
 | Topic routing | HOME → WORK rides go to the morning topic; WORK → HOME to the evening topic |
 | Auto-refresh on booking | When a driver accepts a booking, the group post is automatically refreshed to show the updated available seat count |
 | Auto-delete on FULL | When the last seat is filled (ride becomes FULL), the group post is deleted automatically |
-| Re-announce | Replaces the existing group post (old deleted, new posted); maximum 2 re-announces per ride |
+| Re-announce | Replaces the existing group post (old deleted, new posted); maximum 9 re-announces per ride (10 group posts total) |
+| Re-announce with seat edit | When re-announcing, driver can update the seat count; entering 0 removes the post and marks ride FULL |
+| Auto-refresh on seat freed | When a confirmed passenger is removed by the driver (or auto-cancelled due to FULL), the group post is automatically refreshed to show the updated seat count |
 | Auto-delete | Announcement is deleted when ride is DEPARTED, COMPLETED, or CANCELLED |
 | 48-hour safety | Announcements for rides older than 48 hours are NOT deleted (Telegram API limitation) |
 | Follow button | Each announcement includes "⭐ Follow Driver \| View Ride" — tapping opens the bot privately, follows the driver if not already following, and shows the full ride card |
@@ -966,4 +988,4 @@ A: The system sends three reminders to the driver (at 15, 30, and 45 minutes). T
 
 ---
 
-*End of Car-E-Pool User Manual — Version 1.0*
+*End of Car-E-Pool User Manual — Version 1.2*

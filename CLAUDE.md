@@ -123,7 +123,11 @@ The `carpool-bot` module depends on `carpool-service` which holds `AiService`; `
 ### Bot: Group Announcement Lifecycle
 `GroupNotificationService.onRidePosted()` posts a ride announcement to the configured Telegram group topic and stores the returned Telegram message ID in `Ride.groupMessageId` (added by V37 migration, column `group_message_id`). The DB save for the message ID is isolated in a separate try/catch so a failure there never masks a successful group post or corrupts the ride transaction.
 
-**Re-announce:** `RideService.reannounceRide()` increments `Ride.announceCount` (max 3 total) and re-fires `RidePostedEvent`. `onRidePosted` detects a non-null `groupMessageId` and deletes the old message first (isolated in its own try/catch — a Telegram failure logs a warning but does not abort the new post). Follower alerts are suppressed on re-announces: the loop is guarded by `announceCount <= 1` so followers receive only one DM per ride regardless of how many times the driver re-announces.
+**Re-announce:** `RideService.reannounceRide()` increments `Ride.announceCount` (max 10 total) and re-fires `RidePostedEvent`. `onRidePosted` detects a non-null `groupMessageId` and deletes the old message first (isolated in its own try/catch — a Telegram failure logs a warning but does not abort the new post). Follower alerts are suppressed on re-announces: the loop is guarded by `announceCount <= 1` so followers receive only one DM per ride regardless of how many times the driver re-announces.
+
+**0-seats FULL handling:** When `onRidePosted` fires for a re-announce and `ride.getAvailableSeats() == 0`, the old group post has already been deleted (see above). The method then detects the zero seat count, clears `Ride.groupMessageId` to `null` in DB (isolated try/catch), logs `"Ride is FULL — group announcement removed, not reposted"`, and returns early — no new announcement is posted. The ride remains in the DB with its current status; the group channel simply has no active post for it. This path is triggered by the seat-count-edit re-announce flow (see §Bot: Re-announce with Seat Count Edit).
+
+**Seat-freed auto-refresh:** `GroupNotificationService` also listens for `BookingCancelledByDriverEvent` (driver explicitly removes a confirmed passenger) and `BookingAutoSyncedEvent` (pending bookings auto-cancelled when a ride became FULL after a booking acceptance). Both listeners call `refreshGroupPostAfterSeatFreed(rideId, reason)`. That private method: (1) loads the ride; (2) skips if `groupMessageId` is null, ride is not ACTIVE/FULL, or the ride is older than 48h; (3) deletes the old group post (isolated try/catch); (4) reposts a fresh announcement via `sendToGroup`; (5) stores the new message ID. This keeps the group post seat count in sync whenever a seat is freed without a manual re-announce by the driver.
 
 When a ride is departed, completed, or cancelled, `GroupNotificationService` listens for `RideDepartedEvent`, `RideCompletedEvent`, and `RideCancelledEvent` (all `@Async + @TransactionalEventListener(AFTER_COMMIT)`) and calls `CarpoolBot.deleteMessage()` to remove the announcement. Deletion is skipped if `groupMessageId` is null or if the ride was created more than 48 hours ago (Telegram API limitation).
 
@@ -146,8 +150,26 @@ When a ride is departed, completed, or cancelled, `GroupNotificationService` lis
 
 The handler paginates at 8 followers per page. Pagination is encoded in callback data: `MY_FOLLOWERS:0`, `MY_FOLLOWERS:1`, etc. — `ctx.payload()` gives the page number. A static `FOLLOWED_FMT = DateTimeFormatter.ofPattern("MMM d, yyyy")` constant formats the `followedAt` date. The screen is read-only; there are no per-follower actions. `MY_FOLLOWERS` is non-flow-sensitive — `SessionRecoveryHandler` treats it like `MY_PROFILE` (fresh `UserState`, proceeds normally after a bot restart).
 
+### Bot: Re-announce with Seat Count Edit
+When a driver taps **📢 Re-announce** from the main menu, the flow enters `BotFlow.REANNOUNCE_EDIT_SEATS`. The bot prompts: *"How many available seats do you want to show?"* The driver types a number.
+
+`ProfileHandler.handleReannounceEditSeatsText()` parses the input, calls `rideService.updateAvailableSeats(rideId, newSeats, carpoolUserId)` to persist the new count (this also transitions the ride status: 0 seats → FULL, ≥1 seat → ACTIVE), resets state back to IDLE, then branches:
+
+- **`newSeats == 0`:** Calls `rideService.reannounceRide(rideId, ...)` which fires `RidePostedEvent`. `onRidePosted` detects 0 available seats, deletes the old group post, clears `groupMessageId`, and returns without posting a new announcement. Bot confirms: "🚫 Ride Marked as Full — group announcement has been removed."
+- **`newSeats > 0`:** Calls `rideService.reannounceRide(rideId, ...)` which fires `RidePostedEvent`. `onRidePosted` deletes old post and reposts with updated seat count. Bot confirms: "📢 Ride Re-announced! Seat count updated to N and ride posted to group. X re-announcements remaining."
+
+The remaining count shown in the confirmation message and the `📢 Re-announce (N left)` button label both use `Math.max(0, 10 - ride.announceCount())`.
+
+### Booking: Remove Passenger & Pending Auto-sync
+**Remove Passenger:** Drivers can remove a confirmed passenger from their active ride (via the bookings list). `BookingService` cancels the booking with status `CANCELLED_BY_DRIVER`, decrements `ride.availableSeats`, transitions the ride from FULL back to ACTIVE if needed, notifies the removed passenger, and publishes `BookingCancelledByDriverEvent`. `GroupNotificationService.onBookingCancelledByDriver()` picks this up and calls `refreshGroupPostAfterSeatFreed` — the group announcement is refreshed to reflect the newly available seat.
+
+**Auto-sync on acceptance (ride goes FULL):** When a driver accepts a booking that fills the last available seat, `BookingService` auto-cancels all remaining PENDING bookings on the same ride. Each auto-cancelled booking fires `BookingAutoSyncedEvent` and the affected passenger receives a notification. `GroupNotificationService.onBookingAutoSynced()` calls `refreshGroupPostAfterSeatFreed` — however, since the ride is now FULL (0 seats), `onBookingConfirmed` has already deleted the group post, so the refresh guard (`groupMessageId == null`) typically short-circuits this call.
+
 ### Booking: Pessimistic Locking
 `BookingService.createBooking()` acquires `SELECT FOR UPDATE` on the ride row (`RideRepository.findByIdWithLock()`) to prevent double-booking the last seat. The lock is held for the full transaction duration.
+
+### Bot: Departure Time Guard
+`DriverHandler.handleStartRide()` enforces a 1-hour early-start window. If the current time is more than 60 minutes before `ride.getDepartureTime()`, the handler rejects the tap and sends a countdown message ("You can start the ride in X hours Y minutes") instead of transitioning the ride to DEPARTED. This prevents drivers from accidentally marking a ride as departed hours before the scheduled time.
 
 ### Security
 Stateless JWT auth. `POST /api/v1/auth/telegram` is public — validates Telegram Login Widget hash (HMAC-SHA256 of `SHA256(bot_token)`). All other endpoints require Bearer token. `@PreAuthorize` is enabled for method-level role checks.
@@ -195,7 +217,7 @@ The bot only operates in private chats — group messages are ignored. Group mem
 
 Three background schedulers in `carpool-service/scheduler/`:
 - `RideExpiryScheduler` — every 30 min: auto-expires rides past departure; auto-completes DEPARTED rides 2h+ old
-- `PendingBookingScheduler` — sends up to 3 reminder notifications to drivers with unresponded booking requests, then auto-declines
+- `PendingBookingScheduler` — sends up to 3 reminder notifications to drivers with unresponded booking requests (at 15, 30, and 45 minutes); requests that remain unanswered are marked `TIMED_OUT` by the scheduler — there is no automatic decline with a reason
 - `RideDepartureReminderScheduler` — notifies driver + confirmed passengers 30 min before departure
 
 All use `fixedDelay` (not `fixedRate`) with staggered `initialDelay` to prevent startup overlap.
