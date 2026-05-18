@@ -1,5 +1,5 @@
 # Car-E-Pool — User Manual
-**Version 1.2 | May 2026**
+**Version 1.3 | May 2026**
 
 ---
 
@@ -18,6 +18,15 @@
 4. [Business Rules & Validations](#4-business-rules--validations)
 5. [User Roles & Permissions](#5-user-roles--permissions)
 6. [Troubleshooting & FAQs](#6-troubleshooting--faqs)
+   - 6.1 Registration & Login
+   - 6.2 Posting a Ride
+   - 6.3 Booking a Ride
+   - 6.4 Ratings & Favorites
+   - 6.5 Vehicle & Profile
+   - 6.6 Hubs
+   - 6.7 Notifications
+   - 6.8 Managing Your Ride (Driver)
+   - 6.9 Bookings & Seat Management (Passenger)
 
 ---
 
@@ -878,6 +887,26 @@ A: You cannot post a ride as a driver while you have an active booking (PENDING 
 
 ---
 
+**Q: The bot stopped responding in the middle of posting a ride.**
+A: Your session may have timed out (30 minutes of inactivity resets all flow state). Tap **🏠 Menu** to return to the main menu, then start the post-ride flow again. You will need to re-enter all steps from the beginning — the bot does not save partial progress. Complete the full flow in one sitting to avoid this.
+
+---
+
+**Q: I posted a ride but no announcement appeared in the community group.**
+A: The group announcement is sent asynchronously — allow up to 30 seconds after posting. If it still does not appear, the bot may have lost access to the group topic (e.g., was removed from the group, lost admin rights, or the topic was archived). Contact your community admin to verify the bot's group permissions.
+
+---
+
+**Q: Can I edit my ride after posting — departure time, route, or number of seats?**
+A: Departure time and route cannot be changed after posting. To correct either, cancel the ride and repost using the **🔄 Repost** shortcut (which pre-fills all original details for editing). To adjust only the **available seat count**, use **📢 Re-announce** — it lets you enter a new seat count before reposting to the group.
+
+---
+
+**Q: The AI parsed my message incorrectly — it picked the wrong time or location.**
+A: After the bot shows the "✨ Got it!" summary, review every extracted field carefully. Any field the bot identifies as still missing or wrong will route you to the manual entry step for that field. If the AI extracted nothing usable, the bot falls back to the normal button-driven flow automatically. You can always post the normal way if AI parsing is unreliable for your writing style.
+
+---
+
 ### 6.3 Booking a Ride
 
 **Q: The ride I want shows "FULL".**
@@ -897,6 +926,21 @@ A: Cancellation is only possible while the booking is **PENDING** or **CONFIRMED
 
 **Q: I want to cancel but I see an error.**
 A: If the ride is DEPARTED or COMPLETED, cancellation is no longer possible. Contact your community admin if this is an urgent case.
+
+---
+
+**Q: I sent a booking request but it disappeared from My Bookings.**
+A: Your booking was likely auto-cancelled. Check your notifications: (1) If the driver accepted another passenger that filled the last seat, your pending request was automatically withdrawn — you will have received an "ℹ️ Booking Request Withdrawn" message. (2) If 60 minutes passed with no driver response, your booking timed out. In both cases you are free to book a different ride.
+
+---
+
+**Q: I received a notification saying my booking on another ride was automatically withdrawn after I got confirmed on a different ride. Is that normal?**
+A: Yes — this is the **auto-sync** feature. When a driver accepts your booking on one ride, the system automatically cancels any other pending requests you had open on other rides so you do not hold seats you cannot use. The other ride's driver receives a courtesy notification explaining you confirmed elsewhere.
+
+---
+
+**Q: Can I submit booking requests to multiple rides at the same time?**
+A: Yes. You may have multiple pending requests open simultaneously across different rides. However, once a driver confirms one of them, all other pending requests are automatically cancelled (auto-sync). You can hold only one confirmed booking per ride at a time.
 
 ---
 
@@ -988,4 +1032,88 @@ A: The system sends three reminders to the driver (at 15, 30, and 45 minutes). T
 
 ---
 
-*End of Car-E-Pool User Manual — Version 1.2*
+**Q: I received a departure reminder for a ride that was already cancelled.**
+A: If the cancellation happened very close to the 30-minute reminder window, both notifications may arrive within seconds of each other. The **cancellation notification is authoritative** — the departure reminder can be disregarded. The community group announcement will also have been deleted as confirmation.
+
+---
+
+**Q: I did not receive the 30-minute departure reminder.**
+A: Departure reminders are sent once per ride approximately 30 minutes before the scheduled departure. If the scheduler ran slightly late or the ride was modified close to that window, the reminder may have been skipped. This is a best-effort notification — always verify departure time directly from your booking confirmation.
+
+---
+
+### 6.8 Managing Your Ride (Driver)
+
+**Q: I tapped "Start Ride" but the bot showed a countdown instead of departing. Why?**
+A: You can only start a ride within **60 minutes** of the scheduled departure time. If you tap too early, the bot shows a message like "You can start the ride in X hours Y minutes." This guard prevents accidental early departures. Tap again once the countdown has elapsed.
+
+---
+
+**Q: My ride is FULL. Can passengers still book?**
+A: No. FULL rides do not appear in passenger search results and new booking requests are blocked. Seats become available again if: (a) you remove a confirmed passenger with the **🗑️ Remove** button, (b) a confirmed passenger cancels their own booking, or (c) you use **📢 Re-announce** and enter a higher seat count. In all cases the ride automatically returns to ACTIVE and the group announcement refreshes.
+
+---
+
+**Q: I accepted a booking that filled my last seat, and all remaining pending requests were automatically cancelled. Is this expected?**
+A: Yes. When the last seat is taken the ride transitions to FULL, and all remaining PENDING requests on that ride are automatically declined. Each affected passenger receives a notification explaining the ride is now full. This prevents the ride from being oversold.
+
+---
+
+**Q: I removed a confirmed passenger. Will the community group announcement update?**
+A: Yes. Removing a passenger triggers an automatic group post refresh — the old announcement is deleted and a new one is posted showing the updated (higher) available seat count. No manual re-announce is needed.
+
+---
+
+**Q: I cancelled my ride. Will passengers I had previously removed also receive the cancellation notification?**
+A: No. Only passengers with an **active** booking (PENDING or CONFIRMED) at the moment of cancellation are notified. Passengers you removed earlier with the **🗑️ Remove** button were already notified at that time and receive no second message when the ride is cancelled.
+
+---
+
+**Q: I have used all 10 re-announcement slots. How do I bump my ride again?**
+A: Once the limit is reached, the **📢 Re-announce** button disappears and no further bumps are possible for that ride. Your options are: (1) leave the ride as-is and wait for passengers to find it through search, or (2) cancel the current ride and repost — the **🔄 Repost** shortcut on cancelled rides pre-fills all original details so it takes less than a minute.
+
+---
+
+**Q: I want to reduce the seat count on my active ride because a friend is joining informally. How?**
+A: Tap **📢 Re-announce** and enter the new (lower) available seat count when prompted. The system updates the seat count and reposts a fresh group announcement. Enter **0** to mark the ride as FULL, remove the group post, and close it to new bookings entirely.
+
+---
+
+**Q: The community group announcement shows an outdated seat count.**
+A: The announcement refreshes automatically on every booking acceptance and passenger removal. If it still looks wrong, use **📢 Re-announce** to force a fresh post. If there is no announcement at all (e.g., after a bot restart or a Telegram API glitch), re-announcing will recreate it.
+
+---
+
+### 6.9 Bookings & Seat Management (Passenger)
+
+**Q: I received a "Removed from Ride" notification. What does this mean?**
+A: The driver manually removed you from their ride. Your seat was freed (the ride may have returned to ACTIVE), and you are free to book a different ride. If you believe the removal was in error, reach out to the driver directly — their Telegram handle appears in your original booking confirmation message.
+
+---
+
+**Q: I was confirmed on a ride that was later cancelled by the driver. Is there a refund process?**
+A: Car-E-Pool does not process payments. Gas contribution is settled directly between you and the driver in cash. If you had already paid and the driver cancelled, resolve this with the driver directly — the system has no mechanism to reverse cash transactions.
+
+---
+
+**Q: My booking timed out because the driver did not respond. Can I request the same ride again?**
+A: Yes. If the ride is still ACTIVE and seats are available, you can submit a new booking request with no restriction. Search for the ride again and tap **✅ Book This Ride**.
+
+---
+
+**Q: The ride's departure time has already passed, but my booking still shows CONFIRMED. Is this a bug?**
+A: Not a bug — the expiry scheduler runs every 30 minutes. If the departure time just passed, the ride has not been processed yet. Within the next scheduler cycle (at most 30 minutes) the ride will be marked CANCELLED and you will receive a "Ride Did Not Push Through" notification. No action is needed on your part.
+
+---
+
+**Q: I received a "Ride Did Not Push Through" notification. What does it mean?**
+A: The driver never started the ride and the scheduled departure time has passed. The system automatically expired the ride and cancelled all active bookings. You only receive this notification if the departure was within the last 2 hours — if the departure was more than 2 hours ago, no notification is sent (passengers are assumed to have already made alternative arrangements).
+
+---
+
+**Q: Can I change the number of seats in my booking after it is confirmed?**
+A: No. Seat count is fixed at the time of booking and cannot be modified afterward. To change it, cancel your current booking and submit a new request — subject to availability. Note that the ride may be FULL by the time you rebook if other passengers have taken the remaining seats.
+
+---
+
+*End of Car-E-Pool User Manual — Version 1.3*

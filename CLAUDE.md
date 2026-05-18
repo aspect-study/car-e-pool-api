@@ -153,7 +153,7 @@ The handler paginates at 8 followers per page. Pagination is encoded in callback
 ### Bot: Re-announce with Seat Count Edit
 When a driver taps **📢 Re-announce** from the main menu, the flow enters `BotFlow.REANNOUNCE_EDIT_SEATS`. The bot prompts: *"How many available seats do you want to show?"* The driver types a number.
 
-`ProfileHandler.handleReannounceEditSeatsText()` parses the input, calls `rideService.updateAvailableSeats(rideId, newSeats, carpoolUserId)` to persist the new count (this also transitions the ride status: 0 seats → FULL, ≥1 seat → ACTIVE), resets state back to IDLE, then branches:
+`ProfileHandler.handleReannounceEditSeatsText()` parses the input, calls `rideService.updateAvailableSeats(rideId, newSeats, carpoolUserId)` to persist the new count (this also transitions the ride status: 0 seats → FULL, ≥1 seat → ACTIVE), then branches. State is reset to IDLE only **after** `reannounceRide()` returns successfully in each branch — if the call throws, the user remains in `REANNOUNCE_EDIT_SEATS` and can retry cleanly.
 
 - **`newSeats == 0`:** Calls `rideService.reannounceRide(rideId, ...)` which fires `RidePostedEvent`. `onRidePosted` detects 0 available seats, deletes the old group post, clears `groupMessageId`, and returns without posting a new announcement. Bot confirms: "🚫 Ride Marked as Full — group announcement has been removed."
 - **`newSeats > 0`:** Calls `rideService.reannounceRide(rideId, ...)` which fires `RidePostedEvent`. `onRidePosted` deletes old post and reposts with updated seat count. Bot confirms: "📢 Ride Re-announced! Seat count updated to N and ride posted to group. X re-announcements remaining."
