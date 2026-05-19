@@ -677,6 +677,22 @@ public class NotificationService {
                 ? " (@" + HtmlEscapeUtil.escape(ride.getDriver().getTelegramHandle()) + ")"
                 : "";
 
+        String vehicleLine = "";
+        if (ride.getVehicle() != null) {
+            vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+                    ride.getVehicle().getColor() != null
+                            ? HtmlEscapeUtil.escape(ride.getVehicle().getColor()) + " " : "",
+                    HtmlEscapeUtil.escape(ride.getVehicle().getModel()),
+                    HtmlEscapeUtil.escape(ride.getVehicle().getPlateNumber()));
+        } else if (ride.getDriver().getCarModel() != null
+                && ride.getDriver().getPlateNumber() != null) {
+            vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+                    ride.getDriver().getCarColor() != null
+                            ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " " : "",
+                    HtmlEscapeUtil.escape(ride.getDriver().getCarModel()),
+                    HtmlEscapeUtil.escape(ride.getDriver().getPlateNumber()));
+        }
+
         return String.format(
                 "✅ <b>Booking Confirmed!</b>\n\n" +
                         "📍 %s → %s\n" +
@@ -686,6 +702,7 @@ public class NotificationService {
                         "🪑 Seats: %d\n" +
                         "⛽ Suggested share: <b>₱%.2f</b>\n\n" +
                         "👤 Driver: <b>%s</b>%s\n" +
+                        "%s" +
                         "%s",
                 HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
                 HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
@@ -696,6 +713,7 @@ public class NotificationService {
                 booking.getContributionDue(),
                 HtmlEscapeUtil.escape(ride.getDriver().getFullName()),
                 driverHandle,
+                vehicleLine,
                 ride.getNotes() != null
                         ? "📝 Note: " + HtmlEscapeUtil.escape(ride.getNotes())
                         : "");

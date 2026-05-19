@@ -369,19 +369,16 @@ public class GroupNotificationService {
 
         String vehicleLine;
         if (ride.getVehicle() != null) {
-            vehicleLine = String.format("%s%s (%s)\n",
+            vehicleLine = String.format("%s%s\n",
                     ride.getVehicle().getColor() != null
                             ? HtmlEscapeUtil.escape(ride.getVehicle().getColor()) + " " : "",
-                    HtmlEscapeUtil.escape(ride.getVehicle().getModel()),
-                    HtmlEscapeUtil.escape(ride.getVehicle().getPlateNumber()));
-        } else if (ride.getDriver().getCarModel() != null
-                && ride.getDriver().getPlateNumber() != null) {
+                    HtmlEscapeUtil.escape(ride.getVehicle().getModel()));
+        } else if (ride.getDriver().getCarModel() != null) {
             // Fallback for rides created before multi-vehicle migration
-            vehicleLine = String.format("%s%s (%s)\n",
+            vehicleLine = String.format("%s%s\n",
                     ride.getDriver().getCarColor() != null
                             ? HtmlEscapeUtil.escape(ride.getDriver().getCarColor()) + " " : "",
-                    HtmlEscapeUtil.escape(ride.getDriver().getCarModel()),
-                    HtmlEscapeUtil.escape(ride.getDriver().getPlateNumber()));
+                    HtmlEscapeUtil.escape(ride.getDriver().getCarModel()));
         } else {
             vehicleLine = "";
         }
