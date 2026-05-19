@@ -5,7 +5,8 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\ADMIN\\\\IdeaProjects\\\\car-e-pool-api\" -Recurse -Directory)",
       "Bash(Select-Object FullName)",
       "Bash(git *)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(Get-ChildItem -Recurse -Force)"
     ]
   }
 }
