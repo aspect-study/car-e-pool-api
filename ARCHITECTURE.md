@@ -16,10 +16,11 @@ carpool-domain        ← JPA entities and enums only — no Spring beans
 carpool-repository    ← Spring Data JPA repositories
 carpool-service       ← all business logic, DTOs, event system, schedulers
 carpool-bot           ← Telegram bot: handlers, state machine, notifications
+carpool-admin         ← webforJ admin panel (port 8082); Login, Dashboard, Hub Approval
 carpool-web           ← Spring Boot entry point, REST controllers, security, Flyway
 ```
 
-The dependency flows strictly downward — `carpool-bot` can use `carpool-service` but never the reverse. Only `carpool-web` produces an executable JAR.
+The dependency flows strictly downward — `carpool-bot` can use `carpool-service` but never the reverse. `carpool-admin` also depends only on `carpool-service` — it does not import `carpool-bot` or `carpool-web`. Both `carpool-web` and `carpool-admin` produce executable JARs (ports 8080 and 8082 respectively).
 
 ---
 
@@ -90,7 +91,7 @@ All use `fixedDelay` with staggered `initialDelay` to prevent startup overlap:
 | Scheduler | Frequency | What It Does |
 |-----------|-----------|-------------|
 | `RideExpiryScheduler` | Every 30 min | Auto-cancels expired ACTIVE/FULL rides; auto-completes DEPARTED rides 2h+ old |
-| `PendingBookingScheduler` | Every 60 sec | Sends driver reminders at 15/30/45 min; marks unanswered requests TIMED_OUT at 60 min (no auto-decline with reason) |
+| `PendingBookingScheduler` | Every 60 sec | Sends driver reminders at 15, 30, and 45 min; no auto-expiry — bookings remain PENDING indefinitely until the driver responds |
 | `RideDepartureReminderScheduler` | Every 5 min | One-shot 30-min-before reminder to driver + confirmed passengers |
 
 ---
@@ -178,6 +179,8 @@ Telegram messages stay interactive forever. A user can tap a button from an old 
 
 `BotMessageBuilder` is a pure static utility — no Spring bean.
 
+`ProfileBadgeBuilder` (`carpool-service/util`) is a pure static utility that formats member verification badge strings (role, completed rides, member-since date). It is the single source of truth for badge formatting — used by `BotMessageBuilder.buildMemberBadge()` for ride card driver badges and by `BookingHandler` for passenger mini-profile badges on incoming booking requests.
+
 ### Group Notifications — `GroupNotificationService`
 
 Listens for all `RideEvents.*` via `@Async + @TransactionalEventListener(AFTER_COMMIT)`:
@@ -187,6 +190,8 @@ Listens for all `RideEvents.*` via `@Async + @TransactionalEventListener(AFTER_C
 2. Posts announcement to the correct group topic (HOME→WORK vs WORK→HOME)
 3. Stores returned Telegram message ID in `Ride.groupMessageId`
 4. Sends follower DM alerts — suppressed when `announceCount > 1` (re-announces don't re-notify)
+
+**Vehicle plate privacy:** Group posts show vehicle color and model only — the plate number is intentionally omitted to protect driver privacy. The plate is revealed exclusively in the booking confirmation DM sent to the confirmed passenger, and in the passenger's booking detail view (CONFIRMED/COMPLETED statuses only).
 
 Group post includes two URL button rows:
 - `🚘#N ❯❯❯❯ | View | Request a Seat` → `?start=RIDE_{rideId}`
@@ -235,6 +240,7 @@ Located in `carpool-web/src/main/resources/db/migration/`. Notable migrations:
 | V40 | Adds nullable `vehicle_id` FK to `rides` |
 | V41 | Migrates existing vehicle data from `users` columns into `vehicles` |
 | V42 | Widens `seat_capacity` from `TINYINT` to `INT` |
+| V43 | Widens unique constraint on `ride_ratings` from `(ride_id, rater_id)` to `(ride_id, rater_id, ratee_id)` — supports one rating per passenger per ride for driver raters |
 
 ---
 
