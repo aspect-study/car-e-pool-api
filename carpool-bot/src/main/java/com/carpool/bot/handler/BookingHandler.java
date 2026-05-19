@@ -196,6 +196,24 @@ public class BookingHandler {
                     ? b.dropoffWaypoint().hub().name()
                     : b.ride().destinationHub().name();
 
+            String vehicleLine = "";
+            if (b.status() == BookingStatus.CONFIRMED || b.status() == BookingStatus.COMPLETED) {
+                if (b.ride().vehicle() != null) {
+                    vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+                            b.ride().vehicle().color() != null
+                                    ? HtmlEscapeUtil.escape(b.ride().vehicle().color()) + " " : "",
+                            HtmlEscapeUtil.escape(b.ride().vehicle().model()),
+                            HtmlEscapeUtil.escape(b.ride().vehicle().plateNumber()));
+                } else if (b.ride().driver().carModel() != null
+                        && b.ride().driver().plateNumber() != null) {
+                    vehicleLine = String.format("🚘 %s%s | 🔢 %s\n",
+                            b.ride().driver().carColor() != null
+                                    ? HtmlEscapeUtil.escape(b.ride().driver().carColor()) + " " : "",
+                            HtmlEscapeUtil.escape(b.ride().driver().carModel()),
+                            HtmlEscapeUtil.escape(b.ride().driver().plateNumber()));
+                }
+            }
+
             String detail = String.format(
                     """
                             📋 <b>Booking Details</b>
@@ -207,7 +225,7 @@ public class BookingHandler {
                             🪑 Seats: %d
                             ⛽ Suggested share: ₱%.2f
                             👤 Driver: %s%s
-                            %s📊 Status: %s""",
+                            %s%s📊 Status: %s""",
                     HtmlEscapeUtil.escape(b.ride().originHub().name()),
                     HtmlEscapeUtil.escape(b.ride().destinationHub().name()),
                     b.ride().departureTime()
@@ -221,6 +239,7 @@ public class BookingHandler {
                     b.ride().driver().telegramHandle() != null
                             ? " (@" + HtmlEscapeUtil.escape(
                             b.ride().driver().telegramHandle()) + ")" : "",
+                    vehicleLine,
                     b.passengerMessage() != null
                             ? "💬 Your message: \"" +
                             HtmlEscapeUtil.escape(b.passengerMessage()) + "\"\n" : "",
