@@ -22,6 +22,16 @@ target/
 .md
 *.json
 
+# Claude Code local config — contains personal memory and session files
+.claude/
+
+# Internal project docs — not for public exposure
+CLAUDE.md
+USER_MANUAL.md
+TODOS.md
+docker-compose.yml
+Dockerfile
+
 # compressed files
 *.zip
 .gstack/
