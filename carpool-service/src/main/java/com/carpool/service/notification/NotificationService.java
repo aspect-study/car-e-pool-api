@@ -13,6 +13,9 @@ import com.carpool.repository.NotificationRepository;
 import com.carpool.repository.RideRepository;
 import com.carpool.service.event.RideEvents;
 import com.carpool.service.port.TelegramNotificationPort;
+import com.carpool.service.profile.ProfileService;
+import com.carpool.service.rating.RatingService;
+import com.carpool.service.util.ProfileBadgeBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +54,9 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final BookingRepository      bookingRepository;
-    private final RideRepository rideRepository;
+    private final RideRepository         rideRepository;
+    private final ProfileService         profileService;
+    private final RatingService          ratingService;
 
     @Autowired @Lazy
     private TelegramNotificationPort telegramPort;
@@ -358,10 +363,19 @@ public class NotificationService {
         User driver = ride.getDriver();
         User pax    = booking.getPassenger();
 
+        String badge = "";
+        try {
+            badge = ProfileBadgeBuilder.buildPassengerBadge(
+                    profileService.getProfileStats(pax.getId()),
+                    ratingService.getPassengerRatingLabel(pax.getId()));
+        } catch (Exception e) {
+            log.warn("Could not load passenger profile for notification: passengerId={}", pax.getId());
+        }
+
         // Notify driver with Accept/Decline buttons
         try {
             telegramPort.sendMessageWithKeyboard(driver.getTelegramId(),
-                    buildDriverBookingRequestMessage(booking),
+                    buildDriverBookingRequestMessage(booking, badge),
                     List.of(
                             List.of(
                                     new TelegramNotificationPort.InlineButton("✅ Accept", "ACCEPT_BOOKING:" + booking.getId()),
@@ -687,7 +701,7 @@ public class NotificationService {
                         : "");
     }
 
-    private String buildDriverBookingRequestMessage(Booking booking) {
+    private String buildDriverBookingRequestMessage(Booking booking, String badge) {
         Ride ride = booking.getRide();
         User pax  = booking.getPassenger();
 
@@ -699,14 +713,18 @@ public class NotificationService {
                 ? booking.getPickupWaypoint().getHub().getName()
                 : ride.getOriginHub().getName();
 
+        String badgeLine = badge != null && !badge.isBlank() ? badge + "\n" : "";
+
         return String.format(
                 "🔔 <b>New Booking Request</b>\n\n" +
                         "👤 <b>%s</b>%s\n" +
+                        "%s" +
                         "🚏 Pickup at: <b>%s</b>\n" +
                         "🪑 Seats: %d | ⛽ ₱%.2f share\n" +
                         "%s",
                 HtmlEscapeUtil.escape(pax.getFullName()),
                 paxHandle,
+                badgeLine,
                 HtmlEscapeUtil.escape(pickupPoint),
                 booking.getSeatsReserved(),
                 booking.getContributionDue(),

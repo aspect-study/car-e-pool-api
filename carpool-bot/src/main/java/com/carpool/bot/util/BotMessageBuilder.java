@@ -3,6 +3,7 @@ package com.carpool.bot.util;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.util.ProfileBadgeBuilder;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
@@ -391,6 +392,10 @@ public class BotMessageBuilder {
         }
         sb.append(" | Since ").append(stats.memberSince());
         return sb.toString();
+    }
+
+    public static String buildPassengerBadge(ProfileStatsResponse stats, String ratingLabel) {
+        return ProfileBadgeBuilder.buildPassengerBadge(stats, ratingLabel);
     }
 
     private BotMessageBuilder() {}

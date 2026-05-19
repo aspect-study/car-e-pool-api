@@ -16,6 +16,8 @@ import com.carpool.service.booking.BookingService;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.BookingResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.profile.ProfileService;
+import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,8 @@ public class DriverHandler {
     private final StateManager   stateManager;
     private final RideService    rideService;
     private final BookingService bookingService;
+    private final ProfileService profileService;
+    private final RatingService  ratingService;
     private final BotFlowHelper flowHelper;
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
@@ -198,6 +202,15 @@ public class DriverHandler {
         try {
             BookingResponse b = bookingService.getBookingById(ctx.entityId(), ctx.carpoolUserId());
 
+            String badge = "";
+            try {
+                var stats  = profileService.getProfileStats(b.passenger().id());
+                var rating = ratingService.getPassengerRatingLabel(b.passenger().id());
+                badge = "\n" + BotMessageBuilder.buildPassengerBadge(stats, rating);
+            } catch (Exception e) {
+                log.warn("Could not load passenger profile for booking {}", ctx.entityId());
+            }
+
             String statusLabel = switch (b.status().name()) {
                 case "CONFIRMED"              -> "✅ Confirmed";
                 case "PENDING"                -> "⏳ Awaiting your approval";
@@ -214,8 +227,8 @@ public class DriverHandler {
             String detail = String.format(
                     """
                             👤 <b>Passenger Details</b>
-                            
-                            Name: <b>%s</b>%s
+
+                            Name: <b>%s</b>%s%s
                             🪑 Seats: %d
                             ⛽ Share: ₱%.2f
                             💳 Settlement: %s
@@ -224,6 +237,7 @@ public class DriverHandler {
                     b.passenger().telegramHandle() != null
                             ? " (@" + HtmlEscapeUtil.escape(
                             b.passenger().telegramHandle()) + ")" : "",
+                    badge,
                     b.seatsReserved(),
                     b.contributionDue(),
                     paymentLabel,
@@ -389,16 +403,26 @@ public class DriverHandler {
                     ? " (@" + HtmlEscapeUtil.escape(
                     b.passenger().telegramHandle()) + ")" : "";
 
+            String badge = "";
+            try {
+                var stats  = profileService.getProfileStats(b.passenger().id());
+                var rating = ratingService.getPassengerRatingLabel(b.passenger().id());
+                badge = "\n" + BotMessageBuilder.buildPassengerBadge(stats, rating);
+            } catch (Exception e) {
+                log.warn("Could not load passenger profile for booking {}", ctx.entityId());
+            }
+
             String detail = String.format(
                     """
                             🔔 <b>Booking Request</b>
 
-                            👤 <b>%s</b>%s
+                            👤 <b>%s</b>%s%s
                             🪑 Seats: %d
                             ⛽ Suggested share: ₱%.2f
                             %s""",
                     HtmlEscapeUtil.escape(b.passenger().fullName()),
                     paxHandle,
+                    badge,
                     b.seatsReserved(),
                     b.contributionDue(),
                     b.passengerMessage() != null

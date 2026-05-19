@@ -23,6 +23,31 @@ The existing `BookingService` and `RideService` patterns apply directly.
 
 ---
 
+### Allow driver to book as passenger while having an active ride
+**What:** Remove the cross-role conflict restriction so a user with the **Both** role can
+simultaneously have an active driver ride and a confirmed/pending passenger booking.
+A driver who offers a morning ride should be free to book a ride home in the evening without
+cancelling their driver ride first.
+**Why:** Real user need — drivers on a one-way corridor often drive to work and carpool home.
+The current block forces them to manage bookings manually outside the bot, defeating its purpose.
+**Context (4 files, no schema change):**
+1. `BookingService.java` — delete the `passengerHasActiveRide` guard block (lines ~106–114).
+2. `RideService.java` — delete the `hasActiveBooking` guard block (lines ~79–87). Keep the
+   one-active-driver-ride-at-a-time check above it.
+3. `BookingService.java` — add `countActivePassengerBookings(Long userId)` calling the existing
+   `countByPassengerIdAndStatusIn` repository method with `[PENDING, CONFIRMED]`.
+4. `BotFlowHelper.showMainMenu()` — call the new count at the top of the active-ride branch
+   and inject `📜 My Bookings (N)` just before the `👤 My Profile` row in all three
+   sub-paths (DEPARTED, pendingCount > 0, default) when count > 0.
+5. `CLAUDE.md` / `USER_MANUAL.md` — remove the cross-role conflict rule from §4.1 and §4.3;
+   fix the §6.2 FAQ that tells users to cancel their booking first.
+**Edge case:** A user can be DEPARTED as a driver and CONFIRMED as a passenger on an
+overlapping ride. No system conflict — the user's problem to coordinate physically.
+**Effort:** Human ~30 min / CC ~10 min.
+**Priority:** P1.
+
+---
+
 ## P2 — Medium priority
 
 ### Micrometer metrics instrumentation
