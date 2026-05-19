@@ -37,11 +37,8 @@ public class OpenApiConfig {
                                 """)
                         .version("1.0.0")
                         .contact(new Contact()
-                                .name("""
-                                        Car-e-pool PH API
-                                        Telegram: @AspectJump
-                                        """)
-                                .email("aspectjump.java@gmail.com")))
+                                .name("Car-e-pool PH")
+                                .email("")))
                 // Global JWT security requirement —
                 // shows the lock icon on all protected endpoints
                 .addSecurityItem(new SecurityRequirement()
