@@ -120,15 +120,7 @@ public class GroupNotificationService {
             log.info("Ride announcement posted to group: rideId={}", ride.getId());
 
             if (messageId != null) {
-                try {
-                    rideRepository.findById(ride.getId()).ifPresent(r -> {
-                        r.setGroupMessageId(messageId);
-                        rideRepository.save(r);
-                    });
-                } catch (Exception e) {
-                    log.error("Failed to store groupMessageId: rideId={} messageId={} error={}",
-                            ride.getId(), messageId, e.getMessage());
-                }
+                persistGroupMessageId(ride.getId(), messageId);
             }
 
             // ── Alert followers on first announcement only (not re-announces) ──
@@ -246,8 +238,8 @@ public class GroupNotificationService {
         if (ride == null || ride.getGroupMessageId() == null) return;
         if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) return;
         if (ride.getCreatedAt().isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
-            log.warn("Skipping group refresh ({}) — announcement older than 48h: rideId={}",
-                    reason, rideId);
+            log.warn("48h guard triggered — stale announcement scheduler may have been down: rideId={}",
+                    rideId);
             return;
         }
 
@@ -265,15 +257,7 @@ public class GroupNotificationService {
             log.info("Group announcement refreshed after {}: rideId={}", reason, rideId);
 
             if (messageId != null) {
-                try {
-                    rideRepository.findById(rideId).ifPresent(r -> {
-                        r.setGroupMessageId(messageId);
-                        rideRepository.save(r);
-                    });
-                } catch (Exception e) {
-                    log.error("Failed to store groupMessageId after {}: rideId={} error={}",
-                            reason, rideId, e.getMessage());
-                }
+                persistGroupMessageId(rideId, messageId);
             }
         } catch (Exception e) {
             log.error("Failed to refresh group announcement after {}: rideId={} error={}",
@@ -307,15 +291,7 @@ public class GroupNotificationService {
             log.info("Group announcement refreshed after booking confirmed: rideId={}", rideId);
 
             if (messageId != null) {
-                try {
-                    rideRepository.findById(rideId).ifPresent(r -> {
-                        r.setGroupMessageId(messageId);
-                        rideRepository.save(r);
-                    });
-                } catch (Exception e) {
-                    log.error("Failed to store groupMessageId after booking repost: rideId={} messageId={} error={}",
-                            rideId, messageId, e.getMessage());
-                }
+                persistGroupMessageId(rideId, messageId);
             }
         } catch (Exception e) {
             log.error("Failed to refresh group announcement after booking confirmed: rideId={} error={}",
@@ -327,8 +303,8 @@ public class GroupNotificationService {
         Integer messageId = ride.getGroupMessageId();
         if (messageId == null) return;
         if (ride.getCreatedAt().isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
-            log.warn("Skipping group message deletion — message older than 48h: rideId={} messageId={}",
-                    ride.getId(), messageId);
+            log.warn("48h guard triggered — stale announcement scheduler may have been down: rideId={}",
+                    ride.getId());
             return;
         }
         boolean deleted = carpoolBot.deleteMessage(botConfig.getGroupChatId(), messageId);
@@ -343,6 +319,48 @@ public class GroupNotificationService {
                 log.error("Failed to clear groupMessageId after deletion: rideId={} error={}",
                         ride.getId(), e.getMessage());
             }
+        }
+    }
+
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void refreshGroupAnnouncementForRide(Long rideId) {
+        Ride ride = rideRepository.findById(rideId).orElse(null);
+        if (ride == null || ride.getGroupMessageId() == null) return;
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) return;
+
+        try {
+            try {
+                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+            } catch (Exception e) {
+                log.warn("Could not delete old group post before stale refresh: rideId={} error={}",
+                        rideId, e.getMessage());
+            }
+
+            String message = buildRidePostedMessage(ride);
+            Integer messageId = carpoolBot.sendToGroup(
+                    message, ride.getId(), ride.getDriver().getId(), resolveTopicId(ride));
+            log.info("Stale group announcement refreshed: rideId={}", rideId);
+
+            if (messageId != null) {
+                persistGroupMessageId(rideId, messageId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to refresh stale group announcement: rideId={} error={}",
+                    rideId, e.getMessage());
+        }
+    }
+
+    private void persistGroupMessageId(Long rideId, Integer messageId) {
+        try {
+            rideRepository.findById(rideId).ifPresent(r -> {
+                r.setGroupMessageId(messageId);
+                r.setGroupMessagePostedAt(Instant.now());
+                rideRepository.save(r);
+            });
+        } catch (Exception e) {
+            log.error("Failed to store groupMessageId: rideId={} messageId={} error={}",
+                    rideId, messageId, e.getMessage());
         }
     }
 

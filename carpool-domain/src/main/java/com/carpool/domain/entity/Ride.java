@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +86,9 @@ public class Ride extends BaseEntity {
 
     @Column(name = "group_message_id")
     private Integer groupMessageId;
+
+    @Column(name = "group_message_posted_at")
+    private Instant groupMessagePostedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id")

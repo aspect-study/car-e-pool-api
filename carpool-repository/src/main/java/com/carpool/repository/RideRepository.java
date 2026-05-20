@@ -247,6 +247,16 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
         """)
     Optional<Ride> findActiveRideByDriverId(@Param("driverUserId") Long driverUserId);
 
+    @Query("""
+    SELECT r FROM Ride r
+    WHERE r.status IN :statuses
+      AND r.groupMessageId IS NOT NULL
+      AND r.groupMessagePostedAt < :threshold
+    """)
+    List<Ride> findRidesWithStaleGroupAnnouncement(
+            @Param("statuses")  List<RideStatus> statuses,
+            @Param("threshold") Instant threshold);
+
     /**
      * Fetch ride with driver and waypoints eagerly.
      * Used by NotificationService async handlers to avoid LazyInitializationException.
