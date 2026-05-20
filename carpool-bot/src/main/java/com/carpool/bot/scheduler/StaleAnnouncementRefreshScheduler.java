@@ -25,18 +25,13 @@ public class StaleAnnouncementRefreshScheduler {
     public void refreshStaleAnnouncements() {
         Instant threshold = Instant.now().minus(36, ChronoUnit.HOURS);
         List<Ride> staleRides = rideRepository.findRidesWithStaleGroupAnnouncement(
-                List.of(RideStatus.ACTIVE, RideStatus.FULL), threshold);
+                List.of(RideStatus.ACTIVE), threshold);
 
         if (staleRides.isEmpty()) return;
 
         log.info("Refreshing {} stale group announcement(s)", staleRides.size());
         for (Ride ride : staleRides) {
-            try {
-                groupNotificationService.refreshGroupAnnouncementForRide(ride.getId());
-            } catch (Exception e) {
-                log.error("Failed to refresh stale announcement: rideId={} error={}",
-                        ride.getId(), e.getMessage());
-            }
+            groupNotificationService.refreshGroupAnnouncementForRide(ride.getId());
         }
     }
 }

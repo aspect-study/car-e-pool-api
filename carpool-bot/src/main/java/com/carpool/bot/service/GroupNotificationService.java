@@ -107,6 +107,7 @@ public class GroupNotificationService {
             if (ride.getAvailableSeats() == 0) {
                 try {
                     ride.setGroupMessageId(null);
+                    ride.setGroupMessagePostedAt(null);
                     rideRepository.save(ride);
                 } catch (Exception e) {
                     log.error("Failed to clear groupMessageId for FULL ride: rideId={} error={}", ride.getId(), e.getMessage());
@@ -237,7 +238,9 @@ public class GroupNotificationService {
         Ride ride = rideRepository.findById(rideId).orElse(null);
         if (ride == null || ride.getGroupMessageId() == null) return;
         if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) return;
-        if (ride.getCreatedAt().isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
+        Instant ageReference = ride.getGroupMessagePostedAt() != null
+                ? ride.getGroupMessagePostedAt() : ride.getCreatedAt();
+        if (ageReference.isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
             log.warn("48h guard triggered — stale announcement scheduler may have been down: rideId={}",
                     rideId);
             return;
@@ -302,7 +305,9 @@ public class GroupNotificationService {
     private void deleteGroupAnnouncement(Ride ride) {
         Integer messageId = ride.getGroupMessageId();
         if (messageId == null) return;
-        if (ride.getCreatedAt().isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
+        Instant ageReference = ride.getGroupMessagePostedAt() != null
+                ? ride.getGroupMessagePostedAt() : ride.getCreatedAt();
+        if (ageReference.isBefore(Instant.now().minus(48, ChronoUnit.HOURS))) {
             log.warn("48h guard triggered — stale announcement scheduler may have been down: rideId={}",
                     ride.getId());
             return;
@@ -313,6 +318,7 @@ public class GroupNotificationService {
             try {
                 rideRepository.findById(ride.getId()).ifPresent(r -> {
                     r.setGroupMessageId(null);
+                    r.setGroupMessagePostedAt(null);
                     rideRepository.save(r);
                 });
             } catch (Exception e) {

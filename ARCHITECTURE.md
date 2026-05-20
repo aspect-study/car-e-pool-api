@@ -31,7 +31,7 @@ The core entities:
 | Entity | Key Fields | Notes |
 |--------|-----------|-------|
 | `User` | `telegramId`, `fullName`, `role` (PASSENGER/DRIVER/BOTH/ADMIN), `status` | Legacy vehicle fields kept for backward compat |
-| `Ride` | `driver`, `originHub`, `destinationHub`, `departureTime`, `status`, `availableSeats`, `groupMessageId`, `announceCount` | Status: DRAFT→ACTIVE/FULL→DEPARTED→COMPLETED |
+| `Ride` | `driver`, `originHub`, `destinationHub`, `departureTime`, `status`, `availableSeats`, `groupMessageId`, `groupMessagePostedAt`, `announceCount` | Status: DRAFT→ACTIVE/FULL→DEPARTED→COMPLETED. `groupMessagePostedAt` records when the Telegram group message was last posted/refreshed — used by the stale-refresh scheduler |
 | `Booking` | `ride`, `passenger`, `status`, `seats` | Status: PENDING→CONFIRMED/DECLINED/TIMED_OUT→COMPLETED |
 | `Hub` | `name`, `area`, `code`, `status` (ACTIVE/PENDING/REJECTED) | Shared pickup/dropoff landmarks |
 | `Vehicle` | `user`, `plateNumber`, `model`, `color`, `seatCapacity`, `deletedAt` | Soft-delete; up to 3 per user |
@@ -88,11 +88,12 @@ Listeners use `@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transaction
 
 All use `fixedDelay` with staggered `initialDelay` to prevent startup overlap:
 
-| Scheduler | Frequency | What It Does |
-|-----------|-----------|-------------|
-| `RideExpiryScheduler` | Every 30 min | Auto-cancels expired ACTIVE/FULL rides; auto-completes DEPARTED rides 2h+ old |
-| `PendingBookingScheduler` | Every 60 sec | Sends driver reminders at 15, 30, and 45 min; no auto-expiry — bookings remain PENDING indefinitely until the driver responds |
-| `RideDepartureReminderScheduler` | Every 5 min | One-shot 30-min-before reminder to driver + confirmed passengers |
+| Scheduler | Module | Frequency | What It Does |
+|-----------|--------|-----------|-------------|
+| `RideExpiryScheduler` | `carpool-service` | Every 30 min | Auto-cancels expired ACTIVE/FULL rides; auto-completes DEPARTED rides 2h+ old |
+| `PendingBookingScheduler` | `carpool-service` | Every 60 sec | Sends driver reminders at 15, 30, and 45 min; no auto-expiry — bookings remain PENDING indefinitely until the driver responds |
+| `RideDepartureReminderScheduler` | `carpool-service` | Every 5 min | One-shot 30-min-before reminder to driver + confirmed passengers |
+| `StaleAnnouncementRefreshScheduler` | `carpool-bot` | Every 4 hours | Queries ACTIVE rides where `groupMessagePostedAt < now − 36h`; re-posts each announcement via `refreshGroupAnnouncementForRide()` (dispatched `@Async`). Keeps posts within Telegram's 48h deletion window without driver action |
 
 ---
 
@@ -185,11 +186,20 @@ Telegram messages stay interactive forever. A user can tap a button from an old 
 
 Listens for all `RideEvents.*` via `@Async + @TransactionalEventListener(AFTER_COMMIT)`:
 
+**`persistGroupMessageId(rideId, messageId)` — private helper**
+- Sets `Ride.groupMessageId` and `Ride.groupMessagePostedAt` (to `Instant.now()`) atomically in one isolated try/catch save
+- Called by `onRidePosted`, `refreshGroupPostAfterSeatFreed`, `onBookingConfirmed`, and `refreshGroupAnnouncementForRide` — the single write path for both fields
+
 **`onRidePosted`**
 1. If re-announce: deletes old group message first (isolated try/catch)
 2. Posts announcement to the correct group topic (HOME→WORK vs WORK→HOME)
-3. Stores returned Telegram message ID in `Ride.groupMessageId`
+3. Calls `persistGroupMessageId` to store the Telegram message ID and post timestamp
 4. Sends follower DM alerts — suppressed when `announceCount > 1` (re-announces don't re-notify)
+
+**`refreshGroupAnnouncementForRide(rideId)` — public, called by scheduler**
+- `@Async @Transactional(REQUIRES_NEW)` — runs on the Spring async executor
+- Same delete-then-repost logic as `refreshGroupPostAfterSeatFreed` but **without** the 48h guard and without seat-count semantics
+- Called exclusively by `StaleAnnouncementRefreshScheduler`; on success resets `groupMessagePostedAt` via `persistGroupMessageId`
 
 **Vehicle plate privacy:** Group posts show vehicle color and model only — the plate number is intentionally omitted to protect driver privacy. The plate is revealed exclusively in the booking confirmation DM sent to the confirmed passenger, and in the passenger's booking detail view (CONFIRMED/COMPLETED statuses only).
 
@@ -199,7 +209,7 @@ Group post includes two URL button rows:
 
 **`onRideDeparted` / `onRideCompleted` / `onRideCancelled`**
 - Deletes the group announcement via `CarpoolBot.deleteMessage()`
-- Skipped if `groupMessageId` is null or the ride was created more than 48 hours ago (Telegram API limitation)
+- Skipped if `groupMessageId` is null or the ride was created more than 48 hours ago (Telegram API limitation — the proactive stale-refresh scheduler is the mechanism intended to prevent this guard from triggering)
 
 **`onBookingConfirmed`**
 - Refreshes group post to show updated seat count after a driver accepts a booking
@@ -241,6 +251,7 @@ Located in `carpool-web/src/main/resources/db/migration/`. Notable migrations:
 | V41 | Migrates existing vehicle data from `users` columns into `vehicles` |
 | V42 | Widens `seat_capacity` from `TINYINT` to `INT` |
 | V43 | Widens unique constraint on `ride_ratings` from `(ride_id, rater_id)` to `(ride_id, rater_id, ratee_id)` — supports one rating per passenger per ride for driver raters |
+| V44 | Adds `group_message_posted_at TIMESTAMP NULL` (+ index) to `rides` — tracks when the Telegram group message was last posted; used by the stale-refresh scheduler to proactively re-post before the 48h Telegram deletion limit |
 
 ---
 
