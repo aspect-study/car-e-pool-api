@@ -168,6 +168,27 @@ public class MessageHandler {
                 return;
             }
             if (state.getFlow() == BotFlow.POST_RIDE_DIRECTION) {
+                boolean hasConflictingRide = rideService.getMyRides(carpoolUserId).stream()
+                        .anyMatch(r -> r.direction() == direction
+                                && (r.status() == RideStatus.ACTIVE
+                                    || r.status() == RideStatus.FULL
+                                    || r.status() == RideStatus.DEPARTED));
+                if (hasConflictingRide) {
+                    bot.send(BotMessageBuilder.text(chatId,
+                            "⚠️ You already have an active " + direction.label() +
+                            " ride. Cancel or complete it first before posting a new one."));
+                    stateManager.reset(chatId);
+                    return;
+                }
+                boolean hasConflictingBooking = bookingService.getMyBookings(carpoolUserId).stream()
+                        .anyMatch(b -> b.ride() != null && b.ride().direction() == direction);
+                if (hasConflictingBooking) {
+                    bot.send(BotMessageBuilder.text(chatId,
+                            "⚠️ You have an active booking as a passenger on a " + direction.label() +
+                            " ride. Cancel it first before posting a new one."));
+                    stateManager.reset(chatId);
+                    return;
+                }
                 UserState updated = state.withDirection(direction);
                 stateManager.save(chatId, updated);
                 postRideHandler.askForEtd(chatId, updated, bot);

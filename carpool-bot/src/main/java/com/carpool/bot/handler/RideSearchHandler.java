@@ -65,6 +65,7 @@ public class RideSearchHandler {
                         "⚠️ <b>You have an active " + searchDir.label() + " ride posted.</b>\n\n" +
                         "Please cancel or complete your ride first before " +
                         "looking for a ride as a passenger."));
+                stateManager.reset(ctx.chatId());
                 return;
             }
 
@@ -75,6 +76,7 @@ public class RideSearchHandler {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                         "⚠️ <b>You already have an active booking on a " + searchDir.label() + " ride.</b>\n\n" +
                         "Cancel it first before searching for a new one."));
+                stateManager.reset(ctx.chatId());
                 return;
             }
 
