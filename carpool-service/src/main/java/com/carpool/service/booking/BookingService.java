@@ -7,6 +7,7 @@ import com.carpool.domain.entity.RideWaypoint;
 import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.PaymentStatus;
+import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.RideRepository;
@@ -103,14 +104,15 @@ public class BookingService {
         }
 
         // ── 5b. Prevent booking a ride while having an active ride as driver ─
-        boolean passengerHasActiveRide = rideRepository
-                .findActiveRideByDriverId(passengerUserId)
-                .isPresent();
+        boolean passengerHasActiveRide = rideRepository.existsByDriverIdAndDirectionAndStatusIn(
+                passengerUserId, ride.getDirection(),
+                List.of(RideStatus.ACTIVE, RideStatus.FULL, RideStatus.DEPARTED));
 
         if (passengerHasActiveRide) {
             throw new InvalidRideStateException(
-                    "You have an active ride posted as a driver. " +
-                            "Please cancel or complete your ride before booking as a passenger.");
+                    "You have an active " + ride.getDirection().label() +
+                    " ride posted as a driver. " +
+                    "Please cancel or complete it before booking as a passenger.");
         }
 
         User passenger = userRepository.findById(passengerUserId)

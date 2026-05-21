@@ -50,23 +50,22 @@ public class RideSearchHandler {
     // ── Find ride ─────────────────────────────────────────────────────────
 
     public void handleStartFindRide(BotContext ctx) {
-        long activeCount = rideService.getMyRides(ctx.carpoolUserId()).stream()
-                .filter(r -> r.status() == RideStatus.ACTIVE
-                        || r.status() == RideStatus.FULL
-                        || r.status() == RideStatus.DEPARTED)
-                .count();
-
-        if (activeCount > 0) {
-            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    """
-                            ⚠️ <b>You have an active ride posted.</b>
-                            
-                            Please cancel or complete your ride first before \
-                            looking for a ride as a passenger."""));
-            return;
-        }
-
         if (ctx.state().getDirection() != null) {
+            RideDirection searchDir = ctx.state().getDirection();
+            boolean hasConflictingRide = rideService.getMyRides(ctx.carpoolUserId()).stream()
+                    .filter(r -> r.status() == RideStatus.ACTIVE
+                            || r.status() == RideStatus.FULL
+                            || r.status() == RideStatus.DEPARTED)
+                    .anyMatch(r -> r.direction() == searchDir);
+
+            if (hasConflictingRide) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ <b>You have an active " + searchDir.label() + " ride posted.</b>\n\n" +
+                        "Please cancel or complete your ride first before " +
+                        "looking for a ride as a passenger."));
+                return;
+            }
+
             YearMonth month = YearMonth.now(MANILA);
             stateManager.save(ctx.chatId(), ctx.state()
                     .withCarpoolUserId(ctx.carpoolUserId())
