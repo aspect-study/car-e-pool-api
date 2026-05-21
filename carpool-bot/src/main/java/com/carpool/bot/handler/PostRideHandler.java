@@ -22,6 +22,8 @@ import com.carpool.service.dto.request.SuggestHubRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.HubResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.common.exception.InvalidRideStateException;
+import com.carpool.service.booking.BookingService;
 import com.carpool.service.hub.HubService;
 import com.carpool.service.note.DriverNoteService;
 import com.carpool.service.ride.RideService;
@@ -54,6 +56,7 @@ public class PostRideHandler {
     private final StateManager      stateManager;
     private final UserRepository    userRepository;
     private final RideService       rideService;
+    private final BookingService    bookingService;
     private final HubService        hubService;
     private final HubMatcher        hubMatcher;
     private final DriverNoteService driverNoteService;
@@ -74,6 +77,7 @@ public class PostRideHandler {
                     .withFlow(BotFlow.POST_RIDE_DIRECTION));
             return;
         }
+        if (sendConflictMessageIfAny(ctx, ctx.state().getDirection())) return;
         askForEtd(ctx.chatId(), ctx.state(), ctx.bot());
     }
 
@@ -584,6 +588,10 @@ public class PostRideHandler {
                             BotMessageBuilder.formatRideCard(ride) +
                             "\n\nPassengers can now find and book your ride."));
 
+        } catch (InvalidRideStateException e) {
+            log.warn("Ride post blocked for userId={}: {}", ctx.carpoolUserId(), e.getMessage());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ " + e.getMessage()));
+            stateManager.reset(ctx.chatId());
         } catch (Exception e) {
             log.error("Failed to post ride for userId={}: {}",
                     ctx.carpoolUserId(), e.getMessage());
@@ -597,6 +605,42 @@ public class PostRideHandler {
         stateManager.reset(ctx.chatId());
         ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                 "❌ Ride posting cancelled."));
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+
+    /**
+     * Checks for a same-direction active driver ride or active passenger booking.
+     * Sends the conflict message and resets state if a conflict is found.
+     * Returns true if a conflict was found (caller should return immediately).
+     */
+    private boolean sendConflictMessageIfAny(BotContext ctx, RideDirection direction) {
+        boolean hasActiveRide = rideService.getMyRides(ctx.carpoolUserId()).stream()
+                .anyMatch(r -> r.direction() == direction
+                        && (r.status() == RideStatus.ACTIVE
+                            || r.status() == RideStatus.FULL
+                            || r.status() == RideStatus.DEPARTED));
+
+        if (hasActiveRide) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You already have an active " + direction.label() +
+                    " ride. Cancel or complete it first before posting a new one."));
+            stateManager.reset(ctx.chatId());
+            return true;
+        }
+
+        boolean hasActiveBooking = bookingService.getMyBookings(ctx.carpoolUserId()).stream()
+                .anyMatch(b -> b.ride().direction() == direction);
+
+        if (hasActiveBooking) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You have an active booking as a passenger on a " + direction.label() +
+                    " ride. Cancel it first before posting a new one."));
+            stateManager.reset(ctx.chatId());
+            return true;
+        }
+
+        return false;
     }
 
     // ── Repost ride ───────────────────────────────────────────────────────
@@ -818,6 +862,7 @@ public class PostRideHandler {
                 ? RideDirection.HOME_TO_WORK : RideDirection.WORK_TO_HOME;
 
         if (ctx.state().getFlow() == BotFlow.POST_RIDE_DIRECTION) {
+            if (sendConflictMessageIfAny(ctx, direction)) return;
             UserState updated = ctx.state()
                     .withDirection(direction)
                     .withCarpoolUserId(ctx.carpoolUserId())
