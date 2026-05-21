@@ -80,6 +80,7 @@ public class BotFlowHelper {
 
             long pendingCount = bookingService.countPendingRequestsForDriver(carpoolUserId);
             boolean canReannounce = active.announceCount() != null && active.announceCount() < 10;
+            List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
 
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
@@ -88,6 +89,10 @@ public class BotFlowHelper {
                         BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id(), ButtonStyle.SUCCESS.toString())
                 ));
+                if (!myBookings.isEmpty()) {
+                    rows.add(List.of(BotMessageBuilder.button(
+                            "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+                }
                 rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
 
             } else if (pendingCount > 0) {
@@ -105,6 +110,10 @@ public class BotFlowHelper {
                             "REANNOUNCE_RIDE:" + active.id(),
                             ButtonStyle.PRIMARY.toString())));
                 }
+                if (!myBookings.isEmpty()) {
+                    rows.add(List.of(BotMessageBuilder.button(
+                            "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+                }
                 rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
                 rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
 
@@ -119,6 +128,10 @@ public class BotFlowHelper {
                             "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
                             "REANNOUNCE_RIDE:" + active.id(),
                             null)));
+                }
+                if (!myBookings.isEmpty()) {
+                    rows.add(List.of(BotMessageBuilder.button(
+                            "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
                 }
                 rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
                 rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
