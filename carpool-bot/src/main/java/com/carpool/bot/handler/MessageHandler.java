@@ -15,6 +15,7 @@ import com.carpool.repository.UserRepository;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.common.util.HtmlEscapeUtil;
+import com.carpool.service.booking.BookingService;
 import com.carpool.service.favorite.FavoriteService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.rating.RatingService;
@@ -52,6 +53,7 @@ public class MessageHandler {
     private final StateManager    stateManager;
     private final UserRepository  userRepository;
     private final RideService     rideService;
+    private final BookingService  bookingService;
     private final RatingService   ratingService;
     private final ProfileService  profileService;
     private final FavoriteService favoriteService;
@@ -135,6 +137,28 @@ public class MessageHandler {
                     ? RideDirection.HOME_TO_WORK : RideDirection.WORK_TO_HOME;
 
             if (state.getFlow() == BotFlow.SEARCH_SELECT_DIRECTION) {
+                boolean hasConflictingRide = rideService.getMyRides(carpoolUserId).stream()
+                        .anyMatch(r -> r.direction() == direction
+                                && (r.status() == RideStatus.ACTIVE
+                                    || r.status() == RideStatus.FULL
+                                    || r.status() == RideStatus.DEPARTED));
+                if (hasConflictingRide) {
+                    bot.send(BotMessageBuilder.text(chatId,
+                            "⚠️ <b>You have an active " + direction.label() + " ride posted.</b>\n\n" +
+                            "Please cancel or complete your ride first before " +
+                            "looking for a ride as a passenger."));
+                    stateManager.reset(chatId);
+                    return;
+                }
+                boolean hasConflictingBooking = bookingService.getMyBookings(carpoolUserId).stream()
+                        .anyMatch(b -> b.ride() != null && b.ride().direction() == direction);
+                if (hasConflictingBooking) {
+                    bot.send(BotMessageBuilder.text(chatId,
+                            "⚠️ <b>You already have an active booking on a " + direction.label() + " ride.</b>\n\n" +
+                            "Cancel it first before searching for a new one."));
+                    stateManager.reset(chatId);
+                    return;
+                }
                 YearMonth month = YearMonth.now(MANILA);
                 stateManager.save(chatId, state
                         .withDirection(direction)

@@ -13,6 +13,7 @@ import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.service.dto.response.ProfileStatsResponse;
 import com.carpool.service.dto.response.RideResponse;
+import com.carpool.service.booking.BookingService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.rating.RatingService;
 import com.carpool.service.ride.RideService;
@@ -39,10 +40,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RideSearchHandler {
 
-    private final StateManager  stateManager;
-    private final RideService   rideService;
-    private final BotFlowHelper flowHelper;
-    private final RatingService ratingService;
+    private final StateManager   stateManager;
+    private final RideService    rideService;
+    private final BookingService bookingService;
+    private final BotFlowHelper  flowHelper;
+    private final RatingService  ratingService;
     private final ProfileService profileService;
 
     private static final ZoneId MANILA = ZoneId.of("Asia/Manila");
@@ -63,6 +65,16 @@ public class RideSearchHandler {
                         "⚠️ <b>You have an active " + searchDir.label() + " ride posted.</b>\n\n" +
                         "Please cancel or complete your ride first before " +
                         "looking for a ride as a passenger."));
+                return;
+            }
+
+            boolean hasConflictingBooking = bookingService.getMyBookings(ctx.carpoolUserId()).stream()
+                    .anyMatch(b -> b.ride() != null && b.ride().direction() == searchDir);
+
+            if (hasConflictingBooking) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ <b>You already have an active booking on a " + searchDir.label() + " ride.</b>\n\n" +
+                        "Cancel it first before searching for a new one."));
                 return;
             }
 

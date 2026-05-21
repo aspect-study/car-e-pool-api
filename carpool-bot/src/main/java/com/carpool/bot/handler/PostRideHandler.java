@@ -630,7 +630,7 @@ public class PostRideHandler {
         }
 
         boolean hasActiveBooking = bookingService.getMyBookings(ctx.carpoolUserId()).stream()
-                .anyMatch(b -> b.ride().direction() == direction);
+                .anyMatch(b -> b.ride() != null && b.ride().direction() == direction);
 
         if (hasActiveBooking) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -877,6 +877,28 @@ public class PostRideHandler {
         }
 
         if (ctx.state().getFlow() == BotFlow.SEARCH_SELECT_DIRECTION) {
+            boolean hasConflictingRide = rideService.getMyRides(ctx.carpoolUserId()).stream()
+                    .anyMatch(r -> r.direction() == direction
+                            && (r.status() == RideStatus.ACTIVE
+                                || r.status() == RideStatus.FULL
+                                || r.status() == RideStatus.DEPARTED));
+            if (hasConflictingRide) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ <b>You have an active " + direction.label() + " ride posted.</b>\n\n" +
+                        "Please cancel or complete your ride first before " +
+                        "looking for a ride as a passenger."));
+                stateManager.reset(ctx.chatId());
+                return;
+            }
+            boolean hasConflictingBooking = bookingService.getMyBookings(ctx.carpoolUserId()).stream()
+                    .anyMatch(b -> b.ride() != null && b.ride().direction() == direction);
+            if (hasConflictingBooking) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ <b>You already have an active booking on a " + direction.label() + " ride.</b>\n\n" +
+                        "Cancel it first before searching for a new one."));
+                stateManager.reset(ctx.chatId());
+                return;
+            }
             UserState updated = ctx.state()
                     .withDirection(direction)
                     .withCarpoolUserId(ctx.carpoolUserId())
