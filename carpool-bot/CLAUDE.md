@@ -16,9 +16,35 @@ Telegram bot module. Depends on `carpool-service`. All bot interaction logic liv
 
 **Stale button hazard:** Telegram messages stay interactive forever. A user can tap a button from an old message after their state has been reset (e.g., by returning to the main menu). All hub-selection and confirmation callbacks in `PostRideHandler` guard against this by checking that required state fields (`direction`, `originHubId`) are non-null before proceeding — missing fields mean the button is stale and a session-expired message is shown instead of crashing. `handleVehicleSelect` additionally checks that `departureTime`, `originHubId`, `seats`, and `contribution` are all non-null before calling `showConfirmation()` (which auto-unboxes `seats` and `contribution` and would NPE on null).
 
+## Direction-Scoped Conflict Checks
+
+Conflict checks are direction-scoped — a user can drive HOME_TO_WORK while holding a WORK_TO_HOME passenger booking. All bot-side checks are early-warning UX; `RideService.createRide()` and `BookingService.createBooking()` are the authoritative service-layer gates (see `carpool-service/CLAUDE.md`).
+
+**Post-ride flow — `PostRideHandler.sendConflictMessageIfAny(BotContext ctx, RideDirection direction)`:**
+Private helper called at two points: (1) `handleStartPostRide()` when direction is already in state (repost/AI pre-fill path), and (2) `handleDirectionCallback()` when flow == `POST_RIDE_DIRECTION`. Streams `rideService.getMyRides()` for ACTIVE/FULL/DEPARTED driver rides in the same direction, then streams `bookingService.getMyBookings()` for same-direction passenger bookings. On any conflict, sends a message, calls `stateManager.reset()`, and returns `true` so the caller returns immediately. Always passes a non-null `direction` — `handleStartPostRide` guards with `if (direction == null) return` before calling this helper.
+
+**Post-ride flow — `MessageHandler` reply keyboard path:**
+`MessageHandler` injects both `RideService` and `BookingService`. When flow == `POST_RIDE_DIRECTION` and the user taps the persistent reply keyboard direction button (instead of the inline selector), `MessageHandler` runs the same inline conflict check before calling `postRideHandler.askForEtd()`.
+
+**Search flow — `RideSearchHandler.handleStartFindRide()` re-entry branch:**
+Triggered when direction is already in state (e.g. "Try Different Time" re-entry). Checks driver ride conflict, then passenger booking conflict. Both conflict returns call `stateManager.reset()` — without it, direction stays in state and every subsequent FIND_RIDE tap re-shows the warning with no exit. `BookingService` is injected into `RideSearchHandler` for this check.
+
+**Search flow — direction selection paths:**
+`PostRideHandler.handleDirectionCallback()` (flow == `SEARCH_SELECT_DIRECTION`) and `MessageHandler` (flow == `SEARCH_SELECT_DIRECTION` reply keyboard) both run the same driver-ride + passenger-booking inline check before showing the calendar.
+
 ## Session Recovery
 
 `SessionRecoveryHandler.isFlowSensitive(action)` guards against stale buttons after a bot restart. Flow-sensitive actions (post-ride steps, rating steps, custom hub confirmation) show a context-aware "session expired" message instead of crashing. Non-flow-sensitive actions (`MY_PROFILE`, `PENDING_HUBS`, etc.) get a fresh `UserState.initial()` and proceed normally.
+
+## Main Menu — Active-Ride Block
+
+`BotFlowHelper.showMainMenu()` has two branches. When `hasActiveRide` is true, the active-ride block now also fetches `bookingService.getMyBookings(carpoolUserId)` and adds a `📜 My Bookings (N) → MY_BOOKINGS` row to all three sub-branches (DEPARTED, pendingCount > 0, and the default ACTIVE/FULL branch) whenever the list is non-empty. This allows drivers to access their passenger-side bookings without leaving the active-ride view.
+
+**Button naming convention — critical distinction:**
+- `👥 My Passengers` → callback `RIDE_BOOKINGS:{rideId}` — driver views passengers booked **onto their ride**. Appears in the active-ride menu and on ride cards when the viewer is the driver.
+- `📜 My Bookings (N)` → callback `MY_BOOKINGS` — user views their own bookings **as a passenger** on someone else's ride.
+
+These two buttons coexist in the active-ride menu when the driver also has a passenger booking. Never use "View Bookings" — it was renamed to "My Passengers" precisely to avoid ambiguity with "My Bookings".
 
 ## Departure Time Guard
 

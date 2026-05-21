@@ -6,6 +6,10 @@ Business logic, DTOs, MapStruct mapper, event system, schedulers, and AI service
 
 Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `NotificationService` listens with `@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)` — notifications only fire after the outer transaction commits, run in a virtual thread, and write to the `notifications` table with PENDING → SENT/FAILED status.
 
+**`sendAndRecord` overloads:** The private `sendAndRecord(User, String, String, Map)` delegates to `sendAndRecord(User, String, String, Map, List<List<InlineButton>>)`. The overload with keyboard calls `telegramPort.sendMessageWithKeyboard()` when keyboard is non-null/non-empty, and `telegramPort.sendMessage()` otherwise. Both persist the notification record with PENDING → SENT/FAILED status. Use the keyboard overload when a notification needs actionable inline buttons without splitting into two separate DMs.
+
+**`onBookingConfirmed`** uses the keyboard overload to attach a `📋 View My Booking → VIEW_BOOKING:{bookingId}` inline button to the passenger's confirmation DM. This is the only `sendAndRecord` call currently using the keyboard overload.
+
 ## Multi-Vehicle Management
 
 `Vehicle` is a domain entity (soft-delete via `deletedAt`) with fields `user (FK LAZY)`, `plateNumber`, `model`, `color`, `seatCapacity (Integer)`. `VehicleRepository` exposes `findByUserIdAndDeletedAtIsNullOrderByCreatedAtAsc`, `findActiveByPlateForOtherUser`, and `existsByUserIdAndDeletedAtIsNull`.
@@ -45,6 +49,19 @@ For the bot-side CarpoolBot methods (sendToGroup, sendToUser, group buttons, han
 **Remove Passenger:** `BookingService` cancels the booking with status `CANCELLED_BY_DRIVER`, decrements `ride.availableSeats`, transitions the ride from FULL back to ACTIVE if needed, notifies the removed passenger, and publishes `BookingCancelledByDriverEvent`. `GroupNotificationService.onBookingCancelledByDriver()` picks this up and calls `refreshGroupPostAfterSeatFreed`.
 
 **Auto-sync on acceptance (ride goes FULL):** When a driver accepts a booking that fills the last available seat, `BookingService` auto-cancels all remaining PENDING bookings on the same ride. Each auto-cancelled booking fires `BookingAutoSyncedEvent` and the affected passenger receives a notification. `GroupNotificationService.onBookingAutoSynced()` calls `refreshGroupPostAfterSeatFreed` — however, since the ride is now FULL (0 seats), `onBookingConfirmed` has already deleted the group post, so the refresh guard (`groupMessageId == null`) typically short-circuits this call.
+
+## Direction-Scoped Conflict Checks
+
+Conflict checks are direction-scoped — a user can drive HOME_TO_WORK and hold a WORK_TO_HOME passenger booking at the same time. `RideDirection.label()` returns a human-readable string (`"home-to-work"`, `"work-to-home"`, `"other"`) used in all error messages.
+
+**`RideService.createRide()` guards (before inserting the ride):**
+- `rideRepository.existsByDriverIdAndDirectionAndStatusIn(driverId, direction, [ACTIVE, FULL])` — throws `InvalidRideStateException` if driver already has an active same-direction ride.
+- `bookingRepository.existsByPassengerIdAndRide_DirectionAndStatusIn(driverId, direction, [CONFIRMED, PENDING])` — throws `InvalidRideStateException` if the same user has an active same-direction passenger booking.
+
+**`BookingService.createBooking()` step 5b:**
+- `rideRepository.existsByDriverIdAndDirectionAndStatusIn(passengerId, direction, [ACTIVE, FULL, DEPARTED])` — throws `InvalidRideStateException` if the passenger has a same-direction driver ride in progress. DEPARTED is included here (not in `createRide`) because a departed ride is actively running.
+
+The bot-side checks in `PostRideHandler`, `RideSearchHandler`, and `MessageHandler` are early-warning UX that fire before the user fills a form. The service layer is the authoritative gate and must remain consistent with it.
 
 ## Booking: Pessimistic Locking
 
