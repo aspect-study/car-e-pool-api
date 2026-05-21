@@ -80,6 +80,9 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("now")        LocalDateTime now
     );
 
+    boolean existsByDriverIdAndDirectionAndStatusIn(
+            Long driverId, RideDirection direction, List<RideStatus> statuses);
+
     /**
      * Driver's own rides — for "My Offered Rides" view.
      */

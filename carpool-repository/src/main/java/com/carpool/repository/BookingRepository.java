@@ -2,6 +2,7 @@ package com.carpool.repository;
 
 import com.carpool.domain.entity.Booking;
 import com.carpool.domain.enums.BookingStatus;
+import com.carpool.domain.enums.RideDirection;
 import com.carpool.domain.enums.RideStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -304,4 +305,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     long countByPassengerIdAndStatusIn(
             @Param("passengerId") Long passengerId,
             @Param("statuses") List<BookingStatus> statuses);
+
+    boolean existsByPassengerIdAndRide_DirectionAndStatusIn(
+            Long passengerId, RideDirection direction, List<BookingStatus> statuses);
 }

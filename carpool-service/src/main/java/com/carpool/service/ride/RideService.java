@@ -63,27 +63,23 @@ public class RideService {
             throw new InsufficientRoleException("DRIVER");
         }
 
-        // Validate: driver can only have one active ride at a time
-        boolean hasActiveRide = !rideRepository
-                .findByDriverIdAndStatusInOrderByDepartureTimeDesc(
-                        driverUserId,
-                        List.of(RideStatus.ACTIVE, RideStatus.FULL))
-                .isEmpty();
+        boolean hasActiveRide = rideRepository.existsByDriverIdAndDirectionAndStatusIn(
+                driverUserId, request.direction(), List.of(RideStatus.ACTIVE, RideStatus.FULL));
 
         if (hasActiveRide) {
             throw new InvalidRideStateException(
-                    "You already have an active ride. Cancel or complete it first before posting a new one.");
+                    "You already have an active " + request.direction().label() +
+                    " ride. Cancel or complete it first before posting a new one.");
         }
 
-        // Prevent posting a ride if user has an active booking as passenger
-        boolean hasActiveBooking = bookingRepository
-                .countByPassengerIdAndStatusIn(
-                        driverUserId,
-                        List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING)) > 0;
+        boolean hasActiveBooking = bookingRepository.existsByPassengerIdAndRide_DirectionAndStatusIn(
+                driverUserId, request.direction(),
+                List.of(BookingStatus.CONFIRMED, BookingStatus.PENDING));
 
         if (hasActiveBooking) {
             throw new InvalidRideStateException(
-                    "You have an active booking as a passenger. Cancel it first before posting a ride.");
+                    "You have an active booking as a passenger on a " + request.direction().label() +
+                    " ride. Cancel it first before posting a new one.");
         }
 
         Hub origin = hubRepository.findById(request.originHubId())
