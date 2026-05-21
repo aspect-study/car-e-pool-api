@@ -102,7 +102,11 @@ public class NotificationService {
                 buildPassengerConfirmationMessage(booking),
                 Map.of("bookingId", booking.getId(),
                         "rideId",    ride.getId(),
-                        "contribution", booking.getContributionDue()));
+                        "contribution", booking.getContributionDue()),
+                List.of(List.of(
+                        new TelegramNotificationPort.InlineButton(
+                                "📋 View My Booking", "VIEW_BOOKING:" + booking.getId())
+                )));
 
         log.info("Booking confirmed notification sent to passenger: bookingId={} passengerId={}",
                 booking.getId(), pax.getId());
@@ -637,6 +641,12 @@ public class NotificationService {
 
     private void sendAndRecord(User recipient, String type, String message,
                                Map<String, Object> payloadData) {
+        sendAndRecord(recipient, type, message, payloadData, null);
+    }
+
+    private void sendAndRecord(User recipient, String type, String message,
+                               Map<String, Object> payloadData,
+                               List<List<TelegramNotificationPort.InlineButton>> keyboard) {
         Notification notification = Notification.builder()
                 .user(recipient)
                 .type(type)
@@ -647,7 +657,11 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
 
         try {
-            telegramPort.sendMessage(recipient.getTelegramId(), message);
+            if (keyboard != null && !keyboard.isEmpty()) {
+                telegramPort.sendMessageWithKeyboard(recipient.getTelegramId(), message, keyboard);
+            } else {
+                telegramPort.sendMessage(recipient.getTelegramId(), message);
+            }
             notification.setStatus(NotificationStatus.SENT);
             notification.setSentAt(Instant.now());
             log.debug("Notification sent: type={} userId={}", type, recipient.getId());
