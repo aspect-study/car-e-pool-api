@@ -19,18 +19,17 @@ target/
 # Environment files with actual secrets
 .documents/
 .env
-.md
-*.json
 
-# Claude Code local config — contains personal memory and session files
-.claude/
+# Claude Code — ignore only machine-specific local config, not shared project skills
+.claude/settings.local.json
 
 # Internal project docs — not for public exposure
-CLAUDE.md
-USER_MANUAL.md
-TODOS.md
-docker-compose.yml
-Dockerfile
+# Leading slash anchors these to the repo root only
+/CLAUDE.md
+/USER_MANUAL.md
+/TODOS.md
+/docker-compose.yml
+/Dockerfile
 
 # compressed files
 *.zip
