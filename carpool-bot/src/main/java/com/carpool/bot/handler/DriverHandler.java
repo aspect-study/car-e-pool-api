@@ -632,7 +632,7 @@ public class DriverHandler {
                             The passenger has been notified and their seat(s) have been freed.
                             Your ride announcement has been updated.""",
                     List.of(List.of(
-                            BotMessageBuilder.button("📋 View Bookings", "DRIVER_BOOKINGS", ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("👥 My Passengers", "DRIVER_BOOKINGS", ButtonStyle.PRIMARY.toString()),
                             BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                     ))));
         } catch (Exception e) {
@@ -698,7 +698,7 @@ public class DriverHandler {
                     List.of(List.of(
                             BotMessageBuilder.button("✅ Complete Ride",
                                     "COMPLETE_RIDE:" + ctx.entityId(), ButtonStyle.SUCCESS.toString()),
-                            BotMessageBuilder.button("📋 View Bookings", "DRIVER_BOOKINGS", ButtonStyle.PRIMARY.toString())
+                            BotMessageBuilder.button("👥 My Passengers", "DRIVER_BOOKINGS", ButtonStyle.PRIMARY.toString())
                     ))));
 
         } catch (Exception e) {

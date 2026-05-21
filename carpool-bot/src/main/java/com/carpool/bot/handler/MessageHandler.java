@@ -307,7 +307,7 @@ public class MessageHandler {
                 List<List<InlineKeyboardButton>> rows = isDriver
                         ? List.of(List.of(
                         BotMessageBuilder.button(
-                                "📋 View Bookings", "RIDE_BOOKINGS:" + rideId,  ButtonStyle.PRIMARY.toString()),
+                                "👥 My Passengers", "RIDE_BOOKINGS:" + rideId,  ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())))
                         : List.of(List.of(
                         BotMessageBuilder.button(
@@ -386,7 +386,7 @@ public class MessageHandler {
             if (isDriver) {
                 text = rideCard;
                 rows = List.of(List.of(
-                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + rideId, ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + rideId, ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU",               ButtonStyle.PRIMARY.toString())));
             } else if (followed) {
                 String driverName = HtmlEscapeUtil.escape(ride.driver().fullName());

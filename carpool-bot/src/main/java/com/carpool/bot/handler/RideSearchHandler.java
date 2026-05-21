@@ -233,7 +233,7 @@ public class RideSearchHandler {
 
             if (isDriver) {
                 rows = List.of(List.of(
-                        BotMessageBuilder.button("📋 Bookings",
+                        BotMessageBuilder.button("👥 My Passengers",
                                 "RIDE_BOOKINGS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("❌ Cancel",
                                 "CANCEL_RIDE:"   + ctx.entityId(), ButtonStyle.DANGER.toString())

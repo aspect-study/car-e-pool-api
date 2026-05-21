@@ -86,7 +86,7 @@ public class BotFlowHelper {
 
             if (active.status() == RideStatus.DEPARTED) {
                 rows.add(List.of(
-                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id(), ButtonStyle.SUCCESS.toString())
                 ));
                 if (!myBookings.isEmpty()) {
@@ -97,7 +97,7 @@ public class BotFlowHelper {
 
             } else if (pendingCount > 0) {
                 rows.add(List.of(
-                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(), ButtonStyle.SUCCESS.toString())
                 ));
                 rows.add(List.of(
@@ -119,7 +119,7 @@ public class BotFlowHelper {
 
             } else {
                 rows.add(List.of(
-                        BotMessageBuilder.button("📋 View Bookings", "RIDE_BOOKINGS:" + active.id(),  ButtonStyle.PRIMARY.toString()),
+                        BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(),  ButtonStyle.PRIMARY.toString()),
                         BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(),  ButtonStyle.SUCCESS.toString())
                 ));
                 rows.add(List.of(BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(),  ButtonStyle.DANGER.toString())));
