@@ -34,17 +34,43 @@ Triggered when direction is already in state (e.g. "Try Different Time" re-entry
 
 ## Session Recovery
 
-`SessionRecoveryHandler.isFlowSensitive(action)` guards against stale buttons after a bot restart. Flow-sensitive actions (post-ride steps, rating steps, custom hub confirmation) show a context-aware "session expired" message instead of crashing. Non-flow-sensitive actions (`MY_PROFILE`, `PENDING_HUBS`, etc.) get a fresh `UserState.initial()` and proceed normally.
+`SessionRecoveryHandler.isFlowSensitive(action)` guards against stale buttons after a bot restart. Flow-sensitive actions (post-ride steps, rating steps, custom hub confirmation, edit-time steps) show a context-aware "session expired" message instead of crashing. Non-flow-sensitive actions (`MY_PROFILE`, `PENDING_HUBS`, etc.) get a fresh `UserState.initial()` and proceed normally.
+
+All five edit-time callbacks are registered as flow-sensitive via `EDIT_TIME_ACTIONS = Set.of("EDIT_RIDE_TIME", "CAL_NAV_EDIT_TIME", "CAL_DATE_EDIT_TIME", "RIDE_TIME_EDIT", "TIME_NAV_EDIT")`.
 
 ## Main Menu — Active-Ride Block
 
 `BotFlowHelper.showMainMenu()` has two branches. When `hasActiveRide` is true, the active-ride block now also fetches `bookingService.getMyBookings(carpoolUserId)` and adds a `📜 My Bookings (N) → MY_BOOKINGS` row to all three sub-branches (DEPARTED, pendingCount > 0, and the default ACTIVE/FULL branch) whenever the list is non-empty. This allows drivers to access their passenger-side bookings without leaving the active-ride view.
 
+A `✏️ Edit Time → EDIT_RIDE_TIME:{rideId}` button is included in both the `pendingCount > 0` branch and the default ACTIVE/FULL branch. It is intentionally excluded from the DEPARTED branch — `RideService.updateDepartureTime()` rejects edits on DEPARTED rides at the service layer.
+
 **Button naming convention — critical distinction:**
 - `👥 My Passengers` → callback `RIDE_BOOKINGS:{rideId}` — driver views passengers booked **onto their ride**. Appears in the active-ride menu and on ride cards when the viewer is the driver.
 - `📜 My Bookings (N)` → callback `MY_BOOKINGS` — user views their own bookings **as a passenger** on someone else's ride.
+- `✏️ Edit Time` → callback `EDIT_RIDE_TIME:{rideId}` — driver updates the departure time of their active or FULL ride.
 
-These two buttons coexist in the active-ride menu when the driver also has a passenger booking. Never use "View Bookings" — it was renamed to "My Passengers" precisely to avoid ambiguity with "My Bookings".
+These buttons coexist in the active-ride menu. Never use "View Bookings" — it was renamed to "My Passengers" precisely to avoid ambiguity with "My Bookings".
+
+## Edit Departure Time Flow
+
+Drivers can change the departure time of an ACTIVE or FULL ride. Entry points: `✏️ Edit Time` button in the main menu active-ride block, and `✏️ Edit Time` button in `RideSearchHandler.handleViewRide()` when the viewer is the driver.
+
+**BotFlow states:** `EDIT_RIDE_TIME_SELECT_DATE` (calendar shown) → `EDIT_RIDE_TIME_PICK` (time picker shown).
+
+**Callbacks registered in `CallbackHandler`:**
+- `EDIT_RIDE_TIME` → `DriverHandler.handleEditRideTime()` — validates ownership + status (ACTIVE/FULL), stores `selectedRideId` and `direction` in `UserState`, shows calendar.
+- `CAL_NAV_EDIT_TIME` → `handleEditRideTimeCalendarNav()` — prev/next month navigation; updates `calendarMonth` in state.
+- `CAL_DATE_EDIT_TIME` → `handleEditRideTimeDateSelected()` — stores chosen date as `editTimeSelectedDate` in `UserState`, transitions to `EDIT_RIDE_TIME_PICK`, shows time picker.
+- `TIME_NAV_EDIT` → `handleEditRideTimePickerNav()` — earlier/later page navigation; updates `timeWindowStart`.
+- `RIDE_TIME_EDIT` → `handleEditRideTimeSelected()` — parses hour/minute, validates `editTimeSelectedDate` and `selectedRideId` are non-null (stale-button guard), calls `rideService.updateDepartureTime()`, resets state to IDLE, shows confirmation.
+
+**`UserState.editTimeSelectedDate`** — dedicated field (`LocalDate`) added to hold the date chosen during the edit-time flow. Existing shared fields `selectedRideId`, `direction`, `calendarMonth`, and `timeWindowStart` are reused.
+
+**Calendar/time-picker prefix overloads:** `BotCalendarUtil.buildCalendar(calendarMonth, datePrefix, navPrefix)` and `BotTimePickerUtil.buildTimePicker(windowStart, selectedDate, slotPrefix, navPrefix)` accept custom callback prefixes, allowing the same UI components to be reused across the post-ride and edit-time flows without conflicts. `BotFlowHelper.showCalendar()` and `showTimePicker()` expose matching overloads.
+
+**Confirmed-passenger notification with Keep/Cancel buttons:** After `updateDepartureTime()` succeeds, `NotificationService.onRideTimeChanged()` sends each confirmed passenger a DM with `✅ Keep Booking → KEEP_BOOKING:{bookingId}` and `❌ Cancel Booking → CANCEL_BOOKING:{bookingId}` inline buttons (keyboard overload of `sendAndRecord`). `KEEP_BOOKING` is registered in `CallbackHandler` and shows a confirmation message without changing booking status (the booking remains CONFIRMED). `CANCEL_BOOKING` follows the standard passenger cancellation path.
+
+**Group post refresh:** `GroupNotificationService.onRideTimeChanged()` deletes the old group announcement and reposts a fresh one with the updated time. No 48-hour guard is applied — a time change is always high-signal. Returns early if `groupMessageId` is null or ride is not ACTIVE/FULL.
 
 ## Departure Time Guard
 

@@ -12,6 +12,8 @@ Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `Notifi
 
 **`onBookingReminder`** uses the keyboard overload to send the driver Accept/Decline/Menu buttons with each reminder DM. Failure is tracked as `NotificationStatus.FAILED` via `sendAndRecord` (previously the status was always recorded as SENT even on Telegram failure).
 
+**`onRideTimeChanged`** listens for `RideTimeChangedEvent` (`@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)`). Fetches all confirmed bookings for the ride; returns early if none. Formats new departure time as `"EEE, MMM d 'at' h:mm a"` (e.g. "Thu, May 23 at 7:30 AM"). Sends each confirmed passenger a DM with `✅ Keep Booking → KEEP_BOOKING:{bookingId}` and `❌ Cancel Booking → CANCEL_BOOKING:{bookingId}` inline buttons via the keyboard overload of `sendAndRecord`. Persists each notification with `NotificationTypes.RIDE_TIME_CHANGED` and PENDING → SENT/FAILED status.
+
 ## Multi-Vehicle Management
 
 `Vehicle` is a domain entity (soft-delete via `deletedAt`) with fields `user (FK LAZY)`, `plateNumber`, `model`, `color`, `seatCapacity (Integer)`. `VehicleRepository` exposes `findByUserIdAndDeletedAtIsNullOrderByCreatedAtAsc`, `findActiveByPlateForOtherUser`, and `existsByUserIdAndDeletedAtIsNull`.
@@ -33,6 +35,8 @@ DB migrations: V39 creates `vehicles` with soft-delete and FK to `users (ON DELE
 **Re-announce:** `RideService.reannounceRide()` increments `Ride.announceCount` (max 10 total) and re-fires `RidePostedEvent`. `onRidePosted` detects a non-null `groupMessageId` and deletes the old message first (isolated in its own try/catch — a Telegram failure logs a warning but does not abort the new post). Follower alerts are suppressed on re-announces: the loop is guarded by `announceCount <= 1` so followers receive only one DM per ride regardless of how many times the driver re-announces.
 
 **0-seats FULL handling:** When `onRidePosted` fires for a re-announce and `ride.getAvailableSeats() == 0`, the old group post has already been deleted. The method then detects the zero seat count, clears `Ride.groupMessageId` to `null` in DB (isolated try/catch), logs `"Ride is FULL — group announcement removed, not reposted"`, and returns early — no new announcement is posted.
+
+**Time-change refresh:** `GroupNotificationService.onRideTimeChanged()` (`@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)`) deletes the old group post and reposts a fresh announcement with the updated departure time. No 48-hour guard is applied (time changes are always high-signal). Returns early if `groupMessageId` is null or ride is not ACTIVE/FULL. Calls `persistGroupMessageId` on success.
 
 **Seat-freed auto-refresh:** `GroupNotificationService` listens for `BookingCancelledByDriverEvent` and `BookingAutoSyncedEvent`. Both call `refreshGroupPostAfterSeatFreed(rideId, reason)`. That private method: (1) loads the ride; (2) skips if `groupMessageId` is null, ride is not ACTIVE/FULL, or the ride is older than 48h; (3) deletes the old group post (isolated try/catch); (4) reposts a fresh announcement via `sendToGroup`; (5) calls `persistGroupMessageId` to save the new message ID and timestamp.
 
@@ -64,6 +68,15 @@ Conflict checks are direction-scoped — a user can drive HOME_TO_WORK and hold 
 - `rideRepository.existsByDriverIdAndDirectionAndStatusIn(passengerId, direction, [ACTIVE, FULL, DEPARTED])` — throws `InvalidRideStateException` if the passenger has a same-direction driver ride in progress. DEPARTED is included here (not in `createRide`) because a departed ride is actively running.
 
 The bot-side checks in `PostRideHandler`, `RideSearchHandler`, and `MessageHandler` are early-warning UX that fire before the user fills a form. The service layer is the authoritative gate and must remain consistent with it.
+
+## Update Departure Time
+
+`RideService.updateDepartureTime(rideId, newDepartureTime, callerId)` allows a driver to reschedule an active ride:
+- Acquires `SELECT FOR UPDATE` via `rideRepository.findByIdWithLock(rideId)` to prevent concurrent conflicts.
+- Validates: caller is ride owner (`NotRideOwnerException`); ride status is ACTIVE or FULL (`InvalidRideStateException`); new time ≠ current time (`InvalidRideStateException`); new time is ≥ 15 minutes from now (`InvalidRideStateException`).
+- Updates `ride.departureTime`, saves, then publishes `RideEvents.RideTimeChangedEvent(saved)`.
+- `RideTimeChangedEvent` is handled by `NotificationService.onRideTimeChanged` (passenger DMs with Keep/Cancel buttons) and `GroupNotificationService.onRideTimeChanged` (group post refresh).
+- `NotificationTypes.RIDE_TIME_CHANGED` constant used for the notification type field.
 
 ## Booking: Pessimistic Locking
 
