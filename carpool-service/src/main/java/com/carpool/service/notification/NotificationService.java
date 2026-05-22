@@ -905,7 +905,7 @@ public class NotificationService {
 
         Ride ride = confirmedBookings.get(0).getRide();
         String newTimeFormatted = ride.getDepartureTime()
-                .format(DateTimeFormatter.ofPattern("h:mm a"));
+                .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
 
         String msg = String.format(
                 "⏰ <b>Ride Time Updated</b>\n\n" +
