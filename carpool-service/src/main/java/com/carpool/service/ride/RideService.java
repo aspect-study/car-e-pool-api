@@ -454,6 +454,47 @@ public class RideService {
     }
 
     /**
+     * Updates the departure time of an active or full ride.
+     * Publishes RideTimeChangedEvent to notify confirmed passengers.
+     */
+    @Transactional
+    public RideResponse updateDepartureTime(Long rideId, LocalDateTime newTime, Long driverUserId) {
+        Ride ride = rideRepository.findByIdWithLock(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(driverUserId)) {
+            throw new NotRideOwnerException();
+        }
+
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
+            throw new InvalidRideStateException(
+                    "Only ACTIVE or FULL rides can have their departure time updated.");
+        }
+
+        if (newTime.equals(ride.getDepartureTime())) {
+            throw new InvalidRideStateException(
+                    "The new departure time is the same as the current time. No changes made.");
+        }
+
+        LocalDateTime now = LocalDateTime.now(MANILA);
+        if (!newTime.isAfter(now.plusMinutes(15))) {
+            throw new InvalidRideStateException(
+                    "Departure time must be at least 15 minutes from now.");
+        }
+
+        LocalDateTime oldTime = ride.getDepartureTime();
+        ride.setDepartureTime(newTime);
+        Ride saved = rideRepository.save(ride);
+
+        log.info("Departure time updated: rideId={} oldTime={} newTime={} driverId={}",
+                rideId, oldTime, newTime, driverUserId);
+
+        eventPublisher.publishEvent(new RideEvents.RideTimeChangedEvent(saved));
+
+        return mapper.toRideResponse(saved);
+    }
+
+    /**
      * Updates the available seat count on an active ride.
      * Used by re-announce flow to let the driver adjust seat count before bumping the post.
      */

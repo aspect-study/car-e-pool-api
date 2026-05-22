@@ -39,6 +39,8 @@ public enum BotFlow {
 
     // ── Driver: Manage active ride ────────────────────────────────────────
     MANAGE_RIDE,
+    EDIT_RIDE_TIME_SELECT_DATE,  // calendar shown for edit departure time flow
+    EDIT_RIDE_TIME_PICK,         // waiting for time slot tap in edit time flow
 
     // ── Passenger: Search rides ───────────────────────────────────────────────
     SEARCH_SELECT_DIRECTION,

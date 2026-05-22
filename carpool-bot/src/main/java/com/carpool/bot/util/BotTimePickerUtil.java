@@ -77,12 +77,29 @@ public class BotTimePickerUtil {
 
     /**
      * Builds the time picker inline keyboard for the given page.
+     * Uses default prefixes: "RIDE_TIME" for slots, "TIME_NAV" for Earlier/Later navigation.
      *
      * @param windowStart  page start in minutes (0, 300, 600, 900, 1200)
      * @param selectedDate selected date — past slots are omitted when this is today
      */
     public static InlineKeyboardMarkup buildTimePicker(int windowStart,
                                                        LocalDate selectedDate) {
+        return buildTimePicker(windowStart, selectedDate, "RIDE_TIME", "TIME_NAV");
+    }
+
+    /**
+     * Builds the time picker inline keyboard with custom callback prefixes.
+     * Allows reuse across different flows (post-ride, edit-time, etc.).
+     *
+     * @param windowStart   page start in minutes (0, 300, 600, 900, 1200)
+     * @param selectedDate  selected date — past slots are omitted when this is today
+     * @param slotPrefix    callback prefix for time slot buttons (e.g. "RIDE_TIME", "RIDE_TIME_EDIT")
+     * @param navPrefix     callback prefix for Earlier/Later buttons (e.g. "TIME_NAV", "TIME_NAV_EDIT")
+     */
+    public static InlineKeyboardMarkup buildTimePicker(int windowStart,
+                                                       LocalDate selectedDate,
+                                                       String slotPrefix,
+                                                       String navPrefix) {
         windowStart = Math.min(windowStart, MAX_WINDOW_START);
         boolean isToday = LocalDate.now(MANILA).equals(selectedDate);
         LocalTime now   = isToday ? LocalTime.now(MANILA) : null;
@@ -98,7 +115,7 @@ public class BotTimePickerUtil {
 
         for (int[] slot : slots) {
             currentRow.add(button(formatLabel(slot[0], slot[1]),
-                                  String.format("RIDE_TIME:%02d:%02d", slot[0], slot[1])));
+                                  String.format(slotPrefix + ":%02d:%02d", slot[0], slot[1])));
             if (currentRow.size() == BUTTONS_PER_ROW) {
                 rows.add(new ArrayList<>(currentRow));
                 currentRow = new ArrayList<>();
@@ -111,7 +128,7 @@ public class BotTimePickerUtil {
         }
 
         // Navigation row
-        rows.add(navRow(windowStart, isToday, now));
+        rows.add(navRow(windowStart, isToday, now, navPrefix));
 
         // Menu button
         rows.add(List.of(button("🏠 Menu", "MAIN_MENU")));
@@ -139,7 +156,8 @@ public class BotTimePickerUtil {
         return slots;
     }
 
-    private static List<InlineKeyboardButton> navRow(int windowStart, boolean isToday, LocalTime now) {
+    private static List<InlineKeyboardButton> navRow(int windowStart, boolean isToday,
+                                                      LocalTime now, String navPrefix) {
         boolean hasPrev = windowStart > 0;
         // For today: hide Earlier if the previous page has no available slots
         if (hasPrev && isToday) {
@@ -148,8 +166,8 @@ public class BotTimePickerUtil {
         boolean hasNext = windowStart + PAGE_SIZE_MIN < 24 * 60;
 
         List<InlineKeyboardButton> row = new ArrayList<>();
-        row.add(hasPrev ? button("◀️ Earlier", "TIME_NAV:EARLIER") : button(" ", "NOOP"));
-        row.add(hasNext ? button("Later ▶️",   "TIME_NAV:LATER")   : button(" ", "NOOP"));
+        row.add(hasPrev ? button("◀️ Earlier", navPrefix + ":EARLIER") : button(" ", "NOOP"));
+        row.add(hasNext ? button("Later ▶️",   navPrefix + ":LATER")   : button(" ", "NOOP"));
         return row;
     }
 

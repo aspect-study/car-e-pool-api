@@ -122,6 +122,19 @@ public class CallbackHandler {
         commands.put("CONFIRM_CANCEL_RIDE", driverHandler::handleConfirmCancelRide);
         commands.put("DEPART_RIDE", driverHandler::handleDepartRide);
         commands.put("COMPLETE_RIDE", driverHandler::handleCompleteRide);
+        commands.put("EDIT_RIDE_TIME",      driverHandler::handleEditRideTime);
+        commands.put("CAL_NAV_EDIT_TIME",   driverHandler::handleEditRideTimeCalendarNav);
+        commands.put("CAL_DATE_EDIT_TIME",  driverHandler::handleEditRideTimeDateSelected);
+        commands.put("TIME_NAV_EDIT",       driverHandler::handleEditRideTimePickerNav);
+        commands.put("RIDE_TIME_EDIT",      driverHandler::handleEditRideTimeSelected);
+        commands.put("KEEP_BOOKING", ctx -> {
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    "✅ <b>Got it!</b>\n\nYour booking is kept. See you on departure day!",
+                    List.of(List.of(
+                            BotMessageBuilder.button("📋 My Bookings", "MY_BOOKINGS", null),
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", null)
+                    ))));
+        });
 
         // ── Vehicle ───────────────────────────────────────────────────────
         commands.put("VEHICLE_CONFIRM_YES", profileHandler::handleVehicleConfirmYes);

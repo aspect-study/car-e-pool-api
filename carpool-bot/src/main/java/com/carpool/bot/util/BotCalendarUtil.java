@@ -36,11 +36,26 @@ public class BotCalendarUtil {
 
     /**
      * Builds the calendar inline keyboard for the given month.
+     * Uses default callback prefixes: "CAL_DATE" for day selection, "CAL_NAV" for month nav.
      *
      * @param calendarMonth  month to render
      * @return               InlineKeyboardMarkup ready to attach to a SendMessage
      */
     public static InlineKeyboardMarkup buildCalendar(YearMonth calendarMonth) {
+        return buildCalendar(calendarMonth, "CAL_DATE", "CAL_NAV");
+    }
+
+    /**
+     * Builds the calendar inline keyboard with custom callback prefixes.
+     * Allows reuse across different flows (post-ride, edit-time, etc.).
+     *
+     * @param calendarMonth  month to render
+     * @param datePrefix     callback prefix for day buttons (e.g. "CAL_DATE", "CAL_DATE_EDIT_TIME")
+     * @param navPrefix      callback prefix for Prev/Next buttons (e.g. "CAL_NAV", "CAL_NAV_EDIT_TIME")
+     */
+    public static InlineKeyboardMarkup buildCalendar(YearMonth calendarMonth,
+                                                      String datePrefix,
+                                                      String navPrefix) {
         LocalDate today      = LocalDate.now(MANILA);
         LocalDate maxDate    = today.plusDays(MAX_DAYS_AHEAD);
 
@@ -61,11 +76,11 @@ public class BotCalendarUtil {
 
         rows.add(List.of(
                 canGoPrev
-                        ? button("◀️", "CAL_NAV:PREV")
+                        ? button("◀️", navPrefix + ":PREV")
                         : button(" ", "NOOP"),
                 button("📅 " + monthLabel, "NOOP"),
                 canGoNext
-                        ? button("▶️", "CAL_NAV:NEXT")
+                        ? button("▶️", navPrefix + ":NEXT")
                         : button(" ", "NOOP")
         ));
 
@@ -95,12 +110,9 @@ public class BotCalendarUtil {
             if (date.isBefore(today) || date.isAfter(maxDate)) {
                 // Past or too far ahead — non-selectable, show muted
                 week.add(button("-", "NOOP"));
-            } else if (date.equals(today)) {
-                // Today — highlighted
-                week.add(button(String.valueOf(day), "CAL_DATE:" + date.format(ISO_DATE)));
             } else {
-                // Selectable future date
-                week.add(button(String.valueOf(day), "CAL_DATE:" + date.format(ISO_DATE)));
+                // Today or selectable future date
+                week.add(button(String.valueOf(day), datePrefix + ":" + date.format(ISO_DATE)));
             }
 
             // New row every 7 days

@@ -232,12 +232,29 @@ public class RideSearchHandler {
             List<List<InlineKeyboardButton>> rows;
 
             if (isDriver) {
-                rows = List.of(List.of(
-                        BotMessageBuilder.button("👥 My Passengers",
-                                "RIDE_BOOKINGS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString()),
-                        BotMessageBuilder.button("❌ Cancel",
-                                "CANCEL_RIDE:"   + ctx.entityId(), ButtonStyle.DANGER.toString())
-                ));
+                boolean canEditTime = ride.status() == RideStatus.ACTIVE
+                        || ride.status() == RideStatus.FULL;
+                if (canEditTime) {
+                    rows = List.of(
+                            List.of(
+                                    BotMessageBuilder.button("👥 My Passengers",
+                                            "RIDE_BOOKINGS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString()),
+                                    BotMessageBuilder.button("❌ Cancel",
+                                            "CANCEL_RIDE:" + ctx.entityId(), ButtonStyle.DANGER.toString())
+                            ),
+                            List.of(
+                                    BotMessageBuilder.button("✏️ Edit Time",
+                                            "EDIT_RIDE_TIME:" + ctx.entityId(), null)
+                            )
+                    );
+                } else {
+                    rows = List.of(List.of(
+                            BotMessageBuilder.button("👥 My Passengers",
+                                    "RIDE_BOOKINGS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("❌ Cancel",
+                                    "CANCEL_RIDE:" + ctx.entityId(), ButtonStyle.DANGER.toString())
+                    ));
+                }
             } else {
                 rows = List.of(List.of(
                         BotMessageBuilder.button("✅ Book This Ride",

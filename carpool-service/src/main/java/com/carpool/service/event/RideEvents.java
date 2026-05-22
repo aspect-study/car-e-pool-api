@@ -103,4 +103,10 @@ public final class RideEvents {
      * Triggers: notify the other ride's driver with correct context.
      */
     public record BookingAutoSyncedEvent(Booking booking) {}
+
+    /**
+     * Published when a driver updates the departure time of an active ride.
+     * Triggers: notify all confirmed passengers (time changed — keep or cancel booking).
+     */
+    public record RideTimeChangedEvent(Ride ride) {}
 }

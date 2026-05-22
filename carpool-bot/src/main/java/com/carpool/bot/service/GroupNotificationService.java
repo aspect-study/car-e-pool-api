@@ -329,6 +329,38 @@ public class GroupNotificationService {
     }
 
     @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onRideTimeChanged(RideEvents.RideTimeChangedEvent event) {
+        Long rideId = event.ride().getId();
+        Ride ride = rideRepository.findById(rideId).orElse(null);
+        if (ride == null || ride.getGroupMessageId() == null) return;
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) return;
+
+        // No 48h guard — a time change is always high-signal and must be reflected immediately.
+        try {
+            try {
+                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+            } catch (Exception e) {
+                log.warn("Could not delete old group post before time-change refresh: rideId={} error={}",
+                        rideId, e.getMessage());
+            }
+
+            String message = buildRidePostedMessage(ride);
+            Integer messageId = carpoolBot.sendToGroup(
+                    message, ride.getId(), ride.getDriver().getId(), resolveTopicId(ride));
+            log.info("Group announcement refreshed after departure time change: rideId={}", rideId);
+
+            if (messageId != null) {
+                persistGroupMessageId(rideId, messageId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to refresh group announcement after time change: rideId={} error={}",
+                    rideId, e.getMessage(), e);
+        }
+    }
+
+    @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void refreshGroupAnnouncementForRide(Long rideId) {
         Ride ride = rideRepository.findById(rideId).orElse(null);

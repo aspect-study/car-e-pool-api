@@ -406,6 +406,85 @@ class RideServiceTest {
         }
     }
 
+// ── updateDepartureTime ───────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("updateDepartureTime()")
+    class UpdateDepartureTime {
+
+        @Test
+        @DisplayName("should throw NotRideOwnerException when caller is not the driver")
+        void updateDepartureTime_throwsWhenNotOwner() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateDepartureTime(
+                    100L, LocalDateTime.now().plusHours(2), 99L))
+                    .isInstanceOf(NotRideOwnerException.class);
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = RideStatus.class, names = {"PENDING", "COMPLETED", "CANCELLED"})
+        @DisplayName("should throw InvalidRideStateException when ride is not ACTIVE or FULL")
+        void updateDepartureTime_throwsWhenRideNotActiveOrFull(RideStatus status) {
+            activeRide.setStatus(status);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateDepartureTime(
+                    100L, LocalDateTime.now().plusHours(2), 1L))
+                    .isInstanceOf(InvalidRideStateException.class);
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when new time is the same as current")
+        void updateDepartureTime_throwsWhenSameTime() {
+            LocalDateTime sameTime = activeRide.getDepartureTime();
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateDepartureTime(100L, sameTime, 1L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("same");
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when new time is less than 15 min from now")
+        void updateDepartureTime_throwsWhenTimeTooSoon() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateDepartureTime(
+                    100L, LocalDateTime.now().plusMinutes(5), 1L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("15 minutes");
+        }
+
+        @Test
+        @DisplayName("should save updated departure time and publish RideTimeChangedEvent")
+        void updateDepartureTime_savesAndPublishesEvent() {
+            LocalDateTime newTime = LocalDateTime.now().plusHours(4);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(mapper.toRideResponse(any())).thenReturn(mock(RideResponse.class));
+
+            rideService.updateDepartureTime(100L, newTime, 1L);
+
+            assertThat(activeRide.getDepartureTime()).isEqualTo(newTime);
+            verify(eventPublisher).publishEvent(any(RideEvents.RideTimeChangedEvent.class));
+        }
+
+        @Test
+        @DisplayName("should return updated RideResponse after save")
+        void updateDepartureTime_returnsUpdatedRideResponse() {
+            LocalDateTime newTime = LocalDateTime.now().plusHours(4);
+            RideResponse expected = mock(RideResponse.class);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(mapper.toRideResponse(any())).thenReturn(expected);
+
+            RideResponse result = rideService.updateDepartureTime(100L, newTime, 1L);
+
+            assertThat(result).isSameAs(expected);
+        }
+    }
+
 // ── getRidesByDirection ───────────────────────────────────────────────────
 
     @Nested

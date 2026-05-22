@@ -88,6 +88,10 @@ public class UserState {
     private final LocalDate searchDay;      // date selected by user
     private final YearMonth calendarMonth;  // current month shown on calendar
 
+    // ── Edit ride time state ──────────────────────────────────────────────
+    // Holds the date chosen by the driver during the edit-departure-time flow.
+    private final LocalDate editTimeSelectedDate;
+
     public static UserState initial(Long carpoolUserId) {
         return UserState.builder()
                 .flow(BotFlow.IDLE)

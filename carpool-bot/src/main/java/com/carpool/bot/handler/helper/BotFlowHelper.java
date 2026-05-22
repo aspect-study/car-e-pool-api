@@ -205,10 +205,20 @@ public class BotFlowHelper {
 
     /**
      * Shows the inline calendar for date selection.
+     * Uses default callback prefixes ("CAL_DATE", "CAL_NAV").
      * calendarMonth comes from UserState — no static state.
      */
     public void showCalendar(Long chatId, Integer messageId, YearMonth calendarMonth, CarpoolBot bot) {
-        InlineKeyboardMarkup calendar = BotCalendarUtil.buildCalendar(calendarMonth);
+        showCalendar(chatId, messageId, calendarMonth, "CAL_DATE", "CAL_NAV", bot);
+    }
+
+    /**
+     * Shows the inline calendar with custom callback prefixes.
+     * Use this overload to reuse the calendar across different flows.
+     */
+    public void showCalendar(Long chatId, Integer messageId, YearMonth calendarMonth,
+                             String datePrefix, String navPrefix, CarpoolBot bot) {
+        InlineKeyboardMarkup calendar = BotCalendarUtil.buildCalendar(calendarMonth, datePrefix, navPrefix);
 
         if (messageId != null) {
             bot.edit(EditMessageText.builder()
@@ -230,11 +240,21 @@ public class BotFlowHelper {
 
     /**
      * Shows the inline time picker for departure time selection.
-     * Used in both Post Ride and Repost Ride flows.
+     * Uses default callback prefixes ("RIDE_TIME", "TIME_NAV").
      * Edits the existing message if messageId is provided, otherwise sends a new one.
      */
     public void showTimePicker(Long chatId, Integer messageId,
                                int windowStart, LocalDate selectedDate, CarpoolBot bot) {
+        showTimePicker(chatId, messageId, windowStart, selectedDate, "RIDE_TIME", "TIME_NAV", bot);
+    }
+
+    /**
+     * Shows the inline time picker with custom callback prefixes.
+     * Use this overload to reuse the time picker across different flows.
+     */
+    public void showTimePicker(Long chatId, Integer messageId,
+                               int windowStart, LocalDate selectedDate,
+                               String slotPrefix, String navPrefix, CarpoolBot bot) {
         LocalDate today = LocalDate.now(MANILA);
         String dateLabel = selectedDate.equals(today)
                 ? "Today, " + selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))
@@ -243,7 +263,8 @@ public class BotFlowHelper {
         String text = "🕐 <b>What time are you leaving?</b>\n📅 " + dateLabel +
                 "\n\nSelect your departure time:";
 
-        InlineKeyboardMarkup markup = BotTimePickerUtil.buildTimePicker(windowStart, selectedDate);
+        InlineKeyboardMarkup markup = BotTimePickerUtil.buildTimePicker(
+                windowStart, selectedDate, slotPrefix, navPrefix);
 
         if (messageId != null) {
             bot.edit(EditMessageText.builder()

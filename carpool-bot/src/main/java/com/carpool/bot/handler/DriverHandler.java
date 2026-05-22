@@ -3,8 +3,10 @@ package com.carpool.bot.handler;
 import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.handler.context.BotContext;
 import com.carpool.bot.handler.helper.BotFlowHelper;
+import com.carpool.bot.state.BotFlow;
 import com.carpool.bot.state.StateManager;
 import com.carpool.bot.util.BotMessageBuilder;
+import com.carpool.bot.util.BotTimePickerUtil;
 import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.exception.InvalidRideStateException;
 import com.carpool.common.exception.NotRideOwnerException;
@@ -28,7 +30,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -704,6 +708,147 @@ public class DriverHandler {
         } catch (Exception e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not start ride. Please try again."));
+        }
+    }
+
+    // ── Edit ride departure time ───────────────────────────────────────────
+
+    public void handleEditRideTime(BotContext ctx) {
+        Long rideId = ctx.entityId();
+        try {
+            var ride = rideService.getRideById(rideId);
+            if (!ride.driver().id().equals(ctx.carpoolUserId())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+                return;
+            }
+            if (ride.status() != RideStatus.ACTIVE && ride.status() != RideStatus.FULL) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ Only ACTIVE or FULL rides can have their departure time updated."));
+                return;
+            }
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withFlow(BotFlow.EDIT_RIDE_TIME_SELECT_DATE)
+                    .withSelectedRideId(rideId)
+                    .withDirection(ride.direction())
+                    .withCalendarMonth(YearMonth.now(MANILA)));
+            flowHelper.showCalendar(ctx.chatId(), ctx.messageId(),
+                    YearMonth.now(MANILA), "CAL_DATE_EDIT_TIME", "CAL_NAV_EDIT_TIME", ctx.bot());
+        } catch (Exception e) {
+            log.error("Edit ride time error: rideId={} userId={} error={}",
+                    rideId, ctx.carpoolUserId(), e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not load ride. Please try again."));
+        }
+    }
+
+    public void handleEditRideTimeCalendarNav(BotContext ctx) {
+        YearMonth current = ctx.state().getCalendarMonth() != null
+                ? ctx.state().getCalendarMonth()
+                : YearMonth.now(MANILA);
+
+        YearMonth updated = "PREV".equals(ctx.payload())
+                ? current.minusMonths(1)
+                : current.plusMonths(1);
+
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withCalendarMonth(updated)
+                .withFlow(BotFlow.EDIT_RIDE_TIME_SELECT_DATE));
+
+        flowHelper.showCalendar(ctx.chatId(), ctx.messageId(), updated,
+                "CAL_DATE_EDIT_TIME", "CAL_NAV_EDIT_TIME", ctx.bot());
+    }
+
+    public void handleEditRideTimeDateSelected(BotContext ctx) {
+        try {
+            LocalDate selected = LocalDate.parse(ctx.payload());
+            int windowStart = BotTimePickerUtil.adjustWindowForToday(
+                    BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection(), selected),
+                    selected);
+
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withEditTimeSelectedDate(selected)
+                    .withTimeWindowStart(windowStart)
+                    .withFlow(BotFlow.EDIT_RIDE_TIME_PICK));
+
+            flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(), windowStart, selected,
+                    "RIDE_TIME_EDIT", "TIME_NAV_EDIT", ctx.bot());
+        } catch (Exception e) {
+            log.error("Edit ride date selected error: userId={} error={}",
+                    ctx.carpoolUserId(), e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not process date. Please try again."));
+        }
+    }
+
+    public void handleEditRideTimePickerNav(BotContext ctx) {
+        LocalDate selectedDate = ctx.state().getEditTimeSelectedDate() != null
+                ? ctx.state().getEditTimeSelectedDate()
+                : LocalDate.now(MANILA);
+
+        int current = ctx.state().getTimeWindowStart() != null
+                ? ctx.state().getTimeWindowStart()
+                : BotTimePickerUtil.adjustWindowForToday(
+                      BotTimePickerUtil.defaultWindowStart(ctx.state().getDirection(), selectedDate),
+                      selectedDate);
+
+        int updated = "EARLIER".equals(ctx.payload())
+                ? Math.max(0, current - BotTimePickerUtil.PAGE_SIZE_MIN)
+                : Math.min(1200, current + BotTimePickerUtil.PAGE_SIZE_MIN);
+
+        int adjusted = BotTimePickerUtil.adjustWindowForToday(updated, selectedDate);
+
+        stateManager.save(ctx.chatId(), ctx.state().withTimeWindowStart(adjusted));
+
+        flowHelper.showTimePicker(ctx.chatId(), ctx.messageId(), adjusted, selectedDate,
+                "RIDE_TIME_EDIT", "TIME_NAV_EDIT", ctx.bot());
+    }
+
+    public void handleEditRideTimeSelected(BotContext ctx) {
+        try {
+            if (ctx.parts().length < 3) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ Invalid time selection."));
+                return;
+            }
+            int hour   = Integer.parseInt(ctx.parts()[1]);
+            int minute = Integer.parseInt(ctx.parts()[2]);
+
+            LocalDate date = ctx.state().getEditTimeSelectedDate();
+            Long rideId    = ctx.state().getSelectedRideId();
+
+            if (date == null || rideId == null) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⏳ <b>Session expired.</b>\n\nPlease tap <b>✏️ Edit Time</b> again."));
+                return;
+            }
+
+            LocalDateTime newTime = date.atTime(hour, minute);
+            rideService.updateDepartureTime(rideId, newTime, ctx.carpoolUserId());
+            stateManager.reset(ctx.chatId());
+
+            String formatted = newTime.atZone(MANILA)
+                    .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    String.format("""
+                            ✅ <b>Departure Time Updated!</b>
+
+                            New departure time: <b>%s</b>
+
+                            All confirmed passengers have been notified.""", formatted),
+                    List.of(List.of(
+                            BotMessageBuilder.button("👥 My Passengers", "DRIVER_BOOKINGS",
+                                    ButtonStyle.PRIMARY.toString()),
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", null)
+                    ))));
+
+        } catch (InvalidRideStateException e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ " + e.getMessage()));
+        } catch (NotRideOwnerException e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+        } catch (Exception e) {
+            log.error("Edit ride time selection error: userId={} error={}",
+                    ctx.carpoolUserId(), e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not update departure time. Please try again."));
         }
     }
 

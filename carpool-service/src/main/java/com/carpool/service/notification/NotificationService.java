@@ -887,6 +887,53 @@ public class NotificationService {
                 ride.getId(), confirmedBookings.size());
     }
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onRideTimeChanged(RideEvents.RideTimeChangedEvent event) {
+        Long rideId = event.ride().getId();
+        List<Booking> confirmedBookings = bookingRepository
+                .findActiveBookingsForRide(rideId)
+                .stream()
+                .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
+                .toList();
+
+        if (confirmedBookings.isEmpty()) {
+            log.info("Ride time changed with no confirmed passengers: rideId={}", rideId);
+            return;
+        }
+
+        Ride ride = confirmedBookings.get(0).getRide();
+        String newTimeFormatted = ride.getDepartureTime()
+                .format(DateTimeFormatter.ofPattern("h:mm a"));
+
+        String msg = String.format(
+                "⏰ <b>Ride Time Updated</b>\n\n" +
+                        "Your driver updated the departure time for your upcoming ride.\n\n" +
+                        "📍 %s → %s\n" +
+                        "🕐 New time: <b>%s</b>\n\n" +
+                        "Does this still work for you?",
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()),
+                newTimeFormatted);
+
+        for (Booking booking : confirmedBookings) {
+            sendAndRecord(booking.getPassenger(), NotificationTypes.RIDE_TIME_CHANGED, msg,
+                    Map.of("rideId", rideId, "bookingId", booking.getId()),
+                    List.of(
+                            List.of(
+                                    new TelegramNotificationPort.InlineButton(
+                                            "✅ Keep Booking", "KEEP_BOOKING:" + booking.getId()),
+                                    new TelegramNotificationPort.InlineButton(
+                                            "❌ Cancel Booking", "CANCEL_BOOKING:" + booking.getId())
+                            )
+                    ));
+        }
+
+        log.info("Ride time change notifications sent: rideId={} passengersNotified={}",
+                rideId, confirmedBookings.size());
+    }
+
     private String buildVehicleLine(Ride ride) {
         String model = ride.getDriver().getCarModel();
         String color = ride.getDriver().getCarColor();

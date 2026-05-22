@@ -45,6 +45,14 @@ public class SessionRecoveryHandler {
             "SKIP_RATING"
     );
 
+    private static final Set<String> EDIT_TIME_ACTIONS = Set.of(
+            "EDIT_RIDE_TIME",
+            "CAL_NAV_EDIT_TIME",
+            "CAL_DATE_EDIT_TIME",
+            "RIDE_TIME_EDIT",
+            "TIME_NAV_EDIT"
+    );
+
     // ── Public API ────────────────────────────────────────────────────────
 
     /**
@@ -53,7 +61,8 @@ public class SessionRecoveryHandler {
      */
     public boolean isFlowSensitive(String action) {
         return POST_RIDE_ACTIONS.contains(action)
-                || RATING_ACTIONS.contains(action);
+                || RATING_ACTIONS.contains(action)
+                || EDIT_TIME_ACTIONS.contains(action);
     }
 
     /**
@@ -73,24 +82,32 @@ public class SessionRecoveryHandler {
         if (POST_RIDE_ACTIONS.contains(action)) {
             return """
                     ⏳ <b>Session expired.</b>
-                    
+
                     Sorry for the interruption! 🙏
-                    
+
                     Would you like to post a new ride?""";
         }
         if (RATING_ACTIONS.contains(action)) {
             return """
                     ⏳ <b>Session expired.</b>
-                    
+
                     Sorry for the interruption! 🙏
-                    
+
                     The rating session has expired. Please go to the main menu.""";
+        }
+        if (EDIT_TIME_ACTIONS.contains(action)) {
+            return """
+                    ⏳ <b>Session expired.</b>
+
+                    Sorry for the interruption! 🙏
+
+                    Please tap your ride again and use <b>✏️ Edit Time</b> to try again.""";
         }
         return """
                 ⏳ <b>Session expired.</b>
-                
+
                 Sorry for the interruption! 🙏
-                
+
                 Please start again from the main menu.""";
     }
 
