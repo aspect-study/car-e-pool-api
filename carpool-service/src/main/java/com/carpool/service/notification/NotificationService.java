@@ -532,33 +532,18 @@ public class NotificationService {
                 booking.getSeatsReserved(),
                 booking.getContributionDue());
 
-        try {
-            telegramPort.sendMessageWithKeyboard(driver.getTelegramId(), msg,
-                    List.of(
-                            List.of(
-                                    new TelegramNotificationPort.InlineButton("✅ Accept", "ACCEPT_BOOKING:" + booking.getId()),
-                                    new TelegramNotificationPort.InlineButton("❌ Decline", "DECLINE_BOOKING:" + booking.getId())
-                            ),
-                            List.of(
-                                    new TelegramNotificationPort.InlineButton("🏠 Go to Menu", "MAIN_MENU")
-                            )
-                    ));
-        } catch (Exception e) {
-            log.error("Failed to send booking reminder to driver: bookingId={} driverId={} error={}",
-                    booking.getId(), driver.getId(), e.getMessage());
-        }
-
-        // Record reminder notification
-        Notification notification = Notification.builder()
-                .user(driver)
-                .type(NotificationTypes.BOOKING_RECEIVED)
-                .payload(new HashMap<>(Map.of(
-                        "bookingId", booking.getId(),
-                        "reminderNumber", event.reminderNumber())))
-                .status(NotificationStatus.SENT)
-                .sentAt(Instant.now())
-                .build();
-        notificationRepository.save(notification);
+        sendAndRecord(driver, NotificationTypes.BOOKING_RECEIVED, msg,
+                Map.of("bookingId", booking.getId(),
+                       "reminderNumber", event.reminderNumber()),
+                List.of(
+                        List.of(
+                                new TelegramNotificationPort.InlineButton("✅ Accept", "ACCEPT_BOOKING:" + booking.getId()),
+                                new TelegramNotificationPort.InlineButton("❌ Decline", "DECLINE_BOOKING:" + booking.getId())
+                        ),
+                        List.of(
+                                new TelegramNotificationPort.InlineButton("🏠 Go to Menu", "MAIN_MENU")
+                        )
+                ));
     }
 
     @Async
@@ -668,7 +653,7 @@ public class NotificationService {
         } catch (Exception e) {
             notification.setStatus(NotificationStatus.FAILED);
             log.error("Failed to send notification: type={} userId={} error={}",
-                    type, recipient.getId(), e.getMessage());
+                    type, recipient.getId(), e.getMessage(), e);
         }
 
         notificationRepository.save(notification);
