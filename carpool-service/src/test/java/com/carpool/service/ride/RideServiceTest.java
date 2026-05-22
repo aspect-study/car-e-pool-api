@@ -452,7 +452,7 @@ class RideServiceTest {
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
 
             assertThatThrownBy(() -> rideService.updateDepartureTime(
-                    100L, LocalDateTime.now().plusMinutes(5), 1L))
+                    100L, LocalDateTime.now(ZoneId.of("Asia/Manila")).plusMinutes(5), 1L))
                     .isInstanceOf(InvalidRideStateException.class)
                     .hasMessageContaining("15 minutes");
         }
