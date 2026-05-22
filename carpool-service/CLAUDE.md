@@ -8,7 +8,9 @@ Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `Notifi
 
 **`sendAndRecord` overloads:** The private `sendAndRecord(User, String, String, Map)` delegates to `sendAndRecord(User, String, String, Map, List<List<InlineButton>>)`. The overload with keyboard calls `telegramPort.sendMessageWithKeyboard()` when keyboard is non-null/non-empty, and `telegramPort.sendMessage()` otherwise. Both persist the notification record with PENDING → SENT/FAILED status. Use the keyboard overload when a notification needs actionable inline buttons without splitting into two separate DMs.
 
-**`onBookingConfirmed`** uses the keyboard overload to attach a `📋 View My Booking → VIEW_BOOKING:{bookingId}` inline button to the passenger's confirmation DM. This is the only `sendAndRecord` call currently using the keyboard overload.
+**`onBookingConfirmed`** uses the keyboard overload to attach a `📋 View My Booking → VIEW_BOOKING:{bookingId}` inline button to the passenger's confirmation DM.
+
+**`onBookingReminder`** uses the keyboard overload to send the driver Accept/Decline/Menu buttons with each reminder DM. Failure is tracked as `NotificationStatus.FAILED` via `sendAndRecord` (previously the status was always recorded as SENT even on Telegram failure).
 
 ## Multi-Vehicle Management
 
