@@ -532,6 +532,8 @@ public class NotificationService {
                 booking.getSeatsReserved(),
                 booking.getContributionDue());
 
+        log.info("Processing booking reminder {}/3: bookingId={} driverId={}",
+                event.reminderNumber(), booking.getId(), driver.getId());
         sendAndRecord(driver, NotificationTypes.BOOKING_RECEIVED, msg,
                 Map.of("bookingId", booking.getId(),
                        "reminderNumber", event.reminderNumber()),
