@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -129,7 +130,7 @@ public class CallbackHandler {
         commands.put("RIDE_TIME_EDIT",      driverHandler::handleEditRideTimeSelected);
         commands.put("KEEP_BOOKING", ctx -> {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    "✅ <b>Got it!</b>\n\nYour booking is kept. See you on departure day!",
+                    "✅ <b>Got it!</b>\n\nYou're still booked on this ride. We'll remind you before departure.",
                     List.of(List.of(
                             BotMessageBuilder.button("📋 My Bookings", "MY_BOOKINGS", null),
                             BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", null)
