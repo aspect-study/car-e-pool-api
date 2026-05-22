@@ -30,6 +30,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -418,19 +419,19 @@ class RideServiceTest {
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
 
             assertThatThrownBy(() -> rideService.updateDepartureTime(
-                    100L, LocalDateTime.now().plusHours(2), 99L))
+                    100L, LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(2), 99L))
                     .isInstanceOf(NotRideOwnerException.class);
         }
 
         @ParameterizedTest
-        @EnumSource(value = RideStatus.class, names = {"PENDING", "COMPLETED", "CANCELLED"})
+        @EnumSource(value = RideStatus.class, names = {"PENDING", "COMPLETED", "CANCELLED", "DEPARTED", "DRAFT"})
         @DisplayName("should throw InvalidRideStateException when ride is not ACTIVE or FULL")
         void updateDepartureTime_throwsWhenRideNotActiveOrFull(RideStatus status) {
             activeRide.setStatus(status);
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
 
             assertThatThrownBy(() -> rideService.updateDepartureTime(
-                    100L, LocalDateTime.now().plusHours(2), 1L))
+                    100L, LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(2), 1L))
                     .isInstanceOf(InvalidRideStateException.class);
         }
 
@@ -459,7 +460,7 @@ class RideServiceTest {
         @Test
         @DisplayName("should save updated departure time and publish RideTimeChangedEvent")
         void updateDepartureTime_savesAndPublishesEvent() {
-            LocalDateTime newTime = LocalDateTime.now().plusHours(4);
+            LocalDateTime newTime = LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(4);
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
             when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(mapper.toRideResponse(any())).thenReturn(mock(RideResponse.class));
@@ -473,7 +474,7 @@ class RideServiceTest {
         @Test
         @DisplayName("should return updated RideResponse after save")
         void updateDepartureTime_returnsUpdatedRideResponse() {
-            LocalDateTime newTime = LocalDateTime.now().plusHours(4);
+            LocalDateTime newTime = LocalDateTime.now(ZoneId.of("Asia/Manila")).plusHours(4);
             RideResponse expected = mock(RideResponse.class);
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
             when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
