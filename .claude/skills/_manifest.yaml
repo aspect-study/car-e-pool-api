@@ -1,0 +1,165 @@
+skills:
+  # ── Bot ─────────────────────────────────────────────────────────────────────
+  - name: new-bot-command
+    description: Register a new Telegram inline button callback in CallbackHandler
+    path: new-bot-command/SKILL.md
+    triggers:
+      - adding a new bot button action
+      - new inline keyboard handler
+      - new callback query
+
+  - name: new-bot-flow
+    description: Add a multi-step conversation flow with UserState and MessageHandler routing
+    path: new-bot-flow/SKILL.md
+    triggers:
+      - new conversation flow
+      - multi-step user interaction
+      - new BotFlow enum value
+
+  # ── Events & Notifications ───────────────────────────────────────────────────
+  - name: new-event
+    description: Add a domain event published by the service layer and consumed by a TransactionalEventListener
+    path: new-event/SKILL.md
+    triggers:
+      - new domain event
+      - async notification
+      - new TransactionalEventListener
+
+  # ── Database ─────────────────────────────────────────────────────────────────
+  - name: flyway-migration
+    description: Add a Flyway DB migration with entity sync, mapper update, and version verification
+    path: flyway-migration/SKILL.md
+    triggers:
+      - new column
+      - new table
+      - schema change
+      - alter table
+      - add index
+
+  - name: new-repository-method
+    description: Add a Spring Data JPA query method with correct JPQL and pagination
+    path: new-repository-method/SKILL.md
+    triggers:
+      - new repository method
+      - new JPQL query
+      - findBy / countBy / existsBy
+
+  # ── Service Layer ─────────────────────────────────────────────────────────────
+  - name: new-scheduler
+    description: Add a Spring @Scheduled background job with fixedDelayString config
+    path: new-scheduler/SKILL.md
+    triggers:
+      - new scheduled job
+      - new scheduler
+      - background task
+      - cron job
+
+  # ── REST API ─────────────────────────────────────────────────────────────────
+  - name: add-rest-endpoint
+    description: Add a new REST endpoint with JWT auth, pagination, and security filter chain wiring
+    path: add-rest-endpoint/SKILL.md
+    triggers:
+      - new REST endpoint
+      - new controller method
+      - new API route
+
+  # ── Code Review ───────────────────────────────────────────────────────────────
+  - name: concurrency-review
+    description: Audit for missing pessimistic locks, wrong TransactionPhase, and unsafe listener write-backs
+    path: concurrency-review/SKILL.md
+    triggers:
+      - reviewing booking logic
+      - seat decrement
+      - concurrent write
+      - locking review
+
+  - name: spring-boot-review
+    description: Review Spring Boot 4 filter chain, security config, and controller patterns
+    path: spring-boot-review/SKILL.md
+    triggers:
+      - reviewing security config
+      - filter chain change
+      - new security rule
+
+  # ── Workflow ──────────────────────────────────────────────────────────────────
+  - name: commit-workflow
+    description: Workflow rules — present diffs before editing, provide commit message only
+    path: commit-workflow/SKILL.md
+    triggers:
+      - any session with file edits
+      - before committing
+
+  - name: pr-description
+    description: Write a structured, honest PR description before opening any pull request
+    path: pr-description/SKILL.md
+    triggers:
+      - before opening a pull request
+      - writing a PR description
+      - PR title and description
+
+  - name: security-review
+    description: Full pre-merge security checklist across backend, web, and mobile layers
+    path: security-review/SKILL.md
+    triggers:
+      - before merging to main
+      - security review
+      - pre-merge check
+      - review security
+
+  # ── Growth & Retrospectives ────────────────────────────────────────────────
+  - name: capture-learning
+    description: Write a learning entry after any surprise, gotcha, or non-obvious discovery; updates the relevant agent
+    path: capture-learning/SKILL.md
+    triggers:
+      - after a bug or surprise
+      - something unexpected happened
+      - capture this learning
+      - add to learnings
+      - document this gotcha
+
+  - name: project-retro
+    description: End-of-sprint or end-of-project retrospective — captures accomplishments, unfinished work, and updates agents/skills
+    path: project-retro/SKILL.md
+    triggers:
+      - end of sprint
+      - end of feature
+      - end of project
+      - project retrospective
+      - wrap up this sprint
+
+  - name: adr-retro
+    description: Review implementation decisions after a feature and write missing ADRs; updates agents with new patterns
+    path: adr-retro/SKILL.md
+    triggers:
+      - after completing a feature
+      - before merging a large branch
+      - write missing ADRs
+      - document decisions made
+
+# ── Agents (not skills — listed here for discoverability) ─────────────────────
+agents:
+  - name: frontend-web
+    file: ../agents/frontend-web.md
+    description: >
+      Next.js App Router specialist. Knows all carpool REST endpoints, DTO shapes,
+      enums, HTTP-only JWT cookie auth, Telegram Login Widget, TypeScript types,
+      middleware route protection, and LocalDateTime timezone pitfall.
+    invoke_when:
+      - building any Next.js page
+      - wiring Telegram Login Widget
+      - setting up JWT cookie auth
+      - typing API responses from the carpool backend
+      - reviewing frontend security
+
+  - name: flutter-mobile
+    file: ../agents/flutter-mobile.md
+    description: >
+      Flutter specialist. Knows all carpool REST endpoints, freezed models,
+      Riverpod providers, Dio interceptors, go_router auth guard,
+      flutter_secure_storage JWT handling, and LocalDateTime timezone pitfall.
+    invoke_when:
+      - building any Flutter screen
+      - setting up Dio with auth interceptor
+      - writing freezed models for carpool DTOs
+      - setting up go_router with auth redirect
+      - reviewing mobile security (JWT storage, cleartext traffic)
