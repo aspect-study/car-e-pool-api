@@ -10,6 +10,7 @@ A full-stack carpooling platform for employees to share rides to and from work. 
 - Post a ride in seconds via Telegram bot — direction, departure time, seats, gas share, vehicle, and notes
 - Natural language ride posting — just type "magpost BGC bukas 7am" and the AI fills in the details
 - Re-announce rides to the group (up to 10 times) with updated seat counts
+- Edit departure time on an active ride — confirmed passengers are notified immediately and can keep or cancel their booking
 - Manage bookings — accept, decline, or remove passengers
 - View follower count and who's following you
 - Rate passengers after each completed ride
@@ -32,6 +33,7 @@ A full-stack carpooling platform for employees to share rides to and from work. 
 - Passenger notified when booking is confirmed, declined, or cancelled
 - 30-minute departure reminder for driver and all confirmed passengers
 - Departure notification with full vehicle details sent to confirmed passengers
+- All confirmed passengers notified when a driver changes departure time, with Keep / Cancel booking buttons inline
 
 ### Admin Panel
 - Separate web UI (port 8082) for hub management

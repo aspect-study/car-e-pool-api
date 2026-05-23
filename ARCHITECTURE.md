@@ -46,10 +46,11 @@ The core entities:
 All business logic lives here. Key services:
 
 ### `RideService`
-- `createRide()` — creates ride as DRAFT; validates driver has no active ride or booking conflict
+- `createRide()` — creates ride as DRAFT; validates driver has no active same-direction ride or passenger booking conflict (direction-scoped)
 - `updateRideStatus()` — handles all status transitions; publishes `RidePostedEvent` on DRAFT→ACTIVE
 - `reannounceRide()` — increments `announceCount` (max 10) and re-fires `RidePostedEvent`
 - `updateAvailableSeats()` — updates seat count and transitions ride status (0 → FULL, ≥1 → ACTIVE)
+- `updateDepartureTime(rideId, newTime, driverId)` — validates ownership, ACTIVE/FULL status, ≥15 min from now; publishes `RideTimeChangedEvent`
 
 ### `BookingService`
 - `createBooking()` — acquires `SELECT FOR UPDATE` pessimistic lock on the ride row to prevent double-booking the last seat
@@ -81,6 +82,7 @@ Services publish `RideEvents.*` records via Spring's `ApplicationEventPublisher`
 | `BookingCancelledByPassengerEvent` | Passenger cancels their booking |
 | `BookingCancelledByDriverEvent` | Driver removes a confirmed passenger |
 | `BookingAutoSyncedEvent` | Pending booking auto-cancelled when ride becomes FULL |
+| `RideTimeChangedEvent` | Driver updates departure time of an active ride |
 
 Listeners use `@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)` — guaranteed to fire only after the DB transaction commits, on a virtual thread.
 
