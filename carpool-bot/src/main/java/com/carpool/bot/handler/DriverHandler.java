@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -835,8 +836,10 @@ public class DriverHandler {
                     .withEditTimePendingDateTime(newTime)
                     .withFlow(BotFlow.EDIT_RIDE_TIME_CONFIRM));
 
-            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
-                    String.format("""
+            ctx.bot().edit(EditMessageText.builder()
+                    .chatId(ctx.chatId())
+                    .messageId(ctx.messageId())
+                    .text(String.format("""
                             ✏️ <b>Confirm Departure Time Update</b>
 
                             📍 <b>%s → %s</b>
@@ -845,12 +848,14 @@ public class DriverHandler {
                             ✅ <b>New:</b>     %s
 
                             All confirmed passengers will be notified of this change.""",
-                            origin, dest, currentFormatted, newFormatted),
-                    List.of(List.of(
+                            origin, dest, currentFormatted, newFormatted))
+                    .parseMode("HTML")
+                    .replyMarkup(BotMessageBuilder.inlineButtons(List.of(List.of(
                             BotMessageBuilder.button("✅ Confirm Update", "CONFIRM_EDIT_RIDE_TIME",
                                     ButtonStyle.SUCCESS.toString()),
                             BotMessageBuilder.button("❌ Cancel", "MAIN_MENU", null)
-                    ))));
+                    ))))
+                    .build());
 
         } catch (Exception e) {
             log.error("Edit ride time selection error: userId={} error={}",
