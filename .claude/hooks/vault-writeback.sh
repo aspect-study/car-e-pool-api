@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
-# Stop hook — creates a timestamped dispatch log entry when Claude finishes a session.
-# Records: date, files changed, what was done. User can annotate with learnings.
+# Stop hook — appends a timestamped entry to today's dispatch log.
+# One file per day instead of one file per stop event.
 # Receives stop event JSON on stdin.
 
 set -euo pipefail
 
 INPUT=$(cat)
-TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
+TIMESTAMP=$(date +"%H:%M")
 DATE=$(date +"%Y-%m-%d")
 LOG_DIR="memory/dispatch-logs"
-LOG_FILE="$LOG_DIR/$TIMESTAMP.md"
+LOG_FILE="$LOG_DIR/$DATE.md"
 
-# Ensure directory exists
 mkdir -p "$LOG_DIR"
 
-# Extract stop reason if present
 STOP_REASON=$(echo "$INPUT" | python3 -c "
 import json, sys
 try:
@@ -24,33 +22,29 @@ except Exception:
     print('end_turn')
 " 2>/dev/null || echo "end_turn")
 
-# Collect recently modified files (last 10 minutes, in the project)
-CHANGED_FILES=$(find . -name "*.java" -o -name "*.sql" -o -name "*.properties" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json" \
-  | grep -v ".git/" | grep -v "target/" \
-  | xargs ls -t 2>/dev/null | head -20 \
-  | xargs -I{} find {} -newer "$LOG_DIR/.last_session" 2>/dev/null \
-  || echo "(unable to determine changed files)")
+# Files changed in this session (committed or staged/unstaged)
+COMMITTED=$(git diff --name-only HEAD 2>/dev/null | head -20 || echo "")
+UNCOMMITTED=$(git status --short 2>/dev/null | grep -v "dispatch-logs" | head -20 || echo "")
 
-# Write the log entry
-cat > "$LOG_FILE" <<EOF
-# Session Log — $DATE
+# Create the day header if the file doesn't exist yet
+if [ ! -f "$LOG_FILE" ]; then
+    echo "# Dispatch Log — $DATE" > "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
+fi
 
-## Stop Reason
-$STOP_REASON
+# Append this session's entry
+cat >> "$LOG_FILE" <<EOF
+## Session @ $TIMESTAMP — $STOP_REASON
 
-## Files Modified This Session
-$(git diff --name-only HEAD 2>/dev/null | head -30 || echo "(git not available or no changes)")
+### Files Modified
+${COMMITTED:-"(no committed changes)"}
 
-## Staged / Unstaged Changes
-$(git status --short 2>/dev/null | head -20 || echo "(git not available)")
+### Working Tree
+${UNCOMMITTED:-"(clean)"}
 
-## Notes
-<!-- Fill in what was done, decisions made, and any learnings worth keeping. -->
-<!-- Move notable patterns to memory/learnings/ if they should persist across sessions. -->
-
+---
 EOF
 
-# Update the last-session marker
 touch "$LOG_DIR/.last_session"
 
 exit 0
