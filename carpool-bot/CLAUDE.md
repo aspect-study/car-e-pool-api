@@ -36,7 +36,7 @@ Triggered when direction is already in state (e.g. "Try Different Time" re-entry
 
 `SessionRecoveryHandler.isFlowSensitive(action)` guards against stale buttons after a bot restart. Flow-sensitive actions (post-ride steps, rating steps, custom hub confirmation, edit-time steps) show a context-aware "session expired" message instead of crashing. Non-flow-sensitive actions (`MY_PROFILE`, `PENDING_HUBS`, etc.) get a fresh `UserState.initial()` and proceed normally.
 
-All five edit-time callbacks are registered as flow-sensitive via `EDIT_TIME_ACTIONS = Set.of("EDIT_RIDE_TIME", "CAL_NAV_EDIT_TIME", "CAL_DATE_EDIT_TIME", "RIDE_TIME_EDIT", "TIME_NAV_EDIT")`.
+Four edit-time callbacks are flow-sensitive: `CAL_NAV_EDIT_TIME`, `CAL_DATE_EDIT_TIME`, `RIDE_TIME_EDIT`, `TIME_NAV_EDIT`. The entry point `EDIT_RIDE_TIME` is intentionally excluded — it reads `rideId` from the callback payload, not from `UserState`, so it works safely with a fresh session (via `UserState.initial()`).
 
 ## Main Menu — Active-Ride Block
 

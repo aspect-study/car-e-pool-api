@@ -45,8 +45,9 @@ public class SessionRecoveryHandler {
             "SKIP_RATING"
     );
 
+    // EDIT_RIDE_TIME is intentionally excluded — it's the entry point and reads rideId
+    // from the callback payload, not from UserState, so it works with a fresh session.
     private static final Set<String> EDIT_TIME_ACTIONS = Set.of(
-            "EDIT_RIDE_TIME",
             "CAL_NAV_EDIT_TIME",
             "CAL_DATE_EDIT_TIME",
             "RIDE_TIME_EDIT",
