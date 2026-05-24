@@ -36,7 +36,7 @@ Triggered when direction is already in state (e.g. "Try Different Time" re-entry
 
 `SessionRecoveryHandler.isFlowSensitive(action)` guards against stale buttons after a bot restart. Flow-sensitive actions (post-ride steps, rating steps, custom hub confirmation, edit-time steps) show a context-aware "session expired" message instead of crashing. Non-flow-sensitive actions (`MY_PROFILE`, `PENDING_HUBS`, etc.) get a fresh `UserState.initial()` and proceed normally.
 
-Four edit-time callbacks are flow-sensitive: `CAL_NAV_EDIT_TIME`, `CAL_DATE_EDIT_TIME`, `RIDE_TIME_EDIT`, `TIME_NAV_EDIT`. The entry point `EDIT_RIDE_TIME` is intentionally excluded — it reads `rideId` from the callback payload, not from `UserState`, so it works safely with a fresh session (via `UserState.initial()`).
+Five edit-time callbacks are flow-sensitive: `CAL_NAV_EDIT_TIME`, `CAL_DATE_EDIT_TIME`, `RIDE_TIME_EDIT`, `TIME_NAV_EDIT`, `CONFIRM_EDIT_RIDE_TIME`. The entry point `EDIT_RIDE_TIME` is intentionally excluded — it reads `rideId` from the callback payload, not from `UserState`, so it works safely with a fresh session (via `UserState.initial()`).
 
 ## Main Menu — Active-Ride Block
 
@@ -55,16 +55,23 @@ These buttons coexist in the active-ride menu. Never use "View Bookings" — it 
 
 Drivers can change the departure time of an ACTIVE or FULL ride. Entry points: `✏️ Edit Time` button in the main menu active-ride block, and `✏️ Edit Time` button in `RideSearchHandler.handleViewRide()` when the viewer is the driver.
 
-**BotFlow states:** `EDIT_RIDE_TIME_SELECT_DATE` (calendar shown) → `EDIT_RIDE_TIME_PICK` (time picker shown).
+**BotFlow states:** `EDIT_RIDE_TIME_SELECT_DATE` (calendar shown) → `EDIT_RIDE_TIME_PICK` (time picker shown) → `EDIT_RIDE_TIME_CONFIRM` (confirmation screen shown, awaiting driver tap).
 
 **Callbacks registered in `CallbackHandler`:**
 - `EDIT_RIDE_TIME` → `DriverHandler.handleEditRideTime()` — validates ownership + status (ACTIVE/FULL), stores `selectedRideId` and `direction` in `UserState`, shows calendar.
 - `CAL_NAV_EDIT_TIME` → `handleEditRideTimeCalendarNav()` — prev/next month navigation; updates `calendarMonth` in state.
 - `CAL_DATE_EDIT_TIME` → `handleEditRideTimeDateSelected()` — stores chosen date as `editTimeSelectedDate` in `UserState`, transitions to `EDIT_RIDE_TIME_PICK`, shows time picker.
 - `TIME_NAV_EDIT` → `handleEditRideTimePickerNav()` — earlier/later page navigation; updates `timeWindowStart`.
-- `RIDE_TIME_EDIT` → `handleEditRideTimeSelected()` — parses hour/minute, validates `editTimeSelectedDate` and `selectedRideId` are non-null (stale-button guard), calls `rideService.updateDepartureTime()`, resets state to IDLE, shows confirmation.
+- `RIDE_TIME_EDIT` → `handleEditRideTimeSelected()` — parses hour/minute, validates `editTimeSelectedDate` and `selectedRideId` are non-null (stale-button guard), fetches the current ride to show current vs new time, stores `editTimePendingDateTime` in `UserState`, transitions to `EDIT_RIDE_TIME_CONFIRM`, and **edits the time picker message in-place** (via `EditMessageText` + `ctx.messageId()`) to show the confirmation screen. Does NOT call the service yet.
+- `CONFIRM_EDIT_RIDE_TIME` → `handleConfirmEditRideTime()` — validates `editTimePendingDateTime` and `selectedRideId` are non-null (stale-button guard), calls `rideService.updateDepartureTime()`, resets state to IDLE, shows success message.
 
-**`UserState.editTimeSelectedDate`** — dedicated field (`LocalDate`) added to hold the date chosen during the edit-time flow. Existing shared fields `selectedRideId`, `direction`, `calendarMonth`, and `timeWindowStart` are reused.
+**`UserState` fields for edit-time flow:**
+- `editTimeSelectedDate` (`LocalDate`) — date chosen on the calendar step.
+- `editTimePendingDateTime` (`LocalDateTime`) — fully-composed new departure time stored after date+time are picked, held until the driver confirms. Cleared on `stateManager.reset()`.
+
+Existing shared fields `selectedRideId`, `direction`, `calendarMonth`, and `timeWindowStart` are reused.
+
+**Edit-in-place invariant:** `handleEditRideTimeSelected` uses `bot.edit(EditMessageText...)` with `ctx.messageId()` to replace the time picker message with the confirmation screen — the same pattern used by `showCalendar` and `showTimePicker`. This is critical: sending a new message instead would leave the time picker interactive, allowing a second slot tap to silently overwrite `editTimePendingDateTime` while an orphaned confirmation message still shows the old time.
 
 **Calendar/time-picker prefix overloads:** `BotCalendarUtil.buildCalendar(calendarMonth, datePrefix, navPrefix)` and `BotTimePickerUtil.buildTimePicker(windowStart, selectedDate, slotPrefix, navPrefix)` accept custom callback prefixes, allowing the same UI components to be reused across the post-ride and edit-time flows without conflicts. `BotFlowHelper.showCalendar()` and `showTimePicker()` expose matching overloads.
 
