@@ -91,6 +91,9 @@ public class UserState {
     // ── Edit ride time state ──────────────────────────────────────────────
     // Holds the date chosen by the driver during the edit-departure-time flow.
     private final LocalDate editTimeSelectedDate;
+    // Holds the fully-composed new departure time after date+time are picked,
+    // waiting for the driver to confirm before the service call is made.
+    private final LocalDateTime editTimePendingDateTime;
 
     public static UserState initial(Long carpoolUserId) {
         return UserState.builder()

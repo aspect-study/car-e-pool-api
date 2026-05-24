@@ -51,7 +51,8 @@ public class SessionRecoveryHandler {
             "CAL_NAV_EDIT_TIME",
             "CAL_DATE_EDIT_TIME",
             "RIDE_TIME_EDIT",
-            "TIME_NAV_EDIT"
+            "TIME_NAV_EDIT",
+            "CONFIRM_EDIT_RIDE_TIME"
     );
 
     // ── Public API ────────────────────────────────────────────────────────

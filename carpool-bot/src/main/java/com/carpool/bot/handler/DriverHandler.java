@@ -812,8 +812,8 @@ public class DriverHandler {
             int hour   = Integer.parseInt(ctx.parts()[1]);
             int minute = Integer.parseInt(ctx.parts()[2]);
 
-            LocalDate date = ctx.state().getEditTimeSelectedDate();
-            Long rideId    = ctx.state().getSelectedRideId();
+            LocalDate date  = ctx.state().getEditTimeSelectedDate();
+            Long rideId     = ctx.state().getSelectedRideId();
 
             if (date == null || rideId == null) {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -822,10 +822,59 @@ public class DriverHandler {
             }
 
             LocalDateTime newTime = date.atTime(hour, minute);
-            rideService.updateDepartureTime(rideId, newTime, ctx.carpoolUserId());
+            var ride = rideService.getRideById(rideId);
+
+            String currentFormatted = ride.departureTime()
+                    .atZone(MANILA).format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
+            String newFormatted = newTime.atZone(MANILA)
+                    .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
+            String origin = ride.originHub() != null ? ride.originHub().name() : "Origin";
+            String dest   = ride.destinationHub() != null ? ride.destinationHub().name() : "Destination";
+
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withEditTimePendingDateTime(newTime)
+                    .withFlow(BotFlow.EDIT_RIDE_TIME_CONFIRM));
+
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    String.format("""
+                            ✏️ <b>Confirm Departure Time Update</b>
+
+                            📍 <b>%s → %s</b>
+
+                            🕐 <b>Current:</b> %s
+                            ✅ <b>New:</b>     %s
+
+                            All confirmed passengers will be notified of this change.""",
+                            origin, dest, currentFormatted, newFormatted),
+                    List.of(List.of(
+                            BotMessageBuilder.button("✅ Confirm Update", "CONFIRM_EDIT_RIDE_TIME",
+                                    ButtonStyle.SUCCESS.toString()),
+                            BotMessageBuilder.button("❌ Cancel", "MAIN_MENU", null)
+                    ))));
+
+        } catch (Exception e) {
+            log.error("Edit ride time selection error: userId={} error={}",
+                    ctx.carpoolUserId(), e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not load ride. Please try again."));
+        }
+    }
+
+    public void handleConfirmEditRideTime(BotContext ctx) {
+        try {
+            LocalDateTime pendingTime = ctx.state().getEditTimePendingDateTime();
+            Long rideId               = ctx.state().getSelectedRideId();
+
+            if (pendingTime == null || rideId == null) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⏳ <b>Session expired.</b>\n\nPlease tap <b>✏️ Edit Time</b> again."));
+                return;
+            }
+
+            rideService.updateDepartureTime(rideId, pendingTime, ctx.carpoolUserId());
             stateManager.reset(ctx.chatId());
 
-            String formatted = newTime.atZone(MANILA)
+            String formatted = pendingTime.atZone(MANILA)
                     .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     String.format("""
@@ -845,7 +894,7 @@ public class DriverHandler {
         } catch (NotRideOwnerException e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
         } catch (Exception e) {
-            log.error("Edit ride time selection error: userId={} error={}",
+            log.error("Confirm edit ride time error: userId={} error={}",
                     ctx.carpoolUserId(), e.getMessage(), e);
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not update departure time. Please try again."));
