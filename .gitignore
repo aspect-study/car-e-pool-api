@@ -37,3 +37,4 @@ target/
 
 # Dispatch logs — local ephemeral session audit trail, not repo history
 memory/dispatch-logs/
+.claude/launch.json

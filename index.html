@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCA-F Exam Blueprint | car-e-pool-api</title>
+<style>
+:root{--bg:#0D1117;--surface:#161B22;--card:#1C2128;--border:#30363D;--accent:#FF7043;--accent-dim:rgba(255,112,67,.12);--text:#E6EDF3;--muted:#8B949E;--code:#21262D;--success:#3FB950;--warn:#D29922;--info:#58A6FF;--danger:#F85149;--purple:#BC8CFF;--sw:260px}
+[data-theme="light"]{--bg:#F6F8FA;--surface:#fff;--card:#F0F2F4;--border:#D0D7DE;--text:#1F2328;--muted:#656D76;--code:#E8EAED}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:15px}
+a{color:inherit;text-decoration:none}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sw);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;z-index:100}
+.sb-logo{padding:1.25rem 1rem .75rem;border-bottom:1px solid var(--border)}
+.sb-logo h1{font-size:.85rem;font-weight:800;color:var(--accent);letter-spacing:.07em;text-transform:uppercase}
+.sb-logo p{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.sb-nav{padding:.75rem .5rem;flex:1}
+.nav-lbl{font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.5rem .5rem .2rem}
+.nav-item{display:flex;align-items:center;gap:.45rem;padding:.42rem .65rem;border-radius:6px;cursor:pointer;font-size:.82rem;color:var(--muted);transition:all .12s;margin-bottom:.1rem}
+.nav-item:hover,.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item .badge{margin-left:auto;background:var(--accent);color:#fff;font-size:.6rem;padding:.08rem .38rem;border-radius:10px;font-weight:800}
+.sb-footer{padding:.75rem 1rem;border-top:1px solid var(--border)}
+
+/* ── Main ── */
+.main{margin-left:var(--sw);flex:1;padding:2rem;max-width:calc(100vw - var(--sw))}
+.section{display:none}.section.active{display:block}
+
+/* ── Domain header ── */
+.dom-hdr{background:linear-gradient(135deg,var(--card) 0%,var(--surface) 100%);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:1.4rem 1.5rem;margin-bottom:1.5rem}
+.dom-hdr h2{font-size:1.2rem;font-weight:800;margin-bottom:.4rem}
+.dom-hdr p{color:var(--muted);font-size:.875rem;line-height:1.65}
+.weight-row{display:flex;align-items:center;gap:.75rem;margin-top:.9rem}
+.weight-bar{height:8px;background:var(--border);border-radius:4px;flex:1}
+.weight-fill{height:100%;background:var(--accent);border-radius:4px}
+.weight-lbl{font-size:.82rem;font-weight:800;color:var(--accent);white-space:nowrap}
+
+/* ── Grid ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
+
+/* ── Card ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.25rem}
+.card h3{font-size:.88rem;font-weight:700;margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem}
+.card p,.card li{font-size:.83rem;color:var(--muted);line-height:1.65}
+.card ul{padding-left:1.1rem;margin-top:.4rem}
+.card li{margin-bottom:.2rem}
+
+/* ── Callouts ── */
+.callout{border-radius:8px;padding:.9rem 1.1rem;margin:.9rem 0;display:flex;gap:.7rem;align-items:flex-start}
+.callout-icon{font-size:1.1rem;flex-shrink:0;margin-top:.05rem}
+.callout h4{font-size:.82rem;font-weight:700;margin-bottom:.25rem}
+.callout p,.callout li{font-size:.82rem;line-height:1.6}
+.callout ul{padding-left:1rem;margin-top:.3rem}
+.callout.wisdom{background:rgba(188,140,255,.1);border:1px solid rgba(188,140,255,.3)}.callout.wisdom h4{color:var(--purple)}
+.callout.tip{background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3)}.callout.tip h4{color:var(--success)}
+.callout.warn{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3)}.callout.warn h4{color:var(--warn)}
+.callout.danger{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3)}.callout.danger h4{color:var(--danger)}
+.callout.info{background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3)}.callout.info h4{color:var(--info)}
+
+/* ── Accordion ── */
+.acc{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:.9rem}
+.acc-hdr{background:var(--card);padding:.85rem 1.1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:.87rem;transition:background .12s;user-select:none}
+.acc-hdr:hover{background:var(--surface)}
+.acc-hdr .chev{transition:transform .2s;color:var(--muted)}
+.acc-hdr.open .chev{transform:rotate(180deg)}
+.acc-body{display:none;padding:1.1rem 1.25rem;background:var(--surface);border-top:1px solid var(--border)}
+.acc-body.open{display:block}
+
+/* ── Code ── */
+.code-wrap{position:relative;margin:.7rem 0}
+.code-lbl{display:flex;align-items:center;justify-content:space-between;background:var(--border);padding:.3rem .9rem;border-radius:8px 8px 0 0;font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.04em}
+pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;overflow-x:auto;font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-size:.78rem;line-height:1.65;tab-size:2}
+.code-lbl+pre{border-top:none;border-radius:0 0 8px 8px}
+.copy-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:.18rem .5rem;border-radius:4px;cursor:pointer;font-size:.68rem;font-family:inherit;transition:all .12s}
+.copy-btn:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+.copy-btn.copied{background:rgba(63,185,80,.2);color:var(--success);border-color:var(--success)}
+
+/* ── Compare panels ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+.cmp-panel{border-radius:8px;overflow:hidden}
+.cmp-hdr{padding:.4rem .9rem;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.cmp-panel.bad .cmp-hdr{background:rgba(248,81,73,.2);color:var(--danger);border:1px solid rgba(248,81,73,.3);border-bottom:none}
+.cmp-panel.good .cmp-hdr{background:rgba(63,185,80,.2);color:var(--success);border:1px solid rgba(63,185,80,.3);border-bottom:none}
+.cmp-panel.bad pre{border:1px solid rgba(248,81,73,.3);border-top:none;border-radius:0 0 8px 8px}
+.cmp-panel.good pre{border:1px solid rgba(63,185,80,.3);border-top:none;border-radius:0 0 8px 8px}
+
+/* ── Tags ── */
+.tag{display:inline-block;padding:.18rem .55rem;border-radius:4px;font-size:.72rem;font-weight:700;margin:.15rem}
+.tag.a{background:var(--accent-dim);color:var(--accent)}
+.tag.s{background:rgba(63,185,80,.15);color:var(--success)}
+.tag.i{background:rgba(88,166,255,.15);color:var(--info)}
+.tag.w{background:rgba(210,153,34,.15);color:var(--warn)}
+.tag.p{background:rgba(188,140,255,.15);color:var(--purple)}
+
+/* ── Section title ── */
+.stitle{font-size:.95rem;font-weight:800;margin:1.5rem 0 .7rem;padding-bottom:.45rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;margin:1rem 0}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--card);padding:.55rem .9rem;text-align:left;font-weight:700;font-size:.75rem;color:var(--muted);border:1px solid var(--border)}
+td{padding:.55rem .9rem;border:1px solid var(--border);vertical-align:top;line-height:1.5}
+tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+/* ── Overview cards ── */
+.prog-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;margin-bottom:1.75rem}
+.prog-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.9rem;cursor:pointer;transition:all .15s;text-align:center}
+.prog-card:hover,.prog-card.active{border-color:var(--accent);background:var(--accent-dim)}
+.prog-card .pct{font-size:1.5rem;font-weight:900;color:var(--accent)}
+.prog-card .abbr{font-size:.82rem;font-weight:700;margin-top:.35rem}
+.prog-card .name{font-size:.7rem;color:var(--muted);margin-top:.2rem}
+
+/* ── Highlight strip ── */
+.hl{background:var(--accent-dim);border-left:3px solid var(--accent);padding:.65rem .9rem;border-radius:0 6px 6px 0;margin:.65rem 0;font-size:.84rem}
+
+/* ── Flow diagram ── */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin:.9rem 0;padding:.9rem;background:var(--code);border:1px solid var(--border);border-radius:8px}
+.flow-step{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.35rem .65rem;font-size:.77rem;font-weight:600;white-space:nowrap}
+.flow-step.a{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.flow-step.s{background:rgba(63,185,80,.15);border-color:var(--success);color:var(--success)}
+.flow-arrow{color:var(--muted);padding:0 .4rem;font-size:.85rem}
+
+/* ── Inline code ── */
+code{background:var(--code);border:1px solid var(--border);border-radius:4px;padding:.08em .38em;font-family:'JetBrains Mono',Consolas,monospace;font-size:.84em}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── Toggle button ── */
+.toggle-btn{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:.8rem;font-family:inherit}
+
+/* ── Responsive ── */
+@media(max-width:1024px){.g2,.g3{grid-template-columns:1fr}.cmp{grid-template-columns:1fr}.prog-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <h1>CCA-F Blueprint</h1>
+    <p>car-e-pool-api · Exam Study Guide</p>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-lbl">Start Here</div>
+    <div class="nav-item active" onclick="show('overview',this)"><span>🏠</span> Overview & Exam Map</div>
+
+    <div class="nav-lbl">Exam Domains</div>
+    <div class="nav-item" onclick="show('d1',this)"><span>🤖</span> D1 · Agentic Systems <span class="badge">27%</span></div>
+    <div class="nav-item" onclick="show('d2',this)"><span>🔧</span> D2 · Tools &amp; MCP <span class="badge">18%</span></div>
+    <div class="nav-item" onclick="show('d3',this)"><span>💻</span> D3 · Claude Code <span class="badge">20%</span></div>
+    <div class="nav-item" onclick="show('d4',this)"><span>✍️</span> D4 · Prompt Engineering <span class="badge">20%</span></div>
+    <div class="nav-item" onclick="show('d5',this)"><span>🧠</span> D5 · Context &amp; Memory <span class="badge">15%</span></div>
+
+    <div class="nav-lbl">Quick Reference</div>
+    <div class="nav-item" onclick="show('cheat',this)"><span>📋</span> Cheat Sheet</div>
+  </nav>
+  <div class="sb-footer">
+    <button class="toggle-btn" onclick="toggleTheme()">🌙 Toggle Theme</button>
+  </div>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="main">
+
+<!-- ══════════════════════════════════════════
+     OVERVIEW
+══════════════════════════════════════════ -->
+<div id="overview" class="section active">
+  <div class="dom-hdr" style="border-left-color:#58A6FF">
+    <h2>🎓 Anthropic Certified — Claude Architect Foundations (CCA-F)</h2>
+    <p>A project-anchored study guide built from <strong>car-e-pool-api</strong> — a production Spring Boot 4 + Telegram bot carpooling system (~18 k lines across 6 Maven modules). Every concept below is mapped to real code you already own.</p>
+    <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:100%"></div></div><div class="weight-lbl">100 % Coverage</div></div>
+  </div>
+
+  <div class="prog-grid">
+    <div class="prog-card active" onclick="show('d1',document.querySelectorAll('.nav-item')[2])">
+      <div class="pct">27%</div>
+      <div class="abbr">D1</div>
+      <div class="name">Agentic Systems</div>
+    </div>
+    <div class="prog-card" onclick="show('d2',document.querySelectorAll('.nav-item')[3])">
+      <div class="pct">20%</div>
+      <div class="abbr">D3</div>
+      <div class="name">Claude Code</div>
+    </div>
+    <div class="prog-card" onclick="show('d3',document.querySelectorAll('.nav-item')[4])">
+      <div class="pct">20%</div>
+      <div class="abbr">D4</div>
+      <div class="name">Prompt Engineering</div>
+    </div>
+    <div class="prog-card" onclick="show('d4',document.querySelectorAll('.nav-item')[5])">
+      <div class="pct">18%</div>
+      <div class="abbr">D2</div>
+      <div class="name">Tools &amp; MCP</div>
+    </div>
+    <div class="prog-card" onclick="show('d5',document.querySelectorAll('.nav-item')[6])">
+      <div class="pct">15%</div>
+      <div class="abbr">D5</div>
+      <div class="name">Context &amp; Memory</div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <div class="card">
+      <h3>📦 Project Architecture</h3>
+      <ul>
+        <li><code>carpool-common</code> — shared exceptions, <code>ApiResponse</code></li>
+        <li><code>carpool-domain</code> — JPA entities, enums (no Spring)</li>
+        <li><code>carpool-repository</code> — Spring Data JPA repositories</li>
+        <li><code>carpool-service</code> — business logic, DTOs, MapStruct, events</li>
+        <li><code>carpool-bot</code> — Telegram state machine, 8 k+ LOC</li>
+        <li><code>carpool-web</code> — Spring Boot entry-point, JWT, REST, Flyway</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🔑 Key AI Touchpoints</h3>
+      <ul>
+        <li><code>AiService</code> — Spring AI + Ollama <code>llama3.1:8b</code></li>
+        <li><code>MessageHandler</code> — NL ride-post intent detection</li>
+        <li><code>.claude/agents/*.md</code> — 9 specialist subagent roles</li>
+        <li><code>.claude/skills/*/SKILL.md</code> — 15 custom slash commands</li>
+        <li><code>.claude/hooks/*.sh</code> — PreToolUse + Stop lifecycle hooks</li>
+        <li><code>settings.json</code> — hook wiring (Bash, Write, Edit, Stop)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🎯 Exam Strategy</h3>
+      <ul>
+        <li>D1 is the heaviest domain — master loop control</li>
+        <li>D3 + D4 are tied — both need precision</li>
+        <li>Know the difference: <code>tool_use</code> vs <code>end_turn</code></li>
+        <li>MCP: project-scoped vs personal config files</li>
+        <li>Prompt caching: <code>cache_control</code> block placement</li>
+        <li>Never rely on NL parsing where tool_choice can force JSON</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Architect Wisdom — The Golden Thread</h4>
+      <p>Every CCA-F question can be answered with one mental model: <strong>determinism beats flexibility</strong>. Structured tool calls beat natural-language parsing. Hooks beat prompt guidance. Schema-enforced JSON beats "please respond in JSON". Project-scoped config beats global config when you want reproducibility. When in doubt, choose the option that reduces ambiguity for the model.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     D1: AGENTIC SYSTEMS
+══════════════════════════════════════════ -->
+<div id="d1" class="section">
+  <div class="dom-hdr">
+    <h2>🤖 D1 · Agentic Systems — 27% of Exam</h2>
+    <p>Covers the full lifecycle of an agentic loop: how <code>stop_reason</code> drives execution, how tool results feed back into history, orchestration topologies (hub-and-spoke vs. sequential), programmatic lifecycle hooks, and context isolation between coordinator and subagents.</p>
+    <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:27%"></div></div><div class="weight-lbl">27% weight</div></div>
+  </div>
+
+  <!-- 1.1 The Loop -->
+  <div class="stitle">🔄 1.1 The Agentic Loop Lifecycle</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:1rem">An agent is not a single API call — it is a loop that continues until the model signals completion. Understanding <code>stop_reason</code> is the most tested concept in this domain.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>⏹️ stop_reason Values</h3>
+      <ul>
+        <li><strong>tool_use</strong> — model wants to call a tool; loop MUST continue by appending results</li>
+        <li><strong>end_turn</strong> — model finished; loop should terminate</li>
+        <li><strong>max_tokens</strong> — context limit hit; handle gracefully</li>
+        <li><strong>stop_sequence</strong> — custom stop token matched; usually terminal</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📜 Conversation History Rules</h3>
+      <ul>
+        <li>Tool results MUST be appended before the next API call</li>
+        <li>Role alternation: <code>user → assistant → user → assistant</code></li>
+        <li>Tool result role = <code>user</code>, not <code>tool</code></li>
+        <li>Never skip a tool result — the model loses context</li>
+        <li>Each tool result maps to its <code>tool_use_id</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stitle">🗺️ Canonical Loop Pattern</div>
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Canonical Agentic Loop (CCA-F Reference Pattern)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre>messages = [{"role": "user", "content": user_input}]
+
+while True:
+    response = client.messages.create(
+        model="claude-opus-4-7",
+        max_tokens=4096,
+        tools=tools,
+        messages=messages
+    )
+
+    # Always append the assistant's full response
+    messages.append({"role": "assistant", "content": response.content})
+
+    if response.stop_reason == "end_turn":
+        # Model is done — extract final text and exit
+        final = next(b.text for b in response.content if b.type == "text")
+        break
+
+    if response.stop_reason == "tool_use":
+        # Execute every tool call the model requested
+        tool_results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                result = execute_tool(block.name, block.input)
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,      # ← must match the request id
+                    "content": result
+                })
+
+        # Append results as a USER message before the next call
+        messages.append({"role": "user", "content": tool_results})
+        # Loop continues — model now sees the results
+    else:
+        break  # max_tokens / stop_sequence — handle accordingly</pre>
+  </div>
+
+  <div class="callout danger">
+    <div class="callout-icon">🚨</div>
+    <div>
+      <h4>Anti-Pattern #1 — Skipping Tool Results</h4>
+      <p>Calling the API again without appending the tool result is the most common agentic bug. The model re-enters without knowing what the tool returned, leading to hallucinated results or infinite loops. The exam will test this — always append results before the next call.</p>
+    </div>
+  </div>
+
+  <!-- Project Blueprint -->
+  <div class="stitle">🔵 Project Blueprint — How car-e-pool-api Implements an Agentic Pattern</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The Telegram bot implements a stateful, event-driven agentic loop across <code>CallbackHandler</code>, <code>MessageHandler</code>, <code>StateManager</code>, and the sub-handlers. The conversation state (<code>UserState</code>) is the analogue of <em>conversation history</em>.</p>
+
+  <div class="flow">
+    <div class="flow-step">Telegram Update</div><div class="flow-arrow">→</div>
+    <div class="flow-step a">CallbackHandler / MessageHandler</div><div class="flow-arrow">→</div>
+    <div class="flow-step">Route by BotFlow enum</div><div class="flow-arrow">→</div>
+    <div class="flow-step a">Sub-Handler (tool execution)</div><div class="flow-arrow">→</div>
+    <div class="flow-step">StateManager.save()</div><div class="flow-arrow">→</div>
+    <div class="flow-step s">Bot sends response (end_turn analogue)</div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔄 Loop Continue — <code>tool_use</code> analogue</h3>
+      <p style="margin-bottom:.5rem">In the bot, a "tool call" is any handler that mutates <code>UserState</code> and expects another user interaction to continue the flow:</p>
+      <ul>
+        <li><code>handleDateSelected()</code> → sets <code>flow=DEPARTURE_TIME</code>, sends time picker</li>
+        <li><code>handleRideTimeSelected()</code> → sets <code>flow=ORIGIN</code>, sends hub list</li>
+        <li>Each step waits for the next update (next "tool result")</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🛑 Loop Terminate — <code>end_turn</code> analogue</h3>
+      <p style="margin-bottom:.5rem">The loop terminates when a terminal step is reached:</p>
+      <ul>
+        <li><code>handleConfirmPostRide()</code> → publishes ride, calls <code>stateManager.reset()</code></li>
+        <li><code>handleCancelPostRide()</code> → discards draft, calls <code>stateManager.reset()</code></li>
+        <li><code>BotFlowHelper.showMainMenu()</code> → always calls <code>stateManager.reset()</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Before vs After -->
+  <div class="stitle">⚡ Before vs After — Natural Language Anti-Pattern</div>
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Anti-Pattern (pre-fix in MessageHandler)</div>
+      <pre>// Fragile: relies on NL parsing keywords
+// MessageHandler.isNaturalLanguageRidePost()
+boolean isNL = text.contains("post") &&
+    (text.contains("sucat") || text.contains("bgc") ||
+     text.contains("7am") || text.contains("bukas"));
+
+if (isNL) {
+    // Calls Ollama, parses free-form JSON response
+    // Fails silently on bad JSON, model errors
+    ParsedRideRequest parsed = aiService.parseRideRequest(text);
+    if (parsed.isEmpty()) showFallback();  // ← silent failure path
+}</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Correct Pattern (structured tool_choice)</div>
+      <pre>// Deterministic: force schema via tool definition
+// The model MUST fill every field or call fails
+Tool parseRide = Tool.of("parse_ride_request",
+    "Extract structured ride info from natural language",
+    schema(Map.of(
+        "direction",      enumOf("HOME_TO_WORK","WORK_TO_HOME"),
+        "departureDate",  stringOf("YYYY-MM-DD"),
+        "departureTime",  stringOf("HH:mm"),
+        "seats",          integerOf(1, 4),
+        "originHint",     stringOf("landmark name"),
+        "destinationHint",stringOf("landmark name")
+    ), required("direction","departureDate","departureTime"))
+);
+
+response = client.messages.create(
+    model("claude-haiku-4-5"),
+    toolChoice(ToolChoice.tool("parse_ride_request")),
+    tools(parseRide),
+    messages(...)
+);
+// stop_reason is always "tool_use" — no ambiguity</pre>
+    </div>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Architect Wisdom — Tool Choice Eliminates Ambiguity</h4>
+      <p>When you need structured output, use <code>tool_choice: {type: "tool", name: "..."}</code> to force the model into a specific tool call. This is more reliable than asking the model to "respond in JSON" in a system prompt. The model cannot call a different tool, cannot return plain text — the structure is enforced at the protocol level, not via prompt persuasion.</p>
+    </div>
+  </div>
+
+  <!-- 1.2 Orchestration Patterns -->
+  <div class="stitle">🕸️ 1.2 Orchestration Topologies</div>
+
+  <div class="g3">
+    <div class="card">
+      <h3>📍 Single Agent</h3>
+      <p>One model, one loop, all tools available. Best for focused tasks with clear termination. Used in: <code>AiService.parseRideRequest()</code> — single Ollama call, immediate result.</p>
+    </div>
+    <div class="card" style="border-color:var(--accent)">
+      <h3>🕸️ Hub-and-Spoke (Exam Favourite)</h3>
+      <p>Coordinator agent delegates to specialist subagents via tool calls. Coordinator never executes directly — it orchestrates. <strong>Car-e-pool-api parallel:</strong> <code>Claude Code</code> is the coordinator; <code>.claude/agents/*.md</code> define the 9 specialist spokes.</p>
+    </div>
+    <div class="card">
+      <h3>🔗 Sequential Pipeline</h3>
+      <p>Agent A's output becomes Agent B's input. No shared state. Used in: <code>NotificationService</code> event chain — <code>BookingService</code> commits → <code>ApplicationEventPublisher</code> fires → <code>NotificationService</code> sends DM.</p>
+    </div>
+  </div>
+
+  <div class="stitle">🏗️ Hub-and-Spoke in car-e-pool-api</div>
+  <div class="code-wrap">
+    <div class="code-lbl">.claude/agents/ — 9 Specialist Subagents (Context Isolation)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre>architect.md      — feature planning, cross-module dependency chain
+java-backend.md   — Spring Boot 4, service layer, MapStruct, events
+db-engineer.md    — MySQL 8, Flyway migrations, JPA entity design
+bot-engineer.md   — Telegram bot patterns, BotContext, conversation flows
+qa.md             — tests-first, integration tests, concurrency tests
+security.md       — JWT, Telegram HMAC, OWASP, plate privacy enforcement
+concurrency.md    — pessimistic locking, TransactionPhase, race conditions
+frontend-web.md   — Next.js App Router, Telegram auth, JWT cookie
+flutter-mobile.md — Flutter, Riverpod, Dio, go_router, freezed
+
+// Each agent receives ONLY what it needs — coordinator never dumps
+// the full conversation into each subagent's context.
+// This is context isolation: the key property of hub-and-spoke.</pre>
+  </div>
+
+  <!-- 1.3 Lifecycle Hooks -->
+  <div class="stitle">🪝 1.3 PreToolUse / PostToolUse Lifecycle Hooks</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Hooks fire <em>before</em> or <em>after</em> tool execution and can block, modify, or log. They enforce policies programmatically — stronger than system-prompt instructions because they execute outside model context.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔒 Our settings.json Hook Config</h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command",
+                    "command": "bash .claude/hooks/guard-bash.sh" }]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          { "type":"command","command":"bash .claude/hooks/flyway-gate.sh" },
+          { "type":"command","command":"bash .claude/hooks/module-boundary-check.sh" }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          { "type":"command","command":"bash .claude/hooks/flyway-gate.sh" },
+          { "type":"command","command":"bash .claude/hooks/module-boundary-check.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      { "hooks": [{ "type":"command",
+                    "command": "bash .claude/hooks/vault-writeback.sh" }] }
+    ]
+  }
+}</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🛡️ What Each Hook Enforces</h3>
+      <ul>
+        <li><strong>guard-bash.sh</strong> — blocks <code>rm -rf</code>, <code>DROP TABLE</code>, <code>--force-push</code></li>
+        <li><strong>flyway-gate.sh</strong> — enforces <code>V#__description.sql</code> naming; blocks editing any existing migration file</li>
+        <li><strong>module-boundary-check.sh</strong> — blocks illegal cross-module Java imports (e.g., <code>carpool-bot</code> importing <code>carpool-web</code>)</li>
+        <li><strong>vault-writeback.sh</strong> — on session stop: auto-creates dispatch log in <code>memory/dispatch-logs/</code></li>
+      </ul>
+      <div class="callout tip" style="margin-top:.75rem">
+        <div class="callout-icon">💡</div>
+        <div><h4>Exam Key</h4><p>Hooks exit non-zero to <em>block</em> the tool call. Exit zero to <em>allow</em>. The model cannot override a blocking hook via prompting — this is the core advantage over system-prompt policies.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Weak — Prompt-Only Policy</div>
+      <pre># In CLAUDE.md or system prompt:
+"IMPORTANT: Never edit existing Flyway
+migration files. Always create new ones
+with the next version number."
+
+// Problem: Model can "forget", be confused
+// by context, or be talked out of it.
+// Zero enforcement at execution time.</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Strong — Hook-Enforced Policy</div>
+      <pre># In settings.json PreToolUse for Write/Edit:
+bash .claude/hooks/flyway-gate.sh
+
+# flyway-gate.sh checks the target file path:
+if [[ "$FILE" =~ V[0-9]+__.+\.sql$ ]]; then
+  if [[ "$FILE" == *"db/migration"* ]]; then
+    # Existing migration → block with exit 1
+    echo "ERROR: Editing existing migration forbidden"
+    exit 1
+  fi
+fi
+# New file or non-migration → allow with exit 0</pre>
+    </div>
+  </div>
+
+  <!-- 1.4 Context Isolation -->
+  <div class="stitle">🔒 1.4 Context Isolation Between Coordinator and Subagents</div>
+
+  <div class="callout info">
+    <div class="callout-icon">📌</div>
+    <div>
+      <h4>The Principle</h4>
+      <p>A coordinator agent should pass only the <em>minimum necessary context</em> to each subagent. The coordinator synthesizes results itself — it does not dump its full conversation history into every subagent call. This keeps subagent prompts focused, reduces token cost, and prevents context poisoning.</p>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>✅ Correct — Targeted Handoff</h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre># Coordinator sends to db-engineer agent:
+"Add a NOT NULL column `group_message_posted_at
+TIMESTAMP` to the rides table. The existing
+migration is V44. Write V45."
+
+# Agent receives ONLY:
+# - the specific task
+# - the relevant constraint
+# No conversation history, no other modules' code.</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>❌ Wrong — Context Dumping</h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre># Coordinator sends to db-engineer agent:
+[Full 50-message conversation history]
+[All 6 module CLAUDE.md files]
+[All 44 existing migration files]
+"...and also add the column."
+
+# Problem: Agent wastes tokens re-reading irrelevant
+# context, may be distracted by unrelated patterns,
+# and response quality degrades.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.5 Subagent Patterns -->
+  <div class="stitle">🔁 1.5 Subagent Patterns & Isolation Modes</div>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Pattern</th><th>When to Use</th><th>Isolation</th><th>car-e-pool-api Example</th></tr>
+      <tr><td><strong>Parallel subagents</strong></td><td>Independent tasks that can run concurrently</td><td>Full — each has its own context</td><td>Bot reads migrations + bot CLAUDE.md simultaneously in one Agent message</td></tr>
+      <tr><td><strong>Sequential subagents</strong></td><td>Output of one feeds next</td><td>Coordinator passes summary only</td><td>architect → db-engineer → qa chain for a new feature</td></tr>
+      <tr><td><strong>Worktree isolation</strong></td><td>File edits that must not affect main branch</td><td>Git worktree per agent</td><td><code>isolation: "worktree"</code> in Agent tool call — agent edits files in isolated copy</td></tr>
+      <tr><td><strong>Background agents</strong></td><td>Long-running tasks (build, test)</td><td>Full isolation, notification on complete</td><td>Running Maven integration tests while continuing conversation</td></tr>
+    </table>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Architect Wisdom — Prompt vs Hook for Safety Policies</h4>
+      <p>For any policy that protects data integrity (never drop a table, never edit a migration, never cross module boundaries), use a <strong>hook</strong>, not a prompt instruction. Prompts are advisory. Hooks are enforced. The exam distinguishes between "programmatic enforcement" (hooks, tool schema constraints, <code>tool_choice</code>) and "weak prompt guidance" (system prompt instructions asking the model to behave a certain way).</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     D2: TOOLS & MCP
+══════════════════════════════════════════ -->
+<div id="d2" class="section">
+  <div class="dom-hdr">
+    <h2>🔧 D2 · Tools &amp; MCP — 18% of Exam</h2>
+    <p>Covers the Model Context Protocol architecture, writing precise tool descriptions to prevent routing confusion, configuration file scoping (<code>.mcp.json</code> vs <code>~/.claude.json</code>), secure credential management, and structured error recovery.</p>
+    <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:18%"></div></div><div class="weight-lbl">18% weight</div></div>
+  </div>
+
+  <!-- 2.1 MCP Architecture -->
+  <div class="stitle">🏗️ 2.1 Model Context Protocol Architecture</div>
+
+  <div class="g3">
+    <div class="card">
+      <h3>🖥️ MCP Host</h3>
+      <p>The application that embeds Claude (Claude Code, your IDE, your app). Manages the MCP client lifecycle. In our project: <strong>Claude Code CLI</strong> is the host when you run it in <code>car-e-pool-api/</code>.</p>
+    </div>
+    <div class="card">
+      <h3>🔌 MCP Client</h3>
+      <p>Lives inside the host. Maintains a 1:1 connection with one MCP server. Handles transport negotiation. Managed by the host automatically — you don't write client code directly.</p>
+    </div>
+    <div class="card">
+      <h3>⚙️ MCP Server</h3>
+      <p>Exposes <strong>Tools</strong>, <strong>Resources</strong>, and <strong>Prompts</strong> to the model. Can be a local process (stdio) or remote HTTP server. Example: <code>@modelcontextprotocol/server-github</code> gives Claude GitHub API access.</p>
+    </div>
+  </div>
+
+  <div class="stitle">📁 2.2 Configuration Scoping — The Two File Locations</div>
+  <div class="g2">
+    <div class="card">
+      <h3>📂 Project-Scoped: <code>.mcp.json</code></h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre>// Committed to repo — applies to all devs
+// Lives at: car-e-pool-api/.mcp.json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"  // ← env var reference
+      }
+    },
+    "atlassian": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-atlassian"],
+      "env": {
+        "ATLASSIAN_TOKEN": "${ATLASSIAN_TOKEN}"
+      }
+    }
+  }
+}</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>👤 Personal: <code>~/.claude.json</code></h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre>// NOT committed — personal overrides only
+// Lives at: ~/.claude.json
+{
+  "mcpServers": {
+    "my-local-db": {
+      "command": "node",
+      "args": ["/home/user/tools/db-inspector.js"],
+      "env": {
+        "DB_URL": "jdbc:mysql://localhost:3308/car_e_pool_db",
+        "DB_PASSWORD": "${DB_PASSWORD}"
+      }
+    }
+  }
+}
+
+// Personal config never overrides project config for
+// the same server name — project config wins.</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout danger">
+    <div class="callout-icon">🚨</div>
+    <div>
+      <h4>Exam Trap — Never Hardcode Credentials</h4>
+      <p>Always use <code>${ENV_VAR_NAME}</code> syntax in MCP config files. The actual value is resolved from the environment at runtime. Hardcoding tokens in <code>.mcp.json</code> is a security failure — the file is committed to the repo and the token is exposed. The exam will test whether you know credentials belong in environment variables, not config files.</p>
+    </div>
+  </div>
+
+  <!-- 2.3 Tool Descriptions -->
+  <div class="stitle">📝 2.3 Writing High-Fidelity Tool Descriptions</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Tool descriptions are the primary mechanism for routing disambiguation. A vague description causes the model to pick the wrong tool or to not use a tool at all.</p>
+
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Vague Tool Description</div>
+      <pre>{
+  "name": "search_rides",
+  "description": "Search for rides",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": { "type": "string" }
+    }
+  }
+}
+// Problems:
+// - "Search for rides" could mean anything
+// - Model doesn't know when to prefer this
+//   over a general DB query tool
+// - No examples, no error conditions stated
+// - Free-form "query" string is unstructured</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ High-Fidelity Tool Description</div>
+      <pre>{
+  "name": "search_rides_by_direction",
+  "description": "Search active carpool rides for a specific
+direction and time window. Use this (not search_rides_by_hub)
+when the user specifies a commute direction (home-to-work or
+work-to-home) rather than specific hub names. Returns paginated
+RideResponse list sorted by departure time. Returns empty list
+(not an error) when no rides match.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "direction": {
+        "type": "string",
+        "enum": ["HOME_TO_WORK", "WORK_TO_HOME"],
+        "description": "Commute direction"
+      },
+      "from_datetime": { "type": "string", "format": "date-time" },
+      "to_datetime":   { "type": "string", "format": "date-time" },
+      "min_seats":     { "type": "integer", "minimum": 1 }
+    },
+    "required": ["direction", "from_datetime", "to_datetime"]
+  }
+}</pre>
+      </div>
+  </div>
+
+  <!-- 2.4 Our Project Tools Audit -->
+  <div class="stitle">🔍 2.4 Project Tool Inventory — car-e-pool-api</div>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Tool Surface</th><th>Exposed Via</th><th>Used By</th><th>CCA-F Relevance</th></tr>
+      <tr><td><code>guard-bash.sh</code></td><td>PreToolUse hook on Bash</td><td>Claude Code</td><td>Programmatic tool restriction — blocks risky shell commands</td></tr>
+      <tr><td><code>flyway-gate.sh</code></td><td>PreToolUse hook on Write/Edit</td><td>Claude Code</td><td>File-write gating — enforces migration naming convention</td></tr>
+      <tr><td><code>module-boundary-check.sh</code></td><td>PreToolUse hook on Write/Edit</td><td>Claude Code</td><td>Import guard — prevents illegal cross-module dependencies</td></tr>
+      <tr><td>Atlassian MCP tools (Jira)</td><td><code>.mcp.json</code> → server</td><td>Claude Code sessions</td><td>MCP server config, <code>${ATLASSIAN_TOKEN}</code> credential pattern</td></tr>
+      <tr><td>REST API endpoints</td><td><code>carpool-web</code> controllers</td><td>Frontend, Flutter, bots</td><td>Tool definitions for any Claude agent that consumes the API</td></tr>
+      <tr><td>Ollama / Spring AI</td><td><code>AiService.parseRideRequest()</code></td><td><code>MessageHandler</code></td><td>Model calling model — subagent pattern without explicit MCP</td></tr>
+    </table>
+  </div>
+
+  <!-- 2.5 Error Recovery Matrix -->
+  <div class="stitle">🔴 2.5 Structured Error Recovery Matrix</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">When a tool fails, returning a plain error string forces the model to parse natural language to decide what to do next. Returning structured error metadata enables deterministic retry logic.</p>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Rich Error Response Pattern<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ❌ Anti-pattern: plain string error
+return "Error: booking failed"
+
+# ✅ Correct: structured error with metadata
+return {
+    "isError": True,
+    "errorCode": "RIDE_FULL",
+    "errorCategory": "BUSINESS_RULE",  # BUSINESS_RULE | NETWORK | AUTH | VALIDATION
+    "isRetryable": False,              # model knows not to retry
+    "userMessage": "This ride is now full. Please search for another.",
+    "metadata": {
+        "rideId": 42,
+        "availableSeats": 0,
+        "suggestion": "search_rides_by_direction"  # guide the model's next step
+    }
+}
+
+# isRetryable: True examples:
+# - NETWORK timeout → retry with backoff
+# - RATE_LIMIT → wait then retry
+# - OPTIMISTIC_LOCK → re-fetch and retry
+
+# isRetryable: False examples:
+# - RIDE_FULL → do not retry, search instead
+# - SELF_BOOKING → do not retry, inform user
+# - DUPLICATE_BOOKING → do not retry</pre>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Error from Our Domain</th><th>errorCategory</th><th>isRetryable</th><th>Model Action</th></tr>
+      <tr><td><code>RideFullException</code></td><td>BUSINESS_RULE</td><td class="matrix-cell-bad" style="color:var(--danger)">false</td><td>Suggest search_rides_by_direction</td></tr>
+      <tr><td><code>DuplicateBookingException</code></td><td>BUSINESS_RULE</td><td class="matrix-cell-bad" style="color:var(--danger)">false</td><td>Show existing booking instead</td></tr>
+      <tr><td><code>InvalidRideStateException</code></td><td>BUSINESS_RULE</td><td class="matrix-cell-bad" style="color:var(--danger)">false</td><td>Inform user of required state</td></tr>
+      <tr><td>Telegram API rate limit</td><td>RATE_LIMIT</td><td class="matrix-cell-warn" style="color:var(--warn)">true (after delay)</td><td>Wait Retry-After header, then retry</td></tr>
+      <tr><td>DB connection timeout</td><td>NETWORK</td><td class="matrix-cell-warn" style="color:var(--warn)">true (×3 max)</td><td>Exponential backoff, then fail</td></tr>
+      <tr><td><code>InsufficientRoleException</code></td><td>AUTH</td><td class="matrix-cell-bad" style="color:var(--danger)">false</td><td>Request role elevation from user</td></tr>
+    </table>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Architect Wisdom — Tools Are Your API Contract</h4>
+      <p>Every tool description is a promise to the model about when to use that tool and what to expect back. Vague descriptions cause routing failures. Missing error metadata causes blind retries. Think of tool schemas as a typed API — the richer the types and descriptions, the more reliably the model routes. In production, tool descriptions matter as much as system prompts.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     D3: CLAUDE CODE
+══════════════════════════════════════════ -->
+<div id="d3" class="section">
+  <div class="dom-hdr">
+    <h2>💻 D3 · Claude Code — 20% of Exam</h2>
+    <p>Covers the CLAUDE.md configuration hierarchy, scoping rules, custom slash commands in <code>.claude/commands/</code>, runtime CLI flags, Plan Mode vs direct execution, and session state management (<code>/memory</code>, <code>/compact</code>). Heavily tested because it's the core Claude Code workflow.</p>
+    <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:20%"></div></div><div class="weight-lbl">20% weight</div></div>
+  </div>
+
+  <!-- 3.1 CLAUDE.md Hierarchy -->
+  <div class="stitle">📄 3.1 CLAUDE.md Configuration Hierarchy</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">CLAUDE.md files are loaded in a specific order. Understanding precedence is critical for the exam.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Level</th><th>Location</th><th>Scope</th><th>Committed?</th><th>Precedence</th></tr>
+      <tr><td><strong>Personal</strong></td><td><code>~/.claude/CLAUDE.md</code></td><td>All projects for this user</td><td>Never</td><td>Lowest</td></tr>
+      <tr><td><strong>Project Root</strong></td><td><code>car-e-pool-api/CLAUDE.md</code></td><td>All modules</td><td>Yes</td><td>Medium</td></tr>
+      <tr><td><strong>Module</strong></td><td><code>carpool-bot/CLAUDE.md</code></td><td>That module only</td><td>Yes</td><td>Highest</td></tr>
+      <tr><td><strong>Subdirectory</strong></td><td><code>carpool-bot/handlers/CLAUDE.md</code></td><td>That folder only</td><td>Yes</td><td>Overrides module</td></tr>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">📌</div>
+    <div>
+      <h4>Key Rule — All CLAUDE.md Files Are Additive</h4>
+      <p>Claude Code reads <em>all</em> applicable CLAUDE.md files (personal + project root + module + subdirectory) and merges them. Module-level files do not <em>replace</em> root files — they extend them. If the root CLAUDE.md says "never use rm -rf" and the module CLAUDE.md says nothing about it, the root rule still applies in that module.</p>
+    </div>
+  </div>
+
+  <!-- Our CLAUDE.md Audit -->
+  <div class="stitle">🔍 3.2 Evaluating car-e-pool-api's CLAUDE.md — What's Done Right</div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>✅ Root CLAUDE.md Strengths</h3>
+      <ul>
+        <li>Module dependency chain explicit (one-way arrow diagram)</li>
+        <li>Build commands in code blocks (copy-pasteable)</li>
+        <li>Integration test prerequisites stated (MySQL port, creds)</li>
+        <li>Skill routing table — maps user intent to <code>/skill</code></li>
+        <li>AI-augmented structure in <code>.claude/</code> documented</li>
+        <li>Configuration table: env vars for prod deployment</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📈 What Could Be Added</h3>
+      <ul>
+        <li>YAML frontmatter <code>version:</code> field for schema validation</li>
+        <li><code>allowed_tools:</code> list per module CLAUDE.md to restrict tool use</li>
+        <li>Explicit <code>@import</code> directives to share common sections</li>
+        <li>Per-module <code>default_model:</code> override (e.g., <code>haiku</code> for QA tasks)</li>
+        <li>Example conversation starter in each module CLAUDE.md</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Optimized CLAUDE.md Structure for a Module (carpool-service example)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre>---
+# Optional YAML frontmatter (Claude Code reads this)
+description: "Business logic, events, DTOs, MapStruct — carpool-service module"
+allowed_tools: ["Read", "Edit", "Write", "Grep", "Glob"]  # no Bash in service module
+---
+
+# carpool-service Module Guide
+
+## Purpose
+Business logic, DTOs, MapStruct mapper, event system, schedulers, and AI service.
+Depends on: carpool-repository. Depended on by: carpool-bot, carpool-admin.
+
+## Key Patterns
+- Events: publish via ApplicationEventPublisher, listen with @Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)
+- DTOs: all in dto/response/ as Java records; EntityMapper generates via MapStruct
+- Plate masking: enforced in EntityMapper — first 3 chars + "***"
+
+## When Adding New Business Logic
+1. Run /flyway-migration if DB schema changes
+2. Run /new-event if async notification needed
+3. Run /spring-boot-review before committing
+
+## Common Gotchas
+- REQUIRES_NEW is mandatory on all event listeners — without it, IllegalTransactionStateException
+- VehicleResponse always has masked plate — never expose Vehicle.plateNumber in a DTO directly</pre>
+  </div>
+
+  <!-- 3.3 Custom Slash Commands -->
+  <div class="stitle">⚡ 3.3 Custom Slash Commands — .claude/skills/</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Custom slash commands live in <code>.claude/skills/*/SKILL.md</code> (or <code>.claude/commands/*.md</code> depending on Claude Code version). They provide reusable, project-specific workflows that run within a Claude Code session.</p>
+
+  <div class="g3">
+    <div class="card">
+      <h3>🏗️ Schema-Enforcing Skills</h3>
+      <ul>
+        <li><code>/flyway-migration</code> — V-number lookup, 2-underscore rule, TINYINT→INT mapping</li>
+        <li><code>/new-repository-method</code> — JPA @Query, pessimistic locking patterns</li>
+        <li><code>/add-rest-endpoint</code> — DTO + controller + @PreAuthorize + integration test</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🔄 Workflow Skills</h3>
+      <ul>
+        <li><code>/commit-workflow</code> — no git commit, present diffs first, wait for approval</li>
+        <li><code>/new-bot-command</code> — callback registration pattern in CallbackHandler</li>
+        <li><code>/new-bot-flow</code> — BotFlow enum + UserState.with*() chain + stateManager.reset()</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🔍 Review Skills</h3>
+      <ul>
+        <li><code>/security-review</code> — plate masking, auth guards, JWT expiry, injection</li>
+        <li><code>/concurrency-review</code> — findByIdWithLock usage, transaction boundaries</li>
+        <li><code>/spring-boot-review</code> — DI, transaction scope, exception mapping</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">SKILL.md Format — /new-event skill example<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># Skill: /new-event
+# Trigger: "adding a domain event", "async notification", "fire event"
+
+## Checklist
+
+### Step 1 — Define the event record in RideEvents.java
+```java
+// Add inside RideEvents final class:
+public record MyNewEvent(Ride ride, String reason) {}
+```
+
+### Step 2 — Publish in the service (inside @Transactional method)
+```java
+eventPublisher.publishEvent(new RideEvents.MyNewEvent(ride, reason));
+```
+
+### Step 3 — Listen with the exact 3-annotation stack (no substitutions)
+```java
+@Async
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void onMyNewEvent(RideEvents.MyNewEvent event) {
+    // Safe to call Telegram API here — runs after commit, in new transaction
+}
+```
+
+## Why These Annotations Matter
+- @Async: notification doesn't block the booking transaction
+- AFTER_COMMIT: Telegram only fires after DB write succeeds
+- REQUIRES_NEW: independent transaction for notification status tracking</pre>
+  </div>
+
+  <!-- 3.4 Runtime Flags -->
+  <div class="stitle">🚩 3.4 CLI Runtime Flags</div>
+  <div class="g2">
+    <div class="card">
+      <h3>🔑 Key Flags</h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre># Restrict tools (security boundary)
+claude --allowedTools "Read,Grep,Glob"
+
+# Select model
+claude --model claude-opus-4-7
+
+# Enable verbose logging
+claude --verbose
+
+# Disable interactive mode (CI)
+claude --no-interactive -p "run tests"
+
+# Print mode — no conversation
+claude -p "explain this function" src/Foo.java
+
+# Plan mode before execution
+claude --planMode "add vehicle endpoint"</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🗂️ Plan Mode vs Direct Execution</h3>
+      <ul>
+        <li><strong>Plan Mode:</strong> model outlines steps, asks for approval before any file edits</li>
+        <li><strong>Direct:</strong> model executes immediately (reads, edits, runs commands)</li>
+        <li>Use Plan Mode for: multi-module changes, Flyway migrations, security config changes</li>
+        <li>Use Direct for: single-file bug fixes, documentation, test additions</li>
+        <li>Our <code>CLAUDE.md</code> enforces: "present planned file changes and wait for approval before editing"</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 3.5 Session State -->
+  <div class="stitle">💾 3.5 Session State Management</div>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Command</th><th>Purpose</th><th>When to Use in car-e-pool-api</th></tr>
+      <tr><td><code>/memory</code></td><td>View/edit persistent memory files</td><td>Check remembered patterns before starting a feature (e.g., "never run mvn build")</td></tr>
+      <tr><td><code>/compact</code></td><td>Summarize context to free token space</td><td>After exploring all 6 modules and before starting implementation</td></tr>
+      <tr><td><code>/context-save</code></td><td>Checkpoint current working context</td><td>End of day, mid-feature, before switching branches</td></tr>
+      <tr><td><code>/context-restore</code></td><td>Resume from saved checkpoint</td><td>Next session, after Claude Code restart, across worktree handoffs</td></tr>
+      <tr><td><code>/clear</code></td><td>Wipe conversation context</td><td>Starting a completely unrelated task after a long session</td></tr>
+    </table>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Architect Wisdom — CLAUDE.md Is Your System Prompt for the IDE</h4>
+      <p>Think of CLAUDE.md as a persistent system prompt that applies to every Claude Code session in that directory. Unlike a one-off system prompt, it's versioned, reviewed, and enforced by the team. The hierarchy (personal → project → module) mirrors how you'd think about configuration inheritance: global defaults, project overrides, module specifics. The exam tests whether you know which file to edit for which scope of change.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     D4: PROMPT ENGINEERING
+══════════════════════════════════════════ -->
+<div id="d4" class="section">
+  <div class="dom-hdr">
+    <h2>✍️ D4 · Prompt Engineering — 20% of Exam</h2>
+    <p>Covers deterministic output structuring via <code>tool_choice</code>, alternating turn few-shot patterns, XML structural barriers, system context design, and extraction pipeline architecture. Heavily focuses on eliminating model ambiguity through schema constraints rather than natural language instructions.</p>
+    <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:20%"></div></div><div class="weight-lbl">20% weight</div></div>
+  </div>
+
+  <!-- 4.1 Forcing JSON -->
+  <div class="stitle">🎯 4.1 Forcing Valid JSON via tool_choice</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">This is the most-tested prompt engineering concept. Never use system prompt instructions to ask for JSON. Use <code>tool_choice</code> to enforce schema at the protocol level.</p>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Enforcing Structured Output for AiService (Correct Pattern)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># Current car-e-pool-api AiService uses Ollama + Spring AI with a text prompt.
+# This is the production-correct version if using the Anthropic API instead:
+
+parse_ride_tool = {
+    "name": "extract_ride_details",
+    "description": "Extract structured carpool ride details from a natural language message. "
+                   "Call this tool for every message — if fields cannot be determined, "
+                   "set them to null rather than guessing.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "direction": {
+                "type": "string",
+                "enum": ["HOME_TO_WORK", "WORK_TO_HOME", "OTHER"],
+                "description": "Commute direction based on context clues"
+            },
+            "departure_date": {
+                "type": "string",
+                "description": "ISO date YYYY-MM-DD. Use 'today' keyword if user says 'ngayon', tomorrow for 'bukas'"
+            },
+            "departure_time": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "description": "24h time HH:mm"
+            },
+            "seats": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8,
+                "description": "Number of available seats. null if not mentioned."
+            },
+            "origin_hint": {
+                "type": "string",
+                "description": "Landmark or area name for origin. null if not mentioned."
+            },
+            "destination_hint": {
+                "type": "string",
+                "description": "Landmark or area name for destination. null if not mentioned."
+            },
+            "contribution": {
+                "type": "number",
+                "description": "Fuel/toll contribution in PHP. null if not mentioned."
+            }
+        },
+        "required": ["direction", "departure_date", "departure_time"]
+        # seats, origin_hint, destination_hint, contribution are optional
+    }
+}
+
+response = client.messages.create(
+    model="claude-haiku-4-5-20251001",  # fast + cheap for extraction
+    max_tokens=512,
+    tools=[parse_ride_tool],
+    tool_choice={"type": "tool", "name": "extract_ride_details"},  # ← FORCE it
+    messages=[{
+        "role": "user",
+        "content": f"Extract ride details: {user_message}"
+    }]
+)
+
+# stop_reason is ALWAYS "tool_use" — no fallback branch needed
+tool_input = response.content[0].input
+# ParsedRideRequest(direction=..., departure_date=..., departure_time=...)</pre>
+  </div>
+
+  <!-- 4.2 Few-Shot Patterns -->
+  <div class="stitle">🎭 4.2 Few-Shot Examples — Alternating Turns</div>
+  <div class="callout info">
+    <div class="callout-icon">📌</div>
+    <div>
+      <h4>The Alternating Turn Rule</h4>
+      <p>Few-shot examples must alternate <code>user → assistant → user → assistant</code>. You cannot have two consecutive <code>user</code> messages or two consecutive <code>assistant</code> messages. Each example is one full exchange. The final message is always <code>user</code> (the actual query).</p>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Few-Shot with Alternating Turns (Ride NL Parsing)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre">messages = [
+    # Example 1 — clear home-to-work
+    {"role": "user",      "content": "mag post sana ako ng ride bukas 7am sucat to bgc"},
+    {"role": "assistant", "content": None,  # tool_use response
+     "content": [{"type": "tool_use", "id": "ex1", "name": "extract_ride_details",
+                  "input": {"direction": "HOME_TO_WORK", "departure_date": "2026-05-26",
+                             "departure_time": "07:00", "origin_hint": "Sucat",
+                             "destination_hint": "BGC", "seats": None, "contribution": None}}]},
+    # Example 1 result
+    {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "ex1",
+                                   "content": "ok"}]},
+
+    # Example 2 — work-to-home with seats
+    {"role": "user",      "content": "uwi na 6pm from BGC to Paranaque, 2 seats lang"},
+    {"role": "assistant", "content": [{"type": "tool_use", "id": "ex2",
+                                        "name": "extract_ride_details",
+                                        "input": {"direction": "WORK_TO_HOME",
+                                                  "departure_date": "today",
+                                                  "departure_time": "18:00",
+                                                  "origin_hint": "BGC",
+                                                  "destination_hint": "Paranaque",
+                                                  "seats": 2, "contribution": None}}]},
+    {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "ex2",
+                                   "content": "ok"}]},
+
+    # Actual query
+    {"role": "user", "content": actual_user_message}
+]</pre>
+  </div>
+
+  <!-- 4.3 System Context Design -->
+  <div class="stitle">🏗️ 4.3 System Context Design — AiService Audit</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The current <code>AiService.parseRideRequest()</code> in the project uses a Spring AI <code>ChatClient</code> with an inline system prompt. Here's how to structure it optimally:</p>
+
+  <div class="code-wrap">
+    <div class="code-lbl">JAVA — Optimized AiService System Prompt Structure<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre>// carpool-service/ai/AiService.java
+@Service
+public class AiService {
+
+    // System prompt components — ordered for cache efficiency:
+    // 1. Static role + context (most cacheable)
+    // 2. Semi-static rules (cacheable within session)
+    // 3. Dynamic per-request data (never cached)
+
+    private static final String SYSTEM_STATIC = """
+        You are a ride-detail extractor for a Philippine carpooling app.
+        The app serves commuters in Metro Manila.
+        Users write in Filipino, Taglish, or English.
+
+        Key domain facts:
+        - "Home to work" direction = morning commute, before noon
+        - "Work to home" direction = evening commute, after noon
+        - Common locations: Sucat, Paranaque, BGC, Makati, Taguig, QC
+        - Filipino time words: "bukas"=tomorrow, "ngayon"=today, "mamaya"=later today
+        - "Magpost"/"mag post" indicates intent to post a ride (driver)
+        """;
+
+    private static final String EXTRACTION_RULES = """
+        Extraction rules:
+        1. If direction is ambiguous, infer from time (morning=HOME_TO_WORK, evening=WORK_TO_HOME)
+        2. If a field cannot be determined, return null — do not guess
+        3. Times are 24h format. "7am"=07:00, "6pm"=18:00
+        4. Seats: look for numbers near "seat", "tao", "pasahero"
+        5. Contribution: look for peso amounts near "each", "tig", "per person"
+        """;
+
+    public ParsedRideRequest parseRideRequest(String userMessage) {
+        // System prompt = static + rules (both cache-eligible)
+        // User message = dynamic (never cached, always appended)
+        return chatClient
+            .prompt()
+            .system(SYSTEM_STATIC + "\n" + EXTRACTION_RULES)
+            .user(userMessage)
+            .call()
+            .entity(ParsedRideRequest.class);
+    }
+}</pre>
+  </div>
+
+  <!-- 4.4 XML Structural Barriers -->
+  <div class="stitle">🏷️ 4.4 XML Tags as Structural Barriers</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Use XML tags to create unambiguous sections in prompts. The model reliably respects XML structure even in complex multi-part prompts.</p>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Structured System Prompt with XML Barriers<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><system>
+You are a carpool ride posting assistant for car-e-pool-api.
+
+<constraints>
+- Only discuss rides, bookings, and the carpool app
+- Never share plate numbers in public messages
+- If a user asks about something unrelated, redirect politely
+</constraints>
+
+<domain_context>
+Available hub list: Sucat, Paranaque, BGC, Makati, Taguig, Quezon City
+Ride directions: HOME_TO_WORK (morning), WORK_TO_HOME (evening)
+Max seats per ride: 8. Min contribution: PHP 0 (free).
+</domain_context>
+
+<output_format>
+Always respond in Taglish (mix of Tagalog and English).
+Use friendly, conversational tone.
+If extracting ride details, use the extract_ride_details tool.
+</output_format>
+</system>
+
+<user_message>
+{actual_user_input}
+</user_message></pre>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Architect Wisdom — Schema Over Instructions</h4>
+      <p>The single most important prompt engineering insight: <strong>every behavioral constraint you can move from a natural language instruction into a schema constraint, do it</strong>. "Please output valid JSON" is weak. <code>tool_choice: {type: "tool"}</code> is absolute. "Maximum 4 seats" in prose is advisory. <code>"maximum": 4</code> in a JSON schema is enforced by the API. Move constraints down the stack — from prose to schema to type system — at every opportunity.</p>
+    </div>
+  </div>
+
+  <!-- 4.5 Extraction Pipeline -->
+  <div class="stitle">🔬 4.5 Extraction Pipeline — Project Application</div>
+
+  <div class="acc">
+    <div class="acc-hdr" onclick="toggleAcc(this)">
+      <span>📋 Full Ride-Post Extraction Pipeline (MessageHandler → AiService → State hydration)</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="flow">
+        <div class="flow-step">User sends NL message</div><div class="flow-arrow">→</div>
+        <div class="flow-step a">MessageHandler.isNaturalLanguageRidePost()</div><div class="flow-arrow">→</div>
+        <div class="flow-step">Intent keywords detected</div><div class="flow-arrow">→</div>
+        <div class="flow-step a">AiService.parseRideRequest()</div><div class="flow-arrow">→</div>
+        <div class="flow-step">ParsedRideRequest record</div><div class="flow-arrow">→</div>
+        <div class="flow-step a">routeToNextPostRideStep()</div><div class="flow-arrow">→</div>
+        <div class="flow-step s">Jump to first missing field</div>
+      </div>
+      <div class="code-wrap" style="margin-top:.9rem">
+        <pre>// MessageHandler.handleNaturalLanguageRidePost()
+bot.sendMessage(chatId, "⏳ Analyzing your message…");
+
+ParsedRideRequest parsed = aiService.parseRideRequest(text);
+
+if (parsed.isEmpty()) {
+    bot.sendMessage(chatId, "Sorry, I couldn't parse that. Please use the menu.");
+    return;
+}
+
+// Hydrate UserState with extracted fields
+UserState newState = state
+    .withFlow(BotFlow.POST_RIDE_DIRECTION)  // will be overridden below
+    .withDirection(parsed.direction())       // ← extracted
+    .withDepartureTime(parsed.toDateTime())  // ← extracted + parsed
+    .withSeats(parsed.seats())               // ← extracted or null
+    .withContribution(parsed.contribution()) // ← extracted or null
+    .withOriginHint(parsed.originHint())     // ← extracted or null
+    .withDestHint(parsed.destinationHint()); // ← extracted or null
+
+stateManager.save(chatId, newState);
+
+// Jump to the first step that's still missing
+routeToNextPostRideStep(ctx.withState(newState));</pre>
+      </div>
+      <div class="callout tip" style="margin-top:.75rem">
+        <div class="callout-icon">💡</div>
+        <div><h4>Exam Key — Graceful Degradation</h4><p>The <code>parsed.isEmpty()</code> check is critical. AI parsing is best-effort — network failures, bad JSON, model errors are all possible. The bot never hard-depends on AI availability. This is the correct production pattern: AI augments the flow, it doesn't gate it.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     D5: CONTEXT & MEMORY
+══════════════════════════════════════════ -->
+<div id="d5" class="section">
+  <div class="dom-hdr">
+    <h2>🧠 D5 · Context &amp; Memory — 15% of Exam</h2>
+    <p>Covers strategic prompt caching (where to set <code>cache_control</code> breakpoints for maximum savings), context window management strategies, conversation compaction, and token-efficient design for long-horizon developer tasks like working across large codebases.</p>
+    <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:15%"></div></div><div class="weight-lbl">15% weight</div></div>
+  </div>
+
+  <!-- 5.1 Prompt Caching -->
+  <div class="stitle">💰 5.1 Strategic Prompt Caching</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Prompt caching stores processed prompt segments on Anthropic's servers for 5 minutes (Haiku) or longer (Opus/Sonnet). Cached tokens cost ~10% of normal input token price. The key skill is knowing <em>where</em> to place cache breakpoints.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📍 Cache Breakpoint Rules</h3>
+      <ul>
+        <li>Breakpoints are placed at the <em>end</em> of a static section</li>
+        <li>Everything before a breakpoint is eligible for caching</li>
+        <li>Dynamic content (user input, timestamps) goes AFTER the last breakpoint</li>
+        <li>TTL: 5 minutes — re-use within 5 min = cache hit</li>
+        <li>Max 4 cache breakpoints per request</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>💸 Cost Model</h3>
+      <ul>
+        <li><strong>Cache write:</strong> 1.25× normal input cost (paid once)</li>
+        <li><strong>Cache hit:</strong> ~0.10× normal input cost (paid each reuse)</li>
+        <li><strong>Break-even:</strong> ~2 requests to recoup write cost</li>
+        <li><strong>Best for:</strong> system prompts, long code files, tool definitions that don't change per request</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Correct Cache Breakpoint Placement for car-e-pool-api Agent<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre">messages = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=8192,
+    system=[
+        # Breakpoint 1: Static role + project overview (~500 tokens)
+        # This never changes — cache it aggressively
+        {
+            "type": "text",
+            "text": STATIC_ROLE_AND_PROJECT_OVERVIEW,
+            "cache_control": {"type": "ephemeral"}  # ← breakpoint 1
+        },
+        # Breakpoint 2: CLAUDE.md content (~2000 tokens)
+        # Changes rarely — cache with 5-min TTL
+        {
+            "type": "text",
+            "text": read_claude_md_content(),
+            "cache_control": {"type": "ephemeral"}  # ← breakpoint 2
+        },
+        # Breakpoint 3: Tool definitions (~800 tokens)
+        # Same tools per session — cache them
+        {
+            "type": "text",
+            "text": format_tool_definitions(all_tools),
+            "cache_control": {"type": "ephemeral"}  # ← breakpoint 3
+        },
+        # NO breakpoint here: session-specific context added fresh each call
+        {
+            "type": "text",
+            "text": f"Current branch: {git_branch}\nModified files: {modified_files}"
+            # ← dynamic, never cached
+        }
+    ],
+    messages=conversation_history  # conversation itself is never cached
+)</pre>
+  </div>
+
+  <!-- 5.2 Token-Heavy Workflows -->
+  <div class="stitle">📊 5.2 Token-Heavy Workflows — car-e-pool-api Audit</div>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Workflow</th><th>Token Cost</th><th>Cache Strategy</th><th>Savings Potential</th></tr>
+      <tr><td>Reading all 6 module CLAUDE.md files</td><td>High (~4k tokens)</td><td>Cache combined CLAUDE.md content after first read</td><td>High — done every session</td></tr>
+      <tr><td>Reading carpool-bot/PostRideHandler.java (1,075 lines)</td><td>Very High (~8k tokens)</td><td>Cache file content; only re-read if file changed</td><td>Very High — largest handler</td></tr>
+      <tr><td>AiService.parseRideRequest() per message</td><td>Medium (~600 tokens/call)</td><td>Cache system prompt; only user message is dynamic</td><td>High — called per NL message</td></tr>
+      <tr><td>Reading all 44 Flyway migrations before writing V45</td><td>Very High (~12k tokens)</td><td>Cache migration list; only append new migration</td><td>High — done per migration task</td></tr>
+      <tr><td>Tool definitions for 15 skills</td><td>Medium (~2k tokens)</td><td>Cache all tool definitions per session</td><td>Medium — stable within session</td></tr>
+      <tr><td>Per-user Telegram update handling in bot</td><td>Low (~100 tokens/update)</td><td>No caching — fully dynamic per user</td><td>N/A</td></tr>
+    </table>
+  </div>
+
+  <!-- 5.3 Context Window Management -->
+  <div class="stitle">🪟 5.3 Context Window Management Strategies</div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📦 Compaction Strategy</h3>
+      <ul>
+        <li>Use <code>/compact</code> after exploring the full codebase</li>
+        <li>Compaction summarizes old turns into a dense summary</li>
+        <li>Keep: key decisions, file paths, current task state</li>
+        <li>Discard: verbose tool outputs, file content already acted on</li>
+        <li>In our project: compact after reading all 6 modules, before writing code</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🧩 Chunking Strategy for Large Files</h3>
+      <ul>
+        <li>PostRideHandler (1,075 lines) → read only relevant methods</li>
+        <li>Pass line ranges: <code>Read(file, offset=100, limit=50)</code></li>
+        <li>Use Grep to find specific methods before reading</li>
+        <li>Never read entire files "just in case" — every token counts</li>
+        <li>Our CLAUDE.md pattern: "Use Grep, then Read the specific section"</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5.4 Memory System -->
+  <div class="stitle">🗃️ 5.4 Memory Architecture — car-e-pool-api</div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The project uses a file-based memory system in <code>memory/</code> that persists across sessions. This is the analogue of external memory for long-horizon tasks.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📁 memory/ Structure</h3>
+      <ul>
+        <li><code>memory/adrs/</code> — 11 Architecture Decision Records (ADR-001 to ADR-011)</li>
+        <li><code>memory/prds/</code> — Product requirements documents</li>
+        <li><code>memory/learnings/</code> — Hard-won implementation gotchas</li>
+        <li><code>memory/dispatch-logs/</code> — Auto-generated session logs (vault-writeback.sh)</li>
+        <li><code>MEMORY.md</code> — Index file, loaded every session (max 200 lines)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>💡 Key Memory Pattern</h3>
+      <ul>
+        <li>MEMORY.md is the index — 1 line per memory file, ~150 chars max</li>
+        <li>Memory files use frontmatter: <code>name</code>, <code>description</code>, <code>type</code></li>
+        <li>Types: <code>user</code>, <code>feedback</code>, <code>project</code>, <code>reference</code></li>
+        <li>Cross-link with <code>[[other-memory-name]]</code></li>
+        <li>Never save: code patterns, git history, ephemeral task state</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">memory/ File Format — ADR Example (What Gets Cached in External Memory)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre">---
+name: adr-002-pessimistic-locking
+description: Why BookingService uses SELECT FOR UPDATE instead of optimistic locking
+metadata:
+  type: project
+---
+
+BookingService.createBooking() acquires a pessimistic write lock via
+rideRepository.findByIdWithLock(rideId) — a SELECT FOR UPDATE query.
+
+**Why:** Integration tests proved that optimistic locking (version column)
+resulted in a "last write wins" race condition under concurrent bookings.
+H2 in-memory DB ignores SELECT FOR UPDATE — concurrency tests must use
+real MySQL at localhost:3308.
+
+**How to apply:** Never replace findByIdWithLock() with findById() in
+BookingService. If adding a new booking-like feature (e.g., waitlist),
+use the same lock acquisition pattern. See [[adr-003-event-listeners]]
+for the complementary notification safety pattern.
+
+Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Architect Wisdom — Cache What's Static, Stream What's Dynamic</h4>
+      <p>The mental model for prompt caching: anything that would be the same across 10 API calls should be cached. System prompts, tool definitions, CLAUDE.md content, large reference documents — these are cache candidates. User messages, timestamps, current file diffs, search results — these are never cached. The <code>cache_control</code> breakpoint goes at the boundary between static and dynamic content. Moving it one block earlier or later can double your cache hit rate.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHEAT SHEET
+══════════════════════════════════════════ -->
+<div id="cheat" class="section">
+  <div class="dom-hdr" style="border-left-color:var(--purple)">
+    <h2>📋 CCA-F Quick Reference Cheat Sheet</h2>
+    <p>High-density reference for the 30 minutes before your exam. Everything on one page.</p>
+  </div>
+
+  <!-- D1 Quick -->
+  <div class="stitle">🤖 D1: Agentic Systems (27%)</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
+    <tr><td><code>stop_reason: "tool_use"</code></td><td>Model wants to call a tool → loop MUST continue</td><td>Exiting the loop instead of appending results</td></tr>
+    <tr><td><code>stop_reason: "end_turn"</code></td><td>Model finished → loop should terminate</td><td>Continuing loop after end_turn</td></tr>
+    <tr><td>Tool result role</td><td>Role is <code>user</code>, not <code>tool</code></td><td>Using wrong role for tool_result content block</td></tr>
+    <tr><td>Hub-and-spoke</td><td>Coordinator orchestrates; never executes directly</td><td>Coordinator sharing full history with subagents</td></tr>
+    <tr><td>PreToolUse hook</td><td>Exit non-zero = block tool. Exit zero = allow</td><td>Thinking prompts can block tool use (they can't)</td></tr>
+    <tr><td>Context isolation</td><td>Subagents get minimum necessary context only</td><td>Dumping full conversation into every subagent</td></tr>
+    <tr><td>Worktree isolation</td><td><code>isolation: "worktree"</code> = isolated git worktree per agent</td><td>Running file-editing agents on shared branch</td></tr>
+  </table></div>
+
+  <!-- D2 Quick -->
+  <div class="stitle">🔧 D2: Tools &amp; MCP (18%)</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
+    <tr><td>MCP config: project</td><td><code>.mcp.json</code> in repo root — committed, shared</td><td>Committing actual token values (use <code>${ENV_VAR}</code>)</td></tr>
+    <tr><td>MCP config: personal</td><td><code>~/.claude.json</code> — never committed</td><td>Thinking personal config overrides project config</td></tr>
+    <tr><td>Tool description quality</td><td>Say when to use this tool vs alternatives; include examples</td><td>One-liner descriptions that cause routing confusion</td></tr>
+    <tr><td>isError flag</td><td>Must be set True on error responses; enables model error handling</td><td>Returning error string without isError:true</td></tr>
+    <tr><td>isRetryable</td><td>False for business rule errors; True for network/rate-limit</td><td>Not setting isRetryable → model blindly retries RIDE_FULL</td></tr>
+    <tr><td>Credential management</td><td><code>"GITHUB_TOKEN": "${GITHUB_TOKEN}"</code> always</td><td>Hardcoding any secret in any config file</td></tr>
+  </table></div>
+
+  <!-- D3 Quick -->
+  <div class="stitle">💻 D3: Claude Code (20%)</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
+    <tr><td>CLAUDE.md precedence</td><td>personal &lt; project root &lt; module &lt; subdirectory</td><td>Thinking module CLAUDE.md replaces root (it extends it)</td></tr>
+    <tr><td>CLAUDE.md files</td><td>All applicable files are merged/additive</td><td>Assuming only the closest CLAUDE.md is read</td></tr>
+    <tr><td>Custom slash commands</td><td><code>.claude/skills/*/SKILL.md</code> or <code>.claude/commands/*.md</code></td><td>Putting skills outside <code>.claude/</code> folder</td></tr>
+    <tr><td>Plan Mode</td><td>Model plans before executing; requires approval</td><td>Using direct execution for multi-module changes</td></tr>
+    <tr><td><code>/compact</code></td><td>Summarizes context; use after large codebase exploration</td><td>Not compacting before starting implementation (context bloat)</td></tr>
+    <tr><td>hooks in settings.json</td><td>PreToolUse, PostToolUse, Stop — programmatic enforcement</td><td>Using system prompt to enforce safety policies instead</td></tr>
+    <tr><td><code>--allowedTools</code></td><td>Restricts tool use at runtime — stronger than CLAUDE.md allowed_tools</td><td>Not restricting tools in CI/automated contexts</td></tr>
+  </table></div>
+
+  <!-- D4 Quick -->
+  <div class="stitle">✍️ D4: Prompt Engineering (20%)</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
+    <tr><td><code>tool_choice: {type: "tool"}</code></td><td>Forces model to call a specific tool → always structured output</td><td>Asking for JSON in system prompt instead of using tool_choice</td></tr>
+    <tr><td>Few-shot turn alternation</td><td>Must alternate user→assistant→user. Tool results are user role.</td><td>Two consecutive user messages → API error</td></tr>
+    <tr><td>XML structural barriers</td><td><code>&lt;constraints&gt;</code>, <code>&lt;examples&gt;</code> etc. disambiguate prompt sections</td><td>Mixing constraints/examples/context in flat prose</td></tr>
+    <tr><td>Schema over instructions</td><td><code>"enum": ["A","B"]</code> is stronger than "only output A or B"</td><td>Relying on prose instructions for format constraints</td></tr>
+    <tr><td>Graceful AI degradation</td><td>AI parsing is best-effort; always have a non-AI fallback path</td><td>Gating critical flows on AI availability</td></tr>
+    <tr><td>Model selection for extraction</td><td>Haiku for fast/cheap extraction; Opus for complex reasoning</td><td>Using Opus for simple extraction tasks (expensive, slower)</td></tr>
+  </table></div>
+
+  <!-- D5 Quick -->
+  <div class="stitle">🧠 D5: Context &amp; Memory (15%)</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
+    <tr><td>Cache breakpoint placement</td><td>At the END of a static section, BEFORE dynamic content</td><td>Placing breakpoint after dynamic content (nothing cached)</td></tr>
+    <tr><td>Cache TTL</td><td>5 minutes on Haiku; ephemeral type on all models</td><td>Expecting cache to last more than 5 min between calls</td></tr>
+    <tr><td>Cache write cost</td><td>1.25× normal input cost (one-time)</td><td>Forgetting cache writes cost more than normal input</td></tr>
+    <tr><td>Cache hit cost</td><td>~0.10× normal input cost</td><td>Not caching long static system prompts (massive waste)</td></tr>
+    <tr><td>Max breakpoints</td><td>4 per request</td><td>Trying to cache every section separately</td></tr>
+    <tr><td>What to cache</td><td>System prompts, tool defs, reference docs, CLAUDE.md files</td><td>Caching user messages or conversation history</td></tr>
+    <tr><td>Context compaction</td><td>/compact summarizes old turns into dense summary</td><td>Ignoring context growth until the limit is hit mid-task</td></tr>
+  </table></div>
+
+  <!-- Project-Specific Quick Ref -->
+  <div class="stitle">🚗 car-e-pool-api Key Facts (Project-Specific)</div>
+  <div class="g2">
+    <div class="card">
+      <h3>🔒 Critical Invariants</h3>
+      <ul>
+        <li>BookingService uses <code>findByIdWithLock()</code> — SELECT FOR UPDATE</li>
+        <li>Event listeners require all 3 annotations: <code>@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)</code></li>
+        <li>Plate masking enforced in <code>EntityMapper</code> (MapStruct compile-time)</li>
+        <li><code>UserState.timeWindowStart</code> must always be the <em>adjusted</em> value, never raw default</li>
+        <li>H2 ignores SELECT FOR UPDATE — concurrency tests need real MySQL</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🏗️ Module Dependency Chain</h3>
+      <div class="flow" style="flex-direction:column;gap:.4rem">
+        <div class="flow-step" style="text-align:center">carpool-common (shared utils)</div>
+        <div class="flow-arrow" style="text-align:center">↓</div>
+        <div class="flow-step" style="text-align:center">carpool-domain (JPA entities, enums)</div>
+        <div class="flow-arrow" style="text-align:center">↓</div>
+        <div class="flow-step" style="text-align:center">carpool-repository (Spring Data JPA)</div>
+        <div class="flow-arrow" style="text-align:center">↓</div>
+        <div class="flow-step a" style="text-align:center">carpool-service (business logic)</div>
+        <div class="flow-arrow" style="text-align:center">↓ ↓</div>
+        <div style="display:flex;gap:.5rem;justify-content:center">
+          <div class="flow-step">carpool-bot</div>
+          <div class="flow-step">carpool-admin</div>
+          <div class="flow-step s">carpool-web (executable)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">🏛️</div>
+    <div>
+      <h4>Final Architect Wisdom — The Exam in One Sentence</h4>
+      <p>The CCA-F exam rewards architects who understand that <strong>deterministic constraints beat advisory guidance</strong> at every layer: tool schemas beat prose instructions, hooks beat system-prompt policies, <code>tool_choice</code> beats "please respond in JSON", and structured error metadata beats plain error strings. When you see a question asking to choose between a programmatic enforcement mechanism and a natural language instruction, always choose programmatic.</p>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+function show(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById(id);
+  if (sec) sec.classList.add('active');
+  if (el && el.classList) el.classList.add('active');
+}
+
+function toggleTheme() {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
+function toggleAcc(hdr) {
+  hdr.classList.toggle('open');
+  const body = hdr.nextElementSibling;
+  if (body) body.classList.toggle('open');
+}
+
+function copyCode(btn) {
+  const wrap = btn.closest('.code-wrap') || btn.closest('.cmp-panel');
+  const pre = wrap ? wrap.querySelector('pre') : null;
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Wire up the overview domain cards to nav items
+document.querySelectorAll('.prog-card').forEach((card, i) => {
+  const ids = ['d1','d2','d3','d4','d5'];
+  const navItems = document.querySelectorAll('.nav-item');
+  card.addEventListener('click', () => {
+    const target = ids[i];
+    const navEl = Array.from(navItems).find(n => n.textContent.includes('D' + (i+1)));
+    show(target, navEl);
+  });
+});
+</script>
+</body>
+</html>
