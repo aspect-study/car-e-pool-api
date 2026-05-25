@@ -294,7 +294,10 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
     <div class="nav-item" onclick="show('s13',this)"><span>🎰</span> 13 Hidden Scenarios</div>
 
     <div class="nav-lbl">Quick Reference</div>
-    <div class="nav-item" onclick="show('cheat',this)"><span>📋</span> Cheat Sheet</div>
+    <div class="nav-item" onclick="show('cheat',this);openSubnav(this)"><span>📋</span> Cheat Sheet <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span></span></div>
+    <div class="nav-sub-list">
+      <div class="nav-sub-item" onclick="scrollToSD('cheat','study-tip',this)"><span class="nav-sub-dot"></span>💡 Study Tip</div>
+    </div>
   </nav>
   <div class="sb-footer">
     <button class="toggle-btn" onclick="toggleTheme()">🌙 Toggle Theme</button>
@@ -2919,7 +2922,7 @@ synthesis_report = {
     </div>
   </div>
 
-  <div class="stitle">💡 Study Tip</div>
+  <div id="study-tip" class="stitle">💡 Study Tip</div>
   <div class="callout tip">
     <div class="callout-icon">💡</div>
     <div>
