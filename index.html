@@ -1791,6 +1791,70 @@ claude -p "generate missing tests for BookingService" \
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:20%"></div></div><div class="weight-lbl">20% weight</div></div>
   </div>
 
+  <!-- ─────────────────────────────────────── -->
+  <!-- 4.1 Explicit Criteria vs Vague          -->
+  <!-- ─────────────────────────────────────── -->
+  <div id="sd41" class="stitle">🎯 4.1 Explicit Criteria to Reduce False Positives<span class="sub-tag">SD 4.1</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Vague instructions like "be conservative" or "only report high-confidence findings" do NOT improve precision. They require the model to guess what "high confidence" means. Explicit categorical criteria produce consistent, measurable results — and high false positive rates in ANY category undermine developer trust across ALL categories.</p>
+
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Vague Instruction (High False Positives)</div>
+      <pre># Review prompt:
+"Check that comments are accurate.
+Be conservative and only flag issues
+you're highly confident about."
+
+# Problems:
+# - "accurate" is undefined — model flags
+#   stylistic differences as inaccuracies
+# - "highly confident" is model-internal —
+#   no way to tune the threshold externally
+# - High false positives in comments → devs
+#   stop trusting the tool for real bugs too</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Explicit Categorical Criteria</div>
+      <pre># Review prompt:
+"Flag a comment ONLY when the described
+behavior DIRECTLY CONTRADICTS what the
+code does (e.g., comment says returns null
+but code always returns a non-null value).
+
+DO NOT flag:
+- Outdated style or naming preferences
+- Missing documentation for private methods
+- Comments that are terse but not wrong
+- Local conventions that differ from standard
+
+SKIP: any finding you cannot cite with the
+specific line number showing the contradiction."</pre>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔍 False Positive Categories for Our Project</h3>
+      <ul>
+        <li><strong>Plate masking "issue":</strong> EntityMapper intentionally masks plates — not a bug</li>
+        <li><strong>REQUIRES_NEW propagation:</strong> mandatory in event listeners — not a problem</li>
+        <li><strong>SELECT FOR UPDATE:</strong> intentional pessimistic lock — not unnecessary locking</li>
+        <li><strong>Caffeine TTL 30 min:</strong> intentional session design — not a leak</li>
+        <li>Document each known false-positive pattern so the review tool can be instructed to skip it</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📊 Managing False Positive Trust Erosion</h3>
+      <ul>
+        <li>Temporarily <strong>disable</strong> high false-positive categories to restore developer trust</li>
+        <li>While disabled: improve the prompt criteria for that category specifically</li>
+        <li>Define explicit severity criteria with concrete code examples per level</li>
+        <li>High FP in one category = distrust spreads to accurate categories</li>
+        <li>Fix the worst category first — even one category with 0% FP builds confidence</li>
+      </ul>
+    </div>
+  </div>
+
   <!-- 4.1 Forcing JSON -->
   <div class="stitle">🎯 4.1 Forcing Valid JSON via tool_choice</div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">This is the most-tested prompt engineering concept. Never use system prompt instructions to ask for JSON. Use <code>tool_choice</code> to enforce schema at the protocol level.</p>
@@ -2046,69 +2110,6 @@ routeToNextPostRideStep(ctx.withState(newState));</pre>
     </div>
   </div>
 
-  <!-- ─────────────────────────────────────── -->
-  <!-- 4.1 Explicit Criteria vs Vague          -->
-  <!-- ─────────────────────────────────────── -->
-  <div id="sd41" class="stitle">🎯 4.1 Explicit Criteria to Reduce False Positives<span class="sub-tag">SD 4.1</span></div>
-  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Vague instructions like "be conservative" or "only report high-confidence findings" do NOT improve precision. They require the model to guess what "high confidence" means. Explicit categorical criteria produce consistent, measurable results — and high false positive rates in ANY category undermine developer trust across ALL categories.</p>
-
-  <div class="cmp">
-    <div class="cmp-panel bad">
-      <div class="cmp-hdr">❌ Vague Instruction (High False Positives)</div>
-      <pre># Review prompt:
-"Check that comments are accurate.
-Be conservative and only flag issues
-you're highly confident about."
-
-# Problems:
-# - "accurate" is undefined — model flags
-#   stylistic differences as inaccuracies
-# - "highly confident" is model-internal —
-#   no way to tune the threshold externally
-# - High false positives in comments → devs
-#   stop trusting the tool for real bugs too</pre>
-    </div>
-    <div class="cmp-panel good">
-      <div class="cmp-hdr">✅ Explicit Categorical Criteria</div>
-      <pre># Review prompt:
-"Flag a comment ONLY when the described
-behavior DIRECTLY CONTRADICTS what the
-code does (e.g., comment says returns null
-but code always returns a non-null value).
-
-DO NOT flag:
-- Outdated style or naming preferences
-- Missing documentation for private methods
-- Comments that are terse but not wrong
-- Local conventions that differ from standard
-
-SKIP: any finding you cannot cite with the
-specific line number showing the contradiction."</pre>
-    </div>
-  </div>
-
-  <div class="g2">
-    <div class="card">
-      <h3>🔍 False Positive Categories for Our Project</h3>
-      <ul>
-        <li><strong>Plate masking "issue":</strong> EntityMapper intentionally masks plates — not a bug</li>
-        <li><strong>REQUIRES_NEW propagation:</strong> mandatory in event listeners — not a problem</li>
-        <li><strong>SELECT FOR UPDATE:</strong> intentional pessimistic lock — not unnecessary locking</li>
-        <li><strong>Caffeine TTL 30 min:</strong> intentional session design — not a leak</li>
-        <li>Document each known false-positive pattern so the review tool can be instructed to skip it</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h3>📊 Managing False Positive Trust Erosion</h3>
-      <ul>
-        <li>Temporarily <strong>disable</strong> high false-positive categories to restore developer trust</li>
-        <li>While disabled: improve the prompt criteria for that category specifically</li>
-        <li>Define explicit severity criteria with concrete code examples per level</li>
-        <li>High FP in one category = distrust spreads to accurate categories</li>
-        <li>Fix the worst category first — even one category with 0% FP builds confidence</li>
-      </ul>
-    </div>
-  </div>
 
   <!-- ─────────────────────────────────────── -->
   <!-- 4.4 Retry with Error Feedback           -->
