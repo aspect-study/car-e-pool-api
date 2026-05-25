@@ -212,6 +212,16 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 .sd-card p,.sd-card li{font-size:.8rem;color:var(--muted);line-height:1.6}
 .sd-card ul{padding-left:1.1rem;margin-top:.35rem}
 @media(max-width:768px){.sd-grid{grid-template-columns:1fr}}
+
+/* ── Subdomain sub-nav ── */
+.nav-sub-list{display:none;margin:.05rem 0 .3rem 0}
+.nav-sub-list.open{display:block}
+.nav-sub-item{display:flex;align-items:center;gap:.35rem;padding:.28rem .5rem .28rem 1.55rem;border-radius:6px;cursor:pointer;font-size:.73rem;color:var(--muted);transition:all .12s;margin-bottom:.02rem;line-height:1.3}
+.nav-sub-item:hover,.nav-sub-item.active{background:rgba(188,140,255,.12);color:var(--purple)}
+.nav-sub-dot{width:4px;height:4px;border-radius:50%;background:var(--border);flex-shrink:0;margin-top:.15rem;transition:background .12s}
+.nav-sub-item:hover .nav-sub-dot,.nav-sub-item.active .nav-sub-dot{background:var(--purple)}
+.nav-chev{font-size:.55rem;transition:transform .2s;color:var(--muted);flex-shrink:0}
+.nav-item.sub-open .nav-chev{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -235,11 +245,50 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
     <div class="nav-item active" onclick="show('overview',this)"><span>🏠</span> Overview & Exam Map</div>
 
     <div class="nav-lbl">Exam Domains</div>
-    <div class="nav-item" onclick="show('d1',this)"><span>🤖</span> D1 · Agentic Systems <span class="badge">27%</span></div>
-    <div class="nav-item" onclick="show('d2',this)"><span>🔧</span> D2 · Tools &amp; MCP <span class="badge">18%</span></div>
-    <div class="nav-item" onclick="show('d3',this)"><span>💻</span> D3 · Claude Code <span class="badge">20%</span></div>
-    <div class="nav-item" onclick="show('d4',this)"><span>✍️</span> D4 · Prompt Engineering <span class="badge">20%</span></div>
-    <div class="nav-item" onclick="show('d5',this)"><span>🧠</span> D5 · Context &amp; Memory <span class="badge">15%</span></div>
+    <div class="nav-item" onclick="show('d1',this);openSubnav(this)"><span>🤖</span> D1 · Agentic Systems <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">27%</span></span></div>
+    <div class="nav-sub-list">
+      <div class="nav-sub-item" onclick="scrollToSD('d1','sd11',this)"><span class="nav-sub-dot"></span>1.1 · Agentic Loop</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d1','sd12',this)"><span class="nav-sub-dot"></span>1.2 · Orchestration</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d1','sd13',this)"><span class="nav-sub-dot"></span>1.3 · Task Tool &amp; Subagents</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d1','sd14',this)"><span class="nav-sub-dot"></span>1.4 · Prerequisites</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d1','sd15',this)"><span class="nav-sub-dot"></span>1.5 · PostToolUse Hooks</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d1','sd16',this)"><span class="nav-sub-dot"></span>1.6 · Task Decomposition</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d1','sd17',this)"><span class="nav-sub-dot"></span>1.7 · Session Management</div>
+    </div>
+    <div class="nav-item" onclick="show('d2',this);openSubnav(this)"><span>🔧</span> D2 · Tools &amp; MCP <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">18%</span></span></div>
+    <div class="nav-sub-list">
+      <div class="nav-sub-item" onclick="scrollToSD('d2','sd21',this)"><span class="nav-sub-dot"></span>2.1 · MCP Architecture</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d2','sd22',this)"><span class="nav-sub-dot"></span>2.2 · Config Scoping</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d2','sd23',this)"><span class="nav-sub-dot"></span>2.3 · Tool Distribution</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d2','sd24',this)"><span class="nav-sub-dot"></span>2.4 · MCP Resources</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d2','sd25',this)"><span class="nav-sub-dot"></span>2.5 · Built-in Tools</div>
+    </div>
+    <div class="nav-item" onclick="show('d3',this);openSubnav(this)"><span>💻</span> D3 · Claude Code <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">20%</span></span></div>
+    <div class="nav-sub-list">
+      <div class="nav-sub-item" onclick="scrollToSD('d3','sd31',this)"><span class="nav-sub-dot"></span>3.1 · CLAUDE.md</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d3','sd32',this)"><span class="nav-sub-dot"></span>3.2 · Hooks &amp; Commands</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d3','sd33',this)"><span class="nav-sub-dot"></span>3.3 · Path Rules</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d3','sd34',this)"><span class="nav-sub-dot"></span>3.4 · Plan Mode</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d3','sd35',this)"><span class="nav-sub-dot"></span>3.5 · Iterative Refinement</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d3','sd36',this)"><span class="nav-sub-dot"></span>3.6 · CI/CD Integration</div>
+    </div>
+    <div class="nav-item" onclick="show('d4',this);openSubnav(this)"><span>✍️</span> D4 · Prompt Engineering <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">20%</span></span></div>
+    <div class="nav-sub-list">
+      <div class="nav-sub-item" onclick="scrollToSD('d4','sd41',this)"><span class="nav-sub-dot"></span>4.1 · Explicit Criteria</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d4','sd42',this)"><span class="nav-sub-dot"></span>4.2 · Few-Shot Output</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d4','sd43',this)"><span class="nav-sub-dot"></span>4.3 · Context Design</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d4','sd44',this)"><span class="nav-sub-dot"></span>4.4 · Retry Feedback</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d4','sd45',this)"><span class="nav-sub-dot"></span>4.5 · Batch API</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d4','sd46',this)"><span class="nav-sub-dot"></span>4.6 · Multi-Instance</div>
+    </div>
+    <div class="nav-item" onclick="show('d5',this);openSubnav(this)"><span>🧠</span> D5 · Context &amp; Memory <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">15%</span></span></div>
+    <div class="nav-sub-list">
+      <div class="nav-sub-item" onclick="scrollToSD('d5','sd51',this)"><span class="nav-sub-dot"></span>5.1 · Case Facts</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d5','sd52',this)"><span class="nav-sub-dot"></span>5.2 · Escalation Triggers</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d5','sd53',this)"><span class="nav-sub-dot"></span>5.3 · Error Propagation</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d5','sd54',this)"><span class="nav-sub-dot"></span>5.4 · Codebase Exploration</div>
+      <div class="nav-sub-item" onclick="scrollToSD('d5','sd55',this)"><span class="nav-sub-dot"></span>5.5/5.6 · Confidence</div>
+    </div>
 
     <div class="nav-lbl">Advanced</div>
     <div class="nav-item" onclick="show('s13',this)"><span>🎰</span> 13 Hidden Scenarios</div>
@@ -350,7 +399,7 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
   </div>
 
   <!-- 1.1 The Loop -->
-  <div class="stitle">🔄 1.1 The Agentic Loop Lifecycle</div>
+  <div id="sd11" class="stitle">🔄 1.1 The Agentic Loop Lifecycle</div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:1rem">An agent is not a single API call — it is a loop that continues until the model signals completion. Understanding <code>stop_reason</code> is the most tested concept in this domain.</p>
 
   <div class="g2">
@@ -510,7 +559,7 @@ response = client.messages.create(
   </div>
 
   <!-- 1.2 Orchestration Patterns -->
-  <div class="stitle">🕸️ 1.2 Orchestration Topologies</div>
+  <div id="sd12" class="stitle">🕸️ 1.2 Orchestration Topologies</div>
 
   <div class="g3">
     <div class="card">
@@ -693,7 +742,7 @@ migration is V44. Write V45."
   <!-- ─────────────────────────────────────── -->
   <!-- 1.3 Task Tool & Subagent Spawning       -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">⚙️ 1.3 Task Tool &amp; Subagent Spawning<span class="sub-tag">SD 1.3</span></div>
+  <div id="sd13" class="stitle">⚙️ 1.3 Task Tool &amp; Subagent Spawning<span class="sub-tag">SD 1.3</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The <code>Task</code> tool is the mechanism for spawning subagents from a coordinator. The coordinator must list <code>"Task"</code> in its <code>allowedTools</code>. Subagents do <strong>not</strong> automatically inherit parent context — every piece of information they need must be explicitly included in the prompt.</p>
 
   <div class="g2">
@@ -770,7 +819,7 @@ Write @Tag("integration") test verifying the column persists and reads null corr
   <!-- ─────────────────────────────────────── -->
   <!-- 1.4 Programmatic Prerequisites          -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🔐 1.4 Programmatic Prerequisites &amp; Handoff Patterns<span class="sub-tag">SD 1.4</span></div>
+  <div id="sd14" class="stitle">🔐 1.4 Programmatic Prerequisites &amp; Handoff Patterns<span class="sub-tag">SD 1.4</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">For workflows where step ordering is safety-critical (identity verification before financial operations), prompt instructions have a <strong>non-zero failure rate</strong>. Programmatic prerequisites block downstream tool calls at the execution layer — not via persuasion.</p>
 
   <div class="cmp">
@@ -832,7 +881,7 @@ identity verification."
   <!-- ─────────────────────────────────────── -->
   <!-- 1.5 PostToolUse Hooks                   -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🔄 1.5 PostToolUse Hooks — Normalization &amp; Compliance<span class="sub-tag">SD 1.5</span></div>
+  <div id="sd15" class="stitle">🔄 1.5 PostToolUse Hooks — Normalization &amp; Compliance<span class="sub-tag">SD 1.5</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem"><code>PostToolUse</code> hooks intercept tool results <em>after</em> execution and <em>before</em> the model processes them. Use them to normalize heterogeneous formats from different MCP tools, or to intercept outgoing tool calls and enforce compliance rules.</p>
 
   <div class="g2">
@@ -893,7 +942,7 @@ def post_tool_use_normalizer(tool_name: str, tool_result: dict) -> dict:
   <!-- ─────────────────────────────────────── -->
   <!-- 1.6 Task Decomposition Strategies       -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🗂️ 1.6 Task Decomposition Strategies<span class="sub-tag">SD 1.6</span></div>
+  <div id="sd16" class="stitle">🗂️ 1.6 Task Decomposition Strategies<span class="sub-tag">SD 1.6</span></div>
 
   <div class="g2">
     <div class="card">
@@ -929,7 +978,7 @@ def post_tool_use_normalizer(tool_name: str, tool_result: dict) -> dict:
   <!-- ─────────────────────────────────────── -->
   <!-- 1.7 Session State & Forking             -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">💾 1.7 Session Resumption &amp; Forking<span class="sub-tag">SD 1.7</span></div>
+  <div id="sd17" class="stitle">💾 1.7 Session Resumption &amp; Forking<span class="sub-tag">SD 1.7</span></div>
 
   <div class="g2">
     <div class="card">
@@ -994,7 +1043,7 @@ fork_session("locking-strategy-comparison")
   </div>
 
   <!-- 2.1 MCP Architecture -->
-  <div class="stitle">🏗️ 2.1 Model Context Protocol Architecture</div>
+  <div id="sd21" class="stitle">🏗️ 2.1 Model Context Protocol Architecture</div>
 
   <div class="g3">
     <div class="card">
@@ -1011,7 +1060,7 @@ fork_session("locking-strategy-comparison")
     </div>
   </div>
 
-  <div class="stitle">📁 2.2 Configuration Scoping — The Two File Locations</div>
+  <div id="sd22" class="stitle">📁 2.2 Configuration Scoping — The Two File Locations</div>
   <div class="g2">
     <div class="card">
       <h3>📂 Project-Scoped: <code>.mcp.json</code></h3>
@@ -1193,7 +1242,7 @@ return {
   <!-- ─────────────────────────────────────── -->
   <!-- 2.3 Tool Distribution & tool_choice     -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🎯 2.3 Tool Distribution &amp; tool_choice Configuration<span class="sub-tag">SD 2.3</span></div>
+  <div id="sd23" class="stitle">🎯 2.3 Tool Distribution &amp; tool_choice Configuration<span class="sub-tag">SD 2.3</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Giving an agent too many tools degrades selection reliability by increasing decision complexity. An agent with 18 tools will misuse tools outside its specialization — a synthesis agent given web search tools will search instead of synthesizing. <strong>Target: 4–5 tools per agent role.</strong></p>
 
   <div class="g2">
@@ -1267,7 +1316,7 @@ response = client.messages.create(
   <!-- ─────────────────────────────────────── -->
   <!-- 2.4 MCP Resources as Content Catalogs  -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">📚 2.4 MCP Resources as Content Catalogs<span class="sub-tag">SD 2.4</span></div>
+  <div id="sd24" class="stitle">📚 2.4 MCP Resources as Content Catalogs<span class="sub-tag">SD 2.4</span></div>
 
   <div class="g2">
     <div class="card">
@@ -1295,7 +1344,7 @@ response = client.messages.create(
   <!-- ─────────────────────────────────────── -->
   <!-- 2.5 Built-in Tool Selection Guide       -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🛠️ 2.5 Selecting Built-in Tools Effectively<span class="sub-tag">SD 2.5</span></div>
+  <div id="sd25" class="stitle">🛠️ 2.5 Selecting Built-in Tools Effectively<span class="sub-tag">SD 2.5</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Claude Code's built-in tools have specific purposes. Using the wrong tool (e.g., <code>Bash</code> for file search instead of <code>Glob</code>) is slower and creates unnecessary permission prompts. Know when to use each.</p>
 
   <div class="tbl-wrap">
@@ -1332,7 +1381,7 @@ response = client.messages.create(
   </div>
 
   <!-- 3.1 CLAUDE.md Hierarchy -->
-  <div class="stitle">📄 3.1 CLAUDE.md Configuration Hierarchy</div>
+  <div id="sd31" class="stitle">📄 3.1 CLAUDE.md Configuration Hierarchy</div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">CLAUDE.md files are loaded in a specific order. Understanding precedence is critical for the exam.</p>
 
   <div class="tbl-wrap">
@@ -1354,7 +1403,7 @@ response = client.messages.create(
   </div>
 
   <!-- Our CLAUDE.md Audit -->
-  <div class="stitle">🔍 3.2 Evaluating car-e-pool-api's CLAUDE.md — What's Done Right</div>
+  <div id="sd32" class="stitle">🔍 3.2 Evaluating car-e-pool-api's CLAUDE.md — What's Done Right</div>
 
   <div class="g2">
     <div class="card">
@@ -1535,7 +1584,7 @@ claude --planMode "add vehicle endpoint"</pre>
   <!-- ─────────────────────────────────────── -->
   <!-- 3.3 Path-Specific Rules                 -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">📂 3.3 Path-Specific Rules — .claude/rules/<span class="sub-tag">SD 3.3</span></div>
+  <div id="sd33" class="stitle">📂 3.3 Path-Specific Rules — .claude/rules/<span class="sub-tag">SD 3.3</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem"><code>.claude/rules/</code> files use YAML frontmatter with <code>paths:</code> glob patterns to load rules only when editing matching files. This reduces irrelevant context, saves tokens, and is superior to directory-level <code>CLAUDE.md</code> for conventions that span multiple directories.</p>
 
   <div class="g2">
@@ -1600,7 +1649,7 @@ paths:
   <!-- ─────────────────────────────────────── -->
   <!-- 3.4 Plan Mode vs Direct Execution       -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">📋 3.4 Plan Mode vs Direct Execution<span class="sub-tag">SD 3.4</span></div>
+  <div id="sd34" class="stitle">📋 3.4 Plan Mode vs Direct Execution<span class="sub-tag">SD 3.4</span></div>
 
   <div class="g2">
     <div class="card">
@@ -1636,7 +1685,7 @@ paths:
   <!-- ─────────────────────────────────────── -->
   <!-- 3.5 Iterative Refinement Techniques     -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🔁 3.5 Iterative Refinement Techniques<span class="sub-tag">SD 3.5</span></div>
+  <div id="sd35" class="stitle">🔁 3.5 Iterative Refinement Techniques<span class="sub-tag">SD 3.5</span></div>
 
   <div class="g3">
     <div class="card">
@@ -1679,7 +1728,7 @@ paths:
   <!-- ─────────────────────────────────────── -->
   <!-- 3.6 CI/CD Integration                   -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🔧 3.6 CI/CD Pipeline Integration<span class="sub-tag">SD 3.6</span></div>
+  <div id="sd36" class="stitle">🔧 3.6 CI/CD Pipeline Integration<span class="sub-tag">SD 3.6</span></div>
 
   <div class="g2">
     <div class="card">
@@ -1814,7 +1863,7 @@ tool_input = response.content[0].input
   </div>
 
   <!-- 4.2 Few-Shot Patterns -->
-  <div class="stitle">🎭 4.2 Few-Shot Examples — Alternating Turns</div>
+  <div id="sd42" class="stitle">🎭 4.2 Few-Shot Examples — Alternating Turns</div>
   <div class="callout info">
     <div class="callout-icon">📌</div>
     <div>
@@ -1856,7 +1905,7 @@ tool_input = response.content[0].input
   </div>
 
   <!-- 4.3 System Context Design -->
-  <div class="stitle">🏗️ 4.3 System Context Design — AiService Audit</div>
+  <div id="sd43" class="stitle">🏗️ 4.3 System Context Design — AiService Audit</div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The current <code>AiService.parseRideRequest()</code> in the project uses a Spring AI <code>ChatClient</code> with an inline system prompt. Here's how to structure it optimally:</p>
 
   <div class="code-wrap">
@@ -2000,7 +2049,7 @@ routeToNextPostRideStep(ctx.withState(newState));</pre>
   <!-- ─────────────────────────────────────── -->
   <!-- 4.1 Explicit Criteria vs Vague          -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🎯 4.1 Explicit Criteria to Reduce False Positives<span class="sub-tag">SD 4.1</span></div>
+  <div id="sd41" class="stitle">🎯 4.1 Explicit Criteria to Reduce False Positives<span class="sub-tag">SD 4.1</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Vague instructions like "be conservative" or "only report high-confidence findings" do NOT improve precision. They require the model to guess what "high confidence" means. Explicit categorical criteria produce consistent, measurable results — and high false positive rates in ANY category undermine developer trust across ALL categories.</p>
 
   <div class="cmp">
@@ -2064,7 +2113,7 @@ specific line number showing the contradiction."</pre>
   <!-- ─────────────────────────────────────── -->
   <!-- 4.4 Retry with Error Feedback           -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🔁 4.4 Retry-with-Error-Feedback &amp; detected_pattern<span class="sub-tag">SD 4.4</span></div>
+  <div id="sd44" class="stitle">🔁 4.4 Retry-with-Error-Feedback &amp; detected_pattern<span class="sub-tag">SD 4.4</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">When structured extraction produces invalid output, append the specific validation error to the retry prompt. This is more effective than generic retry. However: retries are <em>ineffective</em> when the required information is simply absent from the source document — distinguish format errors from missing data.</p>
 
   <div class="code-wrap">
@@ -2128,7 +2177,7 @@ finding = {
   <!-- ─────────────────────────────────────── -->
   <!-- 4.5 Batch Processing API                -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">📦 4.5 Message Batches API — Cost &amp; Latency Trade-offs<span class="sub-tag">SD 4.5</span></div>
+  <div id="sd45" class="stitle">📦 4.5 Message Batches API — Cost &amp; Latency Trade-offs<span class="sub-tag">SD 4.5</span></div>
 
   <div class="g2">
     <div class="card">
@@ -2195,7 +2244,7 @@ for result in client.beta.messages.batches.results(batch.id):
   <!-- ─────────────────────────────────────── -->
   <!-- 4.6 Multi-Instance Review               -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🔍 4.6 Multi-Instance &amp; Multi-Pass Review Architecture<span class="sub-tag">SD 4.6</span></div>
+  <div id="sd46" class="stitle">🔍 4.6 Multi-Instance &amp; Multi-Pass Review Architecture<span class="sub-tag">SD 4.6</span></div>
 
   <div class="g2">
     <div class="card">
@@ -2436,7 +2485,7 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
   <!-- ─────────────────────────────────────── -->
   <!-- 5.5 Long Conversation Context           -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">📌 5.5 Long Conversation Context — Case Facts &amp; Lost-in-Middle<span class="sub-tag">SD 5.1</span></div>
+  <div id="sd51" class="stitle">📌 5.5 Long Conversation Context — Case Facts &amp; Lost-in-Middle<span class="sub-tag">SD 5.1</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">As conversations grow, two distinct problems emerge: <strong>progressive summarization loss</strong> (specific numbers and dates become vague) and the <strong>"lost in the middle" effect</strong> (models reliably process the beginning and end of long inputs, but miss content in the middle sections).</p>
 
   <div class="g2">
@@ -2501,7 +2550,7 @@ trimmed = {k: raw_ride_response[k]
   <!-- ─────────────────────────────────────── -->
   <!-- 5.6 Escalation Triggers                 -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🚨 5.6 Escalation Triggers &amp; Ambiguity Resolution<span class="sub-tag">SD 5.2</span></div>
+  <div id="sd52" class="stitle">🚨 5.6 Escalation Triggers &amp; Ambiguity Resolution<span class="sub-tag">SD 5.2</span></div>
 
   <div class="g2">
     <div class="card">
@@ -2534,7 +2583,7 @@ trimmed = {k: raw_ride_response[k]
   <!-- ─────────────────────────────────────── -->
   <!-- 5.7 Multi-Agent Error Propagation       -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">⚠️ 5.7 Error Propagation Across Multi-Agent Systems<span class="sub-tag">SD 5.3</span></div>
+  <div id="sd53" class="stitle">⚠️ 5.7 Error Propagation Across Multi-Agent Systems<span class="sub-tag">SD 5.3</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">When a subagent fails, the coordinator needs structured error context — not just a status string — to make intelligent recovery decisions. Two distinct failure types must be reported differently: <strong>access failures</strong> (retry decisions) vs. <strong>valid empty results</strong> (successful queries with no matches).</p>
 
   <div class="cmp">
@@ -2592,7 +2641,7 @@ trimmed = {k: raw_ride_response[k]
   <!-- ─────────────────────────────────────── -->
   <!-- 5.8 Large Codebase Context              -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🗃️ 5.8 Large Codebase Exploration &amp; Context Preservation<span class="sub-tag">SD 5.4</span></div>
+  <div id="sd54" class="stitle">🗃️ 5.8 Large Codebase Exploration &amp; Context Preservation<span class="sub-tag">SD 5.4</span></div>
 
   <div class="g2">
     <div class="card">
@@ -2652,7 +2701,7 @@ manifest = {
   <!-- ─────────────────────────────────────── -->
   <!-- 5.9 Confidence & Provenance             -->
   <!-- ─────────────────────────────────────── -->
-  <div class="stitle">🎯 5.9 Confidence Calibration &amp; Information Provenance<span class="sub-tag">SD 5.5 / 5.6</span></div>
+  <div id="sd55" class="stitle">🎯 5.9 Confidence Calibration &amp; Information Provenance<span class="sub-tag">SD 5.5 / 5.6</span></div>
 
   <div class="sd-grid">
     <div class="sd-card">
@@ -3903,6 +3952,33 @@ function toggleAcc(hdr) {
   hdr.classList.toggle('open');
   const body = hdr.nextElementSibling;
   if (body) body.classList.toggle('open');
+}
+
+function openSubnav(el) {
+  var subList = el.nextElementSibling;
+  var isOpen = subList && subList.classList.contains('open');
+  document.querySelectorAll('.nav-sub-list').forEach(function(l){l.classList.remove('open');});
+  document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('sub-open');});
+  if (!isOpen && subList && subList.classList.contains('nav-sub-list')) {
+    subList.classList.add('open');
+    el.classList.add('sub-open');
+  }
+}
+
+function scrollToSD(sectionId, sdId, el) {
+  var section = document.getElementById(sectionId);
+  if (!section.classList.contains('active')) {
+    document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+    section.classList.add('active');
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.nav-sub-item').forEach(function(i){i.classList.remove('active');});
+  if (el) el.classList.add('active');
+  setTimeout(function(){
+    var target = document.getElementById(sdId);
+    if (target) target.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 80);
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 function copyCode(btn) {
