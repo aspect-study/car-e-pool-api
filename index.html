@@ -196,6 +196,22 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
   .weight-row{gap:.5rem}
   .sb-footer{display:none}
 }
+
+/* ── Anti-Pattern Block ── */
+.ap{background:rgba(248,81,73,.08);border-left:4px solid var(--danger);border-radius:0 8px 8px 0;padding:.85rem 1.1rem;margin:.9rem 0;font-size:.83rem;line-height:1.65}
+.ap strong{color:var(--danger)}
+.ap-hdr{font-size:.75rem;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem;display:flex;align-items:center;gap:.4rem}
+
+/* ── Subdomain tags ── */
+.sub-tag{display:inline-block;background:rgba(188,140,255,.15);color:var(--purple);border:1px solid rgba(188,140,255,.3);border-radius:4px;padding:.1rem .45rem;font-size:.67rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-left:.45rem;vertical-align:middle}
+
+/* ── Subdomain card grid ── */
+.sd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.75rem;margin:1rem 0}
+.sd-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:8px;padding:.9rem 1.1rem}
+.sd-card h4{font-size:.84rem;font-weight:700;margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
+.sd-card p,.sd-card li{font-size:.8rem;color:var(--muted);line-height:1.6}
+.sd-card ul{padding-left:1.1rem;margin-top:.35rem}
+@media(max-width:768px){.sd-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -673,6 +689,297 @@ migration is V44. Write V45."
       <p>For any policy that protects data integrity (never drop a table, never edit a migration, never cross module boundaries), use a <strong>hook</strong>, not a prompt instruction. Prompts are advisory. Hooks are enforced. The exam distinguishes between "programmatic enforcement" (hooks, tool schema constraints, <code>tool_choice</code>) and "weak prompt guidance" (system prompt instructions asking the model to behave a certain way).</p>
     </div>
   </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 1.3 Task Tool & Subagent Spawning       -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">⚙️ 1.3 Task Tool &amp; Subagent Spawning<span class="sub-tag">SD 1.3</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The <code>Task</code> tool is the mechanism for spawning subagents from a coordinator. The coordinator must list <code>"Task"</code> in its <code>allowedTools</code>. Subagents do <strong>not</strong> automatically inherit parent context — every piece of information they need must be explicitly included in the prompt.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔑 Task Tool Requirements</h3>
+      <ul>
+        <li>Coordinator's <code>allowedTools</code> must include <code>"Task"</code></li>
+        <li>Subagent prompt must contain ALL needed context (no auto-inheritance)</li>
+        <li>Spawn parallel subagents by emitting multiple Task calls in ONE coordinator response</li>
+        <li><code>AgentDefinition</code>: set description, system prompt, and tool restrictions per subagent role</li>
+        <li>Pass structured data (source URLs, document names, page numbers) — not raw conversation</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🏗️ car-e-pool-api Parallel Agent Pattern</h3>
+      <ul>
+        <li>Claude Code as coordinator emitting TWO Agent calls in one message = parallel</li>
+        <li>Agent 1: <code>db-engineer</code> — reads V44 migration + Ride entity (isolated context)</li>
+        <li>Agent 2: <code>qa</code> — reads existing test files + patterns (different isolated context)</li>
+        <li>Both run concurrently — coordinator synthesizes both results</li>
+        <li>Coordinator's prompt specifies <em>research goals and quality criteria</em> — not step-by-step instructions</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Coordinator Config — allowedTools:["Task"] + Parallel Subagent Spawning<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># Coordinator AgentDefinition (hub-and-spoke):
+coordinator_config = {
+    "name": "carpool-coordinator",
+    "description": "Plans features and delegates to specialist agents",
+    "system_prompt": """You are a coordinator for car-e-pool-api.
+Analyze the request, then spawn the appropriate specialist agents.
+NEVER execute file edits directly — always delegate to specialists.
+Specify research goals and quality criteria in each subagent prompt.""",
+    "allowedTools": ["Task"],         # ← coordinator ONLY spawns, never edits
+    "model": "claude-opus-4-7"
+}
+
+# Emitting TWO Task tool calls in ONE coordinator response = parallel execution:
+
+# Task call 1 — db-engineer (minimal, targeted context)
+{
+  "tool": "Task",
+  "input": {
+    "description": "Write Flyway V45 migration for new rides column",
+    "prompt": """db-engineer for car-e-pool-api.
+Latest migration: V44__add_hub_sequence.sql.
+Task: add column group_message_posted_at TIMESTAMP NULL to rides table.
+Rules: file must be V45__description.sql, never edit existing migrations.
+Write the complete SQL file content only."""
+  }
+}
+
+# Task call 2 — qa (different isolated context, same single response)
+{
+  "tool": "Task",
+  "input": {
+    "description": "Write integration test for new rides column",
+    "prompt": """qa engineer for car-e-pool-api.
+New column: group_message_posted_at TIMESTAMP NULL on Ride entity.
+Test base: BaseIntegrationTest. MySQL at localhost:3308, DB car_e_pool_db.
+Write @Tag("integration") test verifying the column persists and reads null correctly."""
+  }
+}
+# Both tasks execute in parallel — context is completely isolated between them</pre>
+  </div>
+
+  <div class="ap">
+    <div class="ap-hdr">🚫 Anti-Pattern — Context Dumping Into Subagents</div>
+    Passing the coordinator's full 50-message conversation history into every subagent wastes tokens and degrades response quality. The db-engineer doesn't need to know about the UI design discussion. <strong>Each subagent prompt must be minimal, targeted, and self-contained.</strong>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 1.4 Programmatic Prerequisites          -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🔐 1.4 Programmatic Prerequisites &amp; Handoff Patterns<span class="sub-tag">SD 1.4</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">For workflows where step ordering is safety-critical (identity verification before financial operations), prompt instructions have a <strong>non-zero failure rate</strong>. Programmatic prerequisites block downstream tool calls at the execution layer — not via persuasion.</p>
+
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Prompt-Only Ordering (Probabilistic Failure)</div>
+      <pre># System prompt says:
+"IMPORTANT: Always call get_customer first
+before calling process_refund. Never skip
+identity verification."
+
+# Problem: under sufficient prompt pressure
+# or context confusion, the model may call
+# process_refund directly.
+# Prompt instructions = probabilistic compliance.
+# Critical workflows cannot rely on them.</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Programmatic Gate (Deterministic)</div>
+      <pre>def process_refund(customer_id: str, amount: float):
+    # Gate: block if prerequisite not satisfied
+    if not session.has_verified_customer():
+        return {
+            "isError": True,
+            "errorCategory": "PREREQUISITE_NOT_MET",
+            "isRetryable": False,
+            "message": "Call get_customer first to "
+                       "verify identity before refund.",
+            "requiredTool": "get_customer"
+        }
+    # Only executes after get_customer ran
+    return execute_refund(customer_id, amount)</pre>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📋 Structured Handoff Summary</h3>
+      <p style="margin-bottom:.5rem">When escalating to a human agent who lacks conversation access, compile a structured handoff — never vague summaries:</p>
+      <ul>
+        <li><strong>customer_id</strong> — verified identity reference (exact ID)</li>
+        <li><strong>root_cause</strong> — what was investigated and found</li>
+        <li><strong>attempted_actions</strong> — what was tried and the outcome</li>
+        <li><strong>refund_amount</strong> — specific number, never "approximately"</li>
+        <li><strong>recommended_action</strong> — clear next step for the human agent</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🔵 Project Parallel: BookingService Prerequisite Gate</h3>
+      <ul>
+        <li><code>createBooking()</code> calls <code>findByIdWithLock()</code> before seat decrement</li>
+        <li>Pessimistic lock = the programmatic prerequisite gate</li>
+        <li>Without the lock, two concurrent requests pass the seat-check simultaneously → oversell</li>
+        <li>The lock is mandatory — seat decrement cannot safely proceed without it</li>
+        <li>H2 ignores SELECT FOR UPDATE → test the gate on real MySQL at port 3308</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 1.5 PostToolUse Hooks                   -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🔄 1.5 PostToolUse Hooks — Normalization &amp; Compliance<span class="sub-tag">SD 1.5</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem"><code>PostToolUse</code> hooks intercept tool results <em>after</em> execution and <em>before</em> the model processes them. Use them to normalize heterogeneous formats from different MCP tools, or to intercept outgoing tool calls and enforce compliance rules.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📐 Normalization (PostToolUse)</h3>
+      <ul>
+        <li>MCP tools return different timestamp formats (Unix, ISO 8601, custom strings)</li>
+        <li>PostToolUse hook converts all to ISO 8601 before the model sees them</li>
+        <li>Status codes (0/1/2 vs "ACTIVE"/"FULL") normalized to human-readable values</li>
+        <li>Currency: <code>1000</code> vs <code>PHP 1,000.00</code> → canonical form</li>
+        <li>Model reasons consistently because all inputs share one format</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🚫 Compliance Interception (PreToolUse)</h3>
+      <ul>
+        <li>Hook intercepts a refund tool call before it executes</li>
+        <li>Checks amount against policy threshold (e.g., $500 max auto-approval)</li>
+        <li>Blocks the call and returns a redirect to human escalation workflow</li>
+        <li>Model cannot bypass this — enforcement happens outside model context</li>
+        <li><strong>Key distinction:</strong> PreToolUse blocks calls; PostToolUse transforms results</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PostToolUse Hook — Timestamp &amp; Status Normalization (car-e-pool-api pattern)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># PostToolUse hook: normalize ride data BEFORE model processes it
+# Fired AFTER tool returns, BEFORE model sees the result
+
+def post_tool_use_normalizer(tool_name: str, tool_result: dict) -> dict:
+    if tool_name in ("get_ride", "search_rides_by_direction"):
+        rides = tool_result.get("rides", [])
+        for ride in rides:
+            # Normalize Unix timestamp → ISO 8601
+            if isinstance(ride.get("departureTime"), int):
+                ride["departureTime"] = datetime.utcfromtimestamp(
+                    ride["departureTime"]
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+
+            # Normalize numeric status → readable string
+            status_map = {0: "DRAFT", 1: "ACTIVE", 2: "FULL", 3: "CANCELLED"}
+            if isinstance(ride.get("status"), int):
+                ride["status"] = status_map.get(ride["status"], "UNKNOWN")
+
+    return tool_result  # normalized result goes to model
+
+# Register in settings.json:
+# "PostToolUse": [{
+#   "matcher": "get_ride",
+#   "hooks": [{"type":"command","command":"python normalize_ride.py"}]
+# }]
+
+# Hooks = deterministic normalization.
+# Asking the model to "handle Unix timestamps" in the system prompt = probabilistic.</pre>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 1.6 Task Decomposition Strategies       -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🗂️ 1.6 Task Decomposition Strategies<span class="sub-tag">SD 1.6</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔗 Prompt Chaining (Fixed Sequential)</h3>
+      <ul>
+        <li>Break work into fixed sequential steps with defined inputs/outputs per step</li>
+        <li><strong>Pattern:</strong> analyze each file individually → cross-file integration pass</li>
+        <li><strong>Use when:</strong> steps are predictable, each output is well-defined</li>
+        <li><strong>Best for:</strong> code reviews, schema migrations, document processing</li>
+        <li><strong>Project:</strong> architect → db-engineer → qa sequential chain for a new feature</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🌳 Dynamic Decomposition (Adaptive)</h3>
+      <ul>
+        <li>Generate subtasks based on what is discovered at each step</li>
+        <li><strong>Pattern:</strong> map structure → identify high-impact areas → adapt plan as dependencies found</li>
+        <li><strong>Use when:</strong> scope is open-ended, dependencies are unknown upfront</li>
+        <li><strong>Best for:</strong> "add comprehensive tests to legacy codebase", bug root cause investigations</li>
+        <li><strong>Project:</strong> investigating why rides are not appearing for a specific user</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">📌</div>
+    <div>
+      <h4>Exam Decision Rule — Chaining vs. Decomposition</h4>
+      <p><strong>Prompt chaining:</strong> use when the task is predictable — code review (file-by-file analysis + integration pass), Flyway migration (read V-max, write V-max+1, update entity). <strong>Dynamic decomposition:</strong> use when the scope is unknown upfront — "investigate a performance regression", "add missing test coverage to carpool-bot". The exam will describe a task — ask yourself: "Do I know all the steps in advance?" If yes → chaining. If the steps depend on what you find → dynamic decomposition.</p>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 1.7 Session State & Forking             -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">💾 1.7 Session Resumption &amp; Forking<span class="sub-tag">SD 1.7</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔄 <code>--resume &lt;session-name&gt;</code></h3>
+      <ul>
+        <li>Continues a named prior session with full conversation history</li>
+        <li>Use when: prior context is still valid (files haven't changed significantly)</li>
+        <li>Before resuming: <em>explicitly inform</em> the agent about any file changes since last session</li>
+        <li>Stale tool results (file content read in a prior session that has since changed) = #1 hazard</li>
+        <li>If files changed substantially: start fresh with a structured summary injection instead</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🍴 <code>fork_session</code></h3>
+      <ul>
+        <li>Creates independent branches from a shared analysis baseline</li>
+        <li>Both branches share the initial analysis but diverge from the fork point</li>
+        <li>Use when: comparing two competing implementation approaches</li>
+        <li><strong>Example:</strong> fork after codebase analysis → Branch A: optimistic locking, Branch B: pessimistic locking</li>
+        <li>Each branch operates independently — no shared state after fork</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Session Management — Resume vs. Start Fresh Decision Guide<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ✅ Use --resume: prior context is VALID (same day, no file changes)
+claude --resume "carpool-booking-investigation"
+# Immediately tell the agent what changed since last session:
+# "Since last session: BookingService.createBooking() was updated at line 87.
+#  Re-analyze only that method — prior analysis of other methods is still valid."
+
+# ✅ Start fresh: prior tool results are STALE (files changed, day-old session)
+claude -p """
+Summary from prior session (inject manually — don't resume stale session):
+- BookingService uses findByIdWithLock() (SELECT FOR UPDATE) at line 87
+- Ride entity has: seats INT, version INT (optimistic lock column)
+- Confirmed problem: oversell race condition under concurrent load at > 50 rps
+
+New task: implement the fix. Files to review: BookingService.java, RideRepository.java
+"""
+# Injecting summary = reliable. Resuming with stale tool outputs = confusing.
+
+# ✅ fork_session: exploring competing approaches from shared baseline
+fork_session("locking-strategy-comparison")
+# Branch A: optimistic locking with @Version column
+# Branch B: pessimistic locking with SELECT FOR UPDATE (current approach)
+# Coordinator compares results and picks the better approach for the use case</pre>
+  </div>
+
 </div>
 
 
@@ -882,6 +1189,135 @@ return {
       <p>Every tool description is a promise to the model about when to use that tool and what to expect back. Vague descriptions cause routing failures. Missing error metadata causes blind retries. Think of tool schemas as a typed API — the richer the types and descriptions, the more reliably the model routes. In production, tool descriptions matter as much as system prompts.</p>
     </div>
   </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 2.3 Tool Distribution & tool_choice     -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🎯 2.3 Tool Distribution &amp; tool_choice Configuration<span class="sub-tag">SD 2.3</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Giving an agent too many tools degrades selection reliability by increasing decision complexity. An agent with 18 tools will misuse tools outside its specialization — a synthesis agent given web search tools will search instead of synthesizing. <strong>Target: 4–5 tools per agent role.</strong></p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📊 Tool Count Limit — Why 4–5 Max</h3>
+      <ul>
+        <li>More tools = higher decision complexity = lower selection accuracy</li>
+        <li>Synthesis agents with <code>fetch_url</code> will use it instead of synthesizing</li>
+        <li>Scoped access: each agent gets only the tools relevant to its role</li>
+        <li>Cross-role tools only for specific high-frequency needs (e.g., <code>verify_fact</code> for synthesis agent)</li>
+        <li>Complex cross-role cases route through the coordinator — not via direct tool access</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>⚙️ tool_choice Options</h3>
+      <ul>
+        <li><code>"auto"</code> — model may call a tool OR return text (default; flexible)</li>
+        <li><code>"any"</code> — model MUST call a tool; chooses which one (guarantees tool use, not text)</li>
+        <li><code>{"type":"tool","name":"..."}</code> — forced: model MUST call that specific named tool</li>
+        <li>Use <code>"any"</code> when: multiple schemas exist and document type is unknown upfront</li>
+        <li>Use forced when: a specific extraction must happen first (e.g., <code>extract_metadata</code> before enrichment)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Scoped Tool Sets per Agent + tool_choice Patterns<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ❌ Anti-pattern: 18 tools to every agent
+all_tools = [search_rides, book_ride, cancel_ride, get_user,
+             update_profile, get_hubs, approve_hub, reject_hub,
+             send_notification, get_analytics, export_data,
+             manage_vehicles, rate_driver, get_ratings,
+             process_payment, issue_refund, ban_user, verify_doc]
+# Result: booking agent attempts hub approvals; analytics agent books rides
+
+# ✅ Correct: scoped tool sets per role
+booking_agent_tools = [search_rides, book_ride, cancel_ride, get_user]
+# 4 tools — exactly what a booking agent needs
+
+admin_agent_tools = [get_hubs, approve_hub, reject_hub, ban_user, verify_doc]
+# 5 tools — exactly what an admin agent needs
+
+synthesis_agent_tools = [format_report, verify_fact]
+# 2 tools — synthesis agents never need search or write access
+
+# Replace generic tools with constrained alternatives:
+# ❌ fetch_url       → accepts ANY URL, agent will misuse for web browsing
+# ✅ load_document   → validates only document URLs; blocks arbitrary fetches
+
+# tool_choice: "any" — guarantee a tool is called (unknown document type)
+response = client.messages.create(
+    tools=[extract_ride_schema, extract_booking_schema, extract_user_schema],
+    tool_choice={"type": "any"},   # model MUST call one; it picks which
+    messages=[{"role": "user", "content": document_content}]
+)
+
+# tool_choice: forced — ensure metadata extraction runs FIRST
+response = client.messages.create(
+    tools=[extract_metadata, enrich_with_external_data],
+    tool_choice={"type": "tool", "name": "extract_metadata"},  # forced first
+    messages=[{"role": "user", "content": document_content}]
+)
+# Follow-up turn: allow enrichment with tool_choice: "auto"</pre>
+  </div>
+
+  <div class="ap">
+    <div class="ap-hdr">🚫 Anti-Pattern — Over-Tooled Agents</div>
+    An agent given 18 tools instead of 4–5 will misuse tools outside its specialization. The model follows the path of least resistance — if a synthesis agent has <code>fetch_url</code>, it will fetch instead of synthesize. <strong>Restrict each subagent's tool set to exactly what its role requires. Route complex cross-role needs through the coordinator.</strong>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 2.4 MCP Resources as Content Catalogs  -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">📚 2.4 MCP Resources as Content Catalogs<span class="sub-tag">SD 2.4</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📖 What MCP Resources Enable</h3>
+      <ul>
+        <li>Resources expose <em>content catalogs</em> (issue summaries, doc hierarchies, DB schemas) directly to the agent</li>
+        <li>Agent sees available data without requiring exploratory tool calls</li>
+        <li>Without resources: <code>list_issues</code> → <code>get_issue(1)</code> → <code>get_issue(2)</code>... (expensive, slow)</li>
+        <li>With resources: agent reads the catalog and knows exactly what to request</li>
+        <li>All configured MCP server tools are available simultaneously at connection time</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🔧 Enhance MCP Tool Descriptions</h3>
+      <ul>
+        <li>Enhance MCP tool descriptions to explain capabilities and outputs in full detail</li>
+        <li>Prevents agent from preferring built-in tools (like <code>Grep</code>) over more capable MCP tools</li>
+        <li>If the Atlassian MCP search tool has a weak description → agent uses <code>Grep</code> on local files instead</li>
+        <li>Choose community MCP servers for standard integrations (Jira, GitHub)</li>
+        <li>Reserve custom servers for team-specific workflows not covered by community servers</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 2.5 Built-in Tool Selection Guide       -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🛠️ 2.5 Selecting Built-in Tools Effectively<span class="sub-tag">SD 2.5</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Claude Code's built-in tools have specific purposes. Using the wrong tool (e.g., <code>Bash</code> for file search instead of <code>Glob</code>) is slower and creates unnecessary permission prompts. Know when to use each.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Tool</th><th>Use Case</th><th>Do NOT use for</th><th>car-e-pool-api Example</th></tr>
+      <tr><td><code>Grep</code></td><td>Search file <strong>contents</strong> for patterns (function names, error messages, import statements)</td><td>Finding files by name/extension</td><td>Find all callers of <code>findByIdWithLock()</code> across all modules</td></tr>
+      <tr><td><code>Glob</code></td><td>Find files by <strong>name patterns</strong> (<code>**/*.java</code>, <code>V*.sql</code>)</td><td>Searching inside file contents</td><td>List all Flyway migrations: <code>**/db/migration/V*.sql</code></td></tr>
+      <tr><td><code>Read</code></td><td>Load full file contents; also use as fallback when Edit fails (non-unique anchor)</td><td>Content search — use Grep</td><td>Read <code>BookingService.java</code> before editing (required by our workflow)</td></tr>
+      <tr><td><code>Write</code></td><td>Create new files OR complete rewrites; fallback when Edit anchor text is non-unique</td><td>Targeted single-method edits</td><td>Write new Flyway migration <code>V45__add_column.sql</code></td></tr>
+      <tr><td><code>Edit</code></td><td>Targeted edits using unique anchor text matching</td><td>Files where anchor text repeats (use Read+Write)</td><td>Update one specific method in a handler file</td></tr>
+      <tr><td><code>Bash</code></td><td>Shell commands when no dedicated tool exists</td><td>File search/read/edit — use dedicated tools</td><td><code>mvn test -pl carpool-service -Dtest=BookingServiceTest</code></td></tr>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div>
+      <h4>Incremental Codebase Exploration Pattern (Exam Favourite)</h4>
+      <p>Start with <code>Grep</code> to find entry points → use <code>Read</code> to follow imports and trace flows → never read all files upfront. For car-e-pool-api: <code>Grep "BookingService"</code> finds all callers first, then <code>Read BookingService.java</code> with targeted offset/limit for the specific method. This preserves the context window. <strong>The exam will test whether you read files upfront (wrong) or build understanding incrementally (correct).</strong></p>
+    </div>
+  </div>
+
 </div>
 
 
@@ -1095,6 +1531,204 @@ claude --planMode "add vehicle endpoint"</pre>
       <p>Think of CLAUDE.md as a persistent system prompt that applies to every Claude Code session in that directory. Unlike a one-off system prompt, it's versioned, reviewed, and enforced by the team. The hierarchy (personal → project → module) mirrors how you'd think about configuration inheritance: global defaults, project overrides, module specifics. The exam tests whether you know which file to edit for which scope of change.</p>
     </div>
   </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 3.3 Path-Specific Rules                 -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">📂 3.3 Path-Specific Rules — .claude/rules/<span class="sub-tag">SD 3.3</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem"><code>.claude/rules/</code> files use YAML frontmatter with <code>paths:</code> glob patterns to load rules only when editing matching files. This reduces irrelevant context, saves tokens, and is superior to directory-level <code>CLAUDE.md</code> for conventions that span multiple directories.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📄 Path-Scoped Rule File Format</h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre>---
+# .claude/rules/flyway-conventions.md
+description: "Flyway migration conventions"
+paths:
+  - "carpool-web/src/main/resources/db/migration/**"
+  - "**/V*.sql"
+---
+
+## Flyway Migration Rules
+- Naming: V{n}__description_with_underscores.sql
+- Never edit existing migration files (flyway-gate.sh enforces this)
+- TINYINT → Java Integer (not boolean)
+- Always check current max V-number with Glob before writing
+- Run /flyway-migration skill before starting any migration task</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🎯 Rules vs. Directory CLAUDE.md</h3>
+      <ul>
+        <li>Path-scoped rules apply to files <em>by type</em> regardless of directory location</li>
+        <li><code>**/*.test.tsx</code> applies test rules to ALL test files across ALL directories</li>
+        <li>Directory <code>CLAUDE.md</code>: only applies to files in that specific directory tree</li>
+        <li>Choose path-scoped rules for conventions spanning multiple directories</li>
+        <li>Load only when relevant — a bot handler edit doesn't load Flyway rules</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">.claude/rules/ Recommended Structure for car-e-pool-api<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># .claude/rules/flyway-conventions.md
+# paths: ["**/db/migration/**", "**/V*.sql"]
+# Content: V-number rules, TINYINT→Integer mapping, never-edit-existing rule
+
+# .claude/rules/integration-test-conventions.md
+# paths: ["**/*IntegrationTest.java", "**/BaseIntegrationTest*"]
+# Content: @Tag("integration"), MySQL port 3308, BaseIntegrationTest inheritance
+
+# .claude/rules/bot-handler-conventions.md
+# paths: ["carpool-bot/src/**/*.java"]
+# Content: BotFlow enum rules, UserState.with*() immutable chain, stateManager.reset()
+
+# .claude/rules/entity-conventions.md
+# paths: ["carpool-domain/src/**/*.java"]
+# Content: no Spring annotations, pure JPA, enum column mapping
+
+# .claude/rules/security-conventions.md
+# paths: ["carpool-web/src/**/security/**", "**/JwtFilter*"]
+# Content: JWT filter chain rules, @PreAuthorize patterns, plate masking enforcement
+
+# Result: editing PostRideHandler.java → ONLY bot-handler-conventions.md loads.
+# Flyway rules, security rules, entity rules = NOT loaded.
+# Context window stays focused on the task at hand.</pre>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 3.4 Plan Mode vs Direct Execution       -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">📋 3.4 Plan Mode vs Direct Execution<span class="sub-tag">SD 3.4</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📐 Use Plan Mode When:</h3>
+      <ul>
+        <li>Architectural decisions required (microservice restructuring, library migrations)</li>
+        <li>Large-scale changes across multiple files (45+ files affected)</li>
+        <li>Multiple valid implementation approaches with different trade-offs</li>
+        <li>Infrastructure implications (choosing integration approach)</li>
+        <li>Use <strong>Explore subagent</strong> to isolate verbose discovery output from main context</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>⚡ Use Direct Execution When:</h3>
+      <ul>
+        <li>Single-file bug fix with a clear, specific stack trace</li>
+        <li>Adding a single validation check to one function</li>
+        <li>Well-understood, bounded-scope changes</li>
+        <li>Documentation updates, adding tests for known patterns</li>
+        <li>Best combo: plan mode during investigation → direct during implementation</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div>
+      <h4>Explore Subagent — Preserve Main Context Window</h4>
+      <p>When you need verbose discovery (e.g., "list all test files in carpool-bot"), spawn an Explore subagent. It absorbs the verbose file-listing output and returns a concise summary. The main agent's context window receives only the summary — not 500 lines of file paths. In car-e-pool-api: use Explore to map the full 6-module dependency graph before planning a cross-module change. This prevents context window exhaustion during multi-phase tasks.</p>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 3.5 Iterative Refinement Techniques     -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🔁 3.5 Iterative Refinement Techniques<span class="sub-tag">SD 3.5</span></div>
+
+  <div class="g3">
+    <div class="card">
+      <h3>📋 Concrete Input/Output Examples</h3>
+      <p>Most effective when prose descriptions produce inconsistent results. Provide 2–3 examples showing exactly what transformation is expected. The model generalizes from examples more reliably than from abstract rules.</p>
+      <ul>
+        <li>Show input AND expected output side-by-side</li>
+        <li>Include edge cases: null values, ambiguous inputs, varied structures</li>
+        <li><strong>Project:</strong> bot parsing examples covering Taglish, English, and Filipino inputs</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🧪 Test-Driven Iteration</h3>
+      <p>Write test suites first — covering expected behavior, edge cases, and performance requirements. Then iterate by sharing test failures. The failing test IS the specification.</p>
+      <ul>
+        <li>Share specific failing test output: exact assertion failure message</li>
+        <li>Model uses the failure to correct the implementation, not the prose description</li>
+        <li><strong>Project:</strong> <code>BookingServiceTest</code> written before the pessimistic lock fix</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🎤 Interview Pattern</h3>
+      <p>Before implementing in an unfamiliar domain: have Claude ask questions to surface design considerations you may not have anticipated (cache invalidation, failure modes, concurrency risks).</p>
+      <ul>
+        <li>Prompt: "What design decisions do I need to make before implementing X?"</li>
+        <li>Surfaces hidden complexity before code is written</li>
+        <li><strong>Project:</strong> use before adding the first waitlist feature to carpool</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">📌</div>
+    <div>
+      <h4>Single Message vs. Sequential Iteration</h4>
+      <p>When multiple issues <strong>interact</strong> (fixing one changes the behavior of another), address them all in a <strong>single detailed message</strong>. When issues are <strong>independent</strong>, fix them <strong>sequentially</strong> — one at a time — to see the isolated effect of each change. The exam will describe a bug scenario: determine whether fixes interact, then choose the approach.</p>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 3.6 CI/CD Integration                   -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🔧 3.6 CI/CD Pipeline Integration<span class="sub-tag">SD 3.6</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🚩 Key CI/CD Flags</h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre># -p / --print: non-interactive mode (prevents CI hang)
+claude -p "review PR #42 for security issues"
+
+# --output-format json + --json-schema: machine-parseable findings
+claude -p "extract issues from BookingService.java" \
+  --output-format json \
+  --json-schema ./review-schema.json
+
+# Output enables automated inline PR comments:
+# {
+#   "findings": [{
+#     "file": "BookingService.java",
+#     "line": 87,
+#     "severity": "HIGH",
+#     "issue": "Missing pessimistic lock — race condition possible",
+#     "suggestion": "Use rideRepository.findByIdWithLock(rideId)"
+#   }]
+# }
+
+# Re-runs: include prior findings in context
+claude -p "review PR #42 — report only NEW issues
+not already flagged in: [prior-findings.json]"
+
+# Provide existing test files in context to avoid duplicate suggestions
+claude -p "generate missing tests for BookingService" \
+  --context BookingServiceTest.java</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🔒 Session Isolation for Independent Review</h3>
+      <ul>
+        <li>A model retains reasoning context from code generation</li>
+        <li>Same session reviewing its own code = less likely to question its decisions</li>
+        <li>Fresh, context-free instance = more effective at catching subtle issues</li>
+        <li>CLAUDE.md provides testing standards, valuable criteria, and available fixtures to CI Claude</li>
+        <li>Document criteria in CLAUDE.md: reduces low-value test output, improves first-pass quality</li>
+      </ul>
+      <div class="ap" style="margin-top:.75rem">
+        <div class="ap-hdr">🚫 Anti-Pattern — Self-Review in Same Session</div>
+        Running "review the code you just generated" in the same session is less effective. The model retains its generation reasoning and is unlikely to question its own decisions. <strong>Always spawn a NEW independent instance for code review in CI.</strong>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 
@@ -1362,6 +1996,266 @@ routeToNextPostRideStep(ctx.withState(newState));</pre>
       </div>
     </div>
   </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 4.1 Explicit Criteria vs Vague          -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🎯 4.1 Explicit Criteria to Reduce False Positives<span class="sub-tag">SD 4.1</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Vague instructions like "be conservative" or "only report high-confidence findings" do NOT improve precision. They require the model to guess what "high confidence" means. Explicit categorical criteria produce consistent, measurable results — and high false positive rates in ANY category undermine developer trust across ALL categories.</p>
+
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Vague Instruction (High False Positives)</div>
+      <pre># Review prompt:
+"Check that comments are accurate.
+Be conservative and only flag issues
+you're highly confident about."
+
+# Problems:
+# - "accurate" is undefined — model flags
+#   stylistic differences as inaccuracies
+# - "highly confident" is model-internal —
+#   no way to tune the threshold externally
+# - High false positives in comments → devs
+#   stop trusting the tool for real bugs too</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Explicit Categorical Criteria</div>
+      <pre># Review prompt:
+"Flag a comment ONLY when the described
+behavior DIRECTLY CONTRADICTS what the
+code does (e.g., comment says returns null
+but code always returns a non-null value).
+
+DO NOT flag:
+- Outdated style or naming preferences
+- Missing documentation for private methods
+- Comments that are terse but not wrong
+- Local conventions that differ from standard
+
+SKIP: any finding you cannot cite with the
+specific line number showing the contradiction."</pre>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔍 False Positive Categories for Our Project</h3>
+      <ul>
+        <li><strong>Plate masking "issue":</strong> EntityMapper intentionally masks plates — not a bug</li>
+        <li><strong>REQUIRES_NEW propagation:</strong> mandatory in event listeners — not a problem</li>
+        <li><strong>SELECT FOR UPDATE:</strong> intentional pessimistic lock — not unnecessary locking</li>
+        <li><strong>Caffeine TTL 30 min:</strong> intentional session design — not a leak</li>
+        <li>Document each known false-positive pattern so the review tool can be instructed to skip it</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📊 Managing False Positive Trust Erosion</h3>
+      <ul>
+        <li>Temporarily <strong>disable</strong> high false-positive categories to restore developer trust</li>
+        <li>While disabled: improve the prompt criteria for that category specifically</li>
+        <li>Define explicit severity criteria with concrete code examples per level</li>
+        <li>High FP in one category = distrust spreads to accurate categories</li>
+        <li>Fix the worst category first — even one category with 0% FP builds confidence</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 4.4 Retry with Error Feedback           -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🔁 4.4 Retry-with-Error-Feedback &amp; detected_pattern<span class="sub-tag">SD 4.4</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">When structured extraction produces invalid output, append the specific validation error to the retry prompt. This is more effective than generic retry. However: retries are <em>ineffective</em> when the required information is simply absent from the source document — distinguish format errors from missing data.</p>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Retry-with-Error-Feedback + detected_pattern Field<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># First extraction attempt
+response = client.messages.create(
+    tools=[parse_ride_tool],
+    tool_choice={"type": "tool", "name": "extract_ride_details"},
+    messages=[{"role": "user", "content": user_message}]
+)
+result = response.content[0].input
+
+# Validate the extracted data
+errors = validate_ride_extraction(result)
+
+if errors and is_retryable_error(errors, user_message):
+    # ✅ Retry-with-error-feedback: include the SPECIFIC validation error
+    retry_messages = [
+        {"role": "user", "content": user_message},
+        {"role": "assistant", "content": response.content},
+        {"role": "user", "content": [{
+            "type": "tool_result",
+            "tool_use_id": response.content[0].id,
+            "content": f"Validation failed: {errors}"
+            # e.g., "departure_time '7am' is not in HH:mm format (07:00)"
+        }]},
+        {"role": "user", "content":
+            f"The extraction had these errors: {errors}. "
+            f"Please re-extract with the corrected format."}
+    ]
+    response = client.messages.create(
+        tools=[parse_ride_tool],
+        tool_choice={"type": "tool", "name": "extract_ride_details"},
+        messages=retry_messages
+    )
+
+# detected_pattern field: track WHY findings were dismissed
+# Enables analysis of false-positive patterns over time
+finding = {
+    "file": "BookingService.java",
+    "line": 87,
+    "issue": "Potential race condition in seat decrement",
+    "severity": "HIGH",
+    "detected_pattern": "concurrent_write_without_lock",  # ← for analytics
+    "dismissed": False
+}
+# When dev dismisses a finding, log:
+# {"finding_id": "...", "dismissed_pattern": "concurrent_write_without_lock",
+#  "reason": "uses_pessimistic_lock"}
+# Accumulate → identify which detected_patterns produce false positives</pre>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div>
+      <h4>When Retries Are Useless</h4>
+      <p>Retry-with-error-feedback works for <strong>format/structural errors</strong> (wrong timestamp format, missing required field that was mentioned in the text). It does <strong>NOT</strong> work when the required information is simply not in the source document. If a ride post doesn't mention departure time, retrying 5 times will not produce a departure time — it will produce hallucinated values. Distinguish: format mismatch (retryable) vs. missing information (not retryable, ask the user instead).</p>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 4.5 Batch Processing API                -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">📦 4.5 Message Batches API — Cost &amp; Latency Trade-offs<span class="sub-tag">SD 4.5</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>💰 Batch API Characteristics</h3>
+      <ul>
+        <li><strong>Cost savings: 50%</strong> vs. synchronous API calls</li>
+        <li>Processing window: up to <strong>24 hours</strong> (no guaranteed latency SLA)</li>
+        <li><strong>No multi-turn tool calling</strong> within a single batch request</li>
+        <li>Use <code>custom_id</code> to correlate request/response pairs</li>
+        <li>Handle failures: resubmit only failed documents (by <code>custom_id</code>)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>✅ Right Workloads for Batch API</h3>
+      <ul>
+        <li>Overnight ride usage reports (non-blocking, latency-tolerant)</li>
+        <li>Weekly audit of all ride postings for compliance checks</li>
+        <li>Nightly test generation for new endpoints added that day</li>
+        <li>Bulk extraction of structured data from historical records</li>
+        <li><strong>NOT suitable for:</strong> pre-merge checks, real-time bot responses, any blocking workflow</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">PYTHON — Message Batches API with custom_id Correlation<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ✅ Correct use: overnight ride audit (non-blocking, latency-tolerant)
+import anthropic
+client = anthropic.Anthropic()
+
+# Build batch of requests — one per ride to audit
+batch_requests = []
+for ride in rides_to_audit:
+    batch_requests.append({
+        "custom_id": f"ride-audit-{ride.id}",  # ← for correlation
+        "params": {
+            "model": "claude-haiku-4-5",
+            "max_tokens": 256,
+            "messages": [{
+                "role": "user",
+                "content": f"Audit this ride post for compliance: {ride.to_json()}"
+            }]
+            # NOTE: no tools — batch API does NOT support multi-turn tool calling
+        }
+    })
+
+# Submit batch (50% cost savings, up to 24h processing)
+batch = client.beta.messages.batches.create(requests=batch_requests)
+
+# Poll until complete (or use webhook)
+# Match results back using custom_id:
+for result in client.beta.messages.batches.results(batch.id):
+    ride_id = result.custom_id.replace("ride-audit-", "")
+    if result.result.type == "succeeded":
+        save_audit_result(ride_id, result.result.message)
+    else:
+        # Re-submit only the failed ones — don't reprocess the whole batch
+        resubmit_queue.append(result.custom_id)
+
+# ❌ Wrong use: pre-merge hook that must complete in &lt; 30 seconds
+# → Use synchronous API for blocking workflows with latency SLAs</pre>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 4.6 Multi-Instance Review               -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🔍 4.6 Multi-Instance &amp; Multi-Pass Review Architecture<span class="sub-tag">SD 4.6</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🧠 Self-Review Limitations</h3>
+      <ul>
+        <li>A model retains its generation reasoning context in the same session</li>
+        <li>Unlikely to question decisions it just made — confirmation bias in the context</li>
+        <li><code>"Review the code you just wrote"</code> in same session = weak review</li>
+        <li>Independent instance (no prior reasoning context) catches more subtle issues</li>
+        <li>Multi-pass: split large reviews into per-file local passes + cross-file integration pass</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🏗️ Multi-Pass Review Pattern</h3>
+      <ul>
+        <li><strong>Pass 1 (per-file local):</strong> analyze each file in isolation for local issues</li>
+        <li><strong>Pass 2 (cross-file integration):</strong> look for data flow issues, module boundary violations, inconsistent state</li>
+        <li>Splitting prevents attention dilution: one large review misses cross-file contradictions</li>
+        <li>Each pass produces structured findings; combine for final review report</li>
+        <li>Add confidence self-report: model notes certainty alongside each finding for routing</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Multi-Instance Review Setup for car-e-pool-api<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ❌ Self-review in same session (weak — model retains generation context)
+# claude -p "now review the BookingService code you just wrote"
+
+# ✅ Independent review instance (new session, no generation context)
+# Pass 1: per-file local analysis
+claude -p """
+Review BookingService.java for local issues ONLY.
+Focus: null checks, transaction boundaries, exception handling.
+Do NOT look at cross-file data flow yet.
+Report: file, line, severity, issue, suggestion.
+""" \
+  --output-format json \
+  --json-schema ./per-file-review-schema.json
+
+# ✅ Pass 2: cross-file integration review (separate instance)
+claude -p """
+Review the interaction between BookingService.java and RideRepository.java.
+Focus: data flow consistency, pessimistic lock usage correctness,
+transaction propagation across service/repository boundary.
+Prior per-file findings (already reported — do NOT repeat these):
+[per_file_findings.json]
+Report only NEW cross-file integration issues.
+""" \
+  --output-format json \
+  --json-schema ./integration-review-schema.json
+
+# ✅ Confidence-annotated findings for review routing:
+# { "finding": "...", "confidence": "HIGH",
+#   "confidence_note": "clear missing null check at line 89" }
+# vs
+# { "finding": "...", "confidence": "LOW",
+#   "confidence_note": "possible race condition — needs concurrency expert review" }</pre>
+  </div>
+
 </div>
 
 
@@ -1538,6 +2432,301 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
       <p>The mental model for prompt caching: anything that would be the same across 10 API calls should be cached. System prompts, tool definitions, CLAUDE.md content, large reference documents — these are cache candidates. User messages, timestamps, current file diffs, search results — these are never cached. The <code>cache_control</code> breakpoint goes at the boundary between static and dynamic content. Moving it one block earlier or later can double your cache hit rate.</p>
     </div>
   </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 5.5 Long Conversation Context           -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">📌 5.5 Long Conversation Context — Case Facts &amp; Lost-in-Middle<span class="sub-tag">SD 5.1</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">As conversations grow, two distinct problems emerge: <strong>progressive summarization loss</strong> (specific numbers and dates become vague) and the <strong>"lost in the middle" effect</strong> (models reliably process the beginning and end of long inputs, but miss content in the middle sections).</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📋 Case Facts Block Pattern</h3>
+      <ul>
+        <li>Extract transactional facts (amounts, dates, order IDs, statuses) into a persistent block</li>
+        <li>Include this block in <em>every</em> prompt — outside the summarized conversation history</li>
+        <li>Prevents vague summaries like "a large refund" when the actual value was "₱2,450"</li>
+        <li>For multi-issue sessions: persist structured issue data in a separate context layer</li>
+        <li><strong>Project parallel:</strong> persist ride IDs, booking IDs, and seat counts as explicit facts — never summarize them away</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📍 Mitigating Lost-in-Middle</h3>
+      <ul>
+        <li>Place key findings summaries at the <em>beginning</em> of aggregated inputs</li>
+        <li>Organize detailed results with explicit section headers so middle content is locatable</li>
+        <li>Trim verbose tool outputs: keep only relevant fields before they accumulate in context</li>
+        <li>Example: order lookup returns 40+ fields — keep only the 5 return-relevant fields</li>
+        <li>Require subagents to include metadata (dates, source locations) in structured outputs</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Persistent Case Facts Block Pattern (carpool support context)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ✅ Case facts block — included in every prompt, never summarized away
+CASE_FACTS_BLOCK = """
+=== ACTIVE CASE FACTS ===
+User: Oliver Lapapa (telegram_id: 88123456)
+Ride ID: 4421 | Direction: HOME_TO_WORK | Date: 2026-05-26 07:00
+Booking ID: 1183 | Seats booked: 2 | Status: CONFIRMED
+Issue reported: Seat count shows 0 in user's view after booking
+Investigated at: 2026-05-25T14:32:00
+Findings so far: findByIdWithLock() returned ride.seats=2, booking.seats=2
+  but RideResponse.availableSeats=0 (possible mapper bug in EntityMapper)
+"""
+
+# System prompt structure:
+messages = [{
+    "role": "user",
+    "content": f"""{CASE_FACTS_BLOCK}
+
+Conversation history (summarized):
+{summarized_history}
+
+Current user message: {current_message}
+"""
+}]
+# Case facts are ALWAYS present — even when history is compressed.
+# Numbers never become "some seats" — they stay "2 seats" and "0 available".
+
+# Trim verbose tool output BEFORE it enters context:
+raw_ride_response = get_ride(4421)  # returns 40+ fields
+# ✅ Keep only what matters for THIS task:
+trimmed = {k: raw_ride_response[k]
+           for k in ["id","seats","availableSeats","status","departureTime"]}
+# Save ~2000 tokens per call that would accumulate across the session</pre>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 5.6 Escalation Triggers                 -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🚨 5.6 Escalation Triggers &amp; Ambiguity Resolution<span class="sub-tag">SD 5.2</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>✅ Valid Escalation Triggers</h3>
+      <ul>
+        <li>Customer <strong>explicitly requests</strong> a human — honor immediately, no investigation first</li>
+        <li>Policy <strong>exceptions or gaps</strong> (e.g., competitor price matching when policy only covers own-site)</li>
+        <li>Agent unable to make <strong>meaningful progress</strong> after exhausting available tools</li>
+        <li>Multiple customer matches found → ask for additional identifiers, don't heuristic-select</li>
+        <li>Issue requires authority the agent doesn't have (e.g., manual override of ride status)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🔵 Project Parallel: Bot Escalation</h3>
+      <ul>
+        <li><code>SessionRecoveryHandler.isFlowSensitive()</code> → escalate to main menu (stale session)</li>
+        <li>User sends "/cancel" mid-ride-post → honor immediately, call <code>stateManager.reset()</code></li>
+        <li>Payment policy gap → bot sends "Please contact support for custom contribution arrangements"</li>
+        <li>Multiple rides match search criteria → show list, ask user to pick (never guess)</li>
+        <li>Acknowledge frustration + offer resolution; escalate only if user reiterates demand</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="ap">
+    <div class="ap-hdr">🚫 Anti-Pattern — Sentiment-Based Escalation</div>
+    Escalating based on detected user frustration (angry keywords, exclamation marks, repeated messages) is an <strong>unreliable proxy for actual case complexity</strong>. A user can be frustrated about a simple issue that the agent can easily resolve. A user can be calm about a genuinely complex policy gap that requires human intervention. <strong>Use structural criteria (explicit human request, policy gap, missing authority) — NOT emotional tone detection.</strong>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 5.7 Multi-Agent Error Propagation       -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">⚠️ 5.7 Error Propagation Across Multi-Agent Systems<span class="sub-tag">SD 5.3</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">When a subagent fails, the coordinator needs structured error context — not just a status string — to make intelligent recovery decisions. Two distinct failure types must be reported differently: <strong>access failures</strong> (retry decisions) vs. <strong>valid empty results</strong> (successful queries with no matches).</p>
+
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Generic Error (Coordinator Cannot Recover)</div>
+      <pre># Subagent returns to coordinator:
+{
+  "status": "error",
+  "message": "search unavailable"
+}
+# Coordinator doesn't know:
+# - Was it a timeout? Rate limit? Permissions error?
+# - Should it retry immediately? After delay? Never?
+# - Was there partial data before the failure?
+# - What alternative approaches exist?</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Structured Error Context (Coordinator Can Recover)</div>
+      <pre>{
+  "status": "error",
+  "failure_type": "TIMEOUT",
+  "attempted_query": "rides WHERE date='2026-05-26'",
+  "partial_results": [{"id": 4418}, {"id": 4419}],
+  # partial results up to the timeout
+  "retry_recommendation": "retry_after_30s",
+  "alternative_approach": "query_by_driver_id_instead",
+  "what_was_attempted": "full table scan — consider indexed query"
+}
+# Coordinator now knows: retry in 30s, use partial results meanwhile,
+# or fall back to indexed query. Intelligent recovery is possible.</pre>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔄 Local Recovery First</h3>
+      <ul>
+        <li>Subagents should implement local recovery for transient failures (retry ×3 with backoff)</li>
+        <li>Only propagate errors that cannot be resolved locally</li>
+        <li>Include what was attempted and partial results when propagating</li>
+        <li>Structure synthesis output with coverage annotations: which findings are well-supported vs. which areas have gaps due to unavailable sources</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>⚖️ Access Failure vs. Valid Empty Result</h3>
+      <ul>
+        <li><strong>Access failure:</strong> timeout, permission denied → coordinator needs retry decision</li>
+        <li><strong>Valid empty result:</strong> query succeeded, zero matches → coordinator knows the data doesn't exist</li>
+        <li>Silently returning empty results for an access failure = coordinator thinks no data exists = wrong recovery</li>
+        <li>Always distinguish these two cases explicitly in the return value</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 5.8 Large Codebase Context              -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🗃️ 5.8 Large Codebase Exploration &amp; Context Preservation<span class="sub-tag">SD 5.4</span></div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>📝 Scratchpad Files</h3>
+      <ul>
+        <li>Persistent key findings across context boundaries — written to a local file</li>
+        <li>Agents reference their scratchpad file for subsequent questions: counteracts context degradation</li>
+        <li>Signs of context degradation: model gives "typical patterns" answers instead of referencing specific classes found earlier</li>
+        <li>Start a new phase: summarize key findings from the prior phase, inject summary into the next subagent's initial context</li>
+        <li><strong>Project:</strong> <code>memory/dispatch-logs/</code> functions as a persistent scratchpad across sessions</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>💥 Crash Recovery via State Manifests</h3>
+      <ul>
+        <li>Each agent exports state to a known location (manifest file) at key checkpoints</li>
+        <li>Coordinator loads the manifest on resume — injects it into each agent's initial context</li>
+        <li>Agents can resume from their last checkpoint rather than restarting from scratch</li>
+        <li>Use <code>/compact</code> during extended exploration when context fills with verbose discovery output</li>
+        <li><strong>Project:</strong> architect → db-engineer chain: architect writes manifest before delegating to db-engineer</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Scratchpad + Manifest Pattern for car-e-pool-api Exploration<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ✅ Scratchpad file: persist key findings across context boundaries
+# Agent writes to .claude/scratchpad-investigation.md as it discovers things:
+
+## BookingService Investigation Scratchpad
+### Key Findings (updated as discovered)
+- Line 87: findByIdWithLock() — SELECT FOR UPDATE confirmed
+- Line 112: seat decrement uses ride.decrementSeats() — atomic method, ok
+- Line 143: EventPublisher.publishEvent(new BookingConfirmedEvent(...)) — correct
+- RideRepository line 34: findByIdWithLock uses @Lock(LockModeType.PESSIMISTIC_WRITE)
+- H2 WARNING: LockModeType.PESSIMISTIC_WRITE silently ignored in H2 — test on MySQL
+
+### Open Questions
+- Does NotificationService.onBookingConfirmed() run AFTER_COMMIT? (check @Transactional)
+
+# Agent references scratchpad on every subsequent question:
+# "According to my scratchpad, findByIdWithLock is at line 87..."
+
+# ✅ State manifest for crash recovery:
+manifest = {
+    "phase": "investigation_complete",
+    "findings": { "lock_type": "PESSIMISTIC_WRITE", "lock_line": 87,
+                  "event_type": "BookingConfirmedEvent" },
+    "next_phase": "write_fix",
+    "files_analyzed": ["BookingService.java", "RideRepository.java"],
+    "pending": ["verify NotificationService transaction propagation"]
+}
+# Write to: .claude/manifests/booking-investigation-manifest.json
+# On resume: coordinator loads manifest, injects into next agent's prompt</pre>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 5.9 Confidence & Provenance             -->
+  <!-- ─────────────────────────────────────── -->
+  <div class="stitle">🎯 5.9 Confidence Calibration &amp; Information Provenance<span class="sub-tag">SD 5.5 / 5.6</span></div>
+
+  <div class="sd-grid">
+    <div class="sd-card">
+      <h4>📊 Stratified Sampling</h4>
+      <ul>
+        <li>Aggregate accuracy (97% overall) may mask poor performance on specific document types</li>
+        <li>Stratified random sampling: measure error rates in high-confidence extractions specifically</li>
+        <li>Validate accuracy by document type AND field segment before automating</li>
+        <li>Route low-confidence and ambiguous extractions to human review</li>
+        <li>Calibrate review thresholds using labeled validation sets — not intuition</li>
+      </ul>
+    </div>
+    <div class="sd-card">
+      <h4>🔗 Claim-Source Mappings</h4>
+      <ul>
+        <li>Source attribution is lost when findings are compressed without preserving claim-source mappings</li>
+        <li>Require subagents to output structured mappings: source URL, document name, relevant excerpt</li>
+        <li>Downstream synthesis agents must preserve and merge these mappings — not discard them</li>
+        <li>Conflicting statistics from credible sources: annotate with source attribution, let coordinator reconcile</li>
+        <li><strong>Never</strong> arbitrarily select one conflicting value — preserve both with attribution</li>
+      </ul>
+    </div>
+    <div class="sd-card">
+      <h4>🗓️ Temporal Data Handling</h4>
+      <ul>
+        <li>Require publication/data collection dates in all structured outputs</li>
+        <li>Prevents temporal differences (Q1 2025 vs Q3 2025 data) from being misread as contradictions</li>
+        <li>Distinguish well-established findings from contested ones in synthesis reports</li>
+        <li>Preserve original source characterizations and methodological context</li>
+        <li>Render content types appropriately: financial data as tables, findings as structured lists</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">Claim-Source Mapping Pattern for Multi-Source Synthesis<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre># ✅ Subagent outputs structured claim-source mappings (not raw summaries)
+subagent_output = {
+    "findings": [
+        {
+            "claim": "Philippine carpool adoption grew 34% YoY in Metro Manila",
+            "source_url": "https://mmda.gov.ph/reports/2025-transport.pdf",
+            "source_name": "MMDA 2025 Transport Report",
+            "relevant_excerpt": "..section 4.2 ride-sharing adoption metrics...",
+            "publication_date": "2025-03-15",  # ← REQUIRED: prevents temporal confusion
+            "confidence": "HIGH"
+        },
+        {
+            "claim": "carpool adoption grew 28% in Metro Manila",
+            "source_url": "https://dot.gov.ph/carpool-survey-2024",
+            "source_name": "DOT 2024 Carpool Survey",
+            "relevant_excerpt": "..Q4 2024 survey results..",
+            "publication_date": "2024-11-01",   # ← different date = different period, not contradiction
+            "confidence": "HIGH"
+        }
+    ]
+}
+
+# ✅ Synthesis agent preserves attribution — does NOT merge into single "34% growth" claim
+synthesis_report = {
+    "well_established_findings": [...],
+    "contested_findings": [
+        {
+            "topic": "Metro Manila carpool growth rate",
+            "sources": [
+                {"claim": "34% YoY", "source": "MMDA 2025", "period": "2024"},
+                {"claim": "28% YoY", "source": "DOT Survey", "period": "2023"}
+            ],
+            "note": "Different measurement periods — not contradictory data"
+        }
+    ]
+}</pre>
+  </div>
+
 </div>
 
 
@@ -1561,6 +2750,12 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
     <tr><td>PreToolUse hook</td><td>Exit non-zero = block tool. Exit zero = allow</td><td>Thinking prompts can block tool use (they can't)</td></tr>
     <tr><td>Context isolation</td><td>Subagents get minimum necessary context only</td><td>Dumping full conversation into every subagent</td></tr>
     <tr><td>Worktree isolation</td><td><code>isolation: "worktree"</code> = isolated git worktree per agent</td><td>Running file-editing agents on shared branch</td></tr>
+    <tr><td>Task tool</td><td><code>allowedTools:["Task"]</code> on coordinator; subagents get no auto-inherited context</td><td>Assuming subagents receive parent conversation history</td></tr>
+    <tr><td>Parallel spawning</td><td>Emit multiple Task calls in ONE coordinator response = parallel execution</td><td>Emitting Task calls across separate turns (sequential, not parallel)</td></tr>
+    <tr><td>Programmatic prerequisites</td><td>Block downstream tools until prerequisite step completes — hooks/gates, not prompt rules</td><td>Relying on "always call X first" prompt instructions for safety-critical ordering</td></tr>
+    <tr><td>PostToolUse hooks</td><td>Normalize tool results BEFORE model processes them (timestamps, status codes)</td><td>Asking model to "interpret Unix timestamps" in the system prompt</td></tr>
+    <tr><td>--resume</td><td>Continue named session; inform agent about file changes since last session</td><td>Resuming with stale tool results when files have changed</td></tr>
+    <tr><td>fork_session</td><td>Independent exploration branches from shared analysis baseline</td><td>Reopening old session to explore divergent approaches</td></tr>
   </table></div>
 
   <!-- D2 Quick -->
@@ -1573,6 +2768,10 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
     <tr><td>isError flag</td><td>Must be set True on error responses; enables model error handling</td><td>Returning error string without isError:true</td></tr>
     <tr><td>isRetryable</td><td>False for business rule errors; True for network/rate-limit</td><td>Not setting isRetryable → model blindly retries RIDE_FULL</td></tr>
     <tr><td>Credential management</td><td><code>"GITHUB_TOKEN": "${GITHUB_TOKEN}"</code> always</td><td>Hardcoding any secret in any config file</td></tr>
+    <tr><td>Tool count limit</td><td>4–5 tools per agent maximum; more = degraded selection reliability</td><td>Giving all 18 tools to every agent</td></tr>
+    <tr><td><code>tool_choice: "any"</code></td><td>Model MUST call a tool (its choice); prevents conversational text responses</td><td>Using <code>"auto"</code> when you need guaranteed structured output</td></tr>
+    <tr><td>MCP resources</td><td>Content catalogs that reduce exploratory tool calls; agent starts informed</td><td>Making agents call <code>list_issues</code> one-by-one to discover available data</td></tr>
+    <tr><td>Grep vs Glob</td><td>Grep = search file CONTENTS; Glob = find files by NAME PATTERNS</td><td>Using Grep to find files, or Glob to search content</td></tr>
   </table></div>
 
   <!-- D3 Quick -->
@@ -1586,6 +2785,11 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
     <tr><td><code>/compact</code></td><td>Summarizes context; use after large codebase exploration</td><td>Not compacting before starting implementation (context bloat)</td></tr>
     <tr><td>hooks in settings.json</td><td>PreToolUse, PostToolUse, Stop — programmatic enforcement</td><td>Using system prompt to enforce safety policies instead</td></tr>
     <tr><td><code>--allowedTools</code></td><td>Restricts tool use at runtime — stronger than CLAUDE.md allowed_tools</td><td>Not restricting tools in CI/automated contexts</td></tr>
+    <tr><td>.claude/rules/ paths:</td><td>YAML frontmatter <code>paths: ["glob/**"]</code> = rules load only for matching files</td><td>Using directory CLAUDE.md for cross-directory conventions</td></tr>
+    <tr><td>-p / --print flag</td><td>Non-interactive CI mode; prevents terminal hang in automated pipelines</td><td>Running Claude Code in CI without -p (hangs waiting for input)</td></tr>
+    <tr><td>--output-format json</td><td>Machine-parseable findings for inline PR comments; use with --json-schema</td><td>Parsing Claude's text output with string matching in CI</td></tr>
+    <tr><td>Explore subagent</td><td>Isolates verbose discovery output; main context receives summary only</td><td>Running verbose file discovery in the main agent context</td></tr>
+    <tr><td>Session isolation for review</td><td>Fresh independent instance catches issues the generator won't question</td><td>Self-review in same session that generated the code</td></tr>
   </table></div>
 
   <!-- D4 Quick -->
@@ -1598,6 +2802,11 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
     <tr><td>Schema over instructions</td><td><code>"enum": ["A","B"]</code> is stronger than "only output A or B"</td><td>Relying on prose instructions for format constraints</td></tr>
     <tr><td>Graceful AI degradation</td><td>AI parsing is best-effort; always have a non-AI fallback path</td><td>Gating critical flows on AI availability</td></tr>
     <tr><td>Model selection for extraction</td><td>Haiku for fast/cheap extraction; Opus for complex reasoning</td><td>Using Opus for simple extraction tasks (expensive, slower)</td></tr>
+    <tr><td>Explicit criteria</td><td>"Flag only when described behavior DIRECTLY CONTRADICTS code" = precise; "be conservative" = vague</td><td>Using confidence-based filtering instead of categorical criteria</td></tr>
+    <tr><td>detected_pattern field</td><td>Tracks which code patterns trigger findings; enables false-positive analysis</td><td>Not tracking why developers dismiss findings</td></tr>
+    <tr><td>Retry-with-error-feedback</td><td>Append specific validation error to retry prompt; don't retry missing information</td><td>Generic retry with no error context — or retrying when data simply isn't there</td></tr>
+    <tr><td>Batch API</td><td>50% cost savings, 24h window, no multi-turn tool calling; use for overnight/weekly workloads</td><td>Using batch API for pre-merge checks or any blocking real-time workflow</td></tr>
+    <tr><td>Multi-instance review</td><td>Independent fresh instance catches what self-review misses</td><td>Asking the generator to review its own code in the same session</td></tr>
   </table></div>
 
   <!-- D5 Quick -->
@@ -1611,6 +2820,12 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
     <tr><td>Max breakpoints</td><td>4 per request</td><td>Trying to cache every section separately</td></tr>
     <tr><td>What to cache</td><td>System prompts, tool defs, reference docs, CLAUDE.md files</td><td>Caching user messages or conversation history</td></tr>
     <tr><td>Context compaction</td><td>/compact summarizes old turns into dense summary</td><td>Ignoring context growth until the limit is hit mid-task</td></tr>
+    <tr><td>Case facts block</td><td>Persist transactional facts (amounts, IDs, dates) outside summarized history — in every prompt</td><td>Letting progressive summarization vague-ify specific amounts and order numbers</td></tr>
+    <tr><td>Lost in the middle</td><td>Models process beginning and end reliably; put key findings at the START of aggregated input</td><td>Placing critical information in the middle of a long aggregated context</td></tr>
+    <tr><td>Trim tool outputs</td><td>Keep only relevant fields from verbose tool responses before they accumulate</td><td>Appending full 40-field order responses to context (wastes thousands of tokens)</td></tr>
+    <tr><td>Escalation triggers</td><td>Explicit human request, policy gaps, inability to progress — structural criteria</td><td>Sentiment-based escalation — frustrated tone is NOT a reliable escalation trigger</td></tr>
+    <tr><td>Scratchpad files</td><td>Persist key findings to a file; reference it across context boundaries</td><td>Relying on in-context memory across long exploration sessions</td></tr>
+    <tr><td>Claim-source mappings</td><td>Subagents must output source attribution; synthesis agents must preserve it</td><td>Compressing findings without preserving which source supported each claim</td></tr>
   </table></div>
 
   <!-- Project-Specific Quick Ref -->
@@ -1688,7 +2903,7 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-01</span> Customer Support Resolution Agent</h2>
       <p>How to build a support agent that handles intent changes mid-conversation — routing requests, maintaining session state, and gracefully escalating when the model cannot resolve an issue.</p>
-      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag i">State Machine</span><span class="tag p">Escalation Pattern</span></div>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag i">State Machine</span><span class="tag p">Escalation Pattern</span><span class="sub-tag" style="margin-left:0">SD 1.1 · 1.4 · 5.2</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -1758,7 +2973,7 @@ if (state == null || state.getFlow() == BotFlow.IDLE) {
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-02</span> Code Generation with Claude Code</h2>
       <p>Using <code>CLAUDE.md</code> hierarchy, custom slash commands, and programmatic hooks to govern automated code generation safely within a team repository.</p>
-      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Hooks</span><span class="tag i">CLAUDE.md</span></div>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Hooks</span><span class="tag i">CLAUDE.md</span><span class="sub-tag" style="margin-left:0">SD 1.5 · 3.1 · 3.3</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -1819,7 +3034,7 @@ exit 0  # ← allows all other writes</pre>
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-03</span> Multi-Agent Research System</h2>
       <p>Orchestrator-subagent topology for complex research tasks. Each subagent owns a narrow context slice; the coordinator synthesises results without sharing full history with every agent.</p>
-      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag p">Hub-and-Spoke</span><span class="tag i">Context Isolation</span></div>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag p">Hub-and-Spoke</span><span class="tag i">Context Isolation</span><span class="sub-tag" style="margin-left:0">SD 1.2 · 1.3 · 1.6</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -1855,7 +3070,7 @@ exit 0  # ← allows all other writes</pre>
     </div>
     <div class="code-wrap">
       <div class="code-lbl">PYTHON — Coordinator Dispatching Subagents with Context Isolation<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <pre"># Coordinator: Claude Code session (hub)
+      <pre># Coordinator: Claude Code session (hub)
 # Subagents: specialist agents (spokes)
 
 # ✅ Correct — targeted handoff (minimum context)
@@ -1893,7 +3108,7 @@ db_agent_with_full_history = [
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-04</span> Agentic Tool Design</h2>
       <p>Writing tool schemas with high-fidelity descriptions, strict input boundaries, and structured error responses that enable deterministic routing and reliable recovery.</p>
-      <div class="s-meta"><span class="tag a">D2 Tools &amp; MCP</span><span class="tag s">Schema Design</span><span class="tag w">Error Recovery</span></div>
+      <div class="s-meta"><span class="tag a">D2 Tools &amp; MCP</span><span class="tag s">Schema Design</span><span class="tag w">Error Recovery</span><span class="sub-tag" style="margin-left:0">SD 2.1 · 2.2 · 2.3</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -1963,7 +3178,7 @@ is full, already booked, or the user has a direction conflict.",
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-05</span> Developer Productivity with Claude</h2>
       <p>Tailoring codebase context, reducing token overhead, and encoding team conventions as reusable slash commands to automate repetitive workflows in this repo.</p>
-      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Slash Commands</span><span class="tag i">Token Reduction</span></div>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Slash Commands</span><span class="tag i">Token Reduction</span><span class="sub-tag" style="margin-left:0">SD 3.2 · 3.3 · 3.5</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2035,7 +3250,7 @@ public void onMyNewEvent(RideEvents.MyNewEvent event) {
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-06</span> Long Document Processing</h2>
       <p>Prompt caching boundaries, chunking strategies, and token-efficient ingestion when processing large files, logs, or documentation assets.</p>
-      <div class="s-meta"><span class="tag a">D5 Context &amp; Memory</span><span class="tag w">Prompt Caching</span><span class="tag i">Chunking</span></div>
+      <div class="s-meta"><span class="tag a">D5 Context &amp; Memory</span><span class="tag w">Prompt Caching</span><span class="tag i">Chunking</span><span class="sub-tag" style="margin-left:0">SD 5.1 · 5.4 · 5.5</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2065,7 +3280,7 @@ public void onMyNewEvent(RideEvents.MyNewEvent event) {
     </div>
     <div class="code-wrap">
       <div class="code-lbl">PYTHON — Correct Cache Breakpoints for Long-Doc Processing (Flyway Context)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <pre">system = [
+      <pre>system = [
     # BP1: Static project rules (~600 tokens) — cache aggressively
     {"type": "text", "text": PROJECT_RULES_STATIC,
      "cache_control": {"type": "ephemeral"}},          # ← breakpoint 1
@@ -2106,7 +3321,7 @@ public void onMyNewEvent(RideEvents.MyNewEvent event) {
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-07</span> Claude for Operations</h2>
       <p>Incident response, automated log auditing, and system monitoring using agentic loops mapped to our project's notification lifecycle, scheduler patterns, and error tracking.</p>
-      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag w">Monitoring</span><span class="tag p">Event-Driven</span></div>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag w">Monitoring</span><span class="tag p">Event-Driven</span><span class="sub-tag" style="margin-left:0">SD 1.1 · 1.4 · 1.6</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2178,7 +3393,7 @@ public void checkPendingBookings() {
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-08</span> Claude Code for Continuous Integration</h2>
       <p>Running Claude Code headless in CI/CD pipelines to validate code changes, enforce conventions, and generate review feedback automatically on every pull request.</p>
-      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Headless Mode</span><span class="tag i">--allowedTools</span></div>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Headless Mode</span><span class="tag i">--allowedTools</span><span class="sub-tag" style="margin-left:0">SD 3.6 · 4.6 · 1.5</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2208,7 +3423,7 @@ public void checkPendingBookings() {
     </div>
     <div class="code-wrap">
       <div class="code-lbl">YAML — GitHub Actions CI with Headless Claude Code Review<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <pre">name: Claude Code Review
+      <pre>name: Claude Code Review
 on: [pull_request]
 
 jobs:
@@ -2257,7 +3472,7 @@ jobs:
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-09</span> Structured Data Extraction</h2>
       <p>Forcing deterministic, schema-validated JSON outputs using <code>tool_choice</code> constraints rather than loose system prompt instructions.</p>
-      <div class="s-meta"><span class="tag a">D4 Prompt Engineering</span><span class="tag s">tool_choice</span><span class="tag i">JSON Schema</span></div>
+      <div class="s-meta"><span class="tag a">D4 Prompt Engineering</span><span class="tag s">tool_choice</span><span class="tag i">JSON Schema</span><span class="sub-tag" style="margin-left:0">SD 4.2 · 4.3 · 4.4</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2327,7 +3542,7 @@ parsed = response.content[0].input</pre>
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-10</span> Conversational AI Patterns</h2>
       <p>Multi-turn state preservation, system instruction persistence across turns, and managing conversation history without hitting context ceilings.</p>
-      <div class="s-meta"><span class="tag a">D5 Context &amp; Memory</span><span class="tag p">StateManager</span><span class="tag i">History Management</span></div>
+      <div class="s-meta"><span class="tag a">D5 Context &amp; Memory</span><span class="tag p">StateManager</span><span class="tag i">History Management</span><span class="sub-tag" style="margin-left:0">SD 5.1 · 5.2 · 5.4</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2357,7 +3572,7 @@ parsed = response.content[0].input</pre>
     </div>
     <div class="code-wrap">
       <div class="code-lbl">PYTHON — Conversation History with Sliding Window (Context Ceiling Management)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <pre">import anthropic
+      <pre>import anthropic
 
 client = anthropic.Anthropic()
 
@@ -2405,7 +3620,7 @@ reply, history = chat_with_history(history, "2 seats available")</pre>
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-11</span> Agent Skills for Enterprise Knowledge Management</h2>
       <p>Connecting LLMs to internal semantic search, RAG components, and structured knowledge bases via MCP tool calls and deterministic retrieval patterns.</p>
-      <div class="s-meta"><span class="tag a">D2 Tools &amp; MCP</span><span class="tag s">RAG</span><span class="tag w">Knowledge Base</span></div>
+      <div class="s-meta"><span class="tag a">D2 Tools &amp; MCP</span><span class="tag s">RAG</span><span class="tag w">Knowledge Base</span><span class="sub-tag" style="margin-left:0">SD 2.4 · 2.5 · 5.6</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2435,7 +3650,7 @@ reply, history = chat_with_history(history, "2 seats available")</pre>
     </div>
     <div class="code-wrap">
       <div class="code-lbl">PYTHON — RAG Tool Pattern (Modelled on HubService + memory/ retrieval)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <pre">search_kb_tool = {
+      <pre>search_kb_tool = {
     "name": "search_knowledge_base",
     "description": "Search the internal knowledge base for architecture decisions,
 implementation patterns, and project learnings. Use this tool before answering
@@ -2483,7 +3698,7 @@ project-specific facts. Returns ranked snippets with source file paths.",
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-12</span> Agent Skills for Developer Tooling</h2>
       <p>Building specialized CLI helpers and system-level scripts with safe local execution boundaries, controlled file-system side-effects, and hook-enforced guardrails.</p>
-      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">CLI Safety</span><span class="tag w">File System</span></div>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">CLI Safety</span><span class="tag w">File System</span><span class="sub-tag" style="margin-left:0">SD 1.5 · 3.2 · 3.4</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2513,7 +3728,7 @@ project-specific facts. Returns ranked snippets with source file paths.",
     </div>
     <div class="code-wrap">
       <div class="code-lbl">JSON — settings.json Tool Restriction for Safe Developer Tooling Sessions<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <pre">{
+      <pre>{
   "hooks": {
     "PreToolUse": [
       {
@@ -2558,7 +3773,7 @@ project-specific facts. Returns ranked snippets with source file paths.",
     <div class="s-hdr">
       <h2><span style="color:var(--accent)">S-13</span> Agent Skills with Code Execution</h2>
       <p>Secure sandboxing for dynamic code execution, state validation across execution boundaries, and deterministic output parsing when agents run tests or scripts at runtime.</p>
-      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag s">Sandboxing</span><span class="tag w">Output Parsing</span></div>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag s">Sandboxing</span><span class="tag w">Output Parsing</span><span class="sub-tag" style="margin-left:0">SD 1.1 · 1.4 · 4.3</span></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -2588,7 +3803,7 @@ project-specific facts. Returns ranked snippets with source file paths.",
     </div>
     <div class="code-wrap">
       <div class="code-lbl">PYTHON — Code Execution Tool with Structured Output Parsing<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <pre">run_tests_tool = {
+      <pre>run_tests_tool = {
     "name": "run_unit_tests",
     "description": "Execute Maven unit tests for a specific module. Use this to validate
 code changes before committing. Does NOT run integration tests (those require MySQL).
