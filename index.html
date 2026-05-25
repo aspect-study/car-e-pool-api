@@ -1118,7 +1118,7 @@ tool_input = response.content[0].input
 
   <div class="code-wrap">
     <div class="code-lbl">PYTHON — Few-Shot with Alternating Turns (Ride NL Parsing)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-    <pre">messages = [
+    <pre>messages = [
     # Example 1 — clear home-to-work
     {"role": "user",      "content": "mag post sana ako ng ride bukas 7am sucat to bgc"},
     {"role": "assistant", "content": None,  # tool_use response
@@ -1330,7 +1330,7 @@ routeToNextPostRideStep(ctx.withState(newState));</pre>
 
   <div class="code-wrap">
     <div class="code-lbl">PYTHON — Correct Cache Breakpoint Placement for car-e-pool-api Agent<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-    <pre">messages = client.messages.create(
+    <pre>messages = client.messages.create(
     model="claude-sonnet-4-6",
     max_tokens=8192,
     system=[
@@ -1435,7 +1435,7 @@ routeToNextPostRideStep(ctx.withState(newState));</pre>
 
   <div class="code-wrap">
     <div class="code-lbl">memory/ File Format — ADR Example (What Gets Cached in External Memory)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-    <pre">---
+    <pre>---
 name: adr-002-pessimistic-locking
 description: Why BookingService uses SELECT FOR UPDATE instead of optimistic locking
 metadata:
