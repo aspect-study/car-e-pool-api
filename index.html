@@ -131,15 +131,61 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 /* ── Toggle button ── */
 .toggle-btn{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:.8rem;font-family:inherit}
 
+/* ── Mobile top bar ── */
+.mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;padding:0 1rem;gap:.75rem;z-index:200}
+.mob-title{font-size:.85rem;font-weight:800;color:var(--accent);flex:1;letter-spacing:.05em;text-transform:uppercase}
+.ham-btn{background:none;border:none;color:var(--text);cursor:pointer;font-size:1.4rem;line-height:1;padding:.2rem .3rem}
+
+/* ── Sidebar overlay ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.show{opacity:1;pointer-events:all}
+
+/* ── Sidebar transition ── */
+.sidebar{transition:transform .25s ease}
+
 /* ── Responsive ── */
-@media(max-width:1024px){.g2,.g3{grid-template-columns:1fr}.cmp{grid-template-columns:1fr}.prog-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:768px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
+@media(max-width:1024px){
+  .g2,.g3{grid-template-columns:1fr}
+  .cmp{grid-template-columns:1fr}
+  .prog-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:768px){
+  .mob-bar{display:flex}
+  .overlay{display:block}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;max-width:100vw;padding:1rem;padding-top:4.5rem}
+  .prog-grid{grid-template-columns:repeat(2,1fr)}
+  .dom-hdr{padding:1rem 1.1rem}
+  .dom-hdr h2{font-size:1rem}
+  .stitle{font-size:.88rem}
+  pre{font-size:.72rem;padding:.75rem}
+  .code-lbl{font-size:.68rem;padding:.28rem .75rem}
+  .card{padding:.9rem 1rem}
+  .tbl-wrap table{font-size:.75rem}
+  th,td{padding:.45rem .65rem}
+  .callout{padding:.8rem 1rem}
+  .flow{padding:.7rem}
+  .flow-step{font-size:.72rem;padding:.28rem .5rem}
+  .acc-hdr{padding:.75rem 1rem;font-size:.82rem}
+  .acc-body{padding:1rem}
+  .weight-row{gap:.5rem}
+  .sb-footer{display:none}
+}
 </style>
 </head>
 <body>
 
+<!-- ═══════════════ MOBILE TOP BAR ═══════════════ -->
+<div class="mob-bar">
+  <button class="ham-btn" onclick="toggleSidebar()" aria-label="Open menu">☰</button>
+  <span class="mob-title">CCA-F Blueprint</span>
+  <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
+</div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sb-logo">
     <h1>CCA-F Blueprint</h1>
     <p>car-e-pool-api · Exam Study Guide</p>
@@ -1592,11 +1638,33 @@ function show(id, el) {
   const sec = document.getElementById(id);
   if (sec) sec.classList.add('active');
   if (el && el.classList) el.classList.add('active');
+  // Auto-close sidebar on mobile after navigation
+  if (window.innerWidth <= 768) closeSidebar();
+  window.scrollTo(0, 0);
 }
 
 function toggleTheme() {
   const h = document.documentElement;
   h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  const isOpen = sb.classList.contains('open');
+  if (isOpen) { closeSidebar(); } else {
+    sb.classList.add('open');
+    ov.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  sb.classList.remove('open');
+  ov.classList.remove('show');
+  document.body.style.overflow = '';
 }
 
 function toggleAcc(hdr) {
