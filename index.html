@@ -2918,6 +2918,23 @@ synthesis_report = {
       <p>The CCA-F exam rewards architects who understand that <strong>deterministic constraints beat advisory guidance</strong> at every layer: tool schemas beat prose instructions, hooks beat system-prompt policies, <code>tool_choice</code> beats "please respond in JSON", and structured error metadata beats plain error strings. When you see a question asking to choose between a programmatic enforcement mechanism and a natural language instruction, always choose programmatic.</p>
     </div>
   </div>
+
+  <div class="stitle">💡 Study Tip</div>
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div>
+      <h4>Use Claude Projects to Study This Guide — Not Claude Code</h4>
+      <p><strong>Q:</strong> Should I attach this file to a Claude Project and study from it there? Would that be better, and can token usage be optimized?</p>
+      <p style="margin-top:.5rem"><strong>A:</strong> Yes — <strong>Claude Projects (claude.ai)</strong> is the right tool for Q&amp;A and exam prep. Upload <code>index.html</code> once to the project knowledge base; every conversation in that project reuses the cached file at roughly <strong>90% lower token cost</strong> than pasting or re-uploading. Use <strong>Claude Code</strong> only when you need to edit this file.</p>
+      <div class="tbl-wrap" style="margin-top:.6rem"><table>
+        <tr><th>Task</th><th>Best Tool</th><th>Why</th></tr>
+        <tr><td>Studying / Q&amp;A / Practice quizzes</td><td>✅ Claude Project (claude.ai)</td><td>File cached once — ~90% token saving; all study conversations stay organized under one project</td></tr>
+        <tr><td>Editing or updating this file</td><td>✅ Claude Code (this tool)</td><td>Direct file editing, bug fixes, new content sections</td></tr>
+        <tr><td>Studying in a plain new chat</td><td>❌ Avoid</td><td>Must re-upload or paste the file every single conversation — wasteful and slow</td></tr>
+      </table></div>
+      <p style="margin-top:.6rem">📌 <strong>Quick setup:</strong> claude.ai → Projects → New Project → Add <code>index.html</code> to project knowledge → open a conversation inside the project. Tip: start each study session with a focused scope, e.g. <em>"Focus on D4 — Prompt Engineering. Quiz me with scenario-based questions."</em></p>
+    </div>
+  </div>
 </div>
 
 
@@ -3908,7 +3925,9 @@ def run_unit_tests(module: str, test_class: str = None) -> dict:
 <script>
 function show(id, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active'); n.classList.remove('sub-open'); });
+  document.querySelectorAll('.nav-sub-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-sub-list').forEach(n => n.classList.remove('open'));
   const sec = document.getElementById(id);
   if (sec) sec.classList.add('active');
   if (el && el.classList) el.classList.add('active');
@@ -4002,6 +4021,7 @@ document.querySelectorAll('.prog-card').forEach((card, i) => {
     const target = ids[i];
     const navEl = Array.from(navItems).find(n => n.textContent.includes('D' + (i+1)));
     show(target, navEl);
+    if (navEl) openSubnav(navEl);
   });
 });
 </script>
