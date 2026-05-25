@@ -128,6 +128,30 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 /* ── Scrollbar ── */
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
+/* ── Scenario Matrix ── */
+.s-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.65rem;margin-bottom:1.5rem}
+.s-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;cursor:pointer;transition:all .15s;position:relative}
+.s-card:hover,.s-card.active{border-color:var(--accent);background:var(--accent-dim)}
+.s-card.active{border-left:3px solid var(--accent)}
+.s-num{font-size:.65rem;font-weight:800;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.3rem}
+.s-name{font-size:.8rem;font-weight:700;line-height:1.35}
+.s-tag{font-size:.65rem;color:var(--muted);margin-top:.3rem}
+.s-panel{display:none}.s-panel.active{display:block}
+.s-hdr{background:linear-gradient(135deg,var(--card),var(--surface));border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:1.25rem 1.4rem;margin-bottom:1.25rem}
+.s-hdr h2{font-size:1.1rem;font-weight:800;margin-bottom:.35rem;display:flex;align-items:center;gap:.5rem}
+.s-hdr p{font-size:.855rem;color:var(--muted);line-height:1.65}
+.s-meta{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+.tradeoff{background:linear-gradient(135deg,rgba(188,140,255,.1),rgba(255,112,67,.08));border:1px solid rgba(188,140,255,.35);border-radius:8px;padding:1rem 1.2rem;margin:1rem 0}
+.tradeoff h4{font-size:.83rem;font-weight:800;color:var(--purple);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
+.tradeoff p{font-size:.83rem;color:var(--text);line-height:1.6}
+.tradeoff strong{color:var(--accent)}
+.bp-box{background:var(--code);border:1px solid var(--border);border-left:3px solid var(--info);border-radius:0 8px 8px 0;padding:.9rem 1.1rem;margin:.9rem 0;font-size:.82rem;line-height:1.65}
+.bp-box strong{color:var(--info)}
+.s-nav{display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.s-nav-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:.35rem .75rem;border-radius:20px;cursor:pointer;font-size:.75rem;font-weight:600;font-family:inherit;transition:all .12s;white-space:nowrap}
+.s-nav-btn:hover,.s-nav-btn.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+@media(max-width:768px){.s-grid{grid-template-columns:repeat(2,1fr)}.s-name{font-size:.75rem}}
+
 /* ── Toggle button ── */
 .toggle-btn{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:.8rem;font-family:inherit}
 
@@ -200,6 +224,9 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
     <div class="nav-item" onclick="show('d3',this)"><span>💻</span> D3 · Claude Code <span class="badge">20%</span></div>
     <div class="nav-item" onclick="show('d4',this)"><span>✍️</span> D4 · Prompt Engineering <span class="badge">20%</span></div>
     <div class="nav-item" onclick="show('d5',this)"><span>🧠</span> D5 · Context &amp; Memory <span class="badge">15%</span></div>
+
+    <div class="nav-lbl">Advanced</div>
+    <div class="nav-item" onclick="show('s13',this)"><span>🎰</span> 13 Hidden Scenarios</div>
 
     <div class="nav-lbl">Quick Reference</div>
     <div class="nav-item" onclick="show('cheat',this)"><span>📋</span> Cheat Sheet</div>
@@ -1628,6 +1655,988 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════
+     13 HIDDEN EXAM SCENARIOS MATRIX
+══════════════════════════════════════════ -->
+<div id="s13" class="section">
+  <div class="dom-hdr" style="border-left-color:var(--purple)">
+    <h2>🎰 The 13 Hidden Exam Scenarios Matrix</h2>
+    <p>Real-world architectural case studies drawn from the actual CCA-F exam pool — each mapped directly to <strong>car-e-pool-api</strong> patterns. Select any scenario to expand the full blueprint, project mapping, code reference, and core architectural trade-off.</p>
+    <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:100%;background:var(--purple)"></div></div><div class="weight-lbl" style="color:var(--purple)">13 Scenarios · All Domains</div></div>
+  </div>
+
+  <!-- Scenario selector grid -->
+  <div class="s-grid" id="sGrid">
+    <div class="s-card active" onclick="showScenario(1,this)"><div class="s-num">S-01</div><div class="s-name">Customer Support Agent</div><div class="s-tag">D1 · State &amp; Escalation</div></div>
+    <div class="s-card" onclick="showScenario(2,this)"><div class="s-num">S-02</div><div class="s-name">Code Generation</div><div class="s-tag">D3 · CLAUDE.md &amp; Hooks</div></div>
+    <div class="s-card" onclick="showScenario(3,this)"><div class="s-num">S-03</div><div class="s-name">Multi-Agent Research</div><div class="s-tag">D1 · Orchestration</div></div>
+    <div class="s-card" onclick="showScenario(4,this)"><div class="s-num">S-04</div><div class="s-name">Agentic Tool Design</div><div class="s-tag">D2 · Schema Fidelity</div></div>
+    <div class="s-card" onclick="showScenario(5,this)"><div class="s-num">S-05</div><div class="s-name">Developer Productivity</div><div class="s-tag">D3 · Slash Commands</div></div>
+    <div class="s-card" onclick="showScenario(6,this)"><div class="s-num">S-06</div><div class="s-name">Long Document Processing</div><div class="s-tag">D5 · Chunking &amp; Cache</div></div>
+    <div class="s-card" onclick="showScenario(7,this)"><div class="s-num">S-07</div><div class="s-name">Claude for Operations</div><div class="s-tag">D1 · Monitoring Loops</div></div>
+    <div class="s-card" onclick="showScenario(8,this)"><div class="s-num">S-08</div><div class="s-name">CI/CD Integration</div><div class="s-tag">D3 · Headless Claude</div></div>
+    <div class="s-card" onclick="showScenario(9,this)"><div class="s-num">S-09</div><div class="s-name">Structured Extraction</div><div class="s-tag">D4 · tool_choice JSON</div></div>
+    <div class="s-card" onclick="showScenario(10,this)"><div class="s-num">S-10</div><div class="s-name">Conversational AI</div><div class="s-tag">D5 · State Preservation</div></div>
+    <div class="s-card" onclick="showScenario(11,this)"><div class="s-num">S-11</div><div class="s-name">Knowledge Management</div><div class="s-tag">D2 · RAG &amp; Search</div></div>
+    <div class="s-card" onclick="showScenario(12,this)"><div class="s-num">S-12</div><div class="s-name">Developer Tooling</div><div class="s-tag">D3 · CLI Safety</div></div>
+    <div class="s-card" onclick="showScenario(13,this)"><div class="s-num">S-13</div><div class="s-name">Code Execution Agent</div><div class="s-tag">D1 · Sandboxing</div></div>
+  </div>
+
+  <!-- ─── S-01: Customer Support Agent ─── -->
+  <div class="s-panel active" id="sp1">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-01</span> Customer Support Resolution Agent</h2>
+      <p>How to build a support agent that handles intent changes mid-conversation — routing requests, maintaining session state, and gracefully escalating when the model cannot resolve an issue.</p>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag i">State Machine</span><span class="tag p">Escalation Pattern</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>Detecting intent shifts mid-conversation without losing prior context</li>
+          <li>Routing to specialist sub-handlers based on current <code>flow</code> state</li>
+          <li>Escalation = clean state reset, not a crash</li>
+          <li>Stale button guard: expired sessions must surface friendly errors, not NPEs</li>
+          <li>Tool results must always be appended before continuing the loop</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>BotFlow</code> enum = 50+ conversation states (exact support routing analogue)</li>
+          <li><code>StateManager</code> (Caffeine cache, 30-min TTL) = per-session memory</li>
+          <li><code>CallbackHandler</code> Map = intent router (one action → one handler)</li>
+          <li><code>SessionRecoveryHandler.isFlowSensitive()</code> = stale session escalation</li>
+          <li><code>stateManager.reset()</code> = graceful escalation to main menu (clean slate)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project File:</strong> <code>carpool-bot/handler/SessionRecoveryHandler.java</code><br><br>
+      Flow-sensitive actions (post-ride steps, rating, edit-time) → show "Session Expired" message and call <code>stateManager.reset()</code>.<br>
+      Non-flow-sensitive actions (<code>MY_PROFILE</code>, <code>PENDING_HUBS</code>) → recover with fresh <code>UserState.initial()</code> and proceed normally.<br><br>
+      <strong>This is precisely the escalation/recovery pattern a support agent needs.</strong> Distinguish: recoverable errors (fresh session) vs. context-dependent errors (must restart the flow).
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">JAVA — Escalation Pattern (SessionRecoveryHandler analogue)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre>// carpool-bot/handler/SessionRecoveryHandler.java
+// The same pattern used in a support agent context:
+
+public boolean isFlowSensitive(String action) {
+    // These actions require valid state fields (e.g., departureTime, rideId)
+    // If missing, the "conversation" cannot continue — must escalate
+    return POST_RIDE_ACTIONS.contains(action)
+        || RATING_ACTIONS.contains(action)
+        || EDIT_TIME_ACTIONS.contains(action);
+}
+
+// In the dispatcher:
+UserState state = stateManager.get(chatId);
+if (state == null || state.getFlow() == BotFlow.IDLE) {
+    if (isFlowSensitive(action)) {
+        // Escalation: can't recover — tell user to restart
+        bot.sendMessage(chatId, "⚠️ Session expired. Please start over from the main menu.");
+        stateManager.reset(chatId);   // ← clean slate
+        return;
+    }
+    // Soft recovery: non-sensitive action works with fresh state
+    state = UserState.initial(carpoolUserId);
+}
+// Continue routing with valid state...</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Session Freshness vs. State Continuity</h4>
+      <p><strong>Freshness:</strong> Always resetting state on any ambiguity is safest — no NPEs, no stale data. But users lose their progress and must restart entire flows (bad UX).<br><br>
+      <strong>Continuity:</strong> Persisting state longer increases risk of stale button exploits and context drift. A user tapping an old button with outdated ride data could corrupt a booking.<br><br>
+      <strong>Our resolution:</strong> Classify actions as <em>flow-sensitive</em> vs. <em>non-flow-sensitive</em>. Reset only when required. This is the correct answer on the exam — never a blanket strategy.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-02: Code Generation ─── -->
+  <div class="s-panel" id="sp2">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-02</span> Code Generation with Claude Code</h2>
+      <p>Using <code>CLAUDE.md</code> hierarchy, custom slash commands, and programmatic hooks to govern automated code generation safely within a team repository.</p>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Hooks</span><span class="tag i">CLAUDE.md</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>CLAUDE.md hierarchy: personal → project root → module (additive, not replacing)</li>
+          <li>PreToolUse hooks block unsafe generation before it writes to disk</li>
+          <li>Custom slash commands encode team conventions as runnable workflows</li>
+          <li>Plan Mode forces approval before any multi-file generation</li>
+          <li>Exit-code hook contract: non-zero = block, zero = allow</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>flyway-gate.sh</code> — blocks editing any existing <code>V#__.sql</code> migration</li>
+          <li><code>module-boundary-check.sh</code> — blocks illegal cross-module Java imports</li>
+          <li><code>guard-bash.sh</code> — blocks <code>rm -rf</code>, <code>DROP TABLE</code>, force-push</li>
+          <li>15 skills in <code>.claude/skills/</code> each encode one generation workflow</li>
+          <li>CLAUDE.md per module (e.g., <code>carpool-bot/CLAUDE.md</code>) scopes rules per layer</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>.claude/hooks/flyway-gate.sh</code> + <code>.claude/settings.json</code><br><br>
+      When Claude Code tries to <strong>Write</strong> or <strong>Edit</strong> any file, <code>settings.json</code> fires <code>flyway-gate.sh</code> first. If the target is an existing Flyway migration, the hook exits <code>1</code> and blocks the write — even if the model has already decided to make the change. <strong>This is programmatic enforcement, not prompt guidance.</strong>
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">BASH — flyway-gate.sh (PreToolUse Hook for Code Generation Safety)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre>#!/usr/bin/env bash
+# .claude/hooks/flyway-gate.sh
+# Fires on every Write/Edit tool call.
+# Blocks editing existing Flyway migrations — must create new ones.
+
+FILE="${CLAUDE_TOOL_INPUT_FILE_PATH:-}"
+
+if [[ "$FILE" =~ db/migration/V[0-9]+__.+\.sql$ ]]; then
+  # Is this an existing file? (not a new one being created)
+  if [[ -f "$FILE" ]]; then
+    echo "ERROR: Editing existing Flyway migration '$FILE' is forbidden."
+    echo "Create a new migration with the next version number instead."
+    exit 1   # ← blocks the Write/Edit tool call
+  fi
+fi
+
+exit 0  # ← allows all other writes</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Automation Speed vs. Review Gates</h4>
+      <p><strong>Speed:</strong> Removing all hooks and running Claude Code in auto-approve mode generates code faster. Useful for solo prototyping on throwaway branches.<br><br>
+      <strong>Safety:</strong> Every hook adds latency (shell process startup ~50ms). For 10 file edits, that's ~500ms overhead. On a large generation task, hooks run dozens of times.<br><br>
+      <strong>Our resolution:</strong> Hooks guard only <em>irreversible or high-risk</em> operations (migrations, module boundaries, destructive bash). Low-risk edits (Java logic, tests) pass without hooks. This minimises overhead while maximising safety at the boundaries that actually matter.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-03: Multi-Agent Research ─── -->
+  <div class="s-panel" id="sp3">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-03</span> Multi-Agent Research System</h2>
+      <p>Orchestrator-subagent topology for complex research tasks. Each subagent owns a narrow context slice; the coordinator synthesises results without sharing full history with every agent.</p>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag p">Hub-and-Spoke</span><span class="tag i">Context Isolation</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>Coordinator never executes directly — only dispatches and synthesises</li>
+          <li>Each subagent receives <em>minimum necessary context</em> only</li>
+          <li>Parallel dispatch when tasks are independent (faster, isolated)</li>
+          <li>Sequential dispatch when output of A feeds B</li>
+          <li>Worktree isolation for agents that write files</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li>9 specialist agents in <code>.claude/agents/</code> = the spokes</li>
+          <li>Claude Code session = the coordinator hub</li>
+          <li><code>architect.md</code> → <code>db-engineer.md</code> → <code>qa.md</code> = sequential research chain for a new feature</li>
+          <li>Parallel: reading <code>carpool-bot/CLAUDE.md</code> + <code>carpool-service/CLAUDE.md</code> simultaneously = independent context slices</li>
+          <li><code>security.md</code> always runs last (review gate) — sequential, not parallel</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>.claude/agents/architect.md</code>, <code>java-backend.md</code>, <code>db-engineer.md</code>, <code>qa.md</code><br><br>
+      When adding a new feature (e.g., waitlist booking), the coordinator dispatches:<br>
+      <strong>1.</strong> <code>architect</code> agent → scope + module impact analysis<br>
+      <strong>2.</strong> <code>db-engineer</code> agent → migration design (based on architect output only, not full history)<br>
+      <strong>3.</strong> <code>java-backend</code> agent → service layer implementation<br>
+      <strong>4.</strong> <code>qa</code> agent → integration test design<br>
+      <strong>5.</strong> <code>security</code> agent → final review gate<br>
+      Each receives a targeted handoff brief — not the full conversation.
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">PYTHON — Coordinator Dispatching Subagents with Context Isolation<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre"># Coordinator: Claude Code session (hub)
+# Subagents: specialist agents (spokes)
+
+# ✅ Correct — targeted handoff (minimum context)
+architect_brief = """
+Feature: Add waitlist for fully-booked rides in car-e-pool-api.
+Module dependency chain: common → domain → repository → service → bot/web.
+Constraints: Must not break existing BookingService pessimistic locking.
+Task: Identify which modules need new classes/tables.
+"""
+
+db_brief = """
+Migration context: Current latest is V44 (group_message_posted_at).
+Task: Design V45 for a waitlist_bookings table.
+Rules: TINYINT for booleans, never edit existing migrations.
+"""
+# db agent never sees the architect conversation — only the brief above
+
+# ❌ Wrong — context dumping
+db_agent_with_full_history = [
+    *full_architect_conversation,  # ← irrelevant to DB design
+    *all_previous_sessions,        # ← noise, not signal
+    {"role": "user", "content": "Now design the migration"}
+]</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Context Isolation vs. Cross-Module Awareness</h4>
+      <p><strong>Isolation:</strong> Each subagent works on a clean, focused context. Faster, cheaper, less distraction. Risk: agent may not know about constraints defined elsewhere.<br><br>
+      <strong>Full awareness:</strong> Passing all context ensures every agent knows every constraint. But token cost grows quadratically with agent count, and agents get distracted by irrelevant details.<br><br>
+      <strong>Our resolution:</strong> The coordinator reads all context first, then writes targeted briefs for each subagent. The coordinator holds the full picture; subagents only get what they need to act.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-04: Agentic Tool Design ─── -->
+  <div class="s-panel" id="sp4">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-04</span> Agentic Tool Design</h2>
+      <p>Writing tool schemas with high-fidelity descriptions, strict input boundaries, and structured error responses that enable deterministic routing and reliable recovery.</p>
+      <div class="s-meta"><span class="tag a">D2 Tools &amp; MCP</span><span class="tag s">Schema Design</span><span class="tag w">Error Recovery</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>Tool description must state: when to use this tool vs. alternatives</li>
+          <li>Input schema: use <code>enum</code>, <code>minimum</code>/<code>maximum</code>, <code>pattern</code> — not free strings</li>
+          <li><code>required</code> array must list all mandatory fields</li>
+          <li>Errors: return <code>isError:true</code> + <code>isRetryable</code> + <code>errorCategory</code></li>
+          <li>Never return a plain error string — model cannot route on unstructured text</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>AiService.parseRideRequest()</code> = the tool being designed</li>
+          <li>Target schema: <code>ParsedRideRequest</code> Java record (direction, departureDate, seats…)</li>
+          <li>Domain exceptions = error categories: <code>RideFullException</code>, <code>InvalidRideStateException</code></li>
+          <li>REST controllers return <code>ApiResponse&lt;T&gt;</code> wrapper = structured tool response</li>
+          <li>GlobalExceptionHandler maps domain errors to HTTP codes = error taxonomy</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>carpool-service/ai/AiService.java</code>, <code>carpool-common/exception/</code>, <code>carpool-web/GlobalExceptionHandler.java</code><br><br>
+      The <code>GlobalExceptionHandler</code> already implements error taxonomy: <code>RideFullException → 409</code>, <code>InvalidRideStateException → 409</code>, <code>UserNotFoundException → 404</code>. <strong>This is your isError + errorCategory mapping, already built.</strong> Use it as the reference when designing tool error responses.
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">JSON — High-Fidelity Tool Schema for carpool-api CreateBooking Tool<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre>{
+  "name": "create_booking",
+  "description": "Book a seat on an active carpool ride. Use this tool (not search_rides)
+when the user has confirmed a specific rideId and wants to reserve a seat.
+Returns the created booking on success, or a structured error if the ride
+is full, already booked, or the user has a direction conflict.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "ride_id":         { "type": "integer", "description": "ID of the target ride" },
+      "seats_requested": { "type": "integer", "minimum": 1, "maximum": 4 },
+      "passenger_note":  { "type": "string",  "maxLength": 200, "description": "Optional message to driver" }
+    },
+    "required": ["ride_id", "seats_requested"]
+  }
+}
+
+// Structured error response (isRetryable tells model what to do next):
+{
+  "isError": true,
+  "errorCode": "RIDE_FULL",
+  "errorCategory": "BUSINESS_RULE",
+  "isRetryable": false,
+  "userMessage": "This ride is now full.",
+  "suggestion": "search_rides_by_direction"   // guide next tool call
+}</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Schema Strictness vs. Edge Case Flexibility</h4>
+      <p><strong>Strict schema:</strong> <code>enum</code> constraints, <code>minimum</code>/<code>maximum</code> bounds, and <code>required</code> arrays catch bad inputs at the protocol level. Model can never call the tool with invalid parameters.<br><br>
+      <strong>Flexible schema:</strong> Loose string types handle unexpected user inputs but push validation logic into your tool implementation, where errors are harder to surface back to the model cleanly.<br><br>
+      <strong>Our resolution:</strong> Strict schema at the boundary, rich error taxonomy on the way out. Use <code>enum</code> for all categorical fields (direction, status), numeric bounds for quantities, and structured errors for every failure mode.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-05: Developer Productivity ─── -->
+  <div class="s-panel" id="sp5">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-05</span> Developer Productivity with Claude</h2>
+      <p>Tailoring codebase context, reducing token overhead, and encoding team conventions as reusable slash commands to automate repetitive workflows in this repo.</p>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Slash Commands</span><span class="tag i">Token Reduction</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>CLAUDE.md scoping: put module-specific rules in module CLAUDE.md, not root</li>
+          <li>Custom slash commands encode checklists that would otherwise take many prompts</li>
+          <li><code>/compact</code> after codebase exploration before implementation</li>
+          <li><code>--allowedTools</code> to restrict what Claude can touch in a session</li>
+          <li>Personal <code>~/.claude/CLAUDE.md</code> for cross-project preferences</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li>15 custom skills encode every repetitive workflow (flyway, bot command, event, etc.)</li>
+          <li><code>/flyway-migration</code> — prevents forgetting V-number lookup or 2-underscore rule</li>
+          <li><code>/new-event</code> — ensures all 3 annotations are always applied</li>
+          <li><code>/commit-workflow</code> — never runs <code>git commit</code>; presents diffs first</li>
+          <li><code>MEMORY.md</code> — 200-line index loaded every session (≈ free context)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>.claude/skills/new-event/SKILL.md</code>, <code>.claude/skills/flyway-migration/SKILL.md</code>, <code>memory/MEMORY.md</code><br><br>
+      Without <code>/new-event</code>, every developer risks writing <code>@Async</code> without <code>@Transactional(REQUIRES_NEW)</code>, causing <code>IllegalTransactionStateException</code> in production. The skill makes the correct pattern impossible to forget. <strong>This is the productivity value of slash commands: encoding non-obvious correctness, not just convenience.</strong>
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">MARKDOWN — /new-event Skill (Encodes 3-Annotation Pattern as Runnable Checklist)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre># Skill: /new-event
+# Use before implementing any async domain notification
+
+## Why this skill exists
+Without it, developers routinely forget @Transactional(REQUIRES_NEW),
+causing IllegalTransactionStateException when the notification listener
+tries to write to the notifications table with no active transaction.
+
+## Step 1 — Define event record
+# Add inside RideEvents.java final class:
+public record MyNewEvent(Ride ride, String reason) {}
+
+## Step 2 — Publish (inside existing @Transactional method)
+eventPublisher.publishEvent(new RideEvents.MyNewEvent(ride, reason));
+
+## Step 3 — Listen (exact 3-annotation stack — no substitutions)
+@Async
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void onMyNewEvent(RideEvents.MyNewEvent event) {
+    // Safe: runs after commit, in new transaction, in virtual thread
+}
+
+## Checklist before committing
+- [ ] All 3 annotations present
+- [ ] NotificationTypes constant added
+- [ ] sendAndRecord called (not direct telegramPort)
+- [ ] Notification status: PENDING → SENT/FAILED tracked</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Upfront Skill Authoring Cost vs. Long-Term Productivity</h4>
+      <p><strong>No skills:</strong> Zero upfront investment. Claude re-derives patterns from CLAUDE.md on every task. Risk of inconsistency grows as team grows and patterns drift.<br><br>
+      <strong>Rich skill library:</strong> Each skill takes 30–60 minutes to author well. But it eliminates entire classes of bugs (missing annotations, wrong migration numbering) for every future developer on the team.<br><br>
+      <strong>Our resolution:</strong> Skills exist for high-frequency, high-risk patterns only (15 skills in this repo). Low-frequency or low-risk tasks run without skills. Skill investment is justified when the cost of getting it wrong once exceeds the cost of writing the skill.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-06: Long Document Processing ─── -->
+  <div class="s-panel" id="sp6">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-06</span> Long Document Processing</h2>
+      <p>Prompt caching boundaries, chunking strategies, and token-efficient ingestion when processing large files, logs, or documentation assets.</p>
+      <div class="s-meta"><span class="tag a">D5 Context &amp; Memory</span><span class="tag w">Prompt Caching</span><span class="tag i">Chunking</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li><code>cache_control: {type: "ephemeral"}</code> placed at end of static sections</li>
+          <li>Max 4 cache breakpoints per request</li>
+          <li>Cache write = 1.25× cost (once); cache hit = ~0.10× cost (per reuse)</li>
+          <li>Break-even at 2 reuses — profitable from 3rd call onward</li>
+          <li>Chunking: never read entire files — Grep first, then targeted Read with offset/limit</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li>44 Flyway migrations = ~12k tokens if read all at once before writing V45</li>
+          <li><code>PostRideHandler.java</code> (1,075 lines ≈ 8k tokens) = largest file to chunk</li>
+          <li>6 CLAUDE.md files combined ≈ 4k tokens — cache breakpoint after loading them</li>
+          <li>15 skill SKILL.md files combined ≈ 3k tokens — cache as tool definitions</li>
+          <li>Pattern: Grep migration dir → find max V-number → read only that file, not all 44</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>carpool-web/src/main/resources/db/migration/V*.sql</code>, <code>carpool-bot/handler/PostRideHandler.java</code><br><br>
+      <strong>Token-efficient migration lookup:</strong> Instead of reading all 44 SQL files to find the next V-number, use <code>Glob("db/migration/V*.sql")</code> which returns file names sorted by modification time. Read only the last filename to extract the version number. This drops ~11.5k tokens of context vs. reading all files.
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">PYTHON — Correct Cache Breakpoints for Long-Doc Processing (Flyway Context)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre">system = [
+    # BP1: Static project rules (~600 tokens) — cache aggressively
+    {"type": "text", "text": PROJECT_RULES_STATIC,
+     "cache_control": {"type": "ephemeral"}},          # ← breakpoint 1
+
+    # BP2: All 6 CLAUDE.md files combined (~4k tokens)
+    # Same content every session — high cache hit rate
+    {"type": "text", "text": all_claude_md_content,
+     "cache_control": {"type": "ephemeral"}},          # ← breakpoint 2
+
+    # BP3: Existing migration file names only (not content)
+    # "V1 through V44 exist" is ~200 tokens vs 12k for full content
+    {"type": "text", "text": migration_index,          # glob output only
+     "cache_control": {"type": "ephemeral"}},          # ← breakpoint 3
+
+    # NO cache on dynamic content (current task, modified files)
+    {"type": "text", "text": f"Task: {current_task}"}  # ← dynamic, never cached
+]
+
+# Chunking PostRideHandler (1,075 lines) — never read all at once:
+# Step 1: Grep for the specific method
+# Grep(pattern="handleConfirmPostRide", path="PostRideHandler.java")
+# → returns line 342
+
+# Step 2: Read only that method (50 lines)
+# Read(file="PostRideHandler.java", offset=342, limit=50)
+# Cost: ~400 tokens vs ~8,000 tokens for full file</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Completeness vs. Token Cost</h4>
+      <p><strong>Completeness:</strong> Reading every file in full guarantees no missed context. Safe for one-off tasks but catastrophically expensive at scale (44 migrations × ~270 tokens each = ~12k tokens per task).<br><br>
+      <strong>Chunking:</strong> Grep + targeted Read reduces token cost by 95%+ for large files. Risk: important context in an un-read section could be missed.<br><br>
+      <strong>Our resolution:</strong> Use Grep as a lightweight index before any Read. Cache static assets (CLAUDE.md, migration index) to amortise cost over the session. Only read full files when the task genuinely requires whole-file understanding (e.g., refactoring an entire class).</p>
+    </div>
+  </div>
+
+  <!-- ─── S-07: Claude for Operations ─── -->
+  <div class="s-panel" id="sp7">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-07</span> Claude for Operations</h2>
+      <p>Incident response, automated log auditing, and system monitoring using agentic loops mapped to our project's notification lifecycle, scheduler patterns, and error tracking.</p>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag w">Monitoring</span><span class="tag p">Event-Driven</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>Agentic loop with scheduled polling: <code>fixedDelay</code> vs. <code>fixedRate</code></li>
+          <li>Tool calls to query logs/metrics + branch on results (alert vs. no-op)</li>
+          <li>Idempotent operations: re-running a check must not double-alert</li>
+          <li>Stop conditions: max retries, time window, status change</li>
+          <li><code>@Async</code> dispatch for non-blocking ops monitoring tasks</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>StaleAnnouncementRefreshScheduler</code> = ops monitoring loop (every 4h)</li>
+          <li><code>NotificationStatus.FAILED</code> = incident detection signal</li>
+          <li><code>PendingBookingScheduler</code> = SLA monitoring (max 3 reminders before escalation)</li>
+          <li><code>RideExpiryScheduler</code> = automated remediation (auto-expire past-due rides)</li>
+          <li><code>vault-writeback.sh</code> (Stop hook) = session audit log generation</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>carpool-bot/scheduler/StaleAnnouncementRefreshScheduler.java</code>, <code>carpool-service/scheduler/PendingBookingScheduler.java</code><br><br>
+      <code>PendingBookingScheduler</code> runs every 30 minutes, finds all PENDING bookings older than 15/30/45 minutes, and sends escalating reminder DMs to drivers. At reminder #3 with no response, it fires <code>BookingTimedOutEvent</code>. <strong>This is exactly the ops monitoring loop pattern</strong> — poll → evaluate threshold → escalate → record outcome.
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">JAVA — Ops Monitoring Loop Pattern (PendingBookingScheduler analogue)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre>// carpool-service/scheduler/PendingBookingScheduler.java
+// Production ops monitoring pattern — maps directly to incident response
+
+@Scheduled(fixedDelay = 30 * 60 * 1000, initialDelay = 5 * 60 * 1000)
+public void checkPendingBookings() {
+    // Step 1: Poll — query for "incidents" (pending bookings past SLA)
+    List<Booking> stalePending = bookingRepository
+        .findPendingOlderThan(Instant.now().minus(15, MINUTES));
+
+    for (Booking booking : stalePending) {
+        int reminderCount = booking.getReminderCount();
+
+        // Step 2: Evaluate threshold — how many reminders sent?
+        if (reminderCount >= 3) {
+            // Step 3: Escalate — auto-timeout after max reminders
+            eventPublisher.publishEvent(new BookingTimedOutEvent(booking));
+        } else {
+            // Step 4: Escalate progressively — send reminder DM to driver
+            eventPublisher.publishEvent(
+                new BookingReminderEvent(booking, reminderCount + 1));
+        }
+        // Step 5: Record outcome — idempotency guard prevents double-escalation
+        booking.setReminderCount(reminderCount + 1);
+        bookingRepository.save(booking);
+    }
+}
+// fixedDelay (not fixedRate) ensures previous run completes before next starts
+// initialDelay prevents startup overlap with ride-expiry scheduler</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Polling Frequency vs. System Load</h4>
+      <p><strong>High frequency (e.g., every 1 min):</strong> Near real-time incident detection. But each run issues DB queries under load. For a 50k-ride system, every 1-minute scan is 50k row evaluations/hour.<br><br>
+      <strong>Low frequency (e.g., every 30 min):</strong> Minimal DB load. But SLA violations are only detected up to 30 minutes late — unacceptable for time-sensitive operations.<br><br>
+      <strong>Our resolution:</strong> Different schedulers use different cadences based on urgency: <code>RideDepartureReminderScheduler</code> runs every 5 min (time-critical), <code>PendingBookingScheduler</code> every 30 min (moderate urgency), <code>StaleAnnouncementRefreshScheduler</code> every 4 hours (low urgency). Match cadence to SLA requirement, not a one-size-fits-all interval.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-08: CI/CD Integration ─── -->
+  <div class="s-panel" id="sp8">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-08</span> Claude Code for Continuous Integration</h2>
+      <p>Running Claude Code headless in CI/CD pipelines to validate code changes, enforce conventions, and generate review feedback automatically on every pull request.</p>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">Headless Mode</span><span class="tag i">--allowedTools</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li><code>--no-interactive</code> flag for headless/non-TTY execution</li>
+          <li><code>-p "prompt"</code> for single-shot pipeline tasks</li>
+          <li><code>--allowedTools "Read,Grep,Glob"</code> — read-only in CI (never write)</li>
+          <li><code>--output-format json</code> for machine-parseable CI output</li>
+          <li>Exit codes: 0 = pass, non-zero = fail (gates the pipeline)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li>Maven commands: <code>mvn clean verify -Dgroups="!integration"</code> = unit test gate</li>
+          <li><code>guard-bash.sh</code> = CI-equivalent safety boundary (blocks destructive ops)</li>
+          <li><code>/security-review</code> skill = automated pre-merge checklist</li>
+          <li><code>/concurrency-review</code> skill = validates locking patterns on every booking change</li>
+          <li>Integration tests: <code>@Tag("integration")</code> require MySQL — isolated from fast CI loop</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>.claude/skills/security-review/SKILL.md</code>, <code>.claude/skills/concurrency-review/SKILL.md</code>, <code>.claude/hooks/guard-bash.sh</code><br><br>
+      In CI: run <code>claude --no-interactive --allowedTools "Read,Grep,Glob" -p "/security-review"</code> on every PR targeting <code>main</code>. Claude reads only (no writes), runs the security checklist, and exits non-zero if a critical issue is found. <strong>The pipeline fails the PR — no human intervention needed for common security anti-patterns.</strong>
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">YAML — GitHub Actions CI with Headless Claude Code Review<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre">name: Claude Code Review
+on: [pull_request]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests (no DB required)
+        run: mvn clean verify -Dgroups="!integration" -DskipTests=false
+
+      - name: Claude security review (read-only, headless)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude \
+            --no-interactive \
+            --allowedTools "Read,Grep,Glob" \
+            --model claude-sonnet-4-6 \
+            -p "Run /security-review on the changed files in this PR.
+                Check: plate masking in DTOs, @PreAuthorize on new endpoints,
+                module boundary violations, JWT filter chain changes.
+                Exit 1 if any critical issue found."
+        # Exit code propagates to CI — fails the PR gate automatically
+
+      - name: Claude concurrency review (booking changes only)
+        if: contains(github.event.pull_request.changed_files, 'BookingService')
+        run: |
+          claude \
+            --no-interactive \
+            --allowedTools "Read,Grep" \
+            -p "Check BookingService changes for: findByIdWithLock() usage,
+                SELECT FOR UPDATE on seat decrements, transaction boundaries.
+                Exit 1 if pessimistic lock is missing from createBooking()."</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Automation Breadth vs. Safety Boundaries</h4>
+      <p><strong>Broad automation:</strong> Give CI Claude write access to auto-fix issues. Faster — no developer round-trip. Risk: auto-fixes in CI can introduce regressions, modify files not in the PR scope, or bypass team review processes.<br><br>
+      <strong>Read-only automation:</strong> CI Claude only reads and reports. Every fix requires a human commit. Slower but the human remains in the loop for all code changes.<br><br>
+      <strong>Our resolution:</strong> CI uses <code>--allowedTools "Read,Grep,Glob"</code> — strictly read-only. Claude identifies issues; developers fix them. Write access is reserved for local development sessions where the developer can review each change before committing.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-09: Structured Data Extraction ─── -->
+  <div class="s-panel" id="sp9">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-09</span> Structured Data Extraction</h2>
+      <p>Forcing deterministic, schema-validated JSON outputs using <code>tool_choice</code> constraints rather than loose system prompt instructions.</p>
+      <div class="s-meta"><span class="tag a">D4 Prompt Engineering</span><span class="tag s">tool_choice</span><span class="tag i">JSON Schema</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li><code>tool_choice: {type: "tool", name: "..."}</code> = model MUST call that tool</li>
+          <li><code>stop_reason</code> is always <code>tool_use</code> when forced — no fallback branch needed</li>
+          <li>Schema constraints over prose: <code>enum</code>, <code>minimum</code>, <code>pattern</code>, <code>required</code></li>
+          <li>Null fields for unknowns — never omit optional fields from schema</li>
+          <li>Claude Haiku for extraction: fast, cheap, still follows tool schemas perfectly</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>AiService.parseRideRequest()</code> = the extraction pipeline</li>
+          <li><code>ParsedRideRequest</code> record = the target JSON shape</li>
+          <li>Fields: <code>direction</code> (enum), <code>departureDate</code> (ISO date), <code>seats</code> (int 1–8)</li>
+          <li>Current code uses Spring AI text response — should use <code>tool_choice</code></li>
+          <li><code>ParsedRideRequest.empty()</code> = graceful degradation when extraction fails</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>carpool-service/ai/AiService.java</code>, <code>carpool-service/dto/ParsedRideRequest.java</code><br><br>
+      The current <code>AiService</code> uses Spring AI's <code>.entity(ParsedRideRequest.class)</code> which attempts JSON parsing from a text response. <strong>The production-correct upgrade is <code>tool_choice</code></strong> — forcing the model to call <code>extract_ride_details</code> with the <code>ParsedRideRequest</code> schema. This eliminates all JSON parsing failures and makes <code>stop_reason == "tool_use"</code> guaranteed.
+    </div>
+    <div class="cmp">
+      <div class="cmp-panel bad">
+        <div class="cmp-hdr">❌ Current (Spring AI text → parse)</div>
+        <pre>// AiService.java — current approach
+return chatClient
+    .prompt()
+    .system(SYSTEM_PROMPT)
+    .user(userMessage)
+    .call()
+    .entity(ParsedRideRequest.class);
+// Risks: JSON parse failure if model adds
+// prose before/after JSON, wrong field names,
+// missing required fields → silent nulls</pre>
+      </div>
+      <div class="cmp-panel good">
+        <div class="cmp-hdr">✅ Upgraded (tool_choice enforcement)</div>
+        <pre>// Forced tool call — guaranteed structure
+response = client.messages.create(
+    model="claude-haiku-4-5",
+    tools=[parse_ride_tool],
+    tool_choice={"type":"tool",
+                 "name":"extract_ride_details"},
+    messages=[user_message]
+)
+# stop_reason is ALWAYS "tool_use"
+# response.content[0].input is ALWAYS valid
+parsed = response.content[0].input</pre>
+      </div>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Schema Enforcement vs. Handling Ambiguity</h4>
+      <p><strong>Strict tool_choice:</strong> Model always returns the exact schema. But if user input is genuinely ambiguous (no direction hint at all), the model must still fill required fields — it may hallucinate values rather than admit uncertainty.<br><br>
+      <strong>Optional fields + null:</strong> Making most fields optional (only <code>direction</code> required) lets the model return partial extractions. The bot then prompts for missing fields individually rather than getting hallucinated data.<br><br>
+      <strong>Our resolution:</strong> Require only the fields that are truly mandatory for routing (<code>direction</code>). Make all others optional with explicit null. Show the partial extraction to the user ("Here's what I understood — can you confirm the time?") rather than silently using guessed values.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-10: Conversational AI ─── -->
+  <div class="s-panel" id="sp10">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-10</span> Conversational AI Patterns</h2>
+      <p>Multi-turn state preservation, system instruction persistence across turns, and managing conversation history without hitting context ceilings.</p>
+      <div class="s-meta"><span class="tag a">D5 Context &amp; Memory</span><span class="tag p">StateManager</span><span class="tag i">History Management</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>System prompt persists across all turns — never re-inject per turn</li>
+          <li>Conversation history grows each turn — must compact before context limit</li>
+          <li>User role for both user messages AND tool results</li>
+          <li>Never mutate history in place — append only</li>
+          <li>Sliding window: keep last N turns when history exceeds budget</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>StateManager</code> (Caffeine cache) = external conversation history store</li>
+          <li><code>UserState</code> immutable record = the "history" for our bot (append-only via <code>.with*()</code>)</li>
+          <li>30-min TTL = automatic sliding window eviction</li>
+          <li>Max 10k entries = hard memory ceiling</li>
+          <li><code>stateManager.reset(chatId)</code> = history compaction (terminal steps)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>carpool-bot/state/StateManager.java</code>, <code>carpool-bot/state/UserState.java</code><br><br>
+      <code>UserState</code> is the bot's equivalent of conversation history — it holds all context accumulated across multiple Telegram updates (direction, hub selections, departure time, vehicle choice). The immutable <code>.with*()</code> pattern ensures history is append-only: no turn can overwrite a previous decision without an explicit new state object. <strong>This is the correct multi-turn state management pattern</strong> — every Claude API conversation history should be treated the same way.
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">PYTHON — Conversation History with Sliding Window (Context Ceiling Management)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre">import anthropic
+
+client = anthropic.Anthropic()
+
+def chat_with_history(history: list, user_message: str,
+                      max_tokens_budget: int = 150_000) -> tuple[str, list]:
+    # Append new user message (never mutate — create new list)
+    new_history = history + [{"role": "user", "content": user_message}]
+
+    # Sliding window: if history is too long, keep system context + last N turns
+    # analogous to StateManager's 30-min TTL evicting old sessions
+    estimated_tokens = estimate_tokens(new_history)
+    if estimated_tokens > max_tokens_budget:
+        # Keep first 2 turns (context-setting) + last 10 turns (recent context)
+        new_history = new_history[:2] + new_history[-10:]
+
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4096,
+        system=PERSISTENT_SYSTEM_PROMPT,  # ← never changes, cache this
+        messages=new_history
+    )
+
+    assistant_reply = response.content[0].text
+    # Append assistant response — always append, never modify
+    final_history = new_history + [{"role": "assistant",
+                                     "content": assistant_reply}]
+    return assistant_reply, final_history
+
+# Usage — analogous to how StateManager accumulates UserState across updates:
+history = []
+reply, history = chat_with_history(history, "I want to post a ride to BGC")
+reply, history = chat_with_history(history, "Tomorrow, 7am")
+reply, history = chat_with_history(history, "2 seats available")</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — State Granularity vs. Cache Memory Cost</h4>
+      <p><strong>High granularity:</strong> Store every field of every conversation turn. Full context always available. Cost: memory grows without bound; old sessions crowd out new ones; cache TTL becomes a liability (stale data held too long).<br><br>
+      <strong>Low granularity:</strong> Store only current flow + critical fields. Compact and cheap. Risk: user must restart if they go back to a step that was dropped.<br><br>
+      <strong>Our resolution:</strong> <code>UserState</code> stores ~40 fields but uses a 30-min write-expiry TTL (automatic eviction). The Caffeine cache max-size (10k) is a hard ceiling. Terminal steps call <code>stateManager.reset()</code> proactively — don't wait for TTL. This balances session continuity with memory discipline.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-11: Knowledge Management ─── -->
+  <div class="s-panel" id="sp11">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-11</span> Agent Skills for Enterprise Knowledge Management</h2>
+      <p>Connecting LLMs to internal semantic search, RAG components, and structured knowledge bases via MCP tool calls and deterministic retrieval patterns.</p>
+      <div class="s-meta"><span class="tag a">D2 Tools &amp; MCP</span><span class="tag s">RAG</span><span class="tag w">Knowledge Base</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>RAG tool: model calls <code>search_knowledge_base(query)</code>, reads results, synthesises answer</li>
+          <li>Tool result contains snippets + source IDs — model cites sources, doesn't hallucinate</li>
+          <li>Index freshness: how often is the knowledge base re-indexed?</li>
+          <li>MCP server for internal search: credentials via <code>${ENV_VAR}</code>, not hardcoded</li>
+          <li>Fallback: if RAG returns no results, model must say "I don't know" — not hallucinate</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>HubService.suggestHub(name, area)</code> = RAG-like retrieval (search by name + aliases)</li>
+          <li><code>HubAliasRepository</code> = the search index (alternative names for same hub)</li>
+          <li><code>memory/</code> folder = the knowledge base (ADRs, learnings, PRDs)</li>
+          <li><code>MEMORY.md</code> index = the retrieval manifest (200-line summary of all docs)</li>
+          <li><code>HubStatus.PENDING</code> = freshness gap (user-submitted hubs await approval)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>carpool-service/HubService.java</code>, <code>carpool-repository/HubAliasRepository.java</code>, <code>memory/MEMORY.md</code><br><br>
+      <code>HubService.suggestHub()</code> implements deduplication + alias matching: if a hub with the same name+area exists as ACTIVE or PENDING, return it directly (no duplicate). If REJECTED, re-queue to PENDING. <strong>This is the knowledge base freshness + deduplication pattern</strong> that every enterprise RAG system needs — don't insert duplicates, handle stale/rejected entries, surface the best match regardless of spelling variation.
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">PYTHON — RAG Tool Pattern (Modelled on HubService + memory/ retrieval)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre">search_kb_tool = {
+    "name": "search_knowledge_base",
+    "description": "Search the internal knowledge base for architecture decisions,
+implementation patterns, and project learnings. Use this tool before answering
+any question about project conventions — do not rely on training data for
+project-specific facts. Returns ranked snippets with source file paths.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "description": "Search query"},
+            "category": {
+                "type": "string",
+                "enum": ["adr", "learning", "prd", "all"],
+                "description": "Filter by document type"
+            },
+            "max_results": {"type": "integer", "minimum": 1, "maximum": 10,
+                           "default": 5}
+        },
+        "required": ["query"]
+    }
+}
+
+# Tool response with source attribution (prevents hallucination):
+# {
+#   "results": [
+#     {"source": "memory/adrs/ADR-002.md",
+#      "snippet": "BookingService uses SELECT FOR UPDATE...",
+#      "relevance_score": 0.94},
+#     ...
+#   ],
+#   "total_found": 3
+# }
+# Model cites source paths, not invented facts.
+# If results == [], model responds: "I don't have documentation on that yet."</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Index Freshness vs. Query Latency</h4>
+      <p><strong>Real-time indexing:</strong> Every new ADR or learning is immediately searchable. But indexing on every write adds latency to the write path (embedding generation + vector store upsert ~200–500ms).<br><br>
+      <strong>Batch indexing:</strong> Re-index on a schedule (e.g., nightly). Zero write-path overhead. But new knowledge has a freshness gap (up to 24 hours before it's searchable).<br><br>
+      <strong>Our resolution (memory/ pattern):</strong> <code>MEMORY.md</code> is a manually curated 200-line index — zero indexing latency, always accurate, but requires human curation discipline. For automated systems, batch indexing on a short schedule (15–30 min) is the right balance for most enterprise knowledge bases.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-12: Developer Tooling ─── -->
+  <div class="s-panel" id="sp12">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-12</span> Agent Skills for Developer Tooling</h2>
+      <p>Building specialized CLI helpers and system-level scripts with safe local execution boundaries, controlled file-system side-effects, and hook-enforced guardrails.</p>
+      <div class="s-meta"><span class="tag a">D3 Claude Code</span><span class="tag s">CLI Safety</span><span class="tag w">File System</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li><code>--allowedTools</code> restricts which tools a Claude Code session can use</li>
+          <li>PreToolUse hooks intercept Bash calls before execution</li>
+          <li>File-system safety: validate paths before writing (no relative paths, no <code>../</code>)</li>
+          <li>Side-effect documentation: every script must declare what it will create/modify</li>
+          <li>Idempotency: running a tool twice should not corrupt state</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>guard-bash.sh</code> = the CLI safety layer (blocks <code>rm -rf</code>, <code>--force</code>, <code>DROP TABLE</code>)</li>
+          <li><code>module-boundary-check.sh</code> = file-system side-effect guard (illegal imports)</li>
+          <li><code>vault-writeback.sh</code> = safe file creation (appends to dispatch-logs/, never overwrites)</li>
+          <li><code>/commit-workflow</code> skill = never runs <code>git commit</code> (side-effect declaration)</li>
+          <li>CLAUDE.md rule: "Never run <code>mvn clean install</code>" = explicit side-effect prohibition</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>.claude/hooks/guard-bash.sh</code>, <code>.claude/hooks/vault-writeback.sh</code>, <code>.claude/skills/commit-workflow/SKILL.md</code><br><br>
+      <code>vault-writeback.sh</code> runs on every session Stop event. It creates a new timestamped dispatch log in <code>memory/dispatch-logs/</code> — always appending, never overwriting existing logs. The filename includes the timestamp to ensure uniqueness. <strong>This is the idempotent file-creation pattern</strong>: running it twice creates two log files, never corrupts the existing one.
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">JSON — settings.json Tool Restriction for Safe Developer Tooling Sessions<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre">{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "bash .claude/hooks/guard-bash.sh"
+        }]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/flyway-gate.sh" },
+          { "type": "command", "command": "bash .claude/hooks/module-boundary-check.sh" }
+        ]
+      }
+    ],
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "bash .claude/hooks/vault-writeback.sh"
+      }]
+    }]
+  }
+}
+
+// For maximum safety in a CI/automation context:
+// claude --allowedTools "Read,Grep,Glob" --no-interactive -p "audit changes"
+// Model can READ anything but cannot WRITE, EDIT, or RUN bash.
+// This is the "read-only analyst" mode — safest for automated tooling.</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Developer Convenience vs. Accidental Destruction Protection</h4>
+      <p><strong>Full access:</strong> Developer can approve any tool use. Fastest iteration. Risk: a mis-phrased prompt asking to "clean up old files" could trigger <code>rm -rf</code> on source directories before the developer notices.<br><br>
+      <strong>Hook-restricted access:</strong> Certain dangerous patterns are blocked unconditionally, even if the developer approves. Slightly more friction (blocked operations show an error). But the blast radius of a bad prompt is bounded.<br><br>
+      <strong>Our resolution:</strong> Block only <em>irreversible + catastrophic</em> operations via hooks: <code>rm -rf</code>, <code>DROP TABLE</code>, <code>--force-push</code>. Everything else allows developer approval. The hook intercepts before disk writes — not after. You can't undo a dropped table, but you can always re-approve a blocked operation intentionally.</p>
+    </div>
+  </div>
+
+  <!-- ─── S-13: Code Execution Agent ─── -->
+  <div class="s-panel" id="sp13">
+    <div class="s-hdr">
+      <h2><span style="color:var(--accent)">S-13</span> Agent Skills with Code Execution</h2>
+      <p>Secure sandboxing for dynamic code execution, state validation across execution boundaries, and deterministic output parsing when agents run tests or scripts at runtime.</p>
+      <div class="s-meta"><span class="tag a">D1 Agentic Systems</span><span class="tag s">Sandboxing</span><span class="tag w">Output Parsing</span></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <h3>🔑 Core Concepts Tested</h3>
+        <ul>
+          <li>Code execution = a tool call; output = a tool result appended to history</li>
+          <li>Sandbox: restrict to read-only filesystem, no network, no shell injection</li>
+          <li>Output parsing: structured (JSON exit codes) beats natural language (grep for "PASS")</li>
+          <li>Timeout enforcement: all code execution tools must have max runtime limits</li>
+          <li>State validation: confirm execution environment is correct before running</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔵 Our Project Is the Blueprint</h3>
+        <ul>
+          <li><code>BaseIntegrationTest</code> = the sandboxed execution environment (real MySQL required)</li>
+          <li><code>@Tag("integration")</code> = execution boundary marker (DB-dependent vs. in-memory)</li>
+          <li><code>mvn clean verify -Dgroups="!integration"</code> = safe sandbox (no external deps)</li>
+          <li>H2 vs. MySQL lesson: H2 ignores <code>SELECT FOR UPDATE</code> = incorrect sandbox</li>
+          <li><code>guard-bash.sh</code> = shell injection guard for runtime code execution</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bp-box">
+      <strong>📁 Project Files:</strong> <code>carpool-web/src/test/BaseIntegrationTest.java</code>, <code>CLAUDE.md</code> (build commands section)<br><br>
+      The H2 vs. MySQL lesson is the most important sandboxing insight in this project: <strong>H2 in-memory DB ignores <code>SELECT FOR UPDATE</code></strong> — running concurrency tests against H2 will always pass even when the pessimistic locking is broken. The correct sandbox for concurrency tests is always real MySQL at <code>localhost:3308</code>. <strong>Exam lesson: the wrong sandbox can give false confidence. Validate that your execution environment matches production semantics.</strong>
+    </div>
+    <div class="code-wrap">
+      <div class="code-lbl">PYTHON — Code Execution Tool with Structured Output Parsing<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre">run_tests_tool = {
+    "name": "run_unit_tests",
+    "description": "Execute Maven unit tests for a specific module. Use this to validate
+code changes before committing. Does NOT run integration tests (those require MySQL).
+Returns structured pass/fail results per test class.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "module": {
+                "type": "string",
+                "enum": ["carpool-service", "carpool-domain", "carpool-repository",
+                         "carpool-common"],  # ← no carpool-web (needs DB)
+                "description": "Maven module to test"
+            },
+            "test_class": {"type": "string", "description": "Specific test class (optional)"}
+        },
+        "required": ["module"]
+    }
+}
+
+# Tool implementation with structured output (not raw Maven stdout):
+def run_unit_tests(module: str, test_class: str = None) -> dict:
+    cmd = f"mvn test -pl {module} -Dgroups='!integration'"
+    if test_class:
+        cmd += f" -Dtest={test_class}"
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)  # timeout!
+
+    # Return structured output — not raw stdout (model can't reliably grep Maven output)
+    return {
+        "exit_code": result.returncode,
+        "passed": result.returncode == 0,
+        "failed_tests": extract_failed_tests(result.stdout),  # structured list
+        "duration_seconds": extract_duration(result.stdout),
+        "isError": result.returncode != 0,
+        "errorCategory": "TEST_FAILURE" if result.returncode != 0 else None
+    }
+# Model reads passed:true/false — not "BUILD SUCCESS" text</pre>
+    </div>
+    <div class="tradeoff">
+      <h4>⚖️ Core Architectural Trade-Off — Execution Isolation vs. Test Realism</h4>
+      <p><strong>Full isolation (H2 in-memory):</strong> Tests run anywhere, no Docker required, fast startup (~2s vs ~15s for MySQL). But <code>SELECT FOR UPDATE</code> is silently ignored — concurrency bugs pass undetected. False safety.<br><br>
+      <strong>Real environment (MySQL):</strong> Tests match production exactly. Concurrency bugs are caught. Requires Docker, port 3308, setup time. Cannot run in all CI environments without infrastructure.<br><br>
+      <strong>Our resolution:</strong> Two-tier test strategy. Unit tests (<code>-Dgroups="!integration"</code>) run against H2 — fast, no deps, suitable for local and standard CI. Concurrency/integration tests (<code>@Tag("integration")</code>) run only in environments with real MySQL — Docker-based CI only. Never test pessimistic locking against H2: it will lie to you.</p>
+    </div>
+  </div>
+
+</div><!-- end #s13 -->
+
 </main>
 
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
@@ -1665,6 +2674,14 @@ function closeSidebar() {
   sb.classList.remove('open');
   ov.classList.remove('show');
   document.body.style.overflow = '';
+}
+
+function showScenario(n, el) {
+  document.querySelectorAll('.s-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.s-panel').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const panel = document.getElementById('sp' + n);
+  if (panel) { panel.classList.add('active'); panel.scrollIntoView({behavior:'smooth', block:'start'}); }
 }
 
 function toggleAcc(hdr) {
