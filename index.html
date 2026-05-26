@@ -252,8 +252,6 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 .mx-row.open .mx-body{display:block}
 .mx-grid{display:grid;grid-template-columns:repeat(3,1fr)}
 .mx-tab-view{display:none}
-#reality-matrix:not(.mode-deep) .mx-tab-view.theory{display:grid;grid-template-columns:repeat(3,1fr)}
-#reality-matrix.mode-deep .mx-tab-view.deep{display:grid;grid-template-columns:repeat(3,1fr)}
 .mx-col{padding:.85rem 1rem;border-right:1px solid var(--border);background:var(--surface)}
 .mx-col:last-child{border-right:none}
 .mx-col-hdr{font-size:.62rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;padding-bottom:.28rem;border-bottom:1px dashed var(--border)}
@@ -270,7 +268,7 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 .mx-col .ok{color:var(--success)}
 .mx-col .bad{color:var(--danger)}
 .mx-col code{font-size:.77em}
-@media(max-width:1024px){#reality-matrix .mx-tab-view.theory,#reality-matrix.mode-deep .mx-tab-view.deep{grid-template-columns:1fr}.mx-col{border-right:none;border-bottom:1px solid var(--border)}.mx-col:last-child{border-bottom:none}.mx-preview{display:none}}
+@media(max-width:1024px){.mx-col{border-right:none;border-bottom:1px solid var(--border)}.mx-col:last-child{border-bottom:none}.mx-preview{display:none}}
 @media(max-width:768px){.mx-hdr{gap:.35rem}.mx-concept{font-size:.78rem}.mx-toolbar{gap:.4rem}}
 
 /* ── Subdomain sub-nav ── */
@@ -4443,14 +4441,28 @@ function toggleAcc(hdr) {
   if (body) body.classList.toggle('open');
 }
 
+function applyTabState(row) {
+  var isDeep = document.getElementById('reality-matrix').classList.contains('mode-deep');
+  var cols = window.innerWidth <= 1024 ? '1fr' : 'repeat(3,1fr)';
+  row.querySelectorAll('.mx-tab-view').forEach(function(el) {
+    var show = isDeep ? el.classList.contains('deep') : el.classList.contains('theory');
+    el.style.display = show ? 'grid' : 'none';
+    if (show) el.style.gridTemplateColumns = cols;
+  });
+}
+
 function toggleMxRow(hdr) {
-  hdr.closest('.mx-row').classList.toggle('open');
+  var row = hdr.closest('.mx-row');
+  var opening = !row.classList.contains('open');
+  row.classList.toggle('open');
+  if (opening) applyTabState(row);
 }
 
 function switchMxTab(tab) {
   var mx = document.getElementById('reality-matrix');
   if (tab === 'deep') { mx.classList.add('mode-deep'); } else { mx.classList.remove('mode-deep'); }
-  document.querySelectorAll('.mx-tab').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === tab); });
+  document.querySelectorAll('.mx-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+  document.querySelectorAll('.mx-row.open').forEach(function(row) { applyTabState(row); });
 }
 
 function filterMxDomain(domain, btn) {
@@ -4505,6 +4517,9 @@ function copyCode(btn) {
     setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
   });
 }
+
+// Initialise Reality Matrix — apply theory view to any pre-opened rows
+document.querySelectorAll('.mx-row.open').forEach(function(row) { applyTabState(row); });
 
 // Wire up the overview domain cards to nav items
 document.querySelectorAll('.prog-card').forEach((card, i) => {
