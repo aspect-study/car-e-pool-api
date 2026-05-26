@@ -350,9 +350,14 @@ public class DriverHandler {
                             ❌ <b>Booking Declined</b>
                             
                             The passenger has been notified and their seat has been released."""));
+        } catch (InvalidRideStateException e) {
+            log.warn("Duplicate decline attempt ignored: bookingId={} driverId={}",
+                    bookingId, ctx.carpoolUserId());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "✅ This booking has already been declined."));
         } catch (Exception e) {
             log.error("Decline booking failed: bookingId={} userId={} error={}",
-                    bookingId, ctx.carpoolUserId(), e.getMessage());
+                    bookingId, ctx.carpoolUserId(), e.getMessage(), e);
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not decline booking. Please try again."));
         }
