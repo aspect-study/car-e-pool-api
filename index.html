@@ -2871,9 +2871,10 @@ synthesis_report = {
     </div>
     <span class="mx-count" id="mx-count">32 concepts</span>
   </div>
+  <p style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem;padding-left:.15rem">↕ Click any row to expand its 6 columns &nbsp;·&nbsp; Use tabs above to switch between <strong style="color:var(--accent)">Core Theory ①②③</strong> and <strong style="color:var(--purple)">Deep Architecture ④⑤⑥</strong></p>
 
   <!-- ── D1: Agentic Systems ── -->
-  <div class="mx-row" data-domain="d1">
+  <div class="mx-row open" data-domain="d1">
   <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">Agentic Loop Control</span><span class="mx-preview">stop_reason drives loop continuation — not string matching</span><span class="mx-chev">▼</span></div>
   <div class="mx-body"><div class="mx-tab-view theory">
   <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Agentic Loop Control</strong> <span class="sub-tag">SD 1.1</span></p><p>The core loop pattern: call the model, inspect <code>stop_reason</code>, route accordingly. Loop continuation is a programmatic decision, never a language-parsing decision.</p></div>
