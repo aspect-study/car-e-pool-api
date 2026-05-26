@@ -441,6 +441,38 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
     </div>
   </div>
 
+  <div class="stitle">🚗 car-e-pool-api Key Facts (Project-Specific)</div>
+  <div class="g2">
+    <div class="card">
+      <h3>🔒 Critical Invariants</h3>
+      <ul>
+        <li>BookingService uses <code>findByIdWithLock()</code> — SELECT FOR UPDATE</li>
+        <li>Event listeners require all 3 annotations: <code>@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)</code></li>
+        <li>Plate masking enforced in <code>EntityMapper</code> (MapStruct compile-time)</li>
+        <li><code>UserState.timeWindowStart</code> must always be the <em>adjusted</em> value, never raw default</li>
+        <li>H2 ignores SELECT FOR UPDATE — concurrency tests need real MySQL</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🏗️ Module Dependency Chain</h3>
+      <div class="flow" style="flex-direction:column;gap:.4rem">
+        <div class="flow-step" style="text-align:center">carpool-common (shared utils)</div>
+        <div class="flow-arrow" style="text-align:center">↓</div>
+        <div class="flow-step" style="text-align:center">carpool-domain (JPA entities, enums)</div>
+        <div class="flow-arrow" style="text-align:center">↓</div>
+        <div class="flow-step" style="text-align:center">carpool-repository (Spring Data JPA)</div>
+        <div class="flow-arrow" style="text-align:center">↓</div>
+        <div class="flow-step a" style="text-align:center">carpool-service (business logic)</div>
+        <div class="flow-arrow" style="text-align:center">↓ ↓</div>
+        <div style="display:flex;gap:.5rem;justify-content:center">
+          <div class="flow-step">carpool-bot</div>
+          <div class="flow-step">carpool-admin</div>
+          <div class="flow-step s">carpool-web (executable)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="callout wisdom">
     <div class="callout-icon">🏛️</div>
     <div>
