@@ -213,6 +213,66 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 .sd-card ul{padding-left:1.1rem;margin-top:.35rem}
 @media(max-width:768px){.sd-grid{grid-template-columns:1fr}}
 
+/* ── Reality Matrix ── */
+.mx-toolbar{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;margin-bottom:1.25rem;padding:.75rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.mx-tab-group{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.mx-tab{padding:.32rem .85rem;font-size:.75rem;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:none;font-family:inherit;transition:all .12s;white-space:nowrap}
+.mx-tab.active{background:var(--accent);color:#fff}
+.mx-filter-group{display:flex;gap:.35rem;flex-wrap:wrap}
+.mx-filter{padding:.25rem .6rem;border-radius:20px;font-size:.7rem;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:inherit;transition:all .12s}
+.mx-filter:hover{border-color:var(--accent);color:var(--accent)}
+.mx-filter[data-domain="all"].active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mx-filter[data-domain="d1"].active{background:rgba(255,112,67,.18);color:var(--accent);border-color:var(--accent)}
+.mx-filter[data-domain="d2"].active{background:rgba(88,166,255,.18);color:var(--info);border-color:var(--info)}
+.mx-filter[data-domain="d3"].active{background:rgba(63,185,80,.18);color:var(--success);border-color:var(--success)}
+.mx-filter[data-domain="d4"].active{background:rgba(188,140,255,.18);color:var(--purple);border-color:var(--purple)}
+.mx-filter[data-domain="d5"].active{background:rgba(210,153,34,.18);color:var(--warn);border-color:var(--warn)}
+.mx-count{font-size:.7rem;color:var(--muted);margin-left:auto;white-space:nowrap}
+.mx-row{border:1px solid var(--border);border-radius:8px;margin-bottom:.45rem;overflow:hidden;transition:border-color .15s}
+.mx-row:hover{border-color:rgba(255,112,67,.4)}
+.mx-row[data-domain="d1"]{border-left:3px solid var(--accent)}
+.mx-row[data-domain="d2"]{border-left:3px solid var(--info)}
+.mx-row[data-domain="d3"]{border-left:3px solid var(--success)}
+.mx-row[data-domain="d4"]{border-left:3px solid var(--purple)}
+.mx-row[data-domain="d5"]{border-left:3px solid var(--warn)}
+.mx-row.mx-hidden{display:none}
+.mx-hdr{background:var(--card);padding:.62rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;user-select:none}
+.mx-hdr:hover{background:var(--surface)}
+.mx-badge{font-size:.6rem;font-weight:900;padding:.1rem .38rem;border-radius:4px;letter-spacing:.06em;flex-shrink:0;min-width:2rem;text-align:center}
+.mx-row[data-domain="d1"] .mx-badge{background:var(--accent-dim);color:var(--accent)}
+.mx-row[data-domain="d2"] .mx-badge{background:rgba(88,166,255,.15);color:var(--info)}
+.mx-row[data-domain="d3"] .mx-badge{background:rgba(63,185,80,.15);color:var(--success)}
+.mx-row[data-domain="d4"] .mx-badge{background:rgba(188,140,255,.15);color:var(--purple)}
+.mx-row[data-domain="d5"] .mx-badge{background:rgba(210,153,34,.15);color:var(--warn)}
+.mx-concept{font-size:.84rem;font-weight:700;flex:1.2;min-width:0}
+.mx-preview{font-size:.74rem;color:var(--muted);flex:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mx-chev{color:var(--muted);font-size:.65rem;flex-shrink:0;transition:transform .2s}
+.mx-row.open .mx-chev{transform:rotate(180deg)}
+.mx-body{display:none;border-top:1px solid var(--border)}
+.mx-row.open .mx-body{display:block}
+.mx-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.mx-tab-view{display:none}
+#reality-matrix:not(.mode-deep) .mx-tab-view.theory{display:grid;grid-template-columns:repeat(3,1fr)}
+#reality-matrix.mode-deep .mx-tab-view.deep{display:grid;grid-template-columns:repeat(3,1fr)}
+.mx-col{padding:.85rem 1rem;border-right:1px solid var(--border);background:var(--surface)}
+.mx-col:last-child{border-right:none}
+.mx-col-hdr{font-size:.62rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;padding-bottom:.28rem;border-bottom:1px dashed var(--border)}
+.mx-col[data-col="1"] .mx-col-hdr{color:var(--accent)}
+.mx-col[data-col="2"] .mx-col-hdr{color:var(--info)}
+.mx-col[data-col="3"] .mx-col-hdr{color:var(--danger)}
+.mx-col[data-col="4"] .mx-col-hdr{color:var(--warn)}
+.mx-col[data-col="5"] .mx-col-hdr{color:var(--success)}
+.mx-col[data-col="6"] .mx-col-hdr{color:var(--purple)}
+.mx-col p,.mx-col li{font-size:.79rem;line-height:1.65;color:var(--muted)}
+.mx-col ul{padding-left:1rem;margin-top:.3rem}
+.mx-col li{margin-bottom:.2rem}
+.mx-col strong{color:var(--text)}
+.mx-col .ok{color:var(--success)}
+.mx-col .bad{color:var(--danger)}
+.mx-col code{font-size:.77em}
+@media(max-width:1024px){#reality-matrix .mx-tab-view.theory,#reality-matrix.mode-deep .mx-tab-view.deep{grid-template-columns:1fr}.mx-col{border-right:none;border-bottom:1px solid var(--border)}.mx-col:last-child{border-bottom:none}.mx-preview{display:none}}
+@media(max-width:768px){.mx-hdr{gap:.35rem}.mx-concept{font-size:.78rem}.mx-toolbar{gap:.4rem}}
+
 /* ── Subdomain sub-nav ── */
 .nav-sub-list{display:none;margin:.05rem 0 .3rem 0}
 .nav-sub-list.open{display:block}
@@ -296,6 +356,8 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
     <div class="nav-lbl">Quick Reference</div>
     <div class="nav-item" onclick="show('cheat',this);openSubnav(this)"><span>📋</span> Cheat Sheet <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span></span></div>
     <div class="nav-sub-list">
+      <div class="nav-sub-item" onclick="scrollToSD('cheat','reality-matrix',this)"><span class="nav-sub-dot"></span>⚡ Reality Matrix</div>
+      <div class="nav-sub-item" onclick="scrollToSD('cheat','hands-on-prep',this)"><span class="nav-sub-dot"></span>🛠️ Hands-On Prep</div>
       <div class="nav-sub-item" onclick="scrollToSD('cheat','study-tip',this)"><span class="nav-sub-dot"></span>💡 Study Tip</div>
     </div>
   </nav>
@@ -2788,32 +2850,420 @@ synthesis_report = {
 ══════════════════════════════════════════ -->
 <div id="cheat" class="section">
   <div class="dom-hdr" style="border-left-color:var(--purple)">
-    <h2>📋 CCA-F Quick Reference Cheat Sheet</h2>
-    <p>High-density reference for the 30 minutes before your exam. Everything on one page.</p>
+    <h2>🧪 CCA-F Engineering Judgment Sandbox</h2>
+    <p>Interactive 6-column reality matrix. <strong>Core Theory (①②③)</strong> — concept, key fact, common trap. <strong>Deep Architecture (④⑤⑥)</strong> — real enterprise scenario, correct execution, fatal anti-pattern. Filter by domain. Click any row to expand.</p>
   </div>
 
-  <!-- D1 Quick -->
-  <div class="stitle">🤖 D1: Agentic Systems (27%)</div>
-  <div class="tbl-wrap"><table>
-    <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
-    <tr><td><code>stop_reason: "tool_use"</code></td><td>Model wants to call a tool → loop MUST continue</td><td>Exiting the loop instead of appending results</td></tr>
-    <tr><td><code>stop_reason: "end_turn"</code></td><td>Model finished → loop should terminate</td><td>Continuing loop after end_turn</td></tr>
-    <tr><td>Tool result role</td><td>Role is <code>user</code>, not <code>tool</code></td><td>Using wrong role for tool_result content block</td></tr>
-    <tr><td>Hub-and-spoke</td><td>Coordinator orchestrates; never executes directly</td><td>Coordinator sharing full history with subagents</td></tr>
-    <tr><td>PreToolUse hook</td><td>Exit non-zero = block tool. Exit zero = allow</td><td>Thinking prompts can block tool use (they can't)</td></tr>
-    <tr><td>Context isolation</td><td>Subagents get minimum necessary context only</td><td>Dumping full conversation into every subagent</td></tr>
-    <tr><td>Worktree isolation</td><td><code>isolation: "worktree"</code> = isolated git worktree per agent</td><td>Running file-editing agents on shared branch</td></tr>
-    <tr><td>Task tool</td><td><code>allowedTools:["Task"]</code> on coordinator; subagents get no auto-inherited context</td><td>Assuming subagents receive parent conversation history</td></tr>
-    <tr><td>Parallel spawning</td><td>Emit multiple Task calls in ONE coordinator response = parallel execution</td><td>Emitting Task calls across separate turns (sequential, not parallel)</td></tr>
-    <tr><td>Programmatic prerequisites</td><td>Block downstream tools until prerequisite step completes — hooks/gates, not prompt rules</td><td>Relying on "always call X first" prompt instructions for safety-critical ordering</td></tr>
-    <tr><td>PostToolUse hooks</td><td>Normalize tool results BEFORE model processes them (timestamps, status codes)</td><td>Asking model to "interpret Unix timestamps" in the system prompt</td></tr>
-    <tr><td>--resume</td><td>Continue named session; inform agent about file changes since last session</td><td>Resuming with stale tool results when files have changed</td></tr>
-    <tr><td>fork_session</td><td>Independent exploration branches from shared analysis baseline</td><td>Reopening old session to explore divergent approaches</td></tr>
-  </table></div>
+  <div class="stitle">⚡ 6-Column Reality Matrix</div>
+  <div id="reality-matrix">
+  <div class="mx-toolbar">
+    <div class="mx-tab-group">
+      <button class="mx-tab active" data-tab="theory" onclick="switchMxTab('theory')">① ② ③ Core Theory</button>
+      <button class="mx-tab" data-tab="deep" onclick="switchMxTab('deep')">④ ⑤ ⑥ Deep Architecture</button>
+    </div>
+    <div class="mx-filter-group">
+      <button class="mx-filter active" data-domain="all" onclick="filterMxDomain('all',this)">All</button>
+      <button class="mx-filter" data-domain="d1" onclick="filterMxDomain('d1',this)">D1 · Agentic</button>
+      <button class="mx-filter" data-domain="d2" onclick="filterMxDomain('d2',this)">D2 · Tools</button>
+      <button class="mx-filter" data-domain="d3" onclick="filterMxDomain('d3',this)">D3 · Claude Code</button>
+      <button class="mx-filter" data-domain="d4" onclick="filterMxDomain('d4',this)">D4 · Prompts</button>
+      <button class="mx-filter" data-domain="d5" onclick="filterMxDomain('d5',this)">D5 · Context</button>
+    </div>
+    <span class="mx-count" id="mx-count">32 concepts</span>
+  </div>
 
-  <!-- D2 Quick -->
-  <div class="stitle">🔧 D2: Tools &amp; MCP (18%)</div>
-  <div class="tbl-wrap"><table>
+  <!-- ── D1: Agentic Systems ── -->
+  <div class="mx-row" data-domain="d1">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">Agentic Loop Control</span><span class="mx-preview">stop_reason drives loop continuation — not string matching</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Agentic Loop Control</strong> <span class="sub-tag">SD 1.1</span></p><p>The core loop pattern: call the model, inspect <code>stop_reason</code>, route accordingly. Loop continuation is a programmatic decision, never a language-parsing decision.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p><code>stop_reason: "tool_use"</code> → extract the tool call, execute it, append <code>tool_result</code> to <code>messages</code>, call the model again. <code>stop_reason: "end_turn"</code> → break the loop. These are the only two values that control loop flow.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad"><strong>Checking response text</strong> for words like "DONE", "Task complete", "Finished" to decide when to stop. String matching on model output is non-deterministic — the model rephrases freely and will break your regex.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A customer support agent handles flight rebooking. Mid-session the user shifts from "cancel my flight" to "reschedule instead." The loop terminates when it detects "Confirmed" in the model's reply — but the rescheduling tool call was never executed, leaving the booking in a broken state.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Check <code>stop_reason</code> programmatically:<br><code>if resp.stop_reason == "tool_use":</code><br><code>&nbsp;&nbsp;result = call_tool(resp)</code><br><code>&nbsp;&nbsp;messages.append(tool_result_msg)</code><br><code>elif resp.stop_reason == "end_turn": break</code><br>Never inspect <code>resp.content[0].text</code> for control flow.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>if "done" in resp.content[0].text.lower(): break</code> — fatally brittle. Model output is non-deterministic; a single rephrasing like "Task accomplished" bypasses this check and loops forever, or "I'm done thinking" exits prematurely.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d1">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">Tool Result Message Role</span><span class="mx-preview">Role must be "user" — not "tool" or "assistant"</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Tool Result Role</strong> <span class="sub-tag">SD 1.1</span></p><p>After executing a tool, the result must be appended as a <code>user</code>-role message with a <code>tool_result</code> content block. The turn alternation rule (user → assistant) applies here too.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>The only valid message roles are <code>"user"</code> and <code>"assistant"</code>. Tool results use role <code>"user"</code> with content type <code>"tool_result"</code> and must include the matching <code>tool_use_id</code>.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Using <code>role: "tool"</code> or <code>role: "assistant"</code> for the tool result message. The API returns a 400 error immediately — no retry will help until the role is corrected to <code>"user"</code>.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A CI code-review pipeline intermittently returns 400 errors after bash tool calls. The team spends two days blaming rate limits and network instability before discovering every tool result was appended with <code>role: "tool"</code>.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>messages.append({"role":"user","content":[{"type":"tool_result","tool_use_id":tool.id,"content":result}]})</code><br>This is the only valid structure. The model never sees the tool result if the role is wrong — it errors before reaching the model.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>{"role":"tool","content":result}</code> — invalid role. Also wrong: <code>{"role":"assistant","content":...}</code> which would put two consecutive assistant turns in history, violating turn alternation. Both cause immediate 400 API errors.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d1">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">Hub-and-Spoke Orchestration</span><span class="mx-preview">Coordinator orchestrates only — subagents get minimum context</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Hub-and-Spoke Multi-Agent</strong> <span class="sub-tag">SD 1.2</span></p><p>The coordinator is a pure orchestrator — it breaks work into tasks, delegates to specialist subagents, and synthesizes results. It never directly executes file writes, API calls, or tool operations itself.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Subagents receive <strong>minimum necessary context</strong> for their specific task — never the full coordinator conversation history. Each subagent's <code>allowedTools</code> is restricted to what that specific task requires.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Passing the coordinator's full conversation history to every subagent. This causes token explosion, cross-task context contamination, and hallucinations where one subagent's findings bleed into another's analysis.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A research synthesis system coordinator forwards its 200K-token conversation history to 8 parallel research subagents. Context limits are hit after 3 subagents complete; early results contaminate later agents' independent analysis, producing circular citations.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Coordinator creates targeted task payloads per subagent: <code>{"task":"analyze_Q3_revenue","sources":["doc_A","doc_B"],"allowedTools":["Read","search_db"]}</code>. Each subagent receives only its specific question and relevant sources. Coordinator synthesizes using only final subagent output objects.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Forwarding <code>full_coordinator_history</code> to subagents. Also: coordinator directly calling <code>write_file()</code> or <code>commit_code()</code> instead of delegating. Coordinators that execute are no longer coordinators — they become single-agent bottlenecks with all the risks of both patterns.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d1">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">Parallel Task Spawning</span><span class="mx-preview">All Task calls in ONE response = parallel; separate turns = sequential</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Parallel Subagent Execution</strong> <span class="sub-tag">SD 1.2 · 1.3</span></p><p>The orchestration runtime detects multiple Task tool calls emitted in a single coordinator response and executes them concurrently. This is the only mechanism for true parallelism in multi-agent systems.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Task calls in <strong>one coordinator message</strong> = concurrent execution. Task calls across <strong>separate coordinator turns</strong> = sequential execution. The distinction is entirely in how many Task calls appear in a single model response.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Emitting one Task call per coordinator response turn, expecting the runtime to batch them. Each separate turn creates a synchronization barrier — the coordinator waits for each subagent before spawning the next, eliminating all parallelism.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A CI/CD validation pipeline spawns 5 test-runner subagents sequentially — one per coordinator turn. The pipeline takes 25 minutes. After refactoring to emit all 5 Task calls in a single coordinator response, it runs in 5 minutes. Architecture was right; turn structure was wrong.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Single coordinator response with all Task calls:<br><code>[Task(service_A_tests), Task(service_B_tests), Task(service_C_tests)]</code><br>The orchestration layer sees 3 Task calls in one response and runs them concurrently. Coordinator collects all 3 results before proceeding to synthesis.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>for svc in services: claude.messages.create(tools=[task]...)</code> — each loop iteration waits for completion before spawning the next. Even if intent is parallel, sequential loop calls create sequential execution. The fix is emitting all Task calls in one message, not a loop.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d1">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">PreToolUse Hook Gate</span><span class="mx-preview">Exit non-zero = block tool. Programmatic enforcement beats any prompt rule.</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>PreToolUse Hook (Safety Gate)</strong> <span class="sub-tag">SD 1.5</span></p><p>Hooks in <code>settings.json</code> fire as bash scripts before (<code>PreToolUse</code>) or after (<code>PostToolUse</code>) tool execution. A non-zero exit from a PreToolUse hook blocks the tool call entirely — the model never executes it.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p><strong>Exit 0</strong> = allow tool. <strong>Exit non-zero</strong> = block tool, return error to model. This is infrastructure-level enforcement — it cannot be bypassed by model instructions, context pressure, or CLAUDE.md rules.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Adding safety policies to CLAUDE.md: "never delete files without confirmation" or "always ask before pushing to main." These are advisory — the model deprioritizes them under long context, high-autonomy prompts, or conflicting instructions.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A production DevOps agent runs <code>rm -rf /data/logs</code> during automated cleanup. The system prompt says "always confirm before deleting." During a long autonomous session, the model skips the confirmation. The policy was advisory; the enforcement was absent.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>settings.json</code> PreToolUse hook script:<br><code>#!/bin/bash</code><br><code>CMD=$(echo "$CLAUDE_TOOL_INPUT" | jq -r '.command')</code><br><code>if echo "$CMD" | grep -q "rm -rf"; then</code><br><code>&nbsp;&nbsp;echo "Blocked: destructive rm"; exit 1</code><br><code>fi</code><br>Tool blocked at infrastructure level regardless of model state.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">CLAUDE.md or system prompt "safety" instructions for destructive operations. Natural language policies are not enforcement mechanisms. Any instruction that relies on the model choosing to comply is advisory, not mandatory. Hooks are the only mandatory mechanism.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d1">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">PostToolUse Hook Normalization</span><span class="mx-preview">Normalize tool results BEFORE the model processes them</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>PostToolUse Hook (Result Normalization)</strong> <span class="sub-tag">SD 1.5</span></p><p>PostToolUse hooks intercept tool results after execution and before the model receives them. Use for: timestamp conversion, status code translation, output truncation, field filtering.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Normalization is infrastructure work, not model work. Converting Unix timestamps, HTTP status codes, or API error codes in a PostToolUse hook costs zero model tokens and produces deterministic output. Asking the model to "interpret" raw output costs tokens and introduces variance.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">System prompt instruction: "When you see a large integer above 1,700,000,000, treat it as a Unix timestamp and convert it." The model occasionally misidentifies port numbers (17000x) as timestamps, producing wrong date outputs.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>An operations monitoring agent receives raw Unix timestamps and HTTP status codes in tool results. The system prompt instructs the model to interpret them. After a large context session, the model starts misidentifying <code>17001</code> (a port number) as a near-2024 date, producing nonsensical log timestamps.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>PostToolUse hook script transforms output before the model sees it:<br><code>epoch_to_iso() { date -d @$1 +%Y-%m-%dT%H:%M:%SZ }</code><br>Result reaches model as <code>"timestamp":"2024-11-15T14:32:00Z"</code> — no interpretation needed, no token cost, no variance.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Any system prompt that asks the model to "interpret", "translate", or "convert" raw tool output values. Format normalization is deterministic infrastructure work. Delegating it to the model adds token cost, introduces variance, and creates a class of bugs that only appear after long context sessions.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d1">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D1</span><span class="mx-concept">Session Management (resume &amp; fork)</span><span class="mx-preview">--resume continues; fork_session branches without polluting shared history</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Session Resumption &amp; Forking</strong> <span class="sub-tag">SD 1.7</span></p><p>Two distinct session patterns: <code>--resume</code> continues an existing named session with full history. <code>fork_session</code> creates a new independent branch starting from a shared analysis baseline.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>On <code>--resume</code>: always inform the agent about file changes since the last session — stale tool results from the prior session are still in context and may not reflect current disk state. <code>fork_session</code> is for divergent explorations that must not contaminate each other.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Reopening an existing <code>--resume</code> session to explore an alternative architectural approach alongside the main implementation. Divergent intent in shared session history degrades model coherence for all subsequent decisions in that session.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A developer is midway through implementing a payment service via a named session. They want to explore an alternative database schema without losing progress. They resume the same session and ask "what if we used a different schema?" — poisoning the implementation context with competing architectural assumptions.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Call <code>fork_session</code> at the analysis baseline before the implementation decision. Fork A implements schema option 1. Fork B explores schema option 2. Both are independent. If B proves better, merge its findings into a fresh main session. The original implementation session remains uncontaminated.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Using <code>--resume</code> for exploratory "what if" branches. Also: resuming without notifying the agent of file changes — the agent acts on stale tool results from the prior session as if they reflect current state, silently operating on outdated assumptions.</p></div>
+  </div></div></div>
+
+  <!-- ── D2: Tools & MCP ── -->
+  <div class="mx-row" data-domain="d2">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D2</span><span class="mx-concept">MCP Error Isolation</span><span class="mx-preview">isError + isRetryable — the model needs both fields to act correctly</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>MCP Error Structure</strong> <span class="sub-tag">SD 2.2</span></p><p>MCP tool error responses require two programmatic signals: <code>isError: true</code> so the model knows the call failed, and <code>isRetryable</code> to tell it whether retrying makes sense.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p><code>isRetryable: false</code> for business rule errors (RIDE_FULL, INVALID_INPUT — retrying won't help). <code>isRetryable: true</code> for transient errors (network drop, rate limit — retry is appropriate). The model uses these flags to decide its next action.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Returning <code>{"message":"RIDE_FULL"}</code> with no <code>isError</code> flag. The model treats this as a successful tool response and attempts to "confirm the booking" — acting on the error string as if it were valid booking data.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A ride-booking tool returns <code>{"status":"error","message":"RIDE_FULL"}</code> without <code>isError</code>. The model receives a 200-style response, parses "RIDE_FULL" as a ride identifier, and proceeds to confirm a booking that doesn't exist. The user gets a confirmation email for a full ride.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>{"isError":true,"isRetryable":false,"errorCategory":"business_rule","errorCode":"RIDE_FULL","content":"No seats available on this ride"}</code><br>Model receives a clear signal: operation failed, don't retry, inform the user there are no available seats.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Swallowing errors into success-shaped responses. Any error payload without <code>isError: true</code> is indistinguishable from success to the model. Also: setting <code>isRetryable: true</code> on a <code>RIDE_FULL</code> error causes the model to retry the same booking request, wasting API calls and confusing the user.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d2">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D2</span><span class="mx-concept">Tool Count &amp; Selection Reliability</span><span class="mx-preview">4–5 tools max per agent — more degrades selection accuracy non-linearly</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Tool Count Limit</strong> <span class="sub-tag">SD 2.1</span></p><p>Model tool-selection reliability degrades measurably above 4–5 tools per agent context. The correct response to "we need more capability" is to create specialist subagents, not add more tools to one agent.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Above 5 tools: the model shows increased wrong-tool selection, unnecessary tool calls, and ambiguous routing. The degradation is non-linear — each tool added above 5 compounds the confusion. Split by capability domain, not by tool count preference.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Giving a "super agent" access to all 18 available tools to maximize its capability. The assumption "more tools = more capable" is backwards — more tools = worse routing decisions and higher error rate.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A product intelligence agent has 18 tools: search, analytics, CRM, email, calendar, Jira, Slack, code review, deploy, rollback, metrics, alerts, docs, wiki, pricing, inventory, contracts, billing. It calls the wrong tool in 30% of operations. Users blame "AI hallucination" — the real cause is tool overload.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Decompose into specialists: <code>PricingAgent(tools=[pricing, inventory, contracts])</code>, <code>OpsAgent(tools=[deploy, rollback, metrics, alerts])</code>, <code>CommAgent(tools=[email, slack, calendar])</code>. Coordinator routes to the correct specialist. Each agent has ≤4 tools; selection accuracy is near-deterministic.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>tools=[t1,t2,...,t18]</code> — passing all available tools to one agent context. Also: splitting tools by count rather than by semantic domain (e.g., "first 5 tools go to Agent A, next 5 to Agent B"). Split by capability cohesion, not by arbitrary count.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d2">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D2</span><span class="mx-concept">tool_choice Modes</span><span class="mx-preview">"auto" may give text; "any" forces a tool call; forced name locks exact schema</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>tool_choice Control</strong> <span class="sub-tag">SD 2.1</span></p><p>Three modes: <code>"auto"</code> (model chooses text or tool), <code>"any"</code> (model must call a tool, its choice), <code>{"type":"tool","name":"X"}</code> (model must call exactly tool X with schema X).</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p><code>"auto"</code> is for conversational flexibility. <code>"any"</code> is for guaranteed structured output without specifying which tool. <code>{"type":"tool","name":"X"}</code> is for guaranteed specific schema — the strongest constraint, used when you need a known JSON shape.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Using <code>tool_choice:"auto"</code> in extraction pipelines that require guaranteed structured output. "auto" allows the model to respond conversationally — "I found 3 records..." — instead of calling the extraction tool, breaking all downstream parsing.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A data extraction pipeline intermittently fails ERP insertions. Root cause: <code>tool_choice:"auto"</code> allows the model to return free-text summaries 4% of the time instead of calling the extraction tool. The 96% success rate masked the bug for 3 weeks of production use.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>For guaranteed schema: <code>tool_choice={"type":"tool","name":"extract_log_entry"}</code>. The model is physically incapable of returning a text response — the API enforces a tool call with the specified schema. ERP receives valid JSON on 100% of calls.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>tool_choice="auto"</code> in any deterministic pipeline. Also: using <code>"any"</code> when you need a specific schema — <code>"any"</code> lets the model pick among all available tools, which may not be the extraction tool. Use forced-name mode for schema-critical pipelines.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d2">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D2</span><span class="mx-concept">MCP Config Scoping</span><span class="mx-preview">.mcp.json = committed shared; ~/.claude.json = personal never committed</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>MCP Config File Scoping</strong> <span class="sub-tag">SD 2.4</span></p><p>Two config files, two scopes: <code>.mcp.json</code> in repo root is committed to version control and shared with all team members. <code>~/.claude.json</code> is personal, never committed, and contains individual credentials.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Credentials in <code>.mcp.json</code> must always use env var placeholders: <code>"GITHUB_TOKEN":"${GITHUB_TOKEN}"</code>. Personal config does NOT override project config — both files merge, with project config taking precedence on conflicts.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Storing literal token values in <code>.mcp.json</code>: <code>"SLACK_TOKEN":"xoxb-real-token-here"</code>. Even after deletion, git history preserves the secret permanently. Rotation after the fact doesn't remove the historical exposure.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A team's <code>.mcp.json</code> contains a live Slack token committed in sprint 3. Six months later, a security audit finds the token in git history. The token had been "deleted" in sprint 5 but was never rotated. The team must rotate it, revoke it, and audit 6 months of Slack activity for unauthorized access.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>.mcp.json</code>: <code>{"mcpServers":{"slack":{"env":{"SLACK_TOKEN":"${SLACK_TOKEN}"}}}}</code>. Each developer sets <code>export SLACK_TOKEN=xoxb-real-token</code> in their shell profile. CI sets it in secrets manager. The committed file contains zero sensitive values.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Any literal credential value in any committed config file — regardless of file name or extension. Also: thinking <code>~/.claude.json</code> settings "override" <code>.mcp.json</code> — they merge, not override. Personal config adds personal tools; project config is authoritative for shared server definitions.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d2">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D2</span><span class="mx-concept">MCP Resources (Content Catalogs)</span><span class="mx-preview">Agents start informed — no expensive discovery tool calls at startup</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>MCP Resource Catalogs</strong> <span class="sub-tag">SD 2.3</span></p><p>MCP resources expose pre-indexed content catalogs that agents can query at startup. Instead of calling <code>list_issues</code>, <code>list_repos</code>, <code>list_users</code> one-by-one, the agent reads a pre-built resource to start informed.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Resources reduce the number of discovery tool calls to zero. The agent reads <code>resources/project-catalog</code> once at startup and has all available issues, repos, and users in context — no sequential list calls, no startup latency chain.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Discovery-first pattern at every agent startup: <code>list_repos() → for each repo: list_issues()</code>. This sequential chain adds 8+ seconds of latency and burns tokens on data the agent could have received from a resource.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A project management agent makes 12 discovery calls at every task start: listing repos, issues, users, labels, milestones, and projects. Users notice an 8-second startup delay. The team optimizes the discovery loop but misses the root fix: replace discovery calls with a resource catalog.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>MCP server exposes <code>resources/project-catalog</code> containing pre-indexed issues, users, and labels. Agent startup: read one resource → agent is fully informed. No discovery tool calls. Startup time: milliseconds. Token cost: one resource read vs. 12 sequential tool calls.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Any agent that begins every session with a chain of <code>list_*</code> calls to understand its environment. If the data doesn't change per-request, it belongs in an MCP resource, not in a startup tool call sequence. Discovery loops are the symptom; missing resources are the diagnosis.</p></div>
+  </div></div></div>
+
+  <!-- ── D3: Claude Code ── -->
+  <div class="mx-row" data-domain="d3">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">CLAUDE.md Hierarchy &amp; Merging</span><span class="mx-preview">Additive merge — module CLAUDE.md extends root, never replaces it</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>CLAUDE.md Precedence</strong> <span class="sub-tag">SD 3.1</span></p><p>All CLAUDE.md files in the path from root to current working directory are read and merged additively. No file overrides another — they stack. Precedence: personal &lt; project root &lt; module &lt; subdirectory (each adds rules on top).</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>A module-level CLAUDE.md <strong>extends</strong> the root CLAUDE.md — it never replaces it. Every rule in the root applies in every module. Module files add module-specific rules on top. "All applicable files are merged" is the exam's exact language.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Assuming a module CLAUDE.md operates in isolation — that a rule not repeated in the module file doesn't apply there. Root rules always apply everywhere. A developer who omits "no direct commits to main" in the module CLAUDE.md has not exempted the module.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>Root CLAUDE.md: "never commit without passing tests." A module CLAUDE.md exists but doesn't repeat this rule. A developer argues the module is exempt. The CI gate disagrees — root rules apply in all modules because CLAUDE.md files merge additively across all directories in the path.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Root CLAUDE.md: global policies (commit rules, security boundaries, module dependency chain). Module CLAUDE.md: module-specific patterns only (service layer rules, event annotation stack, DTO conventions). Both are always active simultaneously in the module context.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Duplicating root rules into every module CLAUDE.md "just to be safe." This creates drift — when the root rule changes, module copies don't update. Worse: writing conflicting rules in a module CLAUDE.md to try to override root rules. Additive merging means conflicts don't cancel — both rules are active.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d3">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">settings.json Hooks (Programmatic Policy)</span><span class="mx-preview">Hooks enforce policy deterministically — CLAUDE.md can only advise</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Hook-Based Enforcement</strong> <span class="sub-tag">SD 3.2</span></p><p>Hooks wired in <code>settings.json</code> execute as bash scripts on <code>PreToolUse</code>, <code>PostToolUse</code>, and <code>Stop</code> events. They are the only mechanism that provides guaranteed policy enforcement regardless of model state.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>CLAUDE.md and system prompt instructions are <strong>advisory</strong> — the model can deprioritize them under context pressure. Hooks in <code>settings.json</code> are <strong>mandatory</strong> — they execute at the infrastructure layer and the model has no mechanism to bypass them.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Using CLAUDE.md to enforce safety-critical policies: "never push directly to main," "always run tests before committing," "never delete production data." These are advisory. The model may honor them until it doesn't — context pressure, long sessions, or conflicting instructions can override them.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A CLAUDE.md instruction "never push to main branch" is ignored in an automated pipeline during a long autonomous session. The model pushes directly to main, triggering an emergency rollback. Post-mortem: the instruction was advisory. The fix: <code>settings.json</code> PreToolUse hook that blocks any <code>git push origin main</code> at the infrastructure level.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>settings.json</code> hook script checks: <code>if echo "$INPUT" | jq -r '.command' | grep -q "push.*main"; then echo "Direct push to main blocked"; exit 1; fi</code>. This fires before every Bash tool call. The model cannot bypass it regardless of context or instructions.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Any CLAUDE.md behavioral instruction for safety-critical operations. The rule is simple: if non-compliance has production consequences, use a hook. If it's a stylistic preference, CLAUDE.md is fine. CLAUDE.md is for guidance; hooks are for enforcement.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d3">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">YAML Frontmatter Path Scoping</span><span class="mx-preview">paths: glob applies rules to cross-directory file patterns — not directory CLAUDE.md</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Path-Scoped Rules</strong> <span class="sub-tag">SD 3.1</span></p><p><code>.claude/rules/*.md</code> files with YAML frontmatter <code>paths: ["glob/**"]</code> load rules only for files matching those patterns — across any directory. More powerful than directory CLAUDE.md for cross-cutting patterns.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Directory CLAUDE.md only applies to files in that directory. YAML frontmatter <code>paths</code> globs apply to any matching file anywhere in the repo. Use frontmatter path scoping for conventions that cut across directory boundaries (e.g., all <code>*Service.java</code> files).</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Creating a CLAUDE.md in one directory to enforce a rule for a cross-cutting file pattern. A CLAUDE.md in <code>src/main/java/service/</code> does not apply to <code>*Service.java</code> files in other packages — only to files in that specific directory.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>An architect wants "all <code>*Service.java</code> files must document their <code>@Transactional</code> boundary" enforced across 15 packages. They create CLAUDE.md files in each package directory. Six months later, 3 packages have diverged rule versions and 2 new packages were added without CLAUDE.md files.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>.claude/rules/service-patterns.md</code> with frontmatter:<br><code>---</code><br><code>paths: ["**/src/main/java/**/*Service.java"]</code><br><code>---</code><br><code># Service Layer Rules...</code><br>One file, zero duplication, applies to all current and future Service files across all packages automatically.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Per-directory CLAUDE.md files for cross-cutting patterns. Results in: duplicated rules, divergent versions, missing coverage for new directories, maintenance debt that grows with every new package. YAML frontmatter path globs eliminate all of these failure modes.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d3">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Headless CI Mode (-p flag)</span><span class="mx-preview">-p prevents terminal hang in CI; --output-format json enables PR comment automation</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Non-Interactive Execution</strong> <span class="sub-tag">SD 3.5</span></p><p><code>-p / --print</code> flag runs Claude Code non-interactively — no terminal input required. Essential for CI/CD automation. <code>--output-format json</code> produces machine-parseable findings for downstream automation like inline PR comment posting.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Without <code>-p</code>, Claude Code in CI waits for interactive terminal input that never comes — the pipeline hangs indefinitely. Pair with <code>--allowedTools Read,Grep</code> to restrict tool use in automated contexts. Use <code>--output-format json</code> for structured findings, not text parsing.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Running <code>claude "review this PR"</code> in a CI pipeline without the <code>-p</code> flag. The process hangs waiting for interactive confirmation, blocking the pipeline for hours until manually killed. Also: parsing Claude's free-text output with string matching instead of using <code>--output-format json</code>.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A CI pipeline adds Claude Code for automated security review. Missing <code>-p</code> causes the GitHub Actions job to hang for 8 hours, consuming paid runner minutes, before timing out. Every subsequent run fails the same way. The team disables the feature for "reliability issues" — the real issue was one missing flag.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>claude -p "Review for SQL injection and missing auth checks" --output-format json --allowedTools Read,Grep --json-schema ./review-schema.json</code><br>Non-interactive ✓, structured output ✓, restricted tools ✓, schema-validated findings ✓. Results pipe directly into PR comment posting automation.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Any Claude Code invocation in CI without <code>-p</code>. Also: parsing Claude's text output with regex to extract findings — text output is non-deterministic in format and will break silently. <code>--output-format json</code> is the only reliable mechanism for machine consumption of Claude Code results.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d3">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Explore Subagent Context Isolation</span><span class="mx-preview">Verbose discovery in a subagent — coordinator gets summary, not 50K tokens of raw scan</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Explore Subagent Pattern</strong> <span class="sub-tag">SD 3.6</span></p><p>Spawn a dedicated Explore subagent for verbose codebase discovery. The subagent absorbs the full scan output. The main coordinator receives only the structured summary — preserving its context window for actual implementation work.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Running large-scale discovery (grep across 2000 files, full directory tree scan) in the main agent context consumes context capacity before any work begins. The Explore pattern routes that token cost to a disposable subagent context, leaving the coordinator's window clean.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Running codebase discovery directly in the main coordinator: "find all files that reference UserService and show their contents." After a large repo scan, 60% of context is raw file content the coordinator doesn't need — real work gets crowded out.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A refactoring agent in a 2000-file monorepo starts by scanning all files for legacy patterns. The raw scan output fills 60% of its context window. By the time refactoring begins, recent tool results are being dropped from context and the agent loses track of earlier findings.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Main agent spawns: <code>Task(subagent_type:"explore", prompt:"find all files referencing UserService, return only: file paths, line numbers, usage pattern")</code>. Coordinator receives: <code>{"files":["svc/A.java:42","repo/B.java:17"],"pattern":"constructor_injection"}</code> — 80 tokens, not 80,000.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Any large-scale file discovery operation in the main coordinator context. If the discovery output is more than a few hundred tokens, it belongs in an Explore subagent. The coordinator's context window is the most precious resource in a long agentic session — protect it.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d3">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Independent Session Review</span><span class="mx-preview">Fresh instance catches what the generator cannot see in its own output</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Self-Review Blind Spot</strong> <span class="sub-tag">SD 3.6</span></p><p>A Claude Code instance that generated code shares all the same assumptions, context, and blind spots with itself when asked to review that code. A fresh, independent instance has no generation context and produces genuinely independent review.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Fresh session = fresh eyes = different blind spots. The generator assumes a certain caller handles a specific error. The independent reviewer has no such assumption and catches the uncaught exception. This is the same reason code review must be done by someone other than the author.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">"Review the code you just wrote" in the same session. The model produced and reviews from the same context — it validates its own assumptions rather than challenging them. Self-review in the generating session produces false confidence, not genuine coverage.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A payment processing module passes its own self-review. An independent review session catches: an uncaught <code>NumberFormatException</code> on currency parsing, a race condition on concurrent updates, and missing input validation on the card number field. All three were present in the original but invisible to the generator's self-review.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>claude -p "Review src/payment/processor.java for: uncaught exceptions, race conditions, missing input validation, SQL injection risks. Be adversarial." --allowedTools Read,Grep</code><br>New terminal, fresh session, no generation context. Results are genuinely independent.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">"Now review what you just wrote" — same session, same context, same blind spots. Produces a review that validates the generator's assumptions instead of challenging them. The independent review session is not a convenience — it's an architectural requirement for genuine quality assurance.</p></div>
+  </div></div></div>
+
+  <!-- ── D4: Prompt Engineering ── -->
+  <div class="mx-row" data-domain="d4">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D4</span><span class="mx-concept">Forced JSON via tool_choice</span><span class="mx-preview">Schema as a tool + forced name = 100% structured output. System prompt "output JSON" = ~96%.</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Deterministic JSON Output</strong> <span class="sub-tag">SD 4.2</span></p><p>Define the target JSON structure as a tool schema. Set <code>tool_choice: {"type":"tool","name":"schema"}</code>. The API enforces the tool call at the serialization layer — prose instructions for format are bypassed entirely.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Tool schemas are enforced at the <strong>API serialization layer</strong>, not the natural language layer. The model physically cannot return anything other than a valid tool call matching the schema when forced. This is a fundamentally different guarantee from system prompt formatting instructions.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">System prompt: "Please output only valid JSON. No markdown. No explanation. No code fences." The model violates this 2–4% of the time under context pressure, adding explanatory text or markdown fences. That 2–4% failure rate breaks batch pipelines silently.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>An ERP integration pipeline ingests operational logs. The system prompt says "only output valid JSON." 2.3% of responses contain markdown fences or extra explanation, causing batch inserts to fail silently. 10,000 log records per day: 230 daily failures, reported as "intermittent ERP data gaps" for weeks before root cause is identified.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Define <code>log_entry_schema</code> tool with exact required fields. Set <code>tool_choice={"type":"tool","name":"log_entry_schema"}</code>. Every response is a schema-validated tool call — not prose. ERP receives valid JSON on 100% of calls. The pipeline never sees a markdown fence again.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Any combination of "please", "only", "always", "never" in system prompt format instructions for pipelines that require guaranteed structure. Natural language format instructions are advisory. They work well enough in demos and break silently in high-volume production. Tool schemas are the only reliable mechanism.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d4">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D4</span><span class="mx-concept">Few-Shot Turn Alternation</span><span class="mx-preview">Strict user→assistant alternation — two consecutive users = immediate 400 error</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Message Turn Alternation</strong> <span class="sub-tag">SD 4.4</span></p><p>The messages array must strictly alternate <code>user → assistant → user → assistant</code>. Tool results count as <code>user</code> role. Any consecutive same-role messages cause an immediate API 400 validation error.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Two consecutive <code>user</code> messages = 400 error, no exception. Two consecutive <code>assistant</code> messages = 400 error. Tool results appended as <code>user</code> role maintain alternation because the preceding tool call was in the <code>assistant</code> turn.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Adding multiple few-shot <code>user</code> examples in sequence to "show the model a conversation pattern." The developer sees a 400 error on every request and assumes authentication or rate limiting issues — the cause is consecutive user messages.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A developer adds 3 consecutive user messages to demonstrate input variation to the model. Every API call returns 400. They spend 2 days investigating API keys, network configuration, and SDK versions. The root cause: <code>[{role:"user",...},{role:"user",...},{role:"user",...}]</code> — three consecutive user messages.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Each user example must pair with an assistant response:<br><code>[{role:"user",content:"example input 1"},{role:"assistant",content:"example output 1"},{role:"user",content:"example input 2"},{role:"assistant",content:"example output 2"},{role:"user",content:"actual task"}]</code></p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>[{role:"user",content:"ex1"},{role:"user",content:"ex2"},{role:"user",content:"actual"}]</code> — three consecutive user messages. No exceptions to the alternation rule exist. If you need multiple user context blocks, combine them into a single user message using XML structure tags.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d4">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D4</span><span class="mx-concept">XML Structural Barriers</span><span class="mx-preview">&lt;constraints&gt; &lt;examples&gt; &lt;context&gt; — unambiguous section delimiters in complex prompts</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>XML Prompt Structure</strong> <span class="sub-tag">SD 4.3</span></p><p>XML tags (<code>&lt;context&gt;</code>, <code>&lt;constraints&gt;</code>, <code>&lt;examples&gt;</code>, <code>&lt;output_format&gt;</code>) create structural boundaries in prompts that the model reliably distinguishes. Critical for multi-section prompts where flat prose creates ambiguity.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Without XML structure, the model struggles to distinguish where one section ends and another begins in complex prompts. XML tags are semantically meaningful to the model — they are not cosmetic. They directly reduce constraint violations and section confusion.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Writing context, constraints, and examples as continuous paragraphs in complex prompts. The model conflates sections — applying constraints from the context paragraph or treating examples as constraints. Flat prose multi-section prompts produce inconsistent behavior at scale.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A financial analysis prompt mixes company context, output constraints, and examples in continuous prose. 15% of responses apply constraints from the "context" section and ignore the "constraints" section. The analyst team notices inconsistent report formats across batches but can't identify the root cause.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>&lt;context&gt;Company background...&lt;/context&gt;</code><br><code>&lt;constraints&gt;Format rules, scope limits...&lt;/constraints&gt;</code><br><code>&lt;examples&gt;Input/output pairs...&lt;/examples&gt;</code><br><code>&lt;output_format&gt;Exact JSON schema...&lt;/output_format&gt;</code><br>Each section is unambiguously delimited. Section confusion drops to near zero.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Flat prose prompts for multi-section instructions over ~200 tokens. Mixing constraints, context, and examples in sequential paragraphs without structural delimiters. The longer and more complex the prompt, the more section ambiguity compounds. XML structure is not optional for complex, production-grade prompts.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d4">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D4</span><span class="mx-concept">Schema Enforcement over Prose</span><span class="mx-preview">"enum":["A","B"] in schema = API-enforced. "Only output A or B" in text = advisory.</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>JSON Schema &gt; Prose Constraints</strong> <span class="sub-tag">SD 4.2</span></p><p>JSON Schema properties (<code>"enum"</code>, <code>"type"</code>, <code>"required"</code>, <code>"maxLength"</code>) constrain tool output at the API serialization layer. Prose instructions for the same constraints are advisory and produce inconsistent output.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p><code>"enum":["PASS","FAIL"]</code> in a tool schema means the model physically cannot return any other value. "Only respond with PASS or FAIL" in prose allows "Pass", "Fail.", "The verdict is PASS", "PASS with caveats" — all of which break downstream parsing.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Using prose instructions to constrain output values in pipelines: "respond with only 'PASS' or 'FAIL'." The model outputs "PASS with minor concerns" 8% of the time. The quality gate opens unconditionally because the string-matching check never sees exactly "PASS".</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A code quality gate expects exactly <code>"PASS"</code> or <code>"FAIL"</code> from the review model. Prose instruction produces "PASS with minor concerns" 8% of the time. The gate opens on ambiguous output — failing to block 80 problematic commits per month. The team discovers the bug only after a production incident.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Tool schema: <code>{"verdict":{"type":"string","enum":["PASS","FAIL"]},"reason":{"type":"string","maxLength":500}}</code> with <code>tool_choice={"type":"tool","name":"quality_verdict"}</code>. The model returns exactly <code>"PASS"</code> or <code>"FAIL"</code> with a bounded reason — no other output is structurally possible.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">"Only respond with X or Y" — prose enumeration is not schema enumeration. The model treats prose constraints as strong suggestions, not hard limits. Any downstream system that string-matches on model output without schema enforcement will encounter edge cases in production. Schema constraints eliminate the entire class of output-format bugs.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d4">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D4</span><span class="mx-concept">Retry with Error Feedback</span><span class="mx-preview">Append the specific validation error to the retry — generic "try again" repeats the same mistake</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Intelligent Retry Loop</strong> <span class="sub-tag">SD 4.5</span></p><p>When a model response fails validation, append the specific validation error to the retry prompt. The model uses that error to correct its output. Never retry without error context; never retry when source data simply doesn't contain the required field.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Two distinct cases: (1) <strong>Model formatting error</strong> — model had the data but formatted it wrong → retryable with error context. (2) <strong>Missing source data</strong> — the field doesn't exist in the source → not retryable, return a structured null/unavailable response instead.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Generic retry: "That response was invalid, please try again." The model has no information about what was wrong and produces the same error 77% of the time. Also: retrying indefinitely when the source data doesn't contain the required field — the model cannot extract what isn't there.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A structured extraction pipeline retries failed extractions with "Invalid response, please retry." The retry success rate is 23%. After switching to specific error feedback, the success rate rises to 89%. The 11% remaining failures are all cases where the source data genuinely didn't contain the required field.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>messages.append({"role":"user","content":f"Validation failed: field 'invoice_date' expected ISO 8601 (YYYY-MM-DD), received '{bad_value}'. Original source text: '{source_excerpt}'. Please correct only this field and return the full schema."})</code> — specific, actionable, includes the original source for reference.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Blind retry: <code>messages.append({"role":"user","content":"invalid, try again"})</code>. Also: infinite retry loop with no max-attempts guard — if the source doesn't have the field, the model will fail every attempt. Distinguish model error (retry with context) from missing data (return structured null, stop retrying).</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d4">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D4</span><span class="mx-concept">Explicit Criteria vs Vague Filtering</span><span class="mx-preview">"Flag only when X DIRECTLY CONTRADICTS Y" beats "be conservative" every time</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Categorical Criteria Design</strong> <span class="sub-tag">SD 4.1</span></p><p>Explicit categorical criteria ("flag only when the documented parameter type DIRECTLY CONTRADICTS the implementation") are deterministic and consistent across runs. Vague confidence filters ("only report high-confidence findings") delegate the filtering decision to the model's subjective judgment.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Confidence thresholds are subjective model estimates that vary across runs, models, and context states. Categorical criteria are binary decisions based on observable facts. High false positive rates in any category undermine developer trust across ALL categories — precision is existential for review tools.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">"Only flag high-confidence findings." "Be conservative." "When in doubt, don't flag." These instructions require the model to estimate its own confidence, which varies non-deterministically. Two identical inputs may produce different findings depending on context state.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A code review tool generates 50% false positives. The prompt says "only report high-confidence findings." Adding categorical criteria ("flag only when the function's documented return type directly conflicts with the actual return statement") reduces false positives from 50% to 8%. Same model, same data, different criteria precision.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Explicit flag criteria: <code>"Flag: documented type ≠ implementation type. Flag: null return in non-nullable context. Flag: missing required annotation. Never flag: style differences. Never flag: unverified assumptions about caller behavior."</code> Binary categories, not confidence scores. Deterministic across all runs.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">"Be conservative," "only flag clear issues," "use your judgment." These phrases outsource the filtering decision to the model's internal confidence estimator — which is neither calibrated nor consistent. Also: using confidence scores as primary output filters. Confidence is a posterior estimate, not a measurable fact about the code.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d4">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D4</span><span class="mx-concept">Batch API</span><span class="mx-preview">50% cost savings, 24h window — never use for blocking real-time workflows</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Asynchronous Batch Processing</strong> <span class="sub-tag">SD 4.6</span></p><p>Batch API processes requests asynchronously with a 24-hour processing window. Trade-off: 50% cost reduction in exchange for latency. No multi-turn tool calling support — each request is independent and stateless.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Batch API is correct for: nightly scans, weekly documentation generation, bulk historical enrichment, monthly report generation — any async, non-blocking, cost-sensitive, stateless workload. It is wrong for anything with a human or system waiting for the result.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Using Batch API for pre-merge code checks. The 24-hour window means developers wait up to a full day for merge approval. The 50% cost saving is real; the deployment velocity collapse is also real. Cost optimization cannot override workflow blocking requirements.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A team switches pre-merge security scans to Batch API to capture 50% cost savings. Developers must wait up to 24 hours for merge approval. Sprint velocity drops 40% as developers context-switch while waiting. After one sprint, the team reverts — cost savings cost more than they saved.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Batch API use cases: <code>nightly_security_scan.py</code> (runs at 2am, results in Jira by 8am), <code>weekly_doc_refresh.py</code> (updates all API docs overnight), <code>bulk_log_enrichment.py</code> (processes 6 months of historical logs). All async, all non-blocking, all cost-critical, none waiting on a human.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>batch_client.messages.batches.create()</code> for pre-merge gates, user-facing extractions, real-time monitoring alerts, or any workflow where a human or downstream system is synchronously waiting. No multi-turn tool calling means complex agentic workflows cannot use Batch API regardless of latency tolerance.</p></div>
+  </div></div></div>
+
+  <!-- ── D5: Context & Memory ── -->
+  <div class="mx-row" data-domain="d5">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D5</span><span class="mx-concept">Prompt Cache Breakpoint Placement</span><span class="mx-preview">Breakpoint at END of stable section, BEFORE dynamic content — never after user message</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Cache Breakpoint Strategy</strong> <span class="sub-tag">SD 5.1</span></p><p>Prompt cache breakpoints tell the API "cache everything up to this point." Place them at the end of each stable, reusable section. Up to 4 breakpoints per request. TTL: 5 minutes (ephemeral). Write cost: 1.25×. Hit cost: ~0.10×.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Cache breakpoints go <strong>after stable content, before dynamic content</strong>. Correct placement: (1) end of system prompt, (2) end of tool definitions, (3) end of reference docs, (4) end of conversation history. Dynamic content (current user message) is always AFTER the last breakpoint.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Placing a cache breakpoint after the user's current message. The cache key changes with every request (different user message), so every call generates a cache WRITE, never a hit. Cost is 1.25× instead of the intended 0.10× — worse than no caching.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A developer adds <code>cache_control: {"type":"ephemeral"}</code> to the end of the messages array (after the user's question). Every request generates a cache WRITE at 1.25× cost. Cache hits: zero. Monthly costs increase 25% vs. no caching. The developer concludes "prompt caching doesn't work for this use case." The breakpoint was in the wrong place.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>System prompt (static 10K tokens) → <code>cache_control: ephemeral</code> → Tool definitions (static 3K tokens) → <code>cache_control: ephemeral</code> → Conversation history (semi-static) → <code>cache_control: ephemeral</code> → User message (dynamic, NO cache marker). Cache hits on system prompt + tools = ~90% token cost reduction on those sections.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Cache breakpoint after dynamic content (user messages, tool results). Cache breakpoint in the middle of static content (splits cache unnecessarily). More than 4 breakpoints per request (limit is 4 — extra markers are ignored). Caching conversation history after a user message (changes per turn — hits nothing).</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d5">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D5</span><span class="mx-concept">Context Compaction (/compact)</span><span class="mx-preview">Use /compact proactively after exploration — waiting for auto-compaction risks losing specs mid-task</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Context Window Management</strong> <span class="sub-tag">SD 5.3</span></p><p><code>/compact</code> summarizes old conversation turns into a dense summary, freeing context window capacity. Use proactively after exploration phases and before implementation — before the context fills, not after.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Uncontrolled auto-compaction (hitting the limit mid-task) may summarize away critical tool results, file contents, or task constraints without developer oversight. Proactive <code>/compact</code> preserves control — the developer chooses when to compact and can verify the summary captures key findings.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Ignoring context growth throughout exploration + implementation in one unbroken session. Auto-compaction hits mid-implementation, vague-ifying the original specifications. The agent continues implementing against a degraded version of requirements.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A refactoring agent explores a monorepo, then begins implementation in the same session. Auto-compaction hits mid-refactor and summarizes "refactor payment service" — losing specific column rename targets, null-safety requirements, and the exact migration script constraints. The agent implements a partial, incorrect refactor and passes self-review.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Explicit workflow: (1) Exploration phase — discover files, understand patterns. (2) Run <code>/compact</code> — verify summary captures: target files, specific changes, constraints. (3) Implementation phase — work against clean context with dense, accurate summary. Compaction is a transition checkpoint, not an emergency measure.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Single unbroken session from exploration through implementation without <code>/compact</code>. Context window fills gradually, recent tool results displace earlier specifications. The agent's behavior degrades invisibly — it continues working but against increasingly vague understanding of the original requirements.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d5">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D5</span><span class="mx-concept">Case Facts Block</span><span class="mx-preview">Transactional facts live outside summarized history — injected into every prompt</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Persistent Transactional Context</strong> <span class="sub-tag">SD 5.1</span></p><p>Critical transactional facts (amounts, IDs, dates, order numbers) live in a structured "case facts" block injected into every prompt, outside the summarized conversation history. They are never summarized away.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Progressive summarization compresses "$47.82 refund for order #ORD-9821-4455 placed 2024-11-15" into "customer wants refund." Specific amounts and IDs are lost. The case facts block bypasses summarization by existing in the persistent, non-summarized section of every prompt.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Relying on conversation history to preserve transactional specifics across a long multi-turn session. Summarization is designed to compress — it will compress specific values into vague descriptions, causing the agent to act on approximate or incorrect data.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A customer support agent resolves a $47.82 dispute over 8 turns. By turn 6, summarization has compressed the amount. The agent offers a $40 credit. The customer disputes the shortfall. Post-mortem: the specific amount survived only 5 turns in conversational history before being summarized away.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>System prompt case facts block — injected on every turn, never summarized:<br><code>{"case_id":"CS-4821","claimed_amount":"$47.82","order_id":"ORD-9821-4455","order_date":"2024-11-15","sku":"ITEM-332"}</code><br>This block is structurally outside the conversation history — summarization cannot touch it.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Embedding transactional facts in early conversation turns and trusting them to survive summarization. They won't. Any specific value (amount, ID, date, quantity) that must remain accurate across a long session belongs in the persistent case facts block — not in the summarizable conversation history.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d5">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D5</span><span class="mx-concept">Lost-in-the-Middle</span><span class="mx-preview">Models process beginning and end reliably — critical findings go at the START of aggregated input</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Context Position Effect</strong> <span class="sub-tag">SD 5.4</span></p><p>Models reliably process information at the beginning and end of long context windows. Information positioned in the middle of large aggregated inputs is systematically deprioritized — it may be omitted from synthesis, summaries, and conclusions.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>When aggregating multiple subagent outputs or documents into a single synthesis context, position the most critical finding <strong>first</strong>, supporting detail after. Do not rely on the model to surface the most important content from middle positions through relevance scoring.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Appending subagent outputs in discovery order (alphabetical, chronological, arbitrary) and expecting the model to surface the most critical finding regardless of its position in the aggregated context. Middle-position critical findings are routinely omitted from executive summaries.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A legal research synthesis agent aggregates 8 source documents in alphabetical order. The critical regulatory risk finding is in document #4 — middle position. The executive memo omits it. A partner cannot sign off, the memo is rejected, and the team discovers the finding was present but positioned where the model deprioritizes it.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Coordinator explicitly reorders aggregated input by criticality before synthesis: highest-risk findings first, supporting evidence after. Or uses a named critical finding block: <code>&lt;critical_finding&gt;Regulatory exposure identified in Doc 4...&lt;/critical_finding&gt;</code> followed by supporting documents. Position is not cosmetic — it is architectural.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Appending subagent outputs in arbitrary order (return order, alphabetical, creation time) and trusting the synthesis model to surface the most important content. Implicit relevance ranking does not override the position effect. Critical findings must be explicitly positioned at the start of any large aggregated context.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d5">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D5</span><span class="mx-concept">Escalation Triggers</span><span class="mx-preview">Structural criteria only — frustrated tone is NOT a reliable escalation signal</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Structural Escalation Logic</strong> <span class="sub-tag">SD 5.2</span></p><p>Escalation triggers must be structural: explicit human request, policy gap (agent has no procedure for this case), or inability to make progress after N defined attempts. Sentiment-based triggers are probabilistic and produce false positives at high volume.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Sentiment analysis classifies tone, not need. An angry expert asking a solvable question does not need escalation. A polite novice with a policy gap does. The only reliable escalation signals are: explicit request, structural inability to resolve, or defined retry exhaustion.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Using negative sentiment score as an escalation trigger: "if sentiment &lt; -0.4, escalate." This floods human queues with tickets from users who were frustrated but would have been resolved on the next response. High false-positive escalation destroys human agent efficiency.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A support agent escalates 40% of tickets because users say "ridiculous" or "unacceptable." Post-analysis: 50% of escalated tickets were resolved on the very next agent message. Human agents are overwhelmed with unnecessary tickets. Team adds sentiment filtering thinking it's a feature; it's creating a workload crisis.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Escalation decision tree — all structural, zero sentiment:<br>1. User explicitly requests human? → escalate.<br>2. No agent procedure covers this case (policy gap)? → escalate.<br>3. Same issue unresolved after ≥3 attempts? → escalate.<br>No sentiment scoring. No tone analysis. Binary structural criteria only.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>if sentiment_score &lt; threshold: escalate()</code> — sentiment-based escalation. Also: escalating on first failure without a retry attempt (over-escalation). Also: never escalating regardless of inability to progress (under-escalation). Structural criteria produce consistent, measurable escalation rates. Sentiment scoring produces noise.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d5">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D5</span><span class="mx-concept">Confidence &amp; Source Attribution</span><span class="mx-preview">Every claim needs a source. Synthesis must preserve claim-source mappings through compression.</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Claim-Source Mapping</strong> <span class="sub-tag">SD 5.5</span></p><p>Subagents must output source attribution alongside every finding. Synthesis agents must preserve those mappings through compression. Confidence levels must be criteria-defined (based on observable evidence), not vibes-based (based on model self-assessment).</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>"Various documents" is not source attribution. Each claim requires a specific document, section, or data point reference. Confidence levels require explicit criteria: "high = direct quote, no ambiguity. medium = strongly implied. low = inferred, requires verification." Vague confidence is unusable downstream.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Synthesis agents that compress findings without preserving source mappings. The final report presents claims as synthesized facts with no traceable source — useless for legal, compliance, or audit contexts where every assertion must be verifiable.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A legal research synthesis produces a liability estimate memo. The source attribution reads "based on several reviewed documents." A partner cannot sign off without knowing which documents support the estimate. The memo is rejected and must be redone from scratch — with proper per-claim source attribution built into the subagent output schema.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>Subagent output schema includes mandatory attribution fields:<br><code>{"claim":"liability exposure in Q3","source":"Contract_v3.pdf §14.2","confidence":"high","confidence_reason":"Direct clause, unambiguous language"}</code><br>Synthesis agent output schema: same fields preserved. Never compress to "various sources."</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad"><code>{"finding":"medium liability exposure","source":"various documents"}</code> — vague attribution is not attribution. Also: synthesizing multiple claims into one attributed to a single source when they came from different documents. Each claim requires its own source. Synthesis may aggregate; it may not fabricate provenance.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d5">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D5</span><span class="mx-concept">Tool Output Trimming</span><span class="mx-preview">Keep only relevant fields — 40-field API responses waste thousands of tokens per call</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Context Economy</strong> <span class="sub-tag">SD 5.3</span></p><p>Every tool response appended verbatim to conversation history occupies permanent context. A 40-field API response providing 2–3 relevant fields wastes ~2,300 tokens per call. After 10 calls: 23,000 tokens of irrelevant data crowding out recent context.</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Context is a finite, non-renewable resource within a session. Every irrelevant token is a token taken from useful information. Tool output trimming — extracting only relevant fields before appending — is the most impactful single optimization for long agentic sessions.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Appending raw API responses verbatim to conversation history: "it's easier to let the model pick out what it needs." The model does not filter what it stores. Each verbatim response occupies context permanently until compaction. Context fills faster than expected and degrades sooner.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A carpool booking agent calls <code>get_ride_details()</code> 8 times per session. Each raw response is ~2,400 tokens (40 fields). After 8 calls, 19,200 tokens of irrelevant ride metadata fill the context window. The agent begins losing track of user preferences stated in early turns. Compaction hits early; recent decisions are dropped.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p>PostToolUse hook extracts relevant fields before model sees the response:<br><code>relevant = {"ride_id":r["id"],"seats":r["available_seats"],"departs":r["departure_time"],"driver":r["driver_name"]}</code><br>Model receives 80 tokens, not 2,400. Session lasts 25× longer before context pressure affects behavior.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Appending any verbose API response verbatim to conversation history. Also: "trimming" by asking the model to summarize its tool results — this uses the model for work that should be done deterministically in a PostToolUse hook. Trimming is infrastructure work, not model work. It should happen before the model sees the output, not after.</p></div>
+  </div></div></div>
+
+  </div><!-- end #reality-matrix -->
+  <!-- legacy D2 table removed — replaced by Reality Matrix above -->
+  <div style="display:none"><table>
     <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
     <tr><td>MCP config: project</td><td><code>.mcp.json</code> in repo root — committed, shared</td><td>Committing actual token values (use <code>${ENV_VAR}</code>)</td></tr>
     <tr><td>MCP config: personal</td><td><code>~/.claude.json</code> — never committed</td><td>Thinking personal config overrides project config</td></tr>
@@ -2879,7 +3329,7 @@ synthesis_report = {
     <tr><td>Escalation triggers</td><td>Explicit human request, policy gaps, inability to progress — structural criteria</td><td>Sentiment-based escalation — frustrated tone is NOT a reliable escalation trigger</td></tr>
     <tr><td>Scratchpad files</td><td>Persist key findings to a file; reference it across context boundaries</td><td>Relying on in-context memory across long exploration sessions</td></tr>
     <tr><td>Claim-source mappings</td><td>Subagents must output source attribution; synthesis agents must preserve it</td><td>Compressing findings without preserving which source supported each claim</td></tr>
-  </table></div>
+  </table></div></div><!-- end legacy hidden tables -->
 
   <!-- Project-Specific Quick Ref -->
   <div class="stitle">🚗 car-e-pool-api Key Facts (Project-Specific)</div>
@@ -2919,6 +3369,21 @@ synthesis_report = {
     <div>
       <h4>Final Architect Wisdom — The Exam in One Sentence</h4>
       <p>The CCA-F exam rewards architects who understand that <strong>deterministic constraints beat advisory guidance</strong> at every layer: tool schemas beat prose instructions, hooks beat system-prompt policies, <code>tool_choice</code> beats "please respond in JSON", and structured error metadata beats plain error strings. When you see a question asking to choose between a programmatic enforcement mechanism and a natural language instruction, always choose programmatic.</p>
+    </div>
+  </div>
+
+  <div id="hands-on-prep" class="stitle">🛠️ Hands-On Preparation</div>
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div>
+      <h4>Do the Exercises — Theory Alone Won't Pass You</h4>
+      <p>Biggest takeaway from people who passed: <strong>do the hands-on exercises yourself.</strong> Build an agent, design MCP tools, set up Claude Code in a real project, wire up a structured extraction pipeline. That practical experience is what actually prepares you for unexpected scenarios. Third-party practice questions floating around online are of very limited help — most only cover a narrow slice of what can actually appear on the exam.</p>
+      <ul style="margin-top:.6rem">
+        <li><strong>Build an agent</strong> — implement the full agentic loop: handle <code>stop_reason: "tool_use"</code> vs <code>"end_turn"</code>, append tool results with the correct <code>user</code> role, wire up a <code>PostToolUse</code> hook that normalizes timestamps before the model sees them</li>
+        <li><strong>Design MCP tools</strong> — write a real tool definition with <code>isError</code>, <code>isRetryable</code> set correctly per error type, and all credentials loaded from <code>${ENV_VAR}</code> — never hardcoded</li>
+        <li><strong>Set up Claude Code in a real project</strong> — create <code>CLAUDE.md</code> files at root and module level, wire a <code>PreToolUse</code> hook in <code>settings.json</code> that blocks a destructive command, run <code>claude -p</code> in a scripted (non-interactive) context with <code>--allowedTools</code></li>
+        <li><strong>Wire up a structured extraction pipeline</strong> — force JSON output with <code>tool_choice: &#123;"type":"tool"&#125;</code>, implement retry-with-error-feedback (append the validation error to the retry prompt), validate output against a JSON schema, add a non-AI fallback path</li>
+      </ul>
     </div>
   </div>
 
@@ -3975,6 +4440,30 @@ function toggleAcc(hdr) {
   hdr.classList.toggle('open');
   const body = hdr.nextElementSibling;
   if (body) body.classList.toggle('open');
+}
+
+function toggleMxRow(hdr) {
+  hdr.closest('.mx-row').classList.toggle('open');
+}
+
+function switchMxTab(tab) {
+  var mx = document.getElementById('reality-matrix');
+  if (tab === 'deep') { mx.classList.add('mode-deep'); } else { mx.classList.remove('mode-deep'); }
+  document.querySelectorAll('.mx-tab').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === tab); });
+}
+
+function filterMxDomain(domain, btn) {
+  document.querySelectorAll('.mx-filter').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var count = 0;
+  document.querySelectorAll('.mx-row').forEach(function(row){
+    var show = domain === 'all' || row.dataset.domain === domain;
+    row.classList.toggle('mx-hidden', !show);
+    if (!show) row.classList.remove('open');
+    if (show) count++;
+  });
+  var el = document.getElementById('mx-count');
+  if (el) el.textContent = count + ' concept' + (count !== 1 ? 's' : '');
 }
 
 function openSubnav(el) {
