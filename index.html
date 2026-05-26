@@ -355,6 +355,7 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
     <div class="nav-item" onclick="show('cheat',this);openSubnav(this)"><span>📋</span> Cheat Sheet <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span></span></div>
     <div class="nav-sub-list">
       <div class="nav-sub-item" onclick="scrollToSD('cheat','reality-matrix',this)"><span class="nav-sub-dot"></span>⚡ Reality Matrix</div>
+      <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d1',this)"><span class="nav-sub-dot"></span>🤖 D1 Quick Ref</div>
       <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d2',this)"><span class="nav-sub-dot"></span>🔧 D2 Quick Ref</div>
       <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d3',this)"><span class="nav-sub-dot"></span>💻 D3 Quick Ref</div>
       <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d4',this)"><span class="nav-sub-dot"></span>✍️ D4 Quick Ref</div>
@@ -3300,6 +3301,24 @@ synthesis_report = {
 
   <!-- ── Domain Quick-Reference Tables ── -->
   <div class="stitle">📊 Domain Quick-Reference Tables</div>
+
+  <!-- D1 Quick -->
+  <div class="stitle" id="qs-d1">🤖 D1: Agentic Systems (27%)</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Concept</th><th>Key Fact</th><th>Common Trap</th></tr>
+    <tr><td>stop_reason: "tool_use"</td><td>Model wants to call a tool — loop MUST continue: execute the tool, append result, call API again</td><td>Treating tool_use as terminal and stopping the loop — tool never executes</td></tr>
+    <tr><td>stop_reason: "end_turn"</td><td>Model is done; no further tool calls needed — loop exits here</td><td>Breaking the loop at tool_use instead of end_turn → infinite loop or missed tool call</td></tr>
+    <tr><td>Tool result role</td><td>Tool results MUST use the <code>user</code> role in the messages array</td><td>Using a <code>tool</code> role for tool results → API validation error</td></tr>
+    <tr><td>Agentic loop</td><td>ask → respond → if tool_use: call tool, append result as user message, ask again</td><td>Stopping after receiving the tool_use response without completing the round-trip</td></tr>
+    <tr><td>Orchestrator responsibility</td><td>Decomposes tasks, routes to subagents, synthesizes final output — does NOT execute domain tasks itself</td><td>Having the orchestrator perform domain work instead of delegating to subagents</td></tr>
+    <tr><td>Subagent context isolation</td><td>Each subagent receives only its specific task + relevant context; NOT the full orchestrator history</td><td>Passing entire conversation history to every subagent — context bloat, information leakage</td></tr>
+    <tr><td>PreToolUse hook</td><td>Fires before a tool executes; can block or modify the call — stronger than prompt guidance</td><td>Using system prompt instructions to prevent destructive tool calls instead of a hook</td></tr>
+    <tr><td>PostToolUse hook</td><td>Fires after a tool runs; normalizes / trims output before the model sees it</td><td>Letting raw verbose tool output append verbatim — trimming belongs in PostToolUse, not model work</td></tr>
+    <tr><td>Stop hook</td><td>Fires when the session ends; used for logging and dispatch (e.g. vault-writeback)</td><td>Expecting the Stop hook to cancel or roll back work — it is observational only</td></tr>
+    <tr><td>Hub-and-spoke pattern</td><td>Central coordinator routes tasks to specialized subagents; synthesizes results at the hub</td><td>Sequential pipeline — one agent calls the next in a chain; context grows unbounded, no synthesis layer</td></tr>
+    <tr><td>--resume flag</td><td>Continues an existing named session with full history intact</td><td>Starting a new session when resumption is needed — loses all prior context and continuity</td></tr>
+    <tr><td>fork_session</td><td>Creates an independent branch from a shared baseline without modifying the original session</td><td>Using fork_session when you need simple continuation (--resume) — wrong tool for sequential work</td></tr>
+  </table></div>
 
   <!-- D2 Quick -->
   <div class="stitle" id="qs-d2">🔧 D2: Tools &amp; MCP (18%)</div>
