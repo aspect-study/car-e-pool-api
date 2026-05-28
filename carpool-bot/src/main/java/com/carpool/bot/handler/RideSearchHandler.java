@@ -195,14 +195,19 @@ public class RideSearchHandler {
 
         if (rides.isEmpty()) {
             String timeContext = flowHelper.buildTimeContext(from, to);
+            boolean hasAnyActiveRide = rideService.getMyRides(carpoolUserId).stream()
+                    .anyMatch(r -> r.status() == RideStatus.ACTIVE || r.status() == RideStatus.FULL);
+            var bottomButton = hasAnyActiveRide
+                    ? BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE", ButtonStyle.SUCCESS.toString())
+                    : BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString());
             var rows = List.of(
                     List.of(
                             BotMessageBuilder.button("🔄 Try Different Time", "FIND_RIDE", null),
                             BotMessageBuilder.button("🔧 Adjust Filters",     "SEARCH_FILTER", null)
                     ),
                     List.of(
-                            BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString()),
-                            BotMessageBuilder.button("🏠 Menu",        "MAIN_MENU", ButtonStyle.PRIMARY.toString())
+                            bottomButton,
+                            BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                     )
             );
             bot.send(flowHelper.sendWithInline(chatId,

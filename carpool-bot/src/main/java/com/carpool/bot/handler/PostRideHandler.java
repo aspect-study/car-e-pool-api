@@ -615,16 +615,9 @@ public class PostRideHandler {
      * Returns true if a conflict was found (caller should return immediately).
      */
     private boolean sendConflictMessageIfAny(BotContext ctx, RideDirection direction) {
-        boolean hasActiveRide = rideService.getMyRides(ctx.carpoolUserId()).stream()
-                .anyMatch(r -> r.direction() == direction
-                        && (r.status() == RideStatus.ACTIVE
-                            || r.status() == RideStatus.FULL
-                            || r.status() == RideStatus.DEPARTED));
-
-        if (hasActiveRide) {
+        if (rideService.hasActiveRide(ctx.carpoolUserId(), direction)) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
-                    "⚠️ You already have an active " + direction.label() +
-                    " ride. Cancel or complete it first before posting a new one."));
+                    "You already have an active ride post for this direction. Please cancel it first."));
             stateManager.reset(ctx.chatId());
             return true;
         }
@@ -648,6 +641,13 @@ public class PostRideHandler {
     public void handleRepostRide(BotContext ctx) {
         try {
             RideResponse original = rideService.getRideById(ctx.entityId());
+
+            if (rideService.hasActiveRide(ctx.carpoolUserId(), original.direction())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "You already have an active ride post for this direction. Please cancel it first."));
+                return;
+            }
+
             LocalDate today = LocalDate.now(ZoneId.of("Asia/Manila"));
             UserState updated = getUserState(ctx, original, today);
 

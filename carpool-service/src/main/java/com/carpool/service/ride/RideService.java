@@ -63,10 +63,7 @@ public class RideService {
             throw new InsufficientRoleException("DRIVER");
         }
 
-        boolean hasActiveRide = rideRepository.existsByDriverIdAndDirectionAndStatusIn(
-                driverUserId, request.direction(), List.of(RideStatus.ACTIVE, RideStatus.FULL));
-
-        if (hasActiveRide) {
+        if (hasActiveRide(driverUserId, request.direction())) {
             throw new InvalidRideStateException(
                     "You already have an active " + request.direction().label() +
                     " ride. Cancel or complete it first before posting a new one.");
@@ -132,6 +129,12 @@ public class RideService {
         return mapper.toRideResponse(saved);
     }
 
+    @Transactional(readOnly = true)
+    public boolean hasActiveRide(Long driverId, RideDirection direction) {
+        return rideRepository.existsByDriverIdAndDirectionAndStatusIn(
+                driverId, direction, List.of(RideStatus.ACTIVE, RideStatus.FULL));
+    }
+
     /**
      * Driver publishes, departs, cancels, or completes a ride.
      * Allowed transitions:
@@ -159,6 +162,13 @@ public class RideService {
         }
 
         validateStatusTransition(ride.getStatus(), request.status());
+
+        if (request.status() == RideStatus.ACTIVE && ride.getStatus() == RideStatus.DRAFT
+                && hasActiveRide(requestingUserId, ride.getDirection())) {
+            throw new InvalidRideStateException(
+                    "You already have an active " + ride.getDirection().label() +
+                    " ride. Cancel or complete it first before posting a new one.");
+        }
 
         RideStatus previous = ride.getStatus();
         ride.setStatus(request.status());
