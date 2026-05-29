@@ -60,9 +60,15 @@ For the bot-side CarpoolBot methods (sendToGroup, sendToUser, group buttons, han
 
 Conflict checks are direction-scoped — a user can drive HOME_TO_WORK and hold a WORK_TO_HOME passenger booking at the same time. `RideDirection.label()` returns a human-readable string (`"home-to-work"`, `"work-to-home"`, `"other"`) used in all error messages.
 
+**`RideService.hasActiveRide(Long driverId, RideDirection direction)` — public helper:**
+Single source of truth for the active-ride guard. Calls `rideRepository.existsByDriverIdAndDirectionAndStatusIn(driverId, direction, [ACTIVE, FULL])`. Used by `createRide()`, `updateRideStatus()`, and bot-side handlers — never duplicated inline.
+
 **`RideService.createRide()` guards (before inserting the ride):**
-- `rideRepository.existsByDriverIdAndDirectionAndStatusIn(driverId, direction, [ACTIVE, FULL])` — throws `InvalidRideStateException` if driver already has an active same-direction ride.
+- `hasActiveRide(driverId, direction)` — throws `InvalidRideStateException` if driver already has an active same-direction ride.
 - `bookingRepository.existsByPassengerIdAndRide_DirectionAndStatusIn(driverId, direction, [CONFIRMED, PENDING])` — throws `InvalidRideStateException` if the same user has an active same-direction passenger booking.
+
+**`RideService.updateRideStatus()` guard (DRAFT → ACTIVE transition):**
+Before `rideRepository.save()`, checks `hasActiveRide(requestingUserId, ride.getDirection())`. The guard runs while the ride is still DRAFT so the query does not find the current ride. Throws `InvalidRideStateException` if another ACTIVE/FULL ride exists in the same direction. Closes the gap where two DRAFT rides created via the API (or a double-tap race) could both be published.
 
 **`BookingService.createBooking()` step 5b:**
 - `rideRepository.existsByDriverIdAndDirectionAndStatusIn(passengerId, direction, [ACTIVE, FULL, DEPARTED])` — throws `InvalidRideStateException` if the passenger has a same-direction driver ride in progress. DEPARTED is included here (not in `createRide`) because a departed ride is actively running.

@@ -21,7 +21,7 @@ Telegram bot module. Depends on `carpool-service`. All bot interaction logic liv
 Conflict checks are direction-scoped — a user can drive HOME_TO_WORK while holding a WORK_TO_HOME passenger booking. All bot-side checks are early-warning UX; `RideService.createRide()` and `BookingService.createBooking()` are the authoritative service-layer gates (see `carpool-service/CLAUDE.md`).
 
 **Post-ride flow — `PostRideHandler.sendConflictMessageIfAny(BotContext ctx, RideDirection direction)`:**
-Private helper called at two points: (1) `handleStartPostRide()` when direction is already in state (repost/AI pre-fill path), and (2) `handleDirectionCallback()` when flow == `POST_RIDE_DIRECTION`. Streams `rideService.getMyRides()` for ACTIVE/FULL/DEPARTED driver rides in the same direction, then streams `bookingService.getMyBookings()` for same-direction passenger bookings. On any conflict, sends a message, calls `stateManager.reset()`, and returns `true` so the caller returns immediately. Always passes a non-null `direction` — `handleStartPostRide` guards with `if (direction == null) return` before calling this helper.
+Private helper called at two points: (1) `handleStartPostRide()` when direction is already in state (repost/AI pre-fill path), and (2) `handleDirectionCallback()` when flow == `POST_RIDE_DIRECTION`. Calls `rideService.hasActiveRide(carpoolUserId, direction)` for a single DB EXISTS query (replaces the previous stream over `getMyRides()`), then streams `bookingService.getMyBookings()` for same-direction passenger bookings. On any conflict, sends a message, calls `stateManager.reset()`, and returns `true` so the caller returns immediately. Always passes a non-null `direction` — `handleStartPostRide` guards with `if (direction == null) return` before calling this helper.
 
 **Post-ride flow — `MessageHandler` reply keyboard path:**
 `MessageHandler` injects both `RideService` and `BookingService`. When flow == `POST_RIDE_DIRECTION` and the user taps the persistent reply keyboard direction button (instead of the inline selector), `MessageHandler` runs the same inline conflict check before calling `postRideHandler.askForEtd()`.
@@ -31,6 +31,9 @@ Triggered when direction is already in state (e.g. "Try Different Time" re-entry
 
 **Search flow — direction selection paths:**
 `PostRideHandler.handleDirectionCallback()` (flow == `SEARCH_SELECT_DIRECTION`) and `MessageHandler` (flow == `SEARCH_SELECT_DIRECTION` reply keyboard) both run the same driver-ride + passenger-booking inline check before showing the calendar.
+
+**Search results — empty-results CTA:**
+`RideSearchHandler.showFilteredRides()` shows a "🚗 Post a Ride" bottom button when no rides are found — a nudge for passengers to become drivers. When the user already has any ACTIVE or FULL ride (checked via `rideService.getMyRides()` stream, any direction), this button is replaced with "🔍 Find a Ride" so a driver is never prompted to post a duplicate ride from within the search flow.
 
 ## Session Recovery
 
@@ -114,6 +117,8 @@ This invariant is enforced in:
 ## Repost Edit Screen
 
 `PostRideHandler.handleRepostRide()` pre-fills origin, destination, direction, seats, contribution, and notes from the original ride into `UserState`, sets `repostEditMode = true`, and shows an inline edit screen via `showRepostEditScreen()`. The driver can tap any field button (📍 Edit Start, 🏁 Edit End, 🪑 Edit Seats, ⛽ Edit Share, 📝 Edit Note) to edit it; each edit returns to the same edit screen. Tapping "✅ Continue" calls `handleRepostProceed()` which shows the calendar picker. After date selection, the flow goes to vehicle selection (`showVehicleSelectStep`), then confirmation — the same path as a new ride.
+
+**Stale-button guard:** After loading the original ride, `handleRepostRide()` calls `rideService.hasActiveRide(carpoolUserId, original.direction())`. If an active ride already exists in the same direction, the user receives "You already have an active ride post for this direction. Please cancel it first." and the flow is aborted. Prevents tapping old "Repost" buttons from Telegram chat history when the driver already has an active post.
 
 ## AI Natural Language Ride Posting
 
