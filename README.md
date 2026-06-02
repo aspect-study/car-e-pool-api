@@ -42,6 +42,32 @@ A full-stack carpooling platform for employees to share rides to and from work. 
 
 ---
 
+## Screenshots
+
+### Telegram Bot
+
+| Bot | Main Menu | Post a Ride |
+|:---:|:---------:|:-----------:|
+| ![Bot](assets/screenshots/bot.png) | ![Main Menu](assets/screenshots/main-menu.png) | ![Post a Ride](assets/screenshots/post.png) |
+
+| Find a Ride | Search Results | Repost |
+|:-----------:|:--------------:|:------:|
+| ![Find a Ride](assets/screenshots/find.png) | ![Search Results](assets/screenshots/searchpng.png) | ![Repost](assets/screenshots/repost.png) |
+
+| Group Announcement | Profile | Hubs |
+|:-----------------:|:-------:|:----:|
+| ![Group](assets/screenshots/Group.png) | ![Profile](assets/screenshots/prof.png) | ![Hubs](assets/screenshots/hub.png) |
+
+### User Manual (GitHub Pages)
+
+| User Manual | Business Rules | Window |
+|:-----------:|:--------------:|:------:|
+| ![User Manual](assets/screenshots/usermanual.png) | ![Business Rules](assets/screenshots/businessrule.png) | ![Window](assets/screenshots/window.png) |
+
+> 📖 Full manual: [tinyurl.com/carpool-manual](https://tinyurl.com/carpool-manual)
+
+---
+
 ## Architecture
 
 Multi-module Maven project with a strict one-way dependency chain:
