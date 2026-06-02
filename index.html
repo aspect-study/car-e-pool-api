@@ -791,10 +791,10 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 
   <div class="stitle">Booking Status Flow</div>
   <div class="flow" style="flex-direction:column;align-items:flex-start;gap:.5rem">
-    <div style="display:flex;align-items:center;gap:0"><span class="flow-step w">PENDING</span><span class="flow-arrow">→ driver accepts →</span><span class="flow-step s">CONFIRMED</span><span class="flow-arrow">→ ride completes →</span><span class="flow-step s">COMPLETED</span></div>
-    <div style="display:flex;align-items:center;gap:0;padding-left:0"><span class="flow-step w">PENDING</span><span class="flow-arrow">→ driver declines →</span><span class="flow-step d">DECLINED</span></div>
-    <div style="display:flex;align-items:center;gap:0"><span class="flow-step s">CONFIRMED</span><span class="flow-arrow">→ passenger cancels →</span><span class="flow-step d">CANCELLED_BY_PASSENGER</span></div>
-    <div style="display:flex;align-items:center;gap:0"><span class="flow-step s">CONFIRMED</span><span class="flow-arrow">→ driver cancels/removes →</span><span class="flow-step d">CANCELLED_BY_DRIVER</span></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:.35rem"><span class="flow-step w">PENDING</span><span class="flow-arrow">→ driver accepts →</span><span class="flow-step s">CONFIRMED</span><span class="flow-arrow">→ ride completes →</span><span class="flow-step s">COMPLETED</span></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:.35rem"><span class="flow-step w">PENDING</span><span class="flow-arrow">→ driver declines →</span><span class="flow-step d">DECLINED</span></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:.35rem"><span class="flow-step s">CONFIRMED</span><span class="flow-arrow">→ passenger cancels →</span><span class="flow-step d">CANCELLED_BY_PASSENGER</span></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:.35rem"><span class="flow-step s">CONFIRMED</span><span class="flow-arrow">→ driver cancels/removes →</span><span class="flow-step d">CANCELLED_BY_DRIVER</span></div>
   </div>
   <p style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">No auto-expiry — PENDING bookings stay open until the driver responds or you cancel manually.</p>
 
