@@ -6,89 +6,106 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CCA-F Exam Blueprint | car-e-pool-api</title>
 <style>
-:root{--bg:#0D1117;--surface:#161B22;--card:#1C2128;--border:#30363D;--accent:#FF7043;--accent-dim:rgba(255,112,67,.12);--text:#E6EDF3;--muted:#8B949E;--code:#21262D;--success:#3FB950;--warn:#D29922;--info:#58A6FF;--danger:#F85149;--purple:#BC8CFF;--sw:260px}
-[data-theme="light"]{--bg:#F6F8FA;--surface:#fff;--card:#F0F2F4;--border:#D0D7DE;--text:#1F2328;--muted:#656D76;--code:#E8EAED}
+:root{--bg:#0d0d0d;--surface:#111111;--card:#161616;--border:#252525;--accent:#00FF41;--accent-dim:rgba(0,255,65,.08);--text:#ccffcc;--muted:#5a8a5a;--code:#0a0a0a;--success:#00FF41;--warn:#FFB300;--info:#00FFFF;--danger:#FF4444;--purple:#CC88FF;--sw:260px}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:15px}
+body{font-family:'JetBrains Mono','Courier New',monospace;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.7}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(transparent 0px,transparent 1px,rgba(0,0,0,0.04) 1px,rgba(0,0,0,0.04) 2px)}
 a{color:inherit;text-decoration:none}
 
 /* ── Sidebar ── */
 .sidebar{width:var(--sw);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;z-index:100}
-.sb-logo{padding:1.25rem 1rem .75rem;border-bottom:1px solid var(--border)}
-.sb-logo h1{font-size:.85rem;font-weight:800;color:var(--accent);letter-spacing:.07em;text-transform:uppercase}
-.sb-logo p{font-size:.72rem;color:var(--muted);margin-top:.2rem}
-.sb-nav{padding:.75rem .5rem;flex:1}
-.nav-lbl{font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.5rem .5rem .2rem}
-.nav-item{display:flex;align-items:center;gap:.45rem;padding:.42rem .65rem;border-radius:6px;cursor:pointer;font-size:.82rem;color:var(--muted);transition:all .12s;margin-bottom:.1rem}
-.nav-item:hover,.nav-item.active{background:var(--accent-dim);color:var(--accent)}
-.nav-item .badge{margin-left:auto;background:var(--accent);color:#fff;font-size:.6rem;padding:.08rem .38rem;border-radius:10px;font-weight:800}
-.sb-footer{padding:.75rem 1rem;border-top:1px solid var(--border)}
+.sb-top{padding:.75rem 1rem .6rem;border-bottom:1px solid var(--border)}
+.sb-title{font-size:.78rem;font-weight:800;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
+.sb-prompt{font-size:.7rem;color:var(--muted);margin-top:.2rem;font-family:'JetBrains Mono','Courier New',monospace}
+.sb-nav{padding:.6rem .4rem;flex:1}
+.nav-folder{font-size:.7rem;color:var(--muted);padding:.4rem .6rem .2rem;letter-spacing:.04em}
+.nav-item{display:flex;align-items:center;padding:.32rem .5rem;cursor:pointer;font-size:.78rem;color:var(--muted);transition:color .1s;margin-bottom:.02rem;font-family:'JetBrains Mono','Courier New',monospace;white-space:nowrap;overflow:hidden;gap:0}
+.nav-item:hover{color:var(--text)}
+.nav-item.active{color:var(--accent)}
+.nav-tree{flex-shrink:0;width:2.2rem;color:var(--border)}
+.nav-item.active .nav-tree{color:var(--accent)}
+.nav-star{font-size:.68rem;color:var(--muted);margin-right:.3rem;flex-shrink:0;min-width:3.2rem}
+.nav-item.active .nav-star{color:var(--accent)}
+.nav-label{flex:1;overflow:hidden;text-overflow:ellipsis}
+.nav-weight{font-size:.68rem;color:var(--muted);flex-shrink:0;padding-left:.4rem}
+.nav-item.active .nav-weight{color:var(--accent)}
+.sb-footer{padding:.6rem 1rem;border-top:1px solid var(--border)}
+.sb-footer-hdr{font-size:.65rem;color:var(--muted);letter-spacing:.06em;margin-bottom:.3rem}
+.sb-footer-count{font-size:.8rem;color:var(--accent);font-weight:700}
 
 /* ── Main ── */
-.main{margin-left:var(--sw);flex:1;padding:2rem;max-width:calc(100vw - var(--sw))}
+.main{margin-left:var(--sw);flex:1;padding:2rem;padding-bottom:36px;max-width:calc(100vw - var(--sw))}
+
+/* ── Status bar ── */
+.status-bar{position:fixed;bottom:0;left:0;right:0;height:28px;background:#0a0a0a;border-top:1px solid var(--accent);display:flex;align-items:center;padding:0 1rem;gap:1.5rem;z-index:200;font-size:.65rem;font-family:'JetBrains Mono','Courier New',monospace;color:var(--muted);white-space:nowrap;overflow:hidden}
+.status-bar .sb-left{font-weight:800}
+.status-bar .sb-flagged{color:var(--accent);font-weight:800;margin-left:auto}
+.status-bar .sb-right{color:var(--muted)}
 .section{display:none}.section.active{display:block}
 
 /* ── Domain header ── */
-.dom-hdr{background:linear-gradient(135deg,var(--card) 0%,var(--surface) 100%);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:1.4rem 1.5rem;margin-bottom:1.5rem}
-.dom-hdr h2{font-size:1.2rem;font-weight:800;margin-bottom:.4rem}
-.dom-hdr p{color:var(--muted);font-size:.875rem;line-height:1.65}
-.weight-row{display:flex;align-items:center;gap:.75rem;margin-top:.9rem}
-.weight-bar{height:8px;background:var(--border);border-radius:4px;flex:1}
-.weight-fill{height:100%;background:var(--accent);border-radius:4px}
-.weight-lbl{font-size:.82rem;font-weight:800;color:var(--accent);white-space:nowrap}
+.dom-hdr{background:var(--surface);border:1px solid var(--accent);border-radius:0;padding:1.2rem 1.5rem;margin-bottom:1.5rem}
+.dom-hdr h2{font-size:.95rem;font-weight:800;margin-bottom:.45rem;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.dom-hdr p{color:var(--muted);font-size:.83rem;line-height:1.65}
+.weight-row{display:flex;align-items:center;gap:.75rem;margin-top:.85rem}
+.weight-bar-text{color:var(--accent);font-size:.82rem;letter-spacing:.02em;font-family:'JetBrains Mono','Courier New',monospace}
+.weight-lbl{font-size:.78rem;font-weight:800;color:var(--accent);white-space:nowrap}
 
 /* ── Grid ── */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
 
 /* ── Card ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.25rem}
-.card h3{font-size:.88rem;font-weight:700;margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:0;padding:1.1rem 1.25rem}
+.card h3{font-size:.88rem;font-weight:700;margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem;color:var(--text)}
+.card h3::before{content:'> ';color:var(--accent);flex-shrink:0}
+.mark-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:.1rem .38rem;border-radius:0;cursor:pointer;font-size:.65rem;font-family:'JetBrains Mono','Courier New',monospace;margin-left:auto;flex-shrink:0;transition:all .12s}
+.mark-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mark-btn.marked{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .card p,.card li{font-size:.83rem;color:var(--muted);line-height:1.65}
 .card ul{padding-left:1.1rem;margin-top:.4rem}
 .card li{margin-bottom:.2rem}
 
 /* ── Callouts ── */
-.callout{border-radius:8px;padding:.9rem 1.1rem;margin:.9rem 0;display:flex;gap:.7rem;align-items:flex-start}
-.callout-icon{font-size:1.1rem;flex-shrink:0;margin-top:.05rem}
+.callout{border-radius:0;padding:.9rem 1.1rem;margin:.9rem 0;display:flex;gap:.7rem;align-items:flex-start}
+.callout-icon{font-size:.72rem;font-weight:800;flex-shrink:0;margin-top:.15rem;font-family:'JetBrains Mono','Courier New',monospace;letter-spacing:.03em;min-width:3.5rem}
 .callout h4{font-size:.82rem;font-weight:700;margin-bottom:.25rem}
 .callout p,.callout li{font-size:.82rem;line-height:1.6}
 .callout ul{padding-left:1rem;margin-top:.3rem}
-.callout.wisdom{background:rgba(188,140,255,.1);border:1px solid rgba(188,140,255,.3)}.callout.wisdom h4{color:var(--purple)}
-.callout.tip{background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3)}.callout.tip h4{color:var(--success)}
-.callout.warn{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3)}.callout.warn h4{color:var(--warn)}
-.callout.danger{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3)}.callout.danger h4{color:var(--danger)}
-.callout.info{background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3)}.callout.info h4{color:var(--info)}
+.callout.wisdom{background:rgba(204,136,255,.04);border:none;border-left:3px solid var(--purple)}.callout.wisdom h4{color:var(--purple)}.callout.wisdom .callout-icon{color:var(--purple)}
+.callout.tip{background:rgba(0,255,65,.04);border:none;border-left:3px solid var(--success)}.callout.tip h4{color:var(--success)}.callout.tip .callout-icon{color:var(--success)}
+.callout.warn{background:rgba(255,179,0,.04);border:none;border-left:3px solid var(--warn)}.callout.warn h4{color:var(--warn)}.callout.warn .callout-icon{color:var(--warn)}
+.callout.danger{background:rgba(255,68,68,.04);border:none;border-left:3px solid var(--danger)}.callout.danger h4{color:var(--danger)}.callout.danger .callout-icon{color:var(--danger)}
+.callout.info{background:rgba(0,255,255,.04);border:none;border-left:3px solid var(--info)}.callout.info h4{color:var(--info)}.callout.info .callout-icon{color:var(--info)}
 
 /* ── Accordion ── */
-.acc{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:.9rem}
+.acc{border:1px solid var(--border);border-radius:0;overflow:hidden;margin-bottom:.9rem}
 .acc-hdr{background:var(--card);padding:.85rem 1.1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:.87rem;transition:background .12s;user-select:none}
 .acc-hdr:hover{background:var(--surface)}
-.acc-hdr .chev{transition:transform .2s;color:var(--muted)}
-.acc-hdr.open .chev{transform:rotate(180deg)}
+.acc-hdr .chev{color:var(--accent);font-family:'JetBrains Mono','Courier New',monospace;font-size:.78rem;flex-shrink:0}
 .acc-body{display:none;padding:1.1rem 1.25rem;background:var(--surface);border-top:1px solid var(--border)}
 .acc-body.open{display:block}
 
 /* ── Code ── */
 .code-wrap{position:relative;margin:.7rem 0}
-.code-lbl{display:flex;align-items:center;justify-content:space-between;background:var(--border);padding:.3rem .9rem;border-radius:8px 8px 0 0;font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.04em}
-pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;overflow-x:auto;font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-size:.78rem;line-height:1.65;tab-size:2}
-.code-lbl+pre{border-top:none;border-radius:0 0 8px 8px}
-.copy-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:.18rem .5rem;border-radius:4px;cursor:pointer;font-size:.68rem;font-family:inherit;transition:all .12s}
+.code-lbl{display:flex;align-items:center;justify-content:space-between;background:transparent;border-bottom:1px solid var(--accent);padding:.3rem .9rem;border-radius:0;font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.04em}
+pre{background:var(--code);border:1px solid var(--border);border-radius:0;padding:.9rem 1rem;overflow-x:auto;font-family:'JetBrains Mono','Courier New',monospace;font-size:.78rem;line-height:1.65;tab-size:2}
+.code-lbl+pre{border-top:none;border-radius:0}
+.copy-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:.18rem .5rem;border-radius:0;cursor:pointer;font-size:.68rem;font-family:'JetBrains Mono','Courier New',monospace;transition:all .12s}
 .copy-btn:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
-.copy-btn.copied{background:rgba(63,185,80,.2);color:var(--success);border-color:var(--success)}
+.copy-btn.copied{background:rgba(0,255,65,.1);color:var(--success);border-color:var(--success)}
 
 /* ── Compare panels ── */
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
-.cmp-panel{border-radius:8px;overflow:hidden}
+.cmp-panel{border-radius:0;overflow:hidden}
 .cmp-hdr{padding:.4rem .9rem;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
 .cmp-panel.bad .cmp-hdr{background:rgba(248,81,73,.2);color:var(--danger);border:1px solid rgba(248,81,73,.3);border-bottom:none}
 .cmp-panel.good .cmp-hdr{background:rgba(63,185,80,.2);color:var(--success);border:1px solid rgba(63,185,80,.3);border-bottom:none}
-.cmp-panel.bad pre{border:1px solid rgba(248,81,73,.3);border-top:none;border-radius:0 0 8px 8px}
-.cmp-panel.good pre{border:1px solid rgba(63,185,80,.3);border-top:none;border-radius:0 0 8px 8px}
+.cmp-panel.bad pre{border:1px solid rgba(255,51,51,.3);border-top:none;border-radius:0}
+.cmp-panel.good pre{border:1px solid rgba(0,255,65,.3);border-top:none;border-radius:0}
 
 /* ── Tags ── */
-.tag{display:inline-block;padding:.18rem .55rem;border-radius:4px;font-size:.72rem;font-weight:700;margin:.15rem}
+.tag{display:inline-block;padding:.18rem .55rem;border-radius:2px;font-size:.72rem;font-weight:700;margin:.15rem}
 .tag.a{background:var(--accent-dim);color:var(--accent)}
 .tag.s{background:rgba(63,185,80,.15);color:var(--success)}
 .tag.i{background:rgba(88,166,255,.15);color:var(--info)}
@@ -107,21 +124,21 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 
 /* ── Overview cards ── */
 .prog-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;margin-bottom:1.75rem}
-.prog-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.9rem;cursor:pointer;transition:all .15s;text-align:center}
+.prog-card{background:var(--card);border:1px solid var(--border);border-radius:0;padding:.9rem;cursor:pointer;transition:all .15s;text-align:center}
 .prog-card:hover,.prog-card.active{border-color:var(--accent);background:var(--accent-dim)}
 .prog-card .pct{font-size:1.5rem;font-weight:900;color:var(--accent)}
 .prog-card .abbr{font-size:.82rem;font-weight:700;margin-top:.35rem}
 .prog-card .name{font-size:.7rem;color:var(--muted);margin-top:.2rem}
 
 /* ── Highlight strip ── */
-.hl{background:var(--accent-dim);border-left:3px solid var(--accent);padding:.65rem .9rem;border-radius:0 6px 6px 0;margin:.65rem 0;font-size:.84rem}
+.hl{background:var(--accent-dim);border-left:3px solid var(--accent);padding:.65rem .9rem;border-radius:0;margin:.65rem 0;font-size:.84rem}
 
 /* ── Flow diagram ── */
-.flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin:.9rem 0;padding:.9rem;background:var(--code);border:1px solid var(--border);border-radius:8px}
-.flow-step{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.35rem .65rem;font-size:.77rem;font-weight:600;white-space:nowrap}
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin:.9rem 0;padding:.9rem;background:var(--code);border:1px solid var(--border);border-radius:0}
+.flow-step{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:.35rem .65rem;font-size:.77rem;font-weight:600;white-space:nowrap}
 .flow-step.a{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
-.flow-step.s{background:rgba(63,185,80,.15);border-color:var(--success);color:var(--success)}
-.flow-arrow{color:var(--muted);padding:0 .4rem;font-size:.85rem}
+.flow-step.s{background:rgba(0,255,65,.08);border-color:var(--success);color:var(--success)}
+.flow-arrow{color:var(--muted);padding:0 .3rem;font-size:.85rem}
 
 /* ── Inline code ── */
 code{background:var(--code);border:1px solid var(--border);border-radius:4px;padding:.08em .38em;font-family:'JetBrains Mono',Consolas,monospace;font-size:.84em}
@@ -181,8 +198,8 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0;max-width:100vw;padding:1rem;padding-top:4.5rem}
   .prog-grid{grid-template-columns:repeat(2,1fr)}
-  .dom-hdr{padding:1rem 1.1rem}
-  .dom-hdr h2{font-size:1rem}
+  .dom-hdr{padding:.9rem 1rem}
+  .dom-hdr h2{font-size:.85rem}
   .stitle{font-size:.88rem}
   pre{font-size:.72rem;padding:.75rem}
   .code-lbl{font-size:.68rem;padding:.28rem .75rem}
@@ -272,15 +289,6 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 @media(max-width:1024px){.mx-col{border-right:none;border-bottom:1px solid var(--border)}.mx-col:last-child{border-bottom:none}.mx-preview{display:none}}
 @media(max-width:768px){.mx-hdr{gap:.35rem}.mx-concept{font-size:.78rem}.mx-toolbar{gap:.4rem}}
 
-/* ── Subdomain sub-nav ── */
-.nav-sub-list{display:none;margin:.05rem 0 .3rem 0}
-.nav-sub-list.open{display:block}
-.nav-sub-item{display:flex;align-items:center;gap:.35rem;padding:.28rem .5rem .28rem 1.55rem;border-radius:6px;cursor:pointer;font-size:.73rem;color:var(--muted);transition:all .12s;margin-bottom:.02rem;line-height:1.3}
-.nav-sub-item:hover,.nav-sub-item.active{background:rgba(188,140,255,.12);color:var(--purple)}
-.nav-sub-dot{width:4px;height:4px;border-radius:50%;background:var(--border);flex-shrink:0;margin-top:.15rem;transition:background .12s}
-.nav-sub-item:hover .nav-sub-dot,.nav-sub-item.active .nav-sub-dot{background:var(--purple)}
-.nav-chev{font-size:.55rem;transition:transform .2s;color:var(--muted);flex-shrink:0}
-.nav-item.sub-open .nav-chev{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -288,86 +296,46 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 <!-- ═══════════════ MOBILE TOP BAR ═══════════════ -->
 <div class="mob-bar">
   <button class="ham-btn" onclick="toggleSidebar()" aria-label="Open menu">☰</button>
-  <span class="mob-title">CCA-F Blueprint</span>
-  <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
+  <span class="mob-title">CCA-F STUDY TERMINAL</span>
 </div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
 <aside class="sidebar" id="sidebar">
-  <div class="sb-logo">
-    <h1>CCA-F Blueprint</h1>
-    <p>car-e-pool-api · Exam Study Guide</p>
+  <div class="sb-top">
+    <div class="sb-title">CCA-F STUDY TERMINAL</div>
+    <div class="sb-prompt">~/car-e-pool-api/exam $</div>
   </div>
   <nav class="sb-nav">
-    <div class="nav-lbl">Start Here</div>
-    <div class="nav-item active" onclick="show('overview',this)"><span>🏠</span> Overview & Exam Map</div>
-
-    <div class="nav-lbl">Exam Domains</div>
-    <div class="nav-item" onclick="show('d1',this);openSubnav(this)"><span>🤖</span> D1 · Agentic Systems <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">27%</span></span></div>
-    <div class="nav-sub-list">
-      <div class="nav-sub-item" onclick="scrollToSD('d1','sd11',this)"><span class="nav-sub-dot"></span>1.1 · Agentic Loop</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d1','sd12',this)"><span class="nav-sub-dot"></span>1.2 · Orchestration</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d1','sd13',this)"><span class="nav-sub-dot"></span>1.3 · Task Tool &amp; Subagents</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d1','sd14',this)"><span class="nav-sub-dot"></span>1.4 · Prerequisites</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d1','sd15',this)"><span class="nav-sub-dot"></span>1.5 · PostToolUse Hooks</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d1','sd16',this)"><span class="nav-sub-dot"></span>1.6 · Task Decomposition</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d1','sd17',this)"><span class="nav-sub-dot"></span>1.7 · Session Management</div>
+    <div class="nav-folder">📁 sections/</div>
+    <div class="nav-item active" onclick="show('overview',this)" data-domain="overview">
+      <span class="nav-tree">├──</span><span class="nav-star" id="star-overview">[★ 0]</span><span class="nav-label">overview</span>
     </div>
-    <div class="nav-item" onclick="show('d2',this);openSubnav(this)"><span>🔧</span> D2 · Tools &amp; MCP <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">18%</span></span></div>
-    <div class="nav-sub-list">
-      <div class="nav-sub-item" onclick="scrollToSD('d2','sd21',this)"><span class="nav-sub-dot"></span>2.1 · MCP Architecture</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d2','sd22',this)"><span class="nav-sub-dot"></span>2.2 · Config Scoping</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d2','sd23',this)"><span class="nav-sub-dot"></span>2.3 · Tool Distribution</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d2','sd24',this)"><span class="nav-sub-dot"></span>2.4 · MCP Resources</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d2','sd25',this)"><span class="nav-sub-dot"></span>2.5 · Built-in Tools</div>
+    <div class="nav-item" onclick="show('d1',this)" data-domain="d1">
+      <span class="nav-tree">├──</span><span class="nav-star" id="star-d1">[★ 0]</span><span class="nav-label">01-agentic</span><span class="nav-weight">27%</span>
     </div>
-    <div class="nav-item" onclick="show('d3',this);openSubnav(this)"><span>💻</span> D3 · Claude Code <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">20%</span></span></div>
-    <div class="nav-sub-list">
-      <div class="nav-sub-item" onclick="scrollToSD('d3','sd31',this)"><span class="nav-sub-dot"></span>3.1 · CLAUDE.md</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d3','sd32',this)"><span class="nav-sub-dot"></span>3.2 · Hooks &amp; Commands</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d3','sd33',this)"><span class="nav-sub-dot"></span>3.3 · Path Rules</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d3','sd34',this)"><span class="nav-sub-dot"></span>3.4 · Plan Mode</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d3','sd35',this)"><span class="nav-sub-dot"></span>3.5 · Iterative Refinement</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d3','sd36',this)"><span class="nav-sub-dot"></span>3.6 · CI/CD Integration</div>
+    <div class="nav-item" onclick="show('d2',this)" data-domain="d2">
+      <span class="nav-tree">├──</span><span class="nav-star" id="star-d2">[★ 0]</span><span class="nav-label">02-tools-mcp</span><span class="nav-weight">18%</span>
     </div>
-    <div class="nav-item" onclick="show('d4',this);openSubnav(this)"><span>✍️</span> D4 · Prompt Engineering <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">20%</span></span></div>
-    <div class="nav-sub-list">
-      <div class="nav-sub-item" onclick="scrollToSD('d4','sd41',this)"><span class="nav-sub-dot"></span>4.1 · Explicit Criteria</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d4','sd42',this)"><span class="nav-sub-dot"></span>4.2 · Few-Shot Output</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d4','sd43',this)"><span class="nav-sub-dot"></span>4.3 · Context Design</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d4','sd44',this)"><span class="nav-sub-dot"></span>4.4 · Retry Feedback</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d4','sd45',this)"><span class="nav-sub-dot"></span>4.5 · Batch API</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d4','sd46',this)"><span class="nav-sub-dot"></span>4.6 · Multi-Instance</div>
+    <div class="nav-item" onclick="show('d3',this)" data-domain="d3">
+      <span class="nav-tree">├──</span><span class="nav-star" id="star-d3">[★ 0]</span><span class="nav-label">03-claude-code</span><span class="nav-weight">20%</span>
     </div>
-    <div class="nav-item" onclick="show('d5',this);openSubnav(this)"><span>🧠</span> D5 · Context &amp; Memory <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span><span class="badge">15%</span></span></div>
-    <div class="nav-sub-list">
-      <div class="nav-sub-item" onclick="scrollToSD('d5','sd51',this)"><span class="nav-sub-dot"></span>5.1 · Case Facts</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d5','sd52',this)"><span class="nav-sub-dot"></span>5.2 · Escalation Triggers</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d5','sd53',this)"><span class="nav-sub-dot"></span>5.3 · Error Propagation</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d5','sd54',this)"><span class="nav-sub-dot"></span>5.4 · Codebase Exploration</div>
-      <div class="nav-sub-item" onclick="scrollToSD('d5','sd55',this)"><span class="nav-sub-dot"></span>5.5 · Confidence</div>
+    <div class="nav-item" onclick="show('d4',this)" data-domain="d4">
+      <span class="nav-tree">├──</span><span class="nav-star" id="star-d4">[★ 0]</span><span class="nav-label">04-prompt-eng</span><span class="nav-weight">20%</span>
     </div>
-
-    <div class="nav-lbl">Advanced</div>
-    <div class="nav-item" onclick="show('s13',this)"><span>🎰</span> 13 Hidden Scenarios</div>
-
-    <div class="nav-lbl">Quick Reference</div>
-    <div class="nav-item" onclick="show('cheat',this);openSubnav(this)"><span>📋</span> Cheat Sheet <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem"><span class="nav-chev">▶</span></span></div>
-    <div class="nav-sub-list">
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','reality-matrix',this)"><span class="nav-sub-dot"></span>⚡ Reality Matrix</div>
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d1',this)"><span class="nav-sub-dot"></span>🤖 D1 Quick Ref</div>
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d2',this)"><span class="nav-sub-dot"></span>🔧 D2 Quick Ref</div>
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d3',this)"><span class="nav-sub-dot"></span>💻 D3 Quick Ref</div>
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d4',this)"><span class="nav-sub-dot"></span>✍️ D4 Quick Ref</div>
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','qs-d5',this)"><span class="nav-sub-dot"></span>🧠 D5 Quick Ref</div>
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','hands-on-prep',this)"><span class="nav-sub-dot"></span>🛠️ Hands-On Prep</div>
-      <div class="nav-sub-item" onclick="scrollToSD('cheat','study-tip',this)"><span class="nav-sub-dot"></span>💡 Study Tip</div>
+    <div class="nav-item" onclick="show('d5',this)" data-domain="d5">
+      <span class="nav-tree">├──</span><span class="nav-star" id="star-d5">[★ 0]</span><span class="nav-label">05-context-mem</span><span class="nav-weight">15%</span>
+    </div>
+    <div class="nav-item" onclick="show('s13',this)" data-domain="s13">
+      <span class="nav-tree">├──</span><span class="nav-star" id="star-s13">[★ 0]</span><span class="nav-label">13-scenarios</span>
+    </div>
+    <div class="nav-item" onclick="show('cheat',this)" data-domain="cheat">
+      <span class="nav-tree">└──</span><span class="nav-star" id="star-cheat">[★ 0]</span><span class="nav-label">cheat-sheet</span>
     </div>
   </nav>
   <div class="sb-footer">
-    <button class="toggle-btn" onclick="toggleTheme()">🌙 Toggle Theme</button>
-    <a href="index.html" style="display:block;margin-top:.6rem;font-size:.75rem;color:var(--muted);text-decoration:none;padding:.3rem .5rem;border-radius:4px;transition:color .12s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">← Car-E-Pool User Manual</a>
+    <div class="sb-footer-hdr">── MARKED FOR REVIEW ──</div>
+    <div class="sb-footer-count"><span id="footer-count">★ 0</span> items flagged</div>
   </div>
 </aside>
 
@@ -378,8 +346,8 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
      OVERVIEW
 ══════════════════════════════════════════ -->
 <div id="overview" class="section active">
-  <div class="dom-hdr" style="border-left-color:#58A6FF">
-    <h2>🎓 Anthropic Certified — Claude Architect Foundations (CCA-F)</h2>
+  <div class="dom-hdr">
+    <h2>CCA-F · CLAUDE ARCHITECT FOUNDATIONS</h2>
     <p>A project-anchored study guide built from <strong>car-e-pool-api</strong> — a production Spring Boot 4 + Telegram bot carpooling system (~18 k lines across 6 Maven modules). Every concept below is mapped to real code I already own.</p>
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:100%"></div></div><div class="weight-lbl">100 % Coverage</div></div>
   </div>
@@ -481,7 +449,7 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
   </div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Architect Wisdom — The Golden Thread</h4>
       <p>Every CCA-F question can be answered with one mental model: <strong>determinism beats flexibility</strong>. Structured tool calls beat natural-language parsing. Hooks beat prompt guidance. Schema-enforced JSON beats "please respond in JSON". Project-scoped config beats global config when you want reproducibility. When in doubt, choose the option that reduces ambiguity for the model.</p>
@@ -495,8 +463,9 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 ══════════════════════════════════════════ -->
 <div id="d1" class="section">
   <div class="dom-hdr">
-    <h2>🤖 D1 · Agentic Systems — 27% of Exam</h2>
+    <h2>D1 · AGENTIC SYSTEMS</h2>
     <p>Covers the full lifecycle of an agentic loop: how <code>stop_reason</code> drives execution, how tool results feed back into history, orchestration topologies (hub-and-spoke vs. sequential), programmatic lifecycle hooks, and context isolation between coordinator and subagents.</p>
+    <div class="weight-row"><span class="weight-bar-text">█████░░░░░░░░░░░░░░░</span><span class="weight-lbl">27% exam weight</span></div>
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:27%"></div></div><div class="weight-lbl">27% weight</div></div>
   </div>
 
@@ -528,7 +497,7 @@ code{background:var(--code);border:1px solid var(--border);border-radius:4px;pad
 
   <div class="stitle">🗺️ Canonical Loop Pattern</div>
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Canonical Agentic Loop (CCA-F Reference Pattern)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Canonical Agentic Loop (CCA-F Reference Pattern)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre>messages = [{"role": "user", "content": user_input}]
 
 while True:
@@ -567,7 +536,7 @@ while True:
   </div>
 
   <div class="callout danger">
-    <div class="callout-icon">🚨</div>
+    <div class="callout-icon">[DANGER]</div>
     <div>
       <h4>Anti-Pattern #1 — Skipping Tool Results</h4>
       <p>Calling the API again without appending the tool result is the most common agentic bug. The model re-enters without knowing what the tool returned, leading to hallucinated results or infinite loops. The exam will test this — always append results before the next call.</p>
@@ -579,11 +548,11 @@ while True:
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The Telegram bot implements a stateful, event-driven agentic loop across <code>CallbackHandler</code>, <code>MessageHandler</code>, <code>StateManager</code>, and the sub-handlers. The conversation state (<code>UserState</code>) is the analogue of <em>conversation history</em>.</p>
 
   <div class="flow">
-    <div class="flow-step">Telegram Update</div><div class="flow-arrow">→</div>
-    <div class="flow-step a">CallbackHandler / MessageHandler</div><div class="flow-arrow">→</div>
-    <div class="flow-step">Route by BotFlow enum</div><div class="flow-arrow">→</div>
-    <div class="flow-step a">Sub-Handler (tool execution)</div><div class="flow-arrow">→</div>
-    <div class="flow-step">StateManager.save()</div><div class="flow-arrow">→</div>
+    <div class="flow-step">Telegram Update</div><div class="flow-arrow"> ──► </div>
+    <div class="flow-step a">CallbackHandler / MessageHandler</div><div class="flow-arrow"> ──► </div>
+    <div class="flow-step">Route by BotFlow enum</div><div class="flow-arrow"> ──► </div>
+    <div class="flow-step a">Sub-Handler (tool execution)</div><div class="flow-arrow"> ──► </div>
+    <div class="flow-step">StateManager.save()</div><div class="flow-arrow"> ──► </div>
     <div class="flow-step s">Bot sends response (end_turn analogue)</div>
   </div>
 
@@ -653,7 +622,7 @@ response = client.messages.create(
   </div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Architect Wisdom — Tool Choice Eliminates Ambiguity</h4>
       <p>When you need structured output, use <code>tool_choice: {type: "tool", name: "..."}</code> to force the model into a specific tool call. This is more reliable than asking the model to "respond in JSON" in a system prompt. The model cannot call a different tool, cannot return plain text — the structure is enforced at the protocol level, not via prompt persuasion.</p>
@@ -680,7 +649,7 @@ response = client.messages.create(
 
   <div class="stitle">🏗️ Hub-and-Spoke in car-e-pool-api</div>
   <div class="code-wrap">
-    <div class="code-lbl">.claude/agents/ — 9 Specialist Subagents (Context Isolation)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">.claude/agents/ — 9 Specialist Subagents (Context Isolation)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre>architect.md      — feature planning, cross-module dependency chain
 java-backend.md   — Spring Boot 4, service layer, MapStruct, events
 db-engineer.md    — MySQL 8, Flyway migrations, JPA entity design
@@ -744,7 +713,7 @@ flutter-mobile.md — Flutter, Riverpod, Dio, go_router, freezed
         <li><strong>vault-writeback.sh</strong> — on session stop: auto-creates dispatch log in <code>memory/dispatch-logs/</code></li>
       </ul>
       <div class="callout tip" style="margin-top:.75rem">
-        <div class="callout-icon">💡</div>
+        <div class="callout-icon">[TIP]</div>
         <div><h4>Exam Key</h4><p>Hooks exit non-zero to <em>block</em> the tool call. Exit zero to <em>allow</em>. The model cannot override a blocking hook via prompting — this is the core advantage over system-prompt policies.</p></div>
       </div>
     </div>
@@ -783,7 +752,7 @@ fi
   <div class="stitle">🔒 1.4 Context Isolation Between Coordinator and Subagents</div>
 
   <div class="callout info">
-    <div class="callout-icon">📌</div>
+    <div class="callout-icon">[INFO]</div>
     <div>
       <h4>The Principle</h4>
       <p>A coordinator agent should pass only the <em>minimum necessary context</em> to each subagent. The coordinator synthesizes results itself — it does not dump its full conversation history into every subagent call. This keeps subagent prompts focused, reduces token cost, and prevents context poisoning.</p>
@@ -834,7 +803,7 @@ migration is V44. Write V45."
   </div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Architect Wisdom — Prompt vs Hook for Safety Policies</h4>
       <p>For any policy that protects data integrity (never drop a table, never edit a migration, never cross module boundaries), use a <strong>hook</strong>, not a prompt instruction. Prompts are advisory. Hooks are enforced. The exam distinguishes between "programmatic enforcement" (hooks, tool schema constraints, <code>tool_choice</code>) and "weak prompt guidance" (system prompt instructions asking the model to behave a certain way).</p>
@@ -871,7 +840,7 @@ migration is V44. Write V45."
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">Coordinator Config — allowedTools:["Task"] + Parallel Subagent Spawning<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Coordinator Config — allowedTools:["Task"] + Parallel Subagent Spawning<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># Coordinator AgentDefinition (hub-and-spoke):
 coordinator_config = {
     "name": "carpool-coordinator",
@@ -1010,7 +979,7 @@ identity verification."
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">PostToolUse Hook — Timestamp &amp; Status Normalization (car-e-pool-api pattern)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PostToolUse Hook — Timestamp &amp; Status Normalization (car-e-pool-api pattern)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># PostToolUse hook: normalize ride data BEFORE model processes it
 # Fired AFTER tool returns, BEFORE model sees the result
 
@@ -1070,7 +1039,7 @@ def post_tool_use_normalizer(tool_name: str, tool_result: dict) -> dict:
   </div>
 
   <div class="callout info">
-    <div class="callout-icon">📌</div>
+    <div class="callout-icon">[INFO]</div>
     <div>
       <h4>Exam Decision Rule — Chaining vs. Decomposition</h4>
       <p><strong>Prompt chaining:</strong> use when the task is predictable — code review (file-by-file analysis + integration pass), Flyway migration (read V-max, write V-max+1, update entity). <strong>Dynamic decomposition:</strong> use when the scope is unknown upfront — "investigate a performance regression", "add missing test coverage to carpool-bot". The exam will describe a task — ask yourself: "Do I know all the steps in advance?" If yes → chaining. If the steps depend on what you find → dynamic decomposition.</p>
@@ -1106,7 +1075,7 @@ def post_tool_use_normalizer(tool_name: str, tool_result: dict) -> dict:
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">Session Management — Resume vs. Start Fresh Decision Guide<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Session Management — Resume vs. Start Fresh Decision Guide<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ✅ Use --resume: prior context is VALID (same day, no file changes)
 claude --resume "carpool-booking-investigation"
 # Immediately tell the agent what changed since last session:
@@ -1139,8 +1108,9 @@ fork_session("locking-strategy-comparison")
 ══════════════════════════════════════════ -->
 <div id="d2" class="section">
   <div class="dom-hdr">
-    <h2>🔧 D2 · Tools &amp; MCP — 18% of Exam</h2>
+    <h2>D2 · TOOLS &amp; MCP</h2>
     <p>Covers the Model Context Protocol architecture, writing precise tool descriptions to prevent routing confusion, configuration file scoping (<code>.mcp.json</code> vs <code>~/.claude.json</code>), secure credential management, and structured error recovery.</p>
+    <div class="weight-row"><span class="weight-bar-text">████░░░░░░░░░░░░░░░░</span><span class="weight-lbl">18% exam weight</span></div>
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:18%"></div></div><div class="weight-lbl">18% weight</div></div>
   </div>
 
@@ -1214,7 +1184,7 @@ fork_session("locking-strategy-comparison")
   </div>
 
   <div class="callout danger">
-    <div class="callout-icon">🚨</div>
+    <div class="callout-icon">[DANGER]</div>
     <div>
       <h4>Exam Trap — Never Hardcode Credentials</h4>
       <p>Always use <code>${ENV_VAR_NAME}</code> syntax in MCP config files. The actual value is resolved from the environment at runtime. Hardcoding tokens in <code>.mcp.json</code> is a security failure — the file is committed to the repo and the token is exposed. The exam will test whether you know credentials belong in environment variables, not config files.</p>
@@ -1292,7 +1262,7 @@ RideResponse list sorted by departure time. Returns empty list
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">When a tool fails, returning a plain error string forces the model to parse natural language to decide what to do next. Returning structured error metadata enables deterministic retry logic.</p>
 
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Rich Error Response Pattern<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Rich Error Response Pattern<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ❌ Anti-pattern: plain string error
 return "Error: booking failed"
 
@@ -1334,7 +1304,7 @@ return {
   </div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Architect Wisdom — Tools Are Your API Contract</h4>
       <p>Every tool description is a promise to the model about when to use that tool and what to expect back. Vague descriptions cause routing failures. Missing error metadata causes blind retries. Think of tool schemas as a typed API — the richer the types and descriptions, the more reliably the model routes. In production, tool descriptions matter as much as system prompts.</p>
@@ -1371,7 +1341,7 @@ return {
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Scoped Tool Sets per Agent + tool_choice Patterns<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Scoped Tool Sets per Agent + tool_choice Patterns<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ❌ Anti-pattern: 18 tools to every agent
 all_tools = [search_rides, book_ride, cancel_ride, get_user,
              update_profile, get_hubs, approve_hub, reject_hub,
@@ -1462,7 +1432,7 @@ response = client.messages.create(
   </div>
 
   <div class="callout tip">
-    <div class="callout-icon">💡</div>
+    <div class="callout-icon">[TIP]</div>
     <div>
       <h4>Incremental Codebase Exploration Pattern (Exam Favourite)</h4>
       <p>Start with <code>Grep</code> to find entry points → use <code>Read</code> to follow imports and trace flows → never read all files upfront. For car-e-pool-api: <code>Grep "BookingService"</code> finds all callers first, then <code>Read BookingService.java</code> with targeted offset/limit for the specific method. This preserves the context window. <strong>The exam will test whether you read files upfront (wrong) or build understanding incrementally (correct).</strong></p>
@@ -1477,8 +1447,9 @@ response = client.messages.create(
 ══════════════════════════════════════════ -->
 <div id="d3" class="section">
   <div class="dom-hdr">
-    <h2>💻 D3 · Claude Code — 20% of Exam</h2>
+    <h2>D3 · CLAUDE CODE</h2>
     <p>Covers the CLAUDE.md configuration hierarchy, scoping rules, custom slash commands in <code>.claude/commands/</code>, runtime CLI flags, Plan Mode vs direct execution, and session state management (<code>/memory</code>, <code>/compact</code>). Heavily tested because it's the core Claude Code workflow.</p>
+    <div class="weight-row"><span class="weight-bar-text">████░░░░░░░░░░░░░░░░</span><span class="weight-lbl">20% exam weight</span></div>
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:20%"></div></div><div class="weight-lbl">20% weight</div></div>
   </div>
 
@@ -1497,7 +1468,7 @@ response = client.messages.create(
   </div>
 
   <div class="callout info">
-    <div class="callout-icon">📌</div>
+    <div class="callout-icon">[INFO]</div>
     <div>
       <h4>Key Rule — All CLAUDE.md Files Are Additive</h4>
       <p>Claude Code reads <em>all</em> applicable CLAUDE.md files (personal + project root + module + subdirectory) and merges them. Module-level files do not <em>replace</em> root files — they extend them. If the root CLAUDE.md says "never use rm -rf" and the module CLAUDE.md says nothing about it, the root rule still applies in that module.</p>
@@ -1532,7 +1503,7 @@ response = client.messages.create(
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">Optimized CLAUDE.md Structure for a Module (carpool-service example)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Optimized CLAUDE.md Structure for a Module (carpool-service example)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre>---
 # Optional YAML frontmatter (Claude Code reads this)
 description: "Business logic, events, DTOs, MapStruct — carpool-service module"
@@ -1592,7 +1563,7 @@ Depends on: carpool-repository. Depended on by: carpool-bot, carpool-admin.
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">SKILL.md Format — /new-event skill example<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">SKILL.md Format — /new-event skill example<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># Skill: /new-event
 # Trigger: "adding a domain event", "async notification", "fire event"
 
@@ -1676,7 +1647,7 @@ claude --planMode "add vehicle endpoint"</pre>
   </div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Architect Wisdom — CLAUDE.md Is Your System Prompt for the IDE</h4>
       <p>Think of CLAUDE.md as a persistent system prompt that applies to every Claude Code session in that directory. Unlike a one-off system prompt, it's versioned, reviewed, and enforced by the team. The hierarchy (personal → project → module) mirrors how you'd think about configuration inheritance: global defaults, project overrides, module specifics. The exam tests whether you know which file to edit for which scope of change.</p>
@@ -1722,7 +1693,7 @@ paths:
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">.claude/rules/ Recommended Structure for car-e-pool-api<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">.claude/rules/ Recommended Structure for car-e-pool-api<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># .claude/rules/flyway-conventions.md
 # paths: ["**/db/migration/**", "**/V*.sql"]
 # Content: V-number rules, TINYINT→Integer mapping, never-edit-existing rule
@@ -1777,7 +1748,7 @@ paths:
   </div>
 
   <div class="callout tip">
-    <div class="callout-icon">💡</div>
+    <div class="callout-icon">[TIP]</div>
     <div>
       <h4>Explore Subagent — Preserve Main Context Window</h4>
       <p>When you need verbose discovery (e.g., "list all test files in carpool-bot"), spawn an Explore subagent. It absorbs the verbose file-listing output and returns a concise summary. The main agent's context window receives only the summary — not 500 lines of file paths. In car-e-pool-api: use Explore to map the full 6-module dependency graph before planning a cross-module change. This prevents context window exhaustion during multi-phase tasks.</p>
@@ -1820,7 +1791,7 @@ paths:
   </div>
 
   <div class="callout info">
-    <div class="callout-icon">📌</div>
+    <div class="callout-icon">[INFO]</div>
     <div>
       <h4>Single Message vs. Sequential Iteration</h4>
       <p>When multiple issues <strong>interact</strong> (fixing one changes the behavior of another), address them all in a <strong>single detailed message</strong>. When issues are <strong>independent</strong>, fix them <strong>sequentially</strong> — one at a time — to see the isolated effect of each change. The exam will describe a bug scenario: determine whether fixes interact, then choose the approach.</p>
@@ -1888,8 +1859,9 @@ claude -p "generate missing tests for BookingService" \
 ══════════════════════════════════════════ -->
 <div id="d4" class="section">
   <div class="dom-hdr">
-    <h2>✍️ D4 · Prompt Engineering — 20% of Exam</h2>
+    <h2>D4 · PROMPT ENGINEERING</h2>
     <p>Covers deterministic output structuring via <code>tool_choice</code>, alternating turn few-shot patterns, XML structural barriers, system context design, and extraction pipeline architecture. Heavily focuses on eliminating model ambiguity through schema constraints rather than natural language instructions.</p>
+    <div class="weight-row"><span class="weight-bar-text">████░░░░░░░░░░░░░░░░</span><span class="weight-lbl">20% exam weight</span></div>
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:20%"></div></div><div class="weight-lbl">20% weight</div></div>
   </div>
 
@@ -1962,7 +1934,7 @@ specific line number showing the contradiction."</pre>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">This is the most-tested prompt engineering concept. Never use system prompt instructions to ask for JSON. Use <code>tool_choice</code> to enforce schema at the protocol level.</p>
 
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Enforcing Structured Output for AiService (Correct Pattern)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Enforcing Structured Output for AiService (Correct Pattern)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># Current car-e-pool-api AiService uses Ollama + Spring AI with a text prompt.
 # This is the production-correct version if using the Anthropic API instead:
 
@@ -2031,7 +2003,7 @@ tool_input = response.content[0].input
   <!-- 4.2 Few-Shot Patterns -->
   <div id="sd42" class="stitle">🎭 4.2 Few-Shot Examples — Alternating Turns</div>
   <div class="callout info">
-    <div class="callout-icon">📌</div>
+    <div class="callout-icon">[INFO]</div>
     <div>
       <h4>The Alternating Turn Rule</h4>
       <p>Few-shot examples must alternate <code>user → assistant → user → assistant</code>. You cannot have two consecutive <code>user</code> messages or two consecutive <code>assistant</code> messages. Each example is one full exchange. The final message is always <code>user</code> (the actual query).</p>
@@ -2039,7 +2011,7 @@ tool_input = response.content[0].input
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Few-Shot with Alternating Turns (Ride NL Parsing)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Few-Shot with Alternating Turns (Ride NL Parsing)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre>messages = [
     # Example 1 — clear home-to-work
     {"role": "user",      "content": "mag post sana ako ng ride bukas 7am sucat to bgc"},
@@ -2075,7 +2047,7 @@ tool_input = response.content[0].input
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">The current <code>AiService.parseRideRequest()</code> in the project uses a Spring AI <code>ChatClient</code> with an inline system prompt. Here's how to structure it optimally:</p>
 
   <div class="code-wrap">
-    <div class="code-lbl">JAVA — Optimized AiService System Prompt Structure<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">JAVA — Optimized AiService System Prompt Structure<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre>// carpool-service/ai/AiService.java
 @Service
 public class AiService {
@@ -2125,7 +2097,7 @@ public class AiService {
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Use XML tags to create unambiguous sections in prompts. The model reliably respects XML structure even in complex multi-part prompts.</p>
 
   <div class="code-wrap">
-    <div class="code-lbl">Structured System Prompt with XML Barriers<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Structured System Prompt with XML Barriers<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre><system>
 You are a carpool ride posting assistant for car-e-pool-api.
 
@@ -2154,7 +2126,7 @@ If extracting ride details, use the extract_ride_details tool.
   </div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Architect Wisdom — Schema Over Instructions</h4>
       <p>The single most important prompt engineering insight: <strong>every behavioral constraint you can move from a natural language instruction into a schema constraint, do it</strong>. "Please output valid JSON" is weak. <code>tool_choice: {type: "tool"}</code> is absolute. "Maximum 4 seats" in prose is advisory. <code>"maximum": 4</code> in a JSON schema is enforced by the API. Move constraints down the stack — from prose to schema to type system — at every opportunity.</p>
@@ -2167,16 +2139,16 @@ If extracting ride details, use the extract_ride_details tool.
   <div class="acc">
     <div class="acc-hdr" onclick="toggleAcc(this)">
       <span>📋 Full Ride-Post Extraction Pipeline (MessageHandler → AiService → State hydration)</span>
-      <span class="chev">▼</span>
+      <span class="chev">[+]</span>
     </div>
     <div class="acc-body">
       <div class="flow">
-        <div class="flow-step">User sends NL message</div><div class="flow-arrow">→</div>
-        <div class="flow-step a">MessageHandler.isNaturalLanguageRidePost()</div><div class="flow-arrow">→</div>
-        <div class="flow-step">Intent keywords detected</div><div class="flow-arrow">→</div>
-        <div class="flow-step a">AiService.parseRideRequest()</div><div class="flow-arrow">→</div>
-        <div class="flow-step">ParsedRideRequest record</div><div class="flow-arrow">→</div>
-        <div class="flow-step a">routeToNextPostRideStep()</div><div class="flow-arrow">→</div>
+        <div class="flow-step">User sends NL message</div><div class="flow-arrow"> ──► </div>
+        <div class="flow-step a">MessageHandler.isNaturalLanguageRidePost()</div><div class="flow-arrow"> ──► </div>
+        <div class="flow-step">Intent keywords detected</div><div class="flow-arrow"> ──► </div>
+        <div class="flow-step a">AiService.parseRideRequest()</div><div class="flow-arrow"> ──► </div>
+        <div class="flow-step">ParsedRideRequest record</div><div class="flow-arrow"> ──► </div>
+        <div class="flow-step a">routeToNextPostRideStep()</div><div class="flow-arrow"> ──► </div>
         <div class="flow-step s">Jump to first missing field</div>
       </div>
       <div class="code-wrap" style="margin-top:.9rem">
@@ -2206,7 +2178,7 @@ stateManager.save(chatId, newState);
 routeToNextPostRideStep(ctx.withState(newState));</pre>
       </div>
       <div class="callout tip" style="margin-top:.75rem">
-        <div class="callout-icon">💡</div>
+        <div class="callout-icon">[TIP]</div>
         <div><h4>Exam Key — Graceful Degradation</h4><p>The <code>parsed.isEmpty()</code> check is critical. AI parsing is best-effort — network failures, bad JSON, model errors are all possible. The bot never hard-depends on AI availability. This is the correct production pattern: AI augments the flow, it doesn't gate it.</p></div>
       </div>
     </div>
@@ -2220,7 +2192,7 @@ routeToNextPostRideStep(ctx.withState(newState));</pre>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">When structured extraction produces invalid output, append the specific validation error to the retry prompt. This is more effective than generic retry. However: retries are <em>ineffective</em> when the required information is simply absent from the source document — distinguish format errors from missing data.</p>
 
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Retry-with-Error-Feedback + detected_pattern Field<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Retry-with-Error-Feedback + detected_pattern Field<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># First extraction attempt
 response = client.messages.create(
     tools=[parse_ride_tool],
@@ -2270,7 +2242,7 @@ finding = {
   </div>
 
   <div class="callout warn">
-    <div class="callout-icon">⚠️</div>
+    <div class="callout-icon">[WARN]</div>
     <div>
       <h4>When Retries Are Useless</h4>
       <p>Retry-with-error-feedback works for <strong>format/structural errors</strong> (wrong timestamp format, missing required field that was mentioned in the text). It does <strong>NOT</strong> work when the required information is simply not in the source document. If a ride post doesn't mention departure time, retrying 5 times will not produce a departure time — it will produce hallucinated values. Distinguish: format mismatch (retryable) vs. missing information (not retryable, ask the user instead).</p>
@@ -2306,7 +2278,7 @@ finding = {
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Message Batches API with custom_id Correlation<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Message Batches API with custom_id Correlation<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ✅ Correct use: overnight ride audit (non-blocking, latency-tolerant)
 import anthropic
 client = anthropic.Anthropic()
@@ -2373,7 +2345,7 @@ for result in client.beta.messages.batches.results(batch.id):
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">Multi-Instance Review Setup for car-e-pool-api<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Multi-Instance Review Setup for car-e-pool-api<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ❌ Self-review in same session (weak — model retains generation context)
 # claude -p "now review the BookingService code you just wrote"
 
@@ -2416,8 +2388,9 @@ Report only NEW cross-file integration issues.
 ══════════════════════════════════════════ -->
 <div id="d5" class="section">
   <div class="dom-hdr">
-    <h2>🧠 D5 · Context &amp; Memory — 15% of Exam</h2>
+    <h2>D5 · CONTEXT &amp; MEMORY</h2>
     <p>Covers strategic prompt caching (where to set <code>cache_control</code> breakpoints for maximum savings), context window management strategies, conversation compaction, and token-efficient design for long-horizon developer tasks like working across large codebases.</p>
+    <div class="weight-row"><span class="weight-bar-text">███░░░░░░░░░░░░░░░░░</span><span class="weight-lbl">15% exam weight</span></div>
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:15%"></div></div><div class="weight-lbl">15% weight</div></div>
   </div>
 
@@ -2448,7 +2421,7 @@ Report only NEW cross-file integration issues.
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">PYTHON — Correct Cache Breakpoint Placement for car-e-pool-api Agent<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">PYTHON — Correct Cache Breakpoint Placement for car-e-pool-api Agent<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre>messages = client.messages.create(
     model="claude-sonnet-4-6",
     max_tokens=8192,
@@ -2553,7 +2526,7 @@ Report only NEW cross-file integration issues.
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">memory/ File Format — ADR Example (What Gets Cached in External Memory)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">memory/ File Format — ADR Example (What Gets Cached in External Memory)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre>---
 name: adr-002-pessimistic-locking
 description: Why BookingService uses SELECT FOR UPDATE instead of optimistic locking
@@ -2578,7 +2551,7 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
   </div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Architect Wisdom — Cache What's Static, Stream What's Dynamic</h4>
       <p>The mental model for prompt caching: anything that would be the same across 10 API calls should be cached. System prompts, tool definitions, CLAUDE.md content, large reference documents — these are cache candidates. User messages, timestamps, current file diffs, search results — these are never cached. The <code>cache_control</code> breakpoint goes at the boundary between static and dynamic content. Moving it one block earlier or later can double your cache hit rate.</p>
@@ -2615,7 +2588,7 @@ Related: [[feedback_build_workflow]], [[project_tech_stack]]</pre>
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">Persistent Case Facts Block Pattern (carpool support context)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Persistent Case Facts Block Pattern (carpool support context)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ✅ Case facts block — included in every prompt, never summarized away
 CASE_FACTS_BLOCK = """
 === ACTIVE CASE FACTS ===
@@ -2770,7 +2743,7 @@ trimmed = {k: raw_ride_response[k]
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">Scratchpad + Manifest Pattern for car-e-pool-api Exploration<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Scratchpad + Manifest Pattern for car-e-pool-api Exploration<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ✅ Scratchpad file: persist key findings across context boundaries
 # Agent writes to .claude/scratchpad-investigation.md as it discovers things:
 
@@ -2840,7 +2813,7 @@ manifest = {
   </div>
 
   <div class="code-wrap">
-    <div class="code-lbl">Claim-Source Mapping Pattern for Multi-Source Synthesis<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <div class="code-lbl">Claim-Source Mapping Pattern for Multi-Source Synthesis<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
     <pre># ✅ Subagent outputs structured claim-source mappings (not raw summaries)
 subagent_output = {
     "findings": [
@@ -2886,8 +2859,8 @@ synthesis_report = {
      CHEAT SHEET
 ══════════════════════════════════════════ -->
 <div id="cheat" class="section">
-  <div class="dom-hdr" style="border-left-color:var(--purple)">
-    <h2>🧪 CCA-F Engineering Judgment Sandbox</h2>
+  <div class="dom-hdr">
+    <h2>CCA-F · ENGINEERING JUDGMENT SANDBOX</h2>
     <p>Interactive 6-column reality matrix. <strong>Core Theory (①②③)</strong> — concept, key fact, common trap. <strong>Deep Architecture (④⑤⑥)</strong> — real enterprise scenario, correct execution, fatal anti-pattern. Filter by domain. Click any row to expand.</p>
   </div>
 
@@ -3393,7 +3366,7 @@ synthesis_report = {
   </table></div>
 
   <div class="callout wisdom">
-    <div class="callout-icon">🏛️</div>
+    <div class="callout-icon">[★]</div>
     <div>
       <h4>Final Architect Wisdom — The Exam in One Sentence</h4>
       <p>The CCA-F exam rewards architects who understand that <strong>deterministic constraints beat advisory guidance</strong> at every layer: tool schemas beat prose instructions, hooks beat system-prompt policies, <code>tool_choice</code> beats "please respond in JSON", and structured error metadata beats plain error strings. When you see a question asking to choose between a programmatic enforcement mechanism and a natural language instruction, always choose programmatic.</p>
@@ -3402,7 +3375,7 @@ synthesis_report = {
 
   <div id="hands-on-prep" class="stitle">🛠️ Hands-On Preparation</div>
   <div class="callout warn">
-    <div class="callout-icon">⚠️</div>
+    <div class="callout-icon">[WARN]</div>
     <div>
       <h4>Do the Exercises — Theory Alone Won't Pass You</h4>
       <p>Biggest takeaway from people who passed: <strong>do the hands-on exercises yourself.</strong> Build an agent, design MCP tools, set up Claude Code in a real project, wire up a structured extraction pipeline. That practical experience is what actually prepares you for unexpected scenarios. Third-party practice questions floating around online are of very limited help — most only cover a narrow slice of what can actually appear on the exam.</p>
@@ -3417,7 +3390,7 @@ synthesis_report = {
 
   <div id="study-tip" class="stitle">💡 Study Tip</div>
   <div class="callout tip">
-    <div class="callout-icon">💡</div>
+    <div class="callout-icon">[TIP]</div>
     <div>
       <h4>Use Claude Projects to Study This Guide — Not Claude Code</h4>
       <p><strong>Q:</strong> Should I attach this file to a Claude Project and study from it there? Would that be better, and can token usage be optimized?</p>
@@ -3438,8 +3411,8 @@ synthesis_report = {
      13 HIDDEN EXAM SCENARIOS MATRIX
 ══════════════════════════════════════════ -->
 <div id="s13" class="section">
-  <div class="dom-hdr" style="border-left-color:var(--purple)">
-    <h2>🎰 The 13 Hidden Exam Scenarios Matrix</h2>
+  <div class="dom-hdr">
+    <h2>13 · HIDDEN EXAM SCENARIOS MATRIX</h2>
     <p>Real-world architectural case studies drawn from the actual CCA-F exam pool — each mapped directly to <strong>car-e-pool-api</strong> patterns. Select any scenario to expand the full blueprint, project mapping, code reference, and core architectural trade-off.</p>
     <div class="weight-row"><div class="weight-bar"><div class="weight-fill" style="width:100%;background:var(--purple)"></div></div><div class="weight-lbl" style="color:var(--purple)">13 Scenarios · All Domains</div></div>
   </div>
@@ -3497,7 +3470,7 @@ synthesis_report = {
       <strong>This is precisely the escalation/recovery pattern a support agent needs.</strong> Distinguish: recoverable errors (fresh session) vs. context-dependent errors (must restart the flow).
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">JAVA — Escalation Pattern (SessionRecoveryHandler analogue)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">JAVA — Escalation Pattern (SessionRecoveryHandler analogue)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>// carpool-bot/handler/SessionRecoveryHandler.java
 // The same pattern used in a support agent context:
 
@@ -3565,7 +3538,7 @@ if (state == null || state.getFlow() == BotFlow.IDLE) {
       When Claude Code tries to <strong>Write</strong> or <strong>Edit</strong> any file, <code>settings.json</code> fires <code>flyway-gate.sh</code> first. If the target is an existing Flyway migration, the hook exits <code>1</code> and blocks the write — even if the model has already decided to make the change. <strong>This is programmatic enforcement, not prompt guidance.</strong>
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">BASH — flyway-gate.sh (PreToolUse Hook for Code Generation Safety)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">BASH — flyway-gate.sh (PreToolUse Hook for Code Generation Safety)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>#!/usr/bin/env bash
 # .claude/hooks/flyway-gate.sh
 # Fires on every Write/Edit tool call.
@@ -3632,7 +3605,7 @@ exit 0  # ← allows all other writes</pre>
       Each receives a targeted handoff brief — not the full conversation.
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">PYTHON — Coordinator Dispatching Subagents with Context Isolation<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">PYTHON — Coordinator Dispatching Subagents with Context Isolation<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre># Coordinator: Claude Code session (hub)
 # Subagents: specialist agents (spokes)
 
@@ -3700,7 +3673,7 @@ db_agent_with_full_history = [
       The <code>GlobalExceptionHandler</code> already implements error taxonomy: <code>RideFullException → 409</code>, <code>InvalidRideStateException → 409</code>, <code>UserNotFoundException → 404</code>. <strong>This is your isError + errorCategory mapping, already built.</strong> Use it as the reference when designing tool error responses.
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">JSON — High-Fidelity Tool Schema for carpool-api CreateBooking Tool<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">JSON — High-Fidelity Tool Schema for carpool-api CreateBooking Tool<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>{
   "name": "create_booking",
   "description": "Book a seat on an active carpool ride. Use this tool (not search_rides)
@@ -3770,7 +3743,7 @@ is full, already booked, or the user has a direction conflict.",
       Without <code>/new-event</code>, every developer risks writing <code>@Async</code> without <code>@Transactional(REQUIRES_NEW)</code>, causing <code>IllegalTransactionStateException</code> in production. The skill makes the correct pattern impossible to forget. <strong>This is the productivity value of slash commands: encoding non-obvious correctness, not just convenience.</strong>
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">MARKDOWN — /new-event Skill (Encodes 3-Annotation Pattern as Runnable Checklist)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">MARKDOWN — /new-event Skill (Encodes 3-Annotation Pattern as Runnable Checklist)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre># Skill: /new-event
 # Use before implementing any async domain notification
 
@@ -3842,7 +3815,7 @@ public void onMyNewEvent(RideEvents.MyNewEvent event) {
       <strong>Token-efficient migration lookup:</strong> Instead of reading all 44 SQL files to find the next V-number, use <code>Glob("db/migration/V*.sql")</code> which returns file names sorted by modification time. Read only the last filename to extract the version number. This drops ~11.5k tokens of context vs. reading all files.
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">PYTHON — Correct Cache Breakpoints for Long-Doc Processing (Flyway Context)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">PYTHON — Correct Cache Breakpoints for Long-Doc Processing (Flyway Context)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>system = [
     # BP1: Static project rules (~600 tokens) — cache aggressively
     {"type": "text", "text": PROJECT_RULES_STATIC,
@@ -3913,7 +3886,7 @@ public void onMyNewEvent(RideEvents.MyNewEvent event) {
       <code>PendingBookingScheduler</code> runs every 30 minutes, finds all PENDING bookings older than 15/30/45 minutes, and sends escalating reminder DMs to drivers. At reminder #3 with no response, it fires <code>BookingTimedOutEvent</code>. <strong>This is exactly the ops monitoring loop pattern</strong> — poll → evaluate threshold → escalate → record outcome.
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">JAVA — Ops Monitoring Loop Pattern (PendingBookingScheduler analogue)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">JAVA — Ops Monitoring Loop Pattern (PendingBookingScheduler analogue)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>// carpool-service/scheduler/PendingBookingScheduler.java
 // Production ops monitoring pattern — maps directly to incident response
 
@@ -3985,7 +3958,7 @@ public void checkPendingBookings() {
       In CI: run <code>claude --no-interactive --allowedTools "Read,Grep,Glob" -p "/security-review"</code> on every PR targeting <code>main</code>. Claude reads only (no writes), runs the security checklist, and exits non-zero if a critical issue is found. <strong>The pipeline fails the PR — no human intervention needed for common security anti-patterns.</strong>
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">YAML — GitHub Actions CI with Headless Claude Code Review<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">YAML — GitHub Actions CI with Headless Claude Code Review<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>name: Claude Code Review
 on: [pull_request]
 
@@ -4134,7 +4107,7 @@ parsed = response.content[0].input</pre>
       <code>UserState</code> is the bot's equivalent of conversation history — it holds all context accumulated across multiple Telegram updates (direction, hub selections, departure time, vehicle choice). The immutable <code>.with*()</code> pattern ensures history is append-only: no turn can overwrite a previous decision without an explicit new state object. <strong>This is the correct multi-turn state management pattern</strong> — every Claude API conversation history should be treated the same way.
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">PYTHON — Conversation History with Sliding Window (Context Ceiling Management)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">PYTHON — Conversation History with Sliding Window (Context Ceiling Management)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>import anthropic
 
 client = anthropic.Anthropic()
@@ -4212,7 +4185,7 @@ reply, history = chat_with_history(history, "2 seats available")</pre>
       <code>HubService.suggestHub()</code> implements deduplication + alias matching: if a hub with the same name+area exists as ACTIVE or PENDING, return it directly (no duplicate). If REJECTED, re-queue to PENDING. <strong>This is the knowledge base freshness + deduplication pattern</strong> that every enterprise RAG system needs — don't insert duplicates, handle stale/rejected entries, surface the best match regardless of spelling variation.
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">PYTHON — RAG Tool Pattern (Modelled on HubService + memory/ retrieval)<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">PYTHON — RAG Tool Pattern (Modelled on HubService + memory/ retrieval)<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>search_kb_tool = {
     "name": "search_knowledge_base",
     "description": "Search the internal knowledge base for architecture decisions,
@@ -4290,7 +4263,7 @@ project-specific facts. Returns ranked snippets with source file paths.",
       <code>vault-writeback.sh</code> runs on every session Stop event. It creates a new timestamped dispatch log in <code>memory/dispatch-logs/</code> — always appending, never overwriting existing logs. The filename includes the timestamp to ensure uniqueness. <strong>This is the idempotent file-creation pattern</strong>: running it twice creates two log files, never corrupts the existing one.
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">JSON — settings.json Tool Restriction for Safe Developer Tooling Sessions<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">JSON — settings.json Tool Restriction for Safe Developer Tooling Sessions<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>{
   "hooks": {
     "PreToolUse": [
@@ -4365,7 +4338,7 @@ project-specific facts. Returns ranked snippets with source file paths.",
       The H2 vs. MySQL lesson is the most important sandboxing insight in this project: <strong>H2 in-memory DB ignores <code>SELECT FOR UPDATE</code></strong> — running concurrency tests against H2 will always pass even when the pessimistic locking is broken. The correct sandbox for concurrency tests is always real MySQL at <code>localhost:3308</code>. <strong>Exam lesson: the wrong sandbox can give false confidence. Validate that your execution environment matches production semantics.</strong>
     </div>
     <div class="code-wrap">
-      <div class="code-lbl">PYTHON — Code Execution Tool with Structured Output Parsing<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-lbl">PYTHON — Code Execution Tool with Structured Output Parsing<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
       <pre>run_tests_tool = {
     "name": "run_unit_tests",
     "description": "Execute Maven unit tests for a specific module. Use this to validate
@@ -4422,20 +4395,16 @@ def run_unit_tests(module: str, test_class: str = None) -> dict:
 function show(id, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active'); n.classList.remove('sub-open'); });
-  document.querySelectorAll('.nav-sub-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.nav-sub-list').forEach(n => n.classList.remove('open'));
   const sec = document.getElementById(id);
   if (sec) sec.classList.add('active');
   if (el && el.classList) el.classList.add('active');
+  const slug = document.getElementById('sb-domain-slug');
+  if (slug) slug.textContent = id;
   // Auto-close sidebar on mobile after navigation
   if (window.innerWidth <= 768) closeSidebar();
   window.scrollTo(0, 0);
 }
 
-function toggleTheme() {
-  const h = document.documentElement;
-  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
-}
 
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
@@ -4468,6 +4437,8 @@ function toggleAcc(hdr) {
   hdr.classList.toggle('open');
   const body = hdr.nextElementSibling;
   if (body) body.classList.toggle('open');
+  const chev = hdr.querySelector('.chev');
+  if (chev) chev.textContent = hdr.classList.contains('open') ? '[-]' : '[+]';
 }
 
 function applyTabState(row) {
@@ -4541,9 +4512,9 @@ function copyCode(btn) {
   if (!pre) return;
   navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
     const orig = btn.textContent;
-    btn.textContent = '✓ Copied!';
+    btn.textContent = '[OK!]';
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+    setTimeout(() => { btn.textContent = '[COPY]'; btn.classList.remove('copied'); }, 2000);
   });
 }
 
@@ -4553,14 +4524,89 @@ document.querySelectorAll('.mx-row.open').forEach(function(row) { applyTabState(
 // Wire up the overview domain cards to nav items
 document.querySelectorAll('.prog-card').forEach((card, i) => {
   const ids = ['d1','d2','d3','d4','d5'];
-  const navItems = document.querySelectorAll('.nav-item');
   card.addEventListener('click', () => {
     const target = ids[i];
-    const navEl = Array.from(navItems).find(n => n.textContent.includes('D' + (i+1)));
+    const navEl = document.querySelector('.nav-item[data-domain="' + target + '"]');
     show(target, navEl);
-    if (navEl) openSubnav(navEl);
   });
 });
+
+// ── Mark-for-Review System ──────────────────────────────────────
+(function() {
+  const STORAGE_KEY = 'ccaf_marked';
+
+  function loadMarked() {
+    try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []); }
+    catch(e) { return new Set(); }
+  }
+
+  function saveMarked(set) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
+  }
+
+  function updateCounts(marked) {
+    const flagCount = document.getElementById('sb-flag-count');
+    if (flagCount) flagCount.textContent = marked.size;
+    const footerCount = document.getElementById('footer-count');
+    if (footerCount) footerCount.textContent = '★ ' + marked.size;
+
+    document.querySelectorAll('.section').forEach(function(section) {
+      const starEl = document.getElementById('star-' + section.id);
+      if (!starEl) return;
+      let count = 0;
+      section.querySelectorAll('.card').forEach(function(card) {
+        if (marked.has(card.id)) count++;
+      });
+      starEl.textContent = '[★ ' + count + ']';
+    });
+  }
+
+  function toggleMark(cardId, btn, marked) {
+    if (marked.has(cardId)) {
+      marked.delete(cardId);
+      btn.textContent = '[MARK]';
+      btn.classList.remove('marked');
+    } else {
+      marked.add(cardId);
+      btn.textContent = '[★]';
+      btn.classList.add('marked');
+    }
+    saveMarked(marked);
+    updateCounts(marked);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const marked = loadMarked();
+
+    document.querySelectorAll('.section').forEach(function(section) {
+      section.querySelectorAll('.card').forEach(function(card, index) {
+        const cardId = 'card-' + section.id + '-' + String(index).padStart(2, '0');
+        card.id = cardId;
+
+        const h3 = card.querySelector('h3');
+        if (h3) {
+          const btn = document.createElement('button');
+          btn.className = 'mark-btn' + (marked.has(cardId) ? ' marked' : '');
+          btn.textContent = marked.has(cardId) ? '[★]' : '[MARK]';
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMark(cardId, btn, marked);
+          });
+          h3.appendChild(btn);
+        }
+      });
+    });
+
+    updateCounts(marked);
+  });
+})();
 </script>
+
+<div class="status-bar">
+  <span class="sb-left">[ CCA-F STUDY TERMINAL ]</span>
+  <span>DOMAIN: <span id="sb-domain-slug">overview</span></span>
+  <span class="sb-flagged">★ <span id="sb-flag-count">0</span> FLAGGED</span>
+  <span class="sb-right">──  [INSERT]  UTF-8  v2026</span>
+</div>
 </body>
 </html>
