@@ -149,6 +149,8 @@ V43 Flyway migration widens the DB unique constraint on `ride_ratings` from `(ri
 
 **Analytics queries (P3 TODO):** Five MySQL aggregate queries are documented for future `RideRatingRepository` addition: star distribution, top-rated drivers leaderboard (min 3 ratings), monthly trend per driver, completion rate (% of completed rides that got rated), and rating drop detection (last-30d avg vs all-time avg, drop > 0.5).
 
+**Ratings wall (paginated):** `RatingService.getRatingsReceivedPaged(Long userId, int page, int pageSize)` returns a `Page<RideRating>` for the bot ratings wall. `RideRatingRepository` has both a `List<RideRating>` overload (used by existing profile screens) and a `Page<RideRating>` overload (used by the ratings wall) of `findByRateeIdOrderByCreatedAtDesc` — Spring Data derives both automatically from the method signature. The paged overload accepts a `Pageable` argument; callers pass `PageRequest.of(page, pageSize)`.
+
 ## Schedulers
 
 Three schedulers in `carpool-service/scheduler/`:
