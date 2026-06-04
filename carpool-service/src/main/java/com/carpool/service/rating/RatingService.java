@@ -257,10 +257,15 @@ public class RatingService {
 
     /**
      * Returns a page of ratings received by a user — for the bot ratings wall.
+     * Transactional so the ratee proxy is initialized while the session is open;
+     * open-in-view is disabled project-wide, so callers cannot touch lazy fields.
      */
+    @Transactional(readOnly = true)
     public Page<RideRating> getRatingsReceivedPaged(Long userId, int page, int pageSize) {
-        return ratingRepository.findByRateeIdOrderByCreatedAtDesc(
+        Page<RideRating> result = ratingRepository.findByRateeIdOrderByCreatedAtDesc(
                 userId, PageRequest.of(page, pageSize));
+        result.getContent().forEach(r -> r.getRatee().getFullName());
+        return result;
     }
 
     /**

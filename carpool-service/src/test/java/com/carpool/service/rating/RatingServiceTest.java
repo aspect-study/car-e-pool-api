@@ -1,6 +1,7 @@
 package com.carpool.service.rating;
 
 import com.carpool.domain.entity.RideRating;
+import com.carpool.domain.entity.User;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.RideRatingRepository;
 import com.carpool.repository.RideRepository;
@@ -43,7 +44,10 @@ class RatingServiceTest {
         @Test
         @DisplayName("returns page 0 results from repository")
         void returnsPageZero() {
+            User mockUser = mock(User.class);
+            when(mockUser.getFullName()).thenReturn("Test User");
             RideRating rating = mock(RideRating.class);
+            when(rating.getRatee()).thenReturn(mockUser);
             Page<RideRating> expected = new PageImpl<>(List.of(rating),
                     PageRequest.of(0, 5), 1);
             when(ratingRepository.findByRateeIdOrderByCreatedAtDesc(
@@ -89,8 +93,12 @@ class RatingServiceTest {
         @Test
         @DisplayName("last page has correct hasNext false")
         void lastPageHasNoNext() {
+            User mockUser = mock(User.class);
+            when(mockUser.getFullName()).thenReturn("Test User");
             RideRating r1 = mock(RideRating.class);
             RideRating r2 = mock(RideRating.class);
+            when(r1.getRatee()).thenReturn(mockUser);
+            when(r2.getRatee()).thenReturn(mockUser);
             // 2 total items, page size 5 → single page, no next
             Page<RideRating> lastPage = new PageImpl<>(List.of(r1, r2),
                     PageRequest.of(0, 5), 2);
