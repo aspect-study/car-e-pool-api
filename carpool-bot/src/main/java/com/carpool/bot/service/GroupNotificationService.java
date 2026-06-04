@@ -234,9 +234,16 @@ public class GroupNotificationService {
         refreshGroupPostAfterSeatFreed(event.booking().getRide().getId(), "auto-sync cancellation");
     }
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onBookingDeclined(RideEvents.BookingDeclinedEvent event) {
+        refreshGroupPostAfterSeatFreed(event.booking().getRide().getId(), "booking declined");
+    }
+
     private void refreshGroupPostAfterSeatFreed(Long rideId, String reason) {
         Ride ride = rideRepository.findById(rideId).orElse(null);
-        if (ride == null || ride.getGroupMessageId() == null) return;
+        if (ride == null) return;
         if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) return;
         Instant ageReference = ride.getGroupMessagePostedAt() != null
                 ? ride.getGroupMessagePostedAt() : ride.getCreatedAt();
@@ -247,11 +254,13 @@ public class GroupNotificationService {
         }
 
         try {
-            try {
-                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
-            } catch (Exception e) {
-                log.warn("Could not delete old group post before refresh ({}): rideId={} error={}",
-                        reason, rideId, e.getMessage());
+            if (ride.getGroupMessageId() != null) {
+                try {
+                    carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+                } catch (Exception e) {
+                    log.warn("Could not delete old group post before refresh ({}): rideId={} error={}",
+                            reason, rideId, e.getMessage());
+                }
             }
 
             String message = buildRidePostedMessage(ride);
