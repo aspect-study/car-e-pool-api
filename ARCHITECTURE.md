@@ -59,6 +59,7 @@ All business logic lives here. Key services:
 
 ### `FavoriteService`
 - `saveFavorite()` — idempotent (silently ignores duplicates); throws `IllegalArgumentException` for self-follow
+- `removeFavorite()` — idempotent; uses `@Modifying @Query` DELETE (returns row count) instead of derived delete so re-delivered Telegram callbacks after a restart do not throw
 - `isFavorite()` — single `EXISTS` query
 - `getFollowers()` — `JOIN FETCH` to avoid N+1
 
