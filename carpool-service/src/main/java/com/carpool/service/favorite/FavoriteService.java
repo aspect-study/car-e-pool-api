@@ -66,19 +66,17 @@ public class FavoriteService {
 
     /**
      * Removes a saved favorite.
-     * Silently ignored if not found.
+     * Idempotent — silently ignored if not found or already removed (e.g. duplicate
+     * Telegram callback re-delivery after a restart).
      */
     @Transactional
     public void removeFavorite(Long followerId, Long favoriteId) {
-        if (!favoriteRepository.existsByFollowerIdAndFavoriteId(
-                followerId, favoriteId)) {
-            log.info("Favorite not found — nothing to remove: " +
-                    "followerId={} favoriteId={}", followerId, favoriteId);
-            return;
+        int deleted = favoriteRepository.deleteByFollowerIdAndFavoriteId(followerId, favoriteId);
+        if (deleted > 0) {
+            log.info("Favorite removed: followerId={} favoriteId={}", followerId, favoriteId);
+        } else {
+            log.info("Favorite already removed (idempotent): followerId={} favoriteId={}", followerId, favoriteId);
         }
-        favoriteRepository.deleteByFollowerIdAndFavoriteId(followerId, favoriteId);
-        log.info("Favorite removed: followerId={} favoriteId={}",
-                followerId, favoriteId);
     }
 
     // ── Check favorite ────────────────────────────────────────────────────

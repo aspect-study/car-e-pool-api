@@ -2,6 +2,7 @@ package com.carpool.repository;
 
 import com.carpool.domain.entity.UserFavorite;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -48,9 +49,12 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavorite, Long
     List<Long> findFollowerIdsByFavoriteId(@Param("favoriteId") Long favoriteId);
 
     /**
-     * Remove a specific favorite.
+     * Remove a specific favorite. Returns number of rows deleted (0 or 1).
+     * Idempotent — does not throw when no row exists.
      */
-    void deleteByFollowerIdAndFavoriteId(Long followerId, Long favoriteId);
+    @Modifying
+    @Query("DELETE FROM UserFavorite uf WHERE uf.follower.id = :followerId AND uf.favorite.id = :favoriteId")
+    int deleteByFollowerIdAndFavoriteId(@Param("followerId") Long followerId, @Param("favoriteId") Long favoriteId);
 
     /**
      * Count how many users have saved a specific user as favorite.
