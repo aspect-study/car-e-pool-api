@@ -14,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -250,6 +253,14 @@ public class RatingService {
      */
     public List<RideRating> getRatingsReceived(Long userId) {
         return ratingRepository.findByRateeIdOrderByCreatedAtDesc(userId);
+    }
+
+    /**
+     * Returns a page of ratings received by a user — for the bot ratings wall.
+     */
+    public Page<RideRating> getRatingsReceivedPaged(Long userId, int page, int pageSize) {
+        return ratingRepository.findByRateeIdOrderByCreatedAtDesc(
+                userId, PageRequest.of(page, pageSize));
     }
 
     /**

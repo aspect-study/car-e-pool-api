@@ -44,7 +44,8 @@ public class CallbackHandler {
     private final RideSearchHandler rideSearchHandler;
     private final DriverHandler     driverHandler;
     private final ProfileHandler    profileHandler;
-    private final RatingHandler     ratingHandler;
+    private final RatingHandler        ratingHandler;
+    private final ViewRatingsHandler   viewRatingsHandler;
 
     private final Map<String, BotCommand> commands = new HashMap<>();
 
@@ -166,6 +167,9 @@ public class CallbackHandler {
         commands.put("TERMS_DECLINE", profileHandler::handleTermsDecline);
 
         // ── Rating ────────────────────────────────────────────────────────────────
+        commands.put("VIEW_RATINGS",  viewRatingsHandler::handleViewRatings);
+        commands.put("RATINGS_PAGE",  viewRatingsHandler::handleRatingsPage);
+        commands.put("CLOSE_RATINGS", viewRatingsHandler::handleCloseRatings);
         commands.put("RATE_RIDE", ratingHandler::handleRateRide);
         commands.put("RATE_STARS", ratingHandler::handleStarSelected);
         commands.put("SUBMIT_RATING", ratingHandler::handleSubmitRating);

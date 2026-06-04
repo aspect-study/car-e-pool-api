@@ -261,12 +261,18 @@ public class RideSearchHandler {
                     ));
                 }
             } else {
-                rows = List.of(List.of(
-                        BotMessageBuilder.button("✅ Book This Ride",
-                                "BOOK_RIDE:" + ctx.entityId(),  ButtonStyle.SUCCESS.toString()),
-                        BotMessageBuilder.button("🔍 Find a Ride",
-                                "FIND_RIDE", ButtonStyle.PRIMARY.toString())
-                ));
+                rows = List.of(
+                        List.of(
+                                BotMessageBuilder.button("✅ Book This Ride",
+                                        "BOOK_RIDE:" + ctx.entityId(),  ButtonStyle.SUCCESS.toString()),
+                                BotMessageBuilder.button("🔍 Find a Ride",
+                                        "FIND_RIDE", ButtonStyle.PRIMARY.toString())
+                        ),
+                        List.of(
+                                BotMessageBuilder.button("⭐ See Ratings",
+                                        "VIEW_RATINGS:" + ride.driver().id(), null)
+                        )
+                );
             }
             String ratingLabel  = ratingService.getDriverRatingLabel(ride.driver().id());
             ProfileStatsResponse stats = profileService.getProfileStats(ride.driver().id());

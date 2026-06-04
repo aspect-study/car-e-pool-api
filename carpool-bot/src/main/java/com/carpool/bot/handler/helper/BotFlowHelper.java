@@ -166,6 +166,7 @@ public class BotFlowHelper {
                 rows.add(List.of(BotMessageBuilder.button("🔄 Repost a Ride", "MY_RIDES", ButtonStyle.SUCCESS.toString())));
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE",  ButtonStyle.PRIMARY.toString())));
+            rows.add(List.of(BotMessageBuilder.button("⭐ My Ratings", "VIEW_RATINGS:" + carpoolUserId, null)));
 
             bot.send(sendWithInline(chatId, prompt, rows));
         }
