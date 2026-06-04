@@ -41,3 +41,6 @@ memory/dispatch-logs/
 
 # Superpowers plan/spec docs
 # docs/ is now tracked — specs and design docs are part of the repo
+
+# SQL files — migrations are local only; not exposed in the public repo
+*.sql
