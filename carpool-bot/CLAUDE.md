@@ -190,6 +190,25 @@ Both Entity and legacy fallback handled: each location checks `ride.getVehicle()
 
 `BotMessageBuilder.formatRideCard(ride, ratingLabel, memberBadge)` renders a badge line between the driver name and "Posted X ago". The badge is built by `BotMessageBuilder.buildMemberBadge(ProfileStatsResponse)` and shows role, completed ride count, and member-since date. Applied in both `RideSearchHandler.handleViewRide()` (bot search flow) and `MessageHandler.handleStart()` (group deep-link flow).
 
+## Ratings Wall
+
+Paginated view of received ratings (stars + optional comment) for any user. Stateless — all state is encoded in callback data, no `UserState` needed.
+
+**Handler:** `ViewRatingsHandler` — registered in `CallbackHandler` for three callbacks:
+- `VIEW_RATINGS:{userId}` — loads page 0, sends a **new message**
+- `RATINGS_PAGE:{userId}:{page}` — loads a specific page, **edits the existing message** in-place
+- `CLOSE_RATINGS:{userId}` — deletes the ratings message
+
+**Entry points:**
+- "⭐ My Ratings" button in `BotFlowHelper.showMainMenu()` — **inactive-ride branch only** (not shown when the user has an active ride). Emits `VIEW_RATINGS:{currentUserId}`.
+- "⭐ See Ratings" row in `RideSearchHandler.handleViewRide()` — **non-owner card only** (not shown to the driver viewing their own ride). Emits `VIEW_RATINGS:{driverUserId}`.
+
+**Page clamping:** `handleRatingsPage` fetches the requested page directly (single DB call in the normal path). If `requestedPage >= page.getTotalPages()` (stale last-page button), it re-fetches the actual last page — two DB calls only in that edge case.
+
+**Display name resolution:** For other-user views, the display name is read from `page.getContent().get(0).getRatee().getFullName()` on non-empty pages (no extra DB call). Falls back to `UserService.getUserById(targetUserId)` when the page is empty. Own-profile views pass `null` for display name and render "Your Ratings" as the header.
+
+**Page size:** 5 ratings per page. Navigation row: `« Prev` (hidden on page 0) · `Next »` (hidden on last page) · `✕ Close`.
+
 ## Schedulers
 
 One scheduler in `carpool-bot/scheduler/`:
