@@ -74,12 +74,10 @@ public class ViewRatingsHandler {
             return;
         }
         try {
-            // Fetch page 0 first to get totalPages for clamping (D3)
-            Page<RideRating> page = ratingService.getRatingsReceivedPaged(targetUserId, 0, PAGE_SIZE);
-            int totalPages  = Math.max(1, page.getTotalPages());
-            int clampedPage = Math.max(0, Math.min(requestedPage, totalPages - 1));
-
-            if (clampedPage != 0) {
+            Page<RideRating> page = ratingService.getRatingsReceivedPaged(targetUserId, requestedPage, PAGE_SIZE);
+            int clampedPage = requestedPage;
+            if (requestedPage >= page.getTotalPages() && page.getTotalPages() > 0) {
+                clampedPage = page.getTotalPages() - 1;
                 page = ratingService.getRatingsReceivedPaged(targetUserId, clampedPage, PAGE_SIZE);
             }
 
