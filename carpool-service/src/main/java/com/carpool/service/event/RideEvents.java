@@ -56,7 +56,7 @@ public final class RideEvents {
 
     /**
      * Published when a driver declines a booking request.
-     * Triggers: notify passenger (request declined, seats restored).
+     * Triggers: notify passenger (request declined, seats restored), refresh group announcement.
      */
     public record BookingDeclinedEvent(Booking booking) {}
 
