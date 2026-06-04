@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: 2026-05-26c -->
+<!-- build: 2026-06-04 -->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -1799,9 +1799,76 @@ paths:
   </div>
 
   <!-- ─────────────────────────────────────── -->
-  <!-- 3.6 CI/CD Integration                   -->
+  <!-- 3.6 Remote Control                      -->
   <!-- ─────────────────────────────────────── -->
-  <div id="sd36" class="stitle">🔧 3.6 CI/CD Pipeline Integration<span class="sub-tag">SD 3.6</span></div>
+  <div id="sd36" class="stitle">📡 3.6 Remote Control — Drive Claude Code From Any Device<span class="sub-tag">SD 3.6</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Remote Control lets you connect <code>claude.ai/code</code> or the Claude mobile app (iOS/Android) to a locally-running Claude Code session. Your code never leaves your machine — it is an HTTPS relay, <strong>not SSH</strong>. Requires Claude Code v2.1.51+; available on Pro/Max/Team/Enterprise plans (not API keys).</p>
+
+  <div class="g3">
+    <div class="card">
+      <h3>📡 Invocation Modes</h3>
+      <div class="code-wrap" style="margin-top:.5rem">
+        <pre># Server mode — headless, waits for connections
+claude remote-control
+
+# Interactive terminal + remote access enabled
+claude --remote-control
+
+# Enable inside a running session or VS Code
+/remote-control
+
+# Named session (easier to find on mobile)
+claude --remote-control --name "carpool-feature"
+
+# Auto-enable for all sessions
+# Settings → /config → enable remote control</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🔒 Security Model</h3>
+      <ul>
+        <li><strong>Outbound HTTPS only</strong> — no inbound ports opened on your machine</li>
+        <li>Credentials are short-lived and TLS-encrypted</li>
+        <li>Routed through Anthropic API relay — Anthropic mediates the connection</li>
+        <li>Not SSH — no SSH daemon, no port 22, no key pairs</li>
+        <li>Local process must stay running; ~10-min network outage causes timeout</li>
+        <li>Mobile push notifications supported (v2.1.110+)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📲 How to Connect</h3>
+      <ul>
+        <li>Session URL displayed in terminal on start</li>
+        <li>QR code — press <kbd>spacebar</kbd> to show, scan with phone</li>
+        <li>Session list at <code>claude.ai/code</code> — named sessions appear by <code>--name</code></li>
+        <li>One remote session per interactive process (limit)</li>
+        <li>Incompatible with Ultraplan running simultaneously</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>Feature</th><th>Claude Runs On</th><th>Use Case</th><th>Exam Trap</th></tr>
+      <tr><td><strong>Remote Control</strong></td><td>Your machine (CLI/VS Code)</td><td>Continue in-progress local work from phone or browser</td><td>Not SSH — HTTPS relay only</td></tr>
+      <tr><td><strong>Claude Code on Web</strong></td><td>Anthropic cloud</td><td>Start fresh without local setup</td><td>Code runs remotely, not locally</td></tr>
+      <tr><td><strong>Dispatch</strong></td><td>Your machine (Desktop)</td><td>Delegate a task from phone</td><td>Desktop app required</td></tr>
+      <tr><td><strong>Channels</strong></td><td>Your machine (CLI)</td><td>Push events from Telegram/Discord/webhooks into a session</td><td>Requires <code>--channels</code> flag</td></tr>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">[TRAP]</div>
+    <div>
+      <h4>Exam Trap — Remote Control ≠ SSH</h4>
+      <p>Remote Control does not use SSH in any way. There is no daemon, no port 22, no key pair, no tunneling. It is an <strong>outbound HTTPS connection</strong> from your local Claude Code process to an Anthropic-mediated relay. Your code runs locally. If an exam question describes "connecting to Claude Code on a remote server via SSH" — that is a different workflow entirely (SSH into the server, then run Claude Code there). Remote Control is specifically for reaching a <em>local</em> session from another device.</p>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 3.7 CI/CD Integration                   -->
+  <!-- ─────────────────────────────────────── -->
+  <div id="sd37" class="stitle">🔧 3.7 CI/CD Pipeline Integration<span class="sub-tag">SD 3.7</span></div>
 
   <div class="g2">
     <div class="card">
@@ -3081,7 +3148,7 @@ synthesis_report = {
   <div class="mx-row" data-domain="d3">
   <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Explore Subagent Context Isolation</span><span class="mx-preview">Verbose discovery in a subagent — coordinator gets summary, not 50K tokens of raw scan</span><span class="mx-chev">▼</span></div>
   <div class="mx-body"><div class="mx-tab-view theory">
-  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Explore Subagent Pattern</strong> <span class="sub-tag">SD 3.6</span></p><p>Spawn a dedicated Explore subagent for verbose codebase discovery. The subagent absorbs the full scan output. The main coordinator receives only the structured summary — preserving its context window for actual implementation work.</p></div>
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Explore Subagent Pattern</strong> <span class="sub-tag">SD 3.7</span></p><p>Spawn a dedicated Explore subagent for verbose codebase discovery. The subagent absorbs the full scan output. The main coordinator receives only the structured summary — preserving its context window for actual implementation work.</p></div>
   <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Running large-scale discovery (grep across 2000 files, full directory tree scan) in the main agent context consumes context capacity before any work begins. The Explore pattern routes that token cost to a disposable subagent context, leaving the coordinator's window clean.</p></div>
   <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Running codebase discovery directly in the main coordinator: "find all files that reference UserService and show their contents." After a large repo scan, 60% of context is raw file content the coordinator doesn't need — real work gets crowded out.</p></div>
   </div><div class="mx-tab-view deep">
@@ -3093,13 +3160,25 @@ synthesis_report = {
   <div class="mx-row" data-domain="d3">
   <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Independent Session Review</span><span class="mx-preview">Fresh instance catches what the generator cannot see in its own output</span><span class="mx-chev">▼</span></div>
   <div class="mx-body"><div class="mx-tab-view theory">
-  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Self-Review Blind Spot</strong> <span class="sub-tag">SD 3.6</span></p><p>A Claude Code instance that generated code shares all the same assumptions, context, and blind spots with itself when asked to review that code. A fresh, independent instance has no generation context and produces genuinely independent review.</p></div>
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Self-Review Blind Spot</strong> <span class="sub-tag">SD 3.7</span></p><p>A Claude Code instance that generated code shares all the same assumptions, context, and blind spots with itself when asked to review that code. A fresh, independent instance has no generation context and produces genuinely independent review.</p></div>
   <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Fresh session = fresh eyes = different blind spots. The generator assumes a certain caller handles a specific error. The independent reviewer has no such assumption and catches the uncaught exception. This is the same reason code review must be done by someone other than the author.</p></div>
   <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">"Review the code you just wrote" in the same session. The model produced and reviews from the same context — it validates its own assumptions rather than challenging them. Self-review in the generating session produces false confidence, not genuine coverage.</p></div>
   </div><div class="mx-tab-view deep">
   <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A payment processing module passes its own self-review. An independent review session catches: an uncaught <code>NumberFormatException</code> on currency parsing, a race condition on concurrent updates, and missing input validation on the card number field. All three were present in the original but invisible to the generator's self-review.</p></div>
   <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>claude -p "Review src/payment/processor.java for: uncaught exceptions, race conditions, missing input validation, SQL injection risks. Be adversarial." --allowedTools Read,Grep</code><br>New terminal, fresh session, no generation context. Results are genuinely independent.</p></div>
   <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">"Now review what you just wrote" — same session, same context, same blind spots. Produces a review that validates the generator's assumptions instead of challenging them. The independent review session is not a convenience — it's an architectural requirement for genuine quality assurance.</p></div>
+  </div></div></div>
+
+  <div class="mx-row" data-domain="d3">
+  <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Remote Control — HTTPS Relay, Not SSH</span><span class="mx-preview">claude --remote-control · outbound HTTPS · local session, any device · no inbound ports</span><span class="mx-chev">▼</span></div>
+  <div class="mx-body"><div class="mx-tab-view theory">
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Remote Control</strong> <span class="sub-tag">SD 3.6</span></p><p>Connects <code>claude.ai/code</code> or the Claude mobile app to a locally-running Claude Code session via an Anthropic-mediated HTTPS relay. Your code runs locally — nothing executes in the cloud. Requires v2.1.51+, Pro/Max/Team/Enterprise plan (not API keys).</p></div>
+  <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Remote Control uses <strong>outbound HTTPS only</strong> — no inbound ports are opened on your machine. It is NOT SSH, NOT a tunnel, NOT a VPN. The local Claude Code process dials out to the Anthropic relay; the remote device connects to the relay. Your firewall requires no inbound rules.</p></div>
+  <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Confusing Remote Control with SSH remote development. SSH requires an inbound port and a daemon. Remote Control requires neither — it's a client-initiated outbound HTTPS connection. Also: confusing "Remote Control" with "Claude Code on the web" — the web version runs in Anthropic's cloud; Remote Control runs on YOUR machine.</p></div>
+  </div><div class="mx-tab-view deep">
+  <div class="mx-col" data-col="4"><div class="mx-col-hdr">④ Real-World Scenario</div><p>A developer starts a long-running refactor on their laptop. They need to leave but want to continue from their phone. They run <code>claude --remote-control --name "refactor-session"</code>, scan the QR code from the Claude mobile app, and continue reviewing and approving changes while commuting — the code stays on their laptop, nothing is uploaded.</p></div>
+  <div class="mx-col" data-col="5"><div class="mx-col-hdr">⑤ Correct Execution</div><p><code>claude --remote-control --name "carpool-feature"</code> → spacebar for QR → scan with Claude mobile app. OR: session appears in <code>claude.ai/code</code> session list by name. Connect, continue work. <code>/remote-control</code> slash command enables it inside a running session. Auto-enable via <code>/config</code>.</p></div>
+  <div class="mx-col" data-col="6"><div class="mx-col-hdr">⑥ Anti-Pattern</div><p class="bad">Using <code>claude remote-control</code> (server/headless mode) when you want an interactive terminal session — that mode waits for connections without a local terminal. Use <code>claude --remote-control</code> (flag form) for an interactive session with remote access also enabled. Also: expecting Remote Control to work with API key plans — Pro/Max/Team/Enterprise only.</p></div>
   </div></div></div>
 
   <!-- ── D4: Prompt Engineering ── -->
@@ -3327,6 +3406,8 @@ synthesis_report = {
     <tr><td>--output-format json</td><td>Machine-parseable findings for inline PR comments; use with --json-schema</td><td>Parsing Claude's text output with string matching in CI</td></tr>
     <tr><td>Explore subagent</td><td>Isolates verbose discovery output; main context receives summary only</td><td>Running verbose file discovery in the main agent context</td></tr>
     <tr><td>Session isolation for review</td><td>Fresh independent instance catches issues the generator won't question</td><td>Self-review in same session that generated the code</td></tr>
+    <tr><td>Remote Control</td><td>HTTPS relay (NOT SSH) — drives local session from any device; outbound only, no inbound ports; Pro/Max/Team/Enterprise plans only</td><td>Confusing with SSH or with "Claude Code on the web" (cloud execution)</td></tr>
+    <tr><td><code>claude --remote-control</code></td><td>Interactive terminal + remote access; <code>claude remote-control</code> = headless server mode; <code>/remote-control</code> = enable in-session</td><td>Using server mode when you want an interactive terminal</td></tr>
   </table></div>
 
   <!-- D4 Quick -->
