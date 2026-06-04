@@ -39,5 +39,5 @@ target/
 memory/dispatch-logs/
 .claude/launch.json
 
-# Superpowers plan/spec docs — local AI workflow artifacts, not repo history
-docs/
+# Superpowers plan/spec docs
+# docs/ is now tracked — specs and design docs are part of the repo
