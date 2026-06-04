@@ -1532,7 +1532,7 @@ Depends on: carpool-repository. Depended on by: carpool-bot, carpool-admin.
   </div>
 
   <!-- 3.3 Custom Slash Commands -->
-  <div class="stitle">⚡ 3.3 Custom Slash Commands — .claude/skills/</div>
+  <div id="sd33" class="stitle">⚡ 3.3 Custom Slash Commands — .claude/skills/<span class="sub-tag">SD 3.3</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Custom slash commands live in <code>.claude/skills/*/SKILL.md</code> (or <code>.claude/commands/*.md</code> depending on Claude Code version). They provide reusable, project-specific workflows that run within a Claude Code session.</p>
 
   <div class="g3">
@@ -1597,7 +1597,7 @@ public void onMyNewEvent(RideEvents.MyNewEvent event) {
   </div>
 
   <!-- 3.4 Runtime Flags -->
-  <div class="stitle">🚩 3.4 CLI Runtime Flags</div>
+  <div id="sd34early" class="stitle">🚩 3.4 CLI Runtime Flags<span class="sub-tag">SD 3.4</span></div>
   <div class="g2">
     <div class="card">
       <h3>🔑 Key Flags</h3>
@@ -1634,7 +1634,7 @@ claude --planMode "add vehicle endpoint"</pre>
   </div>
 
   <!-- 3.5 Session State -->
-  <div class="stitle">💾 3.5 Session State Management</div>
+  <div id="sd35early" class="stitle">💾 3.5 Session State Management<span class="sub-tag">SD 3.5</span></div>
   <div class="tbl-wrap">
     <table>
       <tr><th>Command</th><th>Purpose</th><th>When to Use in car-e-pool-api</th></tr>
@@ -1655,9 +1655,9 @@ claude --planMode "add vehicle endpoint"</pre>
   </div>
 
   <!-- ─────────────────────────────────────── -->
-  <!-- 3.3 Path-Specific Rules                 -->
+  <!-- 3.6 Path-Specific Rules                 -->
   <!-- ─────────────────────────────────────── -->
-  <div id="sd33" class="stitle">📂 3.3 Path-Specific Rules — .claude/rules/<span class="sub-tag">SD 3.3</span></div>
+  <div id="sd36rules" class="stitle">📂 3.6 Path-Specific Rules — .claude/rules/<span class="sub-tag">SD 3.6</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem"><code>.claude/rules/</code> files use YAML frontmatter with <code>paths:</code> glob patterns to load rules only when editing matching files. This reduces irrelevant context, saves tokens, and is superior to directory-level <code>CLAUDE.md</code> for conventions that span multiple directories.</p>
 
   <div class="g2">
@@ -1722,7 +1722,7 @@ paths:
   <!-- ─────────────────────────────────────── -->
   <!-- 3.4 Plan Mode vs Direct Execution       -->
   <!-- ─────────────────────────────────────── -->
-  <div id="sd34" class="stitle">📋 3.4 Plan Mode vs Direct Execution<span class="sub-tag">SD 3.4</span></div>
+  <div id="sd37plan" class="stitle">📋 3.7 Plan Mode vs Direct Execution<span class="sub-tag">SD 3.7</span></div>
 
   <div class="g2">
     <div class="card">
@@ -1758,7 +1758,7 @@ paths:
   <!-- ─────────────────────────────────────── -->
   <!-- 3.5 Iterative Refinement Techniques     -->
   <!-- ─────────────────────────────────────── -->
-  <div id="sd35" class="stitle">🔁 3.5 Iterative Refinement Techniques<span class="sub-tag">SD 3.5</span></div>
+  <div id="sd38iter" class="stitle">🔁 3.8 Iterative Refinement Techniques<span class="sub-tag">SD 3.8</span></div>
 
   <div class="g3">
     <div class="card">
@@ -1801,7 +1801,7 @@ paths:
   <!-- ─────────────────────────────────────── -->
   <!-- 3.6 Remote Control                      -->
   <!-- ─────────────────────────────────────── -->
-  <div id="sd36" class="stitle">📡 3.6 Remote Control — Drive Claude Code From Any Device<span class="sub-tag">SD 3.6</span></div>
+  <div id="sd39remote" class="stitle">📡 3.9 Remote Control — Drive Claude Code From Any Device<span class="sub-tag">SD 3.9</span></div>
   <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Remote Control lets you connect <code>claude.ai/code</code> or the Claude mobile app (iOS/Android) to a locally-running Claude Code session. Your code never leaves your machine — it is an HTTPS relay, <strong>not SSH</strong>. Requires Claude Code v2.1.51+; available on Pro/Max/Team/Enterprise plans (not API keys).</p>
 
   <div class="g3">
@@ -1868,7 +1868,7 @@ claude --remote-control --name "carpool-feature"
   <!-- ─────────────────────────────────────── -->
   <!-- 3.7 CI/CD Integration                   -->
   <!-- ─────────────────────────────────────── -->
-  <div id="sd37" class="stitle">🔧 3.7 CI/CD Pipeline Integration<span class="sub-tag">SD 3.7</span></div>
+  <div id="sd310cicd" class="stitle">🔧 3.10 CI/CD Pipeline Integration<span class="sub-tag">SD 3.10</span></div>
 
   <div class="g2">
     <div class="card">
@@ -3148,7 +3148,7 @@ synthesis_report = {
   <div class="mx-row" data-domain="d3">
   <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Explore Subagent Context Isolation</span><span class="mx-preview">Verbose discovery in a subagent — coordinator gets summary, not 50K tokens of raw scan</span><span class="mx-chev">▼</span></div>
   <div class="mx-body"><div class="mx-tab-view theory">
-  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Explore Subagent Pattern</strong> <span class="sub-tag">SD 3.7</span></p><p>Spawn a dedicated Explore subagent for verbose codebase discovery. The subagent absorbs the full scan output. The main coordinator receives only the structured summary — preserving its context window for actual implementation work.</p></div>
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Explore Subagent Pattern</strong> <span class="sub-tag">SD 3.8</span></p><p>Spawn a dedicated Explore subagent for verbose codebase discovery. The subagent absorbs the full scan output. The main coordinator receives only the structured summary — preserving its context window for actual implementation work.</p></div>
   <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Running large-scale discovery (grep across 2000 files, full directory tree scan) in the main agent context consumes context capacity before any work begins. The Explore pattern routes that token cost to a disposable subagent context, leaving the coordinator's window clean.</p></div>
   <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Running codebase discovery directly in the main coordinator: "find all files that reference UserService and show their contents." After a large repo scan, 60% of context is raw file content the coordinator doesn't need — real work gets crowded out.</p></div>
   </div><div class="mx-tab-view deep">
@@ -3160,7 +3160,7 @@ synthesis_report = {
   <div class="mx-row" data-domain="d3">
   <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Independent Session Review</span><span class="mx-preview">Fresh instance catches what the generator cannot see in its own output</span><span class="mx-chev">▼</span></div>
   <div class="mx-body"><div class="mx-tab-view theory">
-  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Self-Review Blind Spot</strong> <span class="sub-tag">SD 3.7</span></p><p>A Claude Code instance that generated code shares all the same assumptions, context, and blind spots with itself when asked to review that code. A fresh, independent instance has no generation context and produces genuinely independent review.</p></div>
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Self-Review Blind Spot</strong> <span class="sub-tag">SD 3.10</span></p><p>A Claude Code instance that generated code shares all the same assumptions, context, and blind spots with itself when asked to review that code. A fresh, independent instance has no generation context and produces genuinely independent review.</p></div>
   <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Fresh session = fresh eyes = different blind spots. The generator assumes a certain caller handles a specific error. The independent reviewer has no such assumption and catches the uncaught exception. This is the same reason code review must be done by someone other than the author.</p></div>
   <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">"Review the code you just wrote" in the same session. The model produced and reviews from the same context — it validates its own assumptions rather than challenging them. Self-review in the generating session produces false confidence, not genuine coverage.</p></div>
   </div><div class="mx-tab-view deep">
@@ -3172,7 +3172,7 @@ synthesis_report = {
   <div class="mx-row" data-domain="d3">
   <div class="mx-hdr" onclick="toggleMxRow(this)"><span class="mx-badge">D3</span><span class="mx-concept">Remote Control — HTTPS Relay, Not SSH</span><span class="mx-preview">claude --remote-control · outbound HTTPS · local session, any device · no inbound ports</span><span class="mx-chev">▼</span></div>
   <div class="mx-body"><div class="mx-tab-view theory">
-  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Remote Control</strong> <span class="sub-tag">SD 3.6</span></p><p>Connects <code>claude.ai/code</code> or the Claude mobile app to a locally-running Claude Code session via an Anthropic-mediated HTTPS relay. Your code runs locally — nothing executes in the cloud. Requires v2.1.51+, Pro/Max/Team/Enterprise plan (not API keys).</p></div>
+  <div class="mx-col" data-col="1"><div class="mx-col-hdr">① Concept</div><p><strong>Remote Control</strong> <span class="sub-tag">SD 3.9</span></p><p>Connects <code>claude.ai/code</code> or the Claude mobile app to a locally-running Claude Code session via an Anthropic-mediated HTTPS relay. Your code runs locally — nothing executes in the cloud. Requires v2.1.51+, Pro/Max/Team/Enterprise plan (not API keys).</p></div>
   <div class="mx-col" data-col="2"><div class="mx-col-hdr">② Key Fact</div><p>Remote Control uses <strong>outbound HTTPS only</strong> — no inbound ports are opened on your machine. It is NOT SSH, NOT a tunnel, NOT a VPN. The local Claude Code process dials out to the Anthropic relay; the remote device connects to the relay. Your firewall requires no inbound rules.</p></div>
   <div class="mx-col" data-col="3"><div class="mx-col-hdr">③ Common Trap</div><p class="bad">Confusing Remote Control with SSH remote development. SSH requires an inbound port and a daemon. Remote Control requires neither — it's a client-initiated outbound HTTPS connection. Also: confusing "Remote Control" with "Claude Code on the web" — the web version runs in Anthropic's cloud; Remote Control runs on YOUR machine.</p></div>
   </div><div class="mx-tab-view deep">
