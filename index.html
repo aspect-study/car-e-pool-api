@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: 2026-06-02 -->
+<!-- build: 2026-06-04 -->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -161,7 +161,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
     <h1>Car-E-Pool</h1>
-    <p>User Manual — Version 1.6</p>
+    <p>User Manual — Version 1.7</p>
     <p style="margin-top:.2rem;font-size:.68rem;color:var(--muted)">© aspect;</p>
   </div>
   <nav class="sb-nav">
@@ -287,6 +287,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
         <li>📜 My Bookings (N) — when you have active bookings</li>
         <li>🔄 Repost a Ride — when you have past rides</li>
         <li>👤 My Profile</li>
+        <li>⭐ My Ratings</li>
       </ul>
     </div>
     <div class="card">
@@ -551,6 +552,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 
   <div class="step"><div class="step-num">5</div><div class="step-body"><h4>View Ride Details</h4>
     <p>Tap <strong>View #N</strong> to see the full ride card: route, time, seats, gas share, driver name &amp; rating, member badge, and any ride notes.</p>
+    <p style="margin-top:.45rem">Tap <strong>⭐ See Ratings</strong> on the ride card to open the driver's ratings wall — all reviews they have received, paginated.</p>
   </div></div>
 
   <div class="step"><div class="step-num">6</div><div class="step-body"><h4>Send Booking Request</h4>
@@ -642,6 +644,33 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
   <div class="card">
     <p>After rating a driver, the bot asks: <em>"Would you like to save [Driver Name] as a Favorite?"</em></p>
     <p style="margin-top:.5rem">Tap <strong>⭐ Save as Favorite</strong> to follow this driver. Tap <strong>Skip</strong> to pass. If the driver is already in your favorites, no duplicate is created.</p>
+  </div>
+
+  <div class="stitle">Ratings Wall</div>
+  <div class="card">
+    <p>View all ratings received by any user — yours or a driver you are considering booking.</p>
+    <div class="tbl-wrap" style="margin-top:.75rem">
+      <table>
+        <thead><tr><th>Entry point</th><th>What opens</th></tr></thead>
+        <tbody>
+          <tr><td><strong>⭐ My Ratings</strong> — main menu (inactive-ride)</td><td>Your own ratings wall</td></tr>
+          <tr><td><strong>⭐ See Ratings</strong> — ride detail card</td><td>That driver's ratings wall</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:.75rem">Each entry shows the star score (⭐⭐⭐⭐⭐) and the reviewer's comment, if one was left. Ratings are listed newest-first, <strong>5 per page</strong>.</p>
+    <div class="flow" style="margin-top:.75rem">
+      <span class="flow-step">⭐ My Ratings / See Ratings</span><span class="flow-arrow">→</span>
+      <span class="flow-step i">Ratings wall opens</span><span class="flow-arrow">→</span>
+      <span class="flow-step">« Prev / Next »</span><span class="flow-arrow">→</span>
+      <span class="flow-step d">✕ Close</span>
+    </div>
+    <ul style="margin-top:.75rem">
+      <li>Viewing your own ratings: header reads <em>"Your Ratings (N total)"</em></li>
+      <li>Viewing another user's ratings: header reads <em>"Ratings for [Name] (N total)"</em></li>
+      <li>No ratings yet: shows <em>"No ratings yet."</em> with a Close button</li>
+      <li><strong>✕ Close</strong> dismisses the ratings message entirely</li>
+    </ul>
   </div>
 
   <div class="stitle">Following a Driver from the Community Group</div>
@@ -1050,7 +1079,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>I did not receive the 30-minute departure reminder.</span><span class="chev">▼</span></div><div class="acc-body"><p>Departure reminders are sent once per ride approximately 30 minutes before the scheduled departure. If the scheduler ran slightly late or the ride was modified close to that window, the reminder may have been skipped. This is a best-effort notification — always verify departure time from your booking confirmation.</p></div></div>
 
   <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border);text-align:center;font-size:.78rem;color:var(--muted)">
-    Car-E-Pool User Manual — Version 1.6 &nbsp;|&nbsp; June 2026 &nbsp;|&nbsp; © aspect;
+    Car-E-Pool User Manual — Version 1.7 &nbsp;|&nbsp; June 2026 &nbsp;|&nbsp; © aspect;
   </div>
 </section>
 
