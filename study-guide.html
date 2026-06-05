@@ -748,6 +748,236 @@ fi
     </div>
   </div>
 
+  <!-- ─────────────────────────────────────── -->
+  <!-- 1.5 Hook Security Best Practices        -->
+  <!-- ─────────────────────────────────────── -->
+  <div id="sd15hooks" class="stitle">🔐 1.5 Hook Security Best Practices<span class="sub-tag">SD 1.5</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Hooks run with the same OS permissions as the developer and receive AI-generated input. That combination makes them a meaningful attack surface. The official Claude Code documentation defines five mandatory hardening practices — all five appear in <strong>car-e-pool-api</strong>'s hook files and are tested on the CCA-F exam.</p>
+
+  <div class="callout danger">
+    <div class="callout-icon">[RISK]</div>
+    <div>
+      <h4>Why Hook Security Is AI-Specific</h4>
+      <p>In a conventional CI script the operator controls the input. In an agentic hook the <em>model</em> proposes the file path, command, or argument that the hook receives. A crafted or hallucinated path like <code>../../.env</code> can bypass a domain-specific check (e.g. "only act on db/migration files") and expose a secret. Every hook must treat its input as untrusted.</p>
+    </div>
+  </div>
+
+  <!-- Practice 1 — Structured JSON parsing -->
+  <div id="hp1" class="stitle" style="font-size:.82rem;margin-top:1.2rem;margin-bottom:.5rem">① Validate and Sanitize Inputs — Never Trust Tool Input JSON Blindly</div>
+  <p style="font-size:.83rem;color:var(--muted);margin-bottom:.7rem">Hooks receive a JSON blob on stdin describing the tool call. Parse it with a real JSON parser — never split on whitespace or use shell parameter expansion to extract values.</p>
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Insecure — Raw String Extraction</div>
+      <pre>#!/usr/bin/env bash
+# Raw stdin split — fragile and injectable
+INPUT=$(cat)
+# A path with spaces or special chars breaks this:
+FILE_PATH=$(echo "$INPUT" | grep -o '"file_path":"[^"]*"' \
+  | cut -d'"' -f4)
+
+# If model sends: {"file_path":"foo\";rm -rf /;echo \""}
+# the grep/cut approach may pass a malformed value through</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Secure — Structured JSON Parsing</div>
+      <pre>#!/usr/bin/env bash
+INPUT=$(cat)
+# python3 json.load handles escapes, unicode, edge cases
+FILE_PATH=$(echo "$INPUT" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+# KeyError → empty string, never crashes the hook
+print(data.get('tool_input', {}).get('file_path', ''))
+" 2>/dev/null || echo "")
+
+# FILE_PATH is now a clean, properly decoded string</pre>
+    </div>
+  </div>
+
+  <!-- Practice 2 — Quote shell variables -->
+  <div id="hp2" class="stitle" style="font-size:.82rem;margin-top:1.2rem;margin-bottom:.5rem">② Always Quote Shell Variables — Prevent Word Splitting and Globbing</div>
+  <p style="font-size:.83rem;color:var(--muted);margin-bottom:.7rem">An unquoted variable containing spaces, <code>*</code>, or <code>?</code> undergoes shell word-splitting and globbing. In a hook that receives AI-generated paths, this is a reliable source of unexpected behaviour.</p>
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Insecure — Unquoted Variable</div>
+      <pre>#!/usr/bin/env bash
+FILE_PATH=$(extract_path "$INPUT")
+
+# If FILE_PATH = "some dir/V45__add column.sql"
+# the space causes word-splitting:
+if echo $FILE_PATH | grep -q "db/migration"; then
+#       ^^^^^^^^^^  → treated as two arguments:
+#                     echo "some" "dir/V45__add" "column.sql"
+  exit 1
+fi
+
+# Globbing risk: if FILE_PATH = "*.sql"
+# echo *.sql expands to ALL .sql files in CWD</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Secure — Always Quote</div>
+      <pre>#!/usr/bin/env bash
+FILE_PATH=$(extract_path "$INPUT")   # ← quote here too
+
+# Quote in every context: conditionals, grep, echo, test
+if echo "$FILE_PATH" | grep -q "db/migration"; then
+#        ^^^^^^^^^^^  ← quoted: one argument, no splitting
+  exit 1
+fi
+
+# Quote in test expressions too:
+if [[ "$FILE_PATH" == *".sql" ]]; then
+  # safe — [[ ]] suppresses globbing even unquoted,
+  # but quoting is still the correct habit everywhere
+fi</pre>
+    </div>
+  </div>
+
+  <!-- Practice 3 — Block path traversal -->
+  <div id="hp3" class="stitle" style="font-size:.82rem;margin-top:1.2rem;margin-bottom:.5rem">③ Block Path Traversal — Check for <code>..</code> Before Using Any File Path</div>
+  <p style="font-size:.83rem;color:var(--muted);margin-bottom:.7rem">A domain-specific check (e.g. "only act on <code>db/migration</code> files") does not protect against <code>../../.env</code> — that path doesn't match the guard, so execution continues with a sensitive file. The traversal check must come <em>first</em>, before any domain logic.</p>
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Insecure — Domain Check Only</div>
+      <pre>#!/usr/bin/env bash
+FILE_PATH=$(parse_path "$INPUT")
+
+# Domain check — looks safe…
+if ! echo "$FILE_PATH" | grep -q "db/migration"; then
+  exit 0   # ← "not a migration file, skip"
+fi
+
+# BYPASSED by: ../../db/migration/../../.env
+# grep finds "db/migration" substring → continues
+# actual operation targets .env</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Secure — Traversal Check First</div>
+      <pre>#!/usr/bin/env bash
+FILE_PATH=$(parse_path "$INPUT")
+
+# ① Traversal guard — MUST come before all domain logic
+if echo "$FILE_PATH" | grep -q '\.\.'; then
+  echo "BLOCKED: path traversal detected: $FILE_PATH" >&2
+  exit 2   # exit 2 = security block (distinct from exit 1)
+fi
+
+# ② Sensitive file guard (see practice 5)
+# ...
+
+# ③ Domain logic — now safe to apply
+if ! echo "$FILE_PATH" | grep -q "db/migration"; then
+  exit 0
+fi</pre>
+    </div>
+  </div>
+
+  <!-- Practice 4 — Use absolute paths -->
+  <div id="hp4" class="stitle" style="font-size:.82rem;margin-top:1.2rem;margin-bottom:.5rem">④ Use Absolute Paths — Hooks May Run From an Unpredictable CWD</div>
+  <p style="font-size:.83rem;color:var(--muted);margin-bottom:.7rem">The hook dispatcher does not guarantee that <code>$PWD</code> is the project root when the hook runs. Relative paths like <code>memory/dispatch-logs</code> silently write to the wrong location. Resolve to absolute using <code>git rev-parse --show-toplevel</code>.</p>
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Insecure — Relative Path</div>
+      <pre>#!/usr/bin/env bash
+# vault-writeback.sh — original version
+LOG_DIR="memory/dispatch-logs"
+LOG_FILE="$LOG_DIR/$DATE.md"
+
+mkdir -p "$LOG_DIR"
+# If CWD is not the project root (e.g. the hook
+# dispatcher sets CWD to the user's home dir),
+# the log silently writes to ~/memory/dispatch-logs
+# — or mkdir creates the wrong directory tree</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Secure — Absolute Path via git rev-parse</div>
+      <pre>#!/usr/bin/env bash
+# vault-writeback.sh — hardened version
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null \
+  || dirname "$(dirname "$(readlink -f "$0")")")
+LOG_DIR="$PROJECT_ROOT/memory/dispatch-logs"
+LOG_FILE="$LOG_DIR/$DATE.md"
+
+mkdir -p "$LOG_DIR"
+# LOG_DIR is always the correct absolute path
+# regardless of what CWD the dispatcher uses
+
+# Same principle applies to ALL path constructions
+# in hooks: config files, temp dirs, output files</pre>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">[WARN]</div>
+    <div>
+      <h4>Bare Commands Like <code>mvn</code> Depend on PATH</h4>
+      <p>Hooks that invoke build tools (e.g. <code>compile-check.sh</code> runs <code>mvn test-compile</code>) rely on <code>mvn</code> being on the shell's <code>$PATH</code>. This is correct on a developer workstation but can fail silently in a stripped CI environment or when the hook dispatcher uses a minimal environment. Known risk — document it; for portable hooks use the absolute Maven wrapper path: <code>./mvnw</code> or <code>$PROJECT_ROOT/mvnw</code>.</p>
+    </div>
+  </div>
+
+  <!-- Practice 5 — Sensitive file guard -->
+  <div id="hp5" class="stitle" style="font-size:.82rem;margin-top:1.2rem;margin-bottom:.5rem">⑤ Skip Sensitive Files — Block Writes to Credentials Regardless of Domain Logic</div>
+  <p style="font-size:.83rem;color:var(--muted);margin-bottom:.7rem">Write/Edit hooks must explicitly reject operations on credential files. This guard is independent of — and must precede — any domain-specific logic. Applies to <em>every</em> hook wired to Write/Edit events.</p>
+  <div class="cmp">
+    <div class="cmp-panel bad">
+      <div class="cmp-hdr">❌ Insecure — No Sensitive File Check</div>
+      <pre>#!/usr/bin/env bash
+FILE_PATH=$(parse_path "$INPUT")
+
+# flyway-gate only checks for migration files.
+# A crafted path to .env passes through untouched:
+# FILE_PATH = "carpool-web/src/main/resources/.env"
+# → no migration pattern match → exit 0 → write allowed
+
+if ! echo "$FILE_PATH" | grep -q "db/migration"; then
+  exit 0   # ← .env gets through here
+fi
+# ... migration-specific checks below</pre>
+    </div>
+    <div class="cmp-panel good">
+      <div class="cmp-hdr">✅ Secure — Sensitive File Guard</div>
+      <pre>#!/usr/bin/env bash
+FILE_PATH=$(parse_path "$INPUT")
+
+# ① Traversal guard (practice 3)
+if echo "$FILE_PATH" | grep -q '\.\.'; then
+  echo "BLOCKED: path traversal" >&2; exit 2
+fi
+
+# ② Sensitive file guard — before ALL domain logic
+if echo "$FILE_PATH" | grep -qE \
+  '(^|/)\.(env|git)(/|$)|\.pem$|\.key$|\.p12$|\.jks$|\.pkcs12$'; then
+  echo "BLOCKED: sensitive file: $FILE_PATH" >&2
+  exit 2
+fi
+
+# ③ Domain logic — now safe
+if ! echo "$FILE_PATH" | grep -q "db/migration"; then
+  exit 0
+fi</pre>
+    </div>
+  </div>
+
+  <!-- Summary table -->
+  <div class="tbl-wrap" style="margin-top:1.2rem">
+    <table>
+      <tr><th>#</th><th>Practice</th><th>Mechanism</th><th>Our Hook</th><th>Exam Trap</th></tr>
+      <tr><td>①</td><td>Validate inputs</td><td><code>python3 json.load(sys.stdin)</code></td><td>All hooks (<code>parse_path</code> helper)</td><td>Using <code>grep -o</code> / <code>cut</code> to extract JSON fields — broken by special chars</td></tr>
+      <tr><td>②</td><td>Quote variables</td><td><code>"$VAR"</code> everywhere</td><td>All hooks</td><td>Unquoted <code>$FILE_PATH</code> with a space → word-split into multiple arguments</td></tr>
+      <tr><td>③</td><td>Block traversal</td><td><code>grep -q '\.\.'</code> → <code>exit 2</code></td><td><code>flyway-gate.sh</code>, <code>module-boundary-check.sh</code></td><td>Relying on domain check alone — <code>../../db/migration/../../.env</code> satisfies "db/migration" grep</td></tr>
+      <tr><td>④</td><td>Absolute paths</td><td><code>git rev-parse --show-toplevel</code></td><td><code>vault-writeback.sh</code></td><td>Relative <code>LOG_DIR</code> writes to wrong location when CWD ≠ project root</td></tr>
+      <tr><td>⑤</td><td>Skip sensitive files</td><td><code>grep -qE '\.env|\.pem|\.key…'</code> → <code>exit 2</code></td><td><code>flyway-gate.sh</code>, <code>module-boundary-check.sh</code></td><td>Hook exits 0 on "not a migration" without checking whether the target IS a credential file</td></tr>
+    </table>
+  </div>
+
+  <div class="callout wisdom">
+    <div class="callout-icon">[★]</div>
+    <div>
+      <h4>Architect Wisdom — exit 2 vs exit 1</h4>
+      <p>By convention in car-e-pool-api hooks: <code>exit 1</code> = policy violation (wrong migration name, illegal import), <code>exit 2</code> = security block (path traversal, sensitive file). Both cause Claude Code to treat the tool call as blocked. The distinction is for operators reading hook logs — a security block warrants a different response than a naming convention violation.</p>
+    </div>
+  </div>
+
   <!-- 1.4 Context Isolation -->
   <div class="stitle">🔒 1.4 Context Isolation Between Coordinator and Subagents</div>
 
@@ -3496,6 +3726,10 @@ synthesis_report = {
     <tr><td>Subagent context isolation</td><td>Each subagent receives only its specific task + relevant context; NOT the full orchestrator history</td><td>Passing entire conversation history to every subagent — context bloat, information leakage</td></tr>
     <tr><td>PreToolUse hook</td><td>Fires before a tool executes; can block or modify the call — stronger than prompt guidance</td><td>Using system prompt instructions to prevent destructive tool calls instead of a hook</td></tr>
     <tr><td>PostToolUse hook</td><td>Fires after a tool runs; normalizes / trims output before the model sees it</td><td>Letting raw verbose tool output append verbatim — trimming belongs in PostToolUse, not model work</td></tr>
+    <tr><td>Hook input parsing</td><td>Always parse stdin with <code>python3 json.load(sys.stdin)</code> — structured, handles escapes and unicode</td><td>Using <code>grep -o</code> / <code>cut</code> to extract JSON fields — breaks on spaces, quotes, or special chars in AI-generated paths</td></tr>
+    <tr><td>Shell variable quoting</td><td>Always <code>"$VAR"</code> in hooks — prevents word-splitting and globbing on AI-generated values</td><td>Unquoted <code>$FILE_PATH</code> with a space → silently splits into multiple shell arguments</td></tr>
+    <tr><td>Hook path traversal + sensitive files</td><td>Check <code>grep -q '\.\.'</code> then <code>grep -qE '\.env|\.pem|\.key…'</code> → <code>exit 2</code> — BEFORE any domain logic</td><td>Relying on domain check alone — <code>../../db/migration/../../.env</code> satisfies a "db/migration" grep and slips through</td></tr>
+    <tr><td>Absolute paths in hooks</td><td><code>PROJECT_ROOT=$(git rev-parse --show-toplevel)</code> — CWD is not guaranteed to be project root when hooks run</td><td>Relative paths like <code>memory/dispatch-logs</code> silently write to wrong location when dispatcher CWD ≠ project root</td></tr>
     <tr><td>Stop hook (passive)</td><td>Fires when the session ends; used for logging and dispatch (e.g. <code>vault-writeback.sh</code>) — Claude is unaware it ran</td><td>Expecting the Stop hook to cancel or roll back work — passive Stop hooks are observational only</td></tr>
     <tr><td>Stop hook (active / feedback)</td><td>Outputs <code>{"systemMessage":"…"}</code> to stdout + exits 0 → Claude reads the message on its NEXT turn and self-corrects (e.g. <code>compile-check.sh</code>)</td><td>Exiting non-zero from a Stop hook — that terminates the session abnormally; always exit 0 from feedback Stop hooks</td></tr>
     <tr><td>Hub-and-spoke pattern</td><td>Central coordinator routes tasks to specialized subagents; synthesizes results at the hub</td><td>Sequential pipeline — one agent calls the next in a chain; context grows unbounded, no synthesis layer</td></tr>
@@ -4820,7 +5054,7 @@ document.querySelectorAll('.prog-card').forEach((card, i) => {
   <span class="sb-left">[ CCA-F STUDY TERMINAL ]</span>
   <span>DOMAIN: <span id="sb-domain-slug">overview</span></span>
   <span class="sb-flagged">★ <span id="sb-flag-count">0</span> FLAGGED</span>
-  <span class="sb-right">──  [INSERT]  UTF-8  v2026</span>
+  <span class="sb-right">──  [INSERT]  UTF-8  build 2026-06-05</span>
 </div>
 </body>
 </html>
