@@ -113,7 +113,7 @@ public class BookingController {
                 """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200", description = "Driver's ride history")
+            responseCode = "200", description = "Passenger's booking history")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "401", description = "Not authenticated")
     @GetMapping("/bookings/mine")
@@ -242,6 +242,12 @@ public class BookingController {
                     Multiple calls accumulate (e.g. ₱100 + ₱50 = ₱150 total paid).
                     """,
             security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Payment recorded")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403", description = "Not the ride owner")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404", description = "Booking not found")
     @PatchMapping("/bookings/{id}/payment")
     public ResponseEntity<ApiResponse<BookingResponse>> updatePayment(
             @PathVariable Long id,

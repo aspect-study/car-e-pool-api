@@ -9,6 +9,8 @@ import com.carpool.repository.BookingRepository;
 import com.carpool.repository.RideRatingRepository;
 import com.carpool.repository.RideRepository;
 import com.carpool.repository.UserRepository;
+import com.carpool.common.exception.InvalidOperationException;
+import com.carpool.common.exception.RatingConflictException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,21 +52,21 @@ public class RatingService {
                                    String comment) {
         // Validate inputs first — before any DB duplicate checks
         if (stars < 1 || stars > 5) {
-            throw new IllegalArgumentException(
+            throw new InvalidOperationException(
                     "Stars must be between 1 and 5.");
         }
 
         if (comment != null && comment.trim().length() > 1000) {
-            throw new IllegalArgumentException(
+            throw new InvalidOperationException(
                     "Comment is too long. Maximum 1000 characters allowed.");
         }
 
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new InvalidOperationException(
                         "Ride not found: " + rideId));
 
         if (ride.getStatus() != RideStatus.COMPLETED) {
-            throw new IllegalStateException(
+            throw new RatingConflictException(
                     "Ratings can only be submitted for completed rides.");
         }
 
@@ -75,22 +77,22 @@ public class RatingService {
         if (raterIsDriver) {
             if (ratingRepository.existsByRideIdAndRaterIdAndRateeId(
                     rideId, raterId, rateeId)) {
-                throw new IllegalStateException(
+                throw new RatingConflictException(
                         "You have already rated this passenger.");
             }
         } else {
             if (ratingRepository.existsByRideIdAndRaterId(rideId, raterId)) {
-                throw new IllegalStateException(
+                throw new RatingConflictException(
                         "You have already rated this ride.");
             }
         }
 
         User rater = userRepository.findById(raterId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new InvalidOperationException(
                         "Rater not found: " + raterId));
 
         User ratee = userRepository.findById(rateeId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new InvalidOperationException(
                         "Ratee not found: " + rateeId));
 
         String raterRole = raterIsDriver ? "DRIVER" : "PASSENGER";
@@ -156,7 +158,7 @@ public class RatingService {
      */
     public List<Long> getRateeIds(Long rideId, Long raterId) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new InvalidOperationException(
                         "Ride not found: " + rideId));
 
         // If rater is passenger, ratee is the driver — single
@@ -174,7 +176,7 @@ public class RatingService {
                 .toList();
 
         if (passengerIds.isEmpty()) {
-            throw new IllegalStateException(
+            throw new InvalidOperationException(
                     "No confirmed passengers found for ride: " + rideId);
         }
         return passengerIds;
@@ -262,10 +264,8 @@ public class RatingService {
      */
     @Transactional(readOnly = true)
     public Page<RideRating> getRatingsReceivedPaged(Long userId, int page, int pageSize) {
-        Page<RideRating> result = ratingRepository.findByRateeIdOrderByCreatedAtDesc(
+        return ratingRepository.findByRateeIdWithAssociations(
                 userId, PageRequest.of(page, pageSize));
-        result.getContent().forEach(r -> r.getRatee().getFullName());
-        return result;
     }
 
     /**

@@ -20,7 +20,7 @@ Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `Notifi
 
 `VehicleService.addVehicle()` enforces three rules: (1) plate uniqueness across all active vehicles belonging to other users — throws if occupied; (2) replace-oldest policy — if the user already has 3 active vehicles, the oldest (by `createdAt`) is soft-deleted before saving the new one; (3) after saving, the User entity's legacy `carModel`, `plateNumber`, `carColor`, and `carSeatCapacity` fields are synced to the newest active vehicle for backward compatibility with any code still reading those fields.
 
-`removeVehicle(vehicleId, userId)` verifies ownership then sets `deletedAt`. `getActiveVehiclesForUser(userId)` returns `List<VehicleResponse>` ordered oldest-first (matches selection order in bot UX).
+`removeVehicle(vehicleId, userId)` verifies ownership then sets `deletedAt`. Throws `NotRideOwnerException` (403) — not `InvalidRideStateException` — when the caller does not own the vehicle. Throws `ResourceNotFoundException` (404) when the vehicle ID does not exist. `getActiveVehiclesForUser(userId)` returns `List<VehicleResponse>` ordered oldest-first (matches selection order in bot UX).
 
 DB migrations: V39 creates `vehicles` with soft-delete and FK to `users (ON DELETE CASCADE)`; V40 adds `vehicle_id` FK (nullable, `ON DELETE SET NULL`) to `rides`; V41 migrates existing user vehicle data from `users` columns into `vehicles`; V42 widens `seat_capacity` from `TINYINT` to `INT` (Hibernate schema validation requires `Types#INTEGER` for Java `Integer`).
 
@@ -117,13 +117,25 @@ Plate numbers are withheld from public-facing surfaces. They are only disclosed 
 
 Both Entity and legacy fallback handled: each location checks `ride.getVehicle()` first, then falls back to `ride.getDriver().getCarModel()` legacy fields.
 
+**REST-side rule:** `RatingResponse` uses `UserSummaryResponse` (no vehicle fields) for `rater` and `ratee`. `VehicleResponse` (with `plateNumber`) is only returned from `/me/vehicles` — the owner's own data.
+
 For bot-side enforcement (BotMessageBuilder, BookingHandler), see `carpool-bot/CLAUDE.md`.
 
 ## DTOs & Mapping
 
 All entity→DTO mapping uses a single `EntityMapper` (MapStruct, compile-time generated, Spring bean). DTOs are Java records in `carpool-service/src/main/java/com/carpool/service/dto/`.
 
-`FollowerResponse(Long userId, String fullName, String telegramHandle, LocalDateTime followedAt)` is a DTO record in `carpool-service/src/main/java/com/carpool/service/dto/response/`.
+**Response DTOs:**
+- `UserResponse` — full user profile including `plateNumber`, `carModel`, `carColor`. Only for own-data endpoints (`/me`).
+- `UserSummaryResponse(Long id, String fullName, String telegramHandle, Double avgRating)` — plate-privacy DTO for third-party user fields. Used in `RatingResponse.rater` and `RatingResponse.ratee`. Never includes vehicle fields.
+- `VehicleResponse(Long id, String model, String color, String plateNumber, Integer seatCapacity)` — only returned from own-data endpoints (`/me/vehicles`).
+- `RatingResponse(Long id, Long rideId, UserSummaryResponse rater, UserSummaryResponse ratee, int stars, String comment, String raterRole, Instant createdAt)` — public endpoint; uses `UserSummaryResponse` not `UserResponse`.
+- `RatingEligibilityResponse(boolean canRate, List<Long> rateeIds)` — returned from `GET /rides/{rideId}/ratings/eligibility`.
+- `FollowerResponse(Long userId, String fullName, String telegramHandle, LocalDateTime followedAt)` — used by both `FavoriteService.getFollowers()` and `FavoriteService.getMyFavoritesAsDtos()`.
+
+**`FavoriteService.getMyFavoritesAsDtos(Long followerId)`** — returns `List<FollowerResponse>` for the REST `/me/favorites` endpoint. Mirrors `getFollowers()` pattern. The original `getMyFavorites()` still exists (returns `List<UserFavorite>` entities) and is used by bot-side code that needs the full entity.
+
+**Typed exceptions in FavoriteService:** `IllegalArgumentException` throws in `saveFavorite` replaced with `InvalidOperationException` (400). `GlobalExceptionHandler` handles via the existing `CarpoolException` handler.
 
 ## Hubs
 
@@ -149,7 +161,11 @@ V43 Flyway migration widens the DB unique constraint on `ride_ratings` from `(ri
 
 **Analytics queries (P3 TODO):** Five MySQL aggregate queries are documented for future `RideRatingRepository` addition: star distribution, top-rated drivers leaderboard (min 3 ratings), monthly trend per driver, completion rate (% of completed rides that got rated), and rating drop detection (last-30d avg vs all-time avg, drop > 0.5).
 
-**Ratings wall (paginated):** `RatingService.getRatingsReceivedPaged(Long userId, int page, int pageSize)` returns a `Page<RideRating>` for the bot ratings wall. `RideRatingRepository` has both a `List<RideRating>` overload (used by existing profile screens) and a `Page<RideRating>` overload (used by the ratings wall) of `findByRateeIdOrderByCreatedAtDesc` — Spring Data derives both automatically from the method signature. The paged overload accepts a `Pageable` argument; callers pass `PageRequest.of(page, pageSize)`.
+**Ratings wall (paginated):** `RatingService.getRatingsReceivedPaged(Long userId, int page, int pageSize)` returns a `Page<RideRating>`. Uses `RideRatingRepository.findByRateeIdWithAssociations(rateeId, pageable)` — a `@Query` with `JOIN FETCH r.rater JOIN FETCH r.ratee JOIN FETCH r.ride`. This is required because `open-in-view=false` is set project-wide: without JOIN FETCH the mapper throws `LazyInitializationException` when accessing `rater`, `ratee`, or `ride` after the transaction closes. The non-paged `findByRateeIdOrderByCreatedAtDesc` list overload is still used by bot profile screens that don't need the mapper.
+
+**Typed exceptions in RatingService:** Raw `IllegalArgumentException` and `IllegalStateException` throws have been replaced with typed `CarpoolException` subclasses: `InvalidOperationException` (400, error code `INVALID_OPERATION`) for bad-input cases (ride/user not found, invalid stars), and `RatingConflictException` (409, error code `RATING_CONFLICT`) for state-conflict cases (duplicate rating, ride not COMPLETED). Both classes live in `carpool-common`. `GlobalExceptionHandler` handles them via the existing `CarpoolException` handler — no handler changes needed.
+
+**REST-facing RatingResponse:** `RatingResponse` uses `UserSummaryResponse` (not `UserResponse`) for the `rater` and `ratee` fields. `UserSummaryResponse` intentionally omits `plateNumber`, `carModel`, and `carColor` — `GET /users/{userId}/ratings` is accessible by any authenticated user, so vehicle fields must not appear. `EntityMapper.toRatingResponse` requires `@Mapping(source = "ride.id", target = "rideId")` — MapStruct cannot auto-map nested `.id` fields and will silently produce null without this annotation.
 
 ## Schedulers
 

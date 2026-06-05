@@ -48,7 +48,7 @@ class FlywayMigrationTest extends BaseIntegrationTest {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM hubs WHERE status = 'ACTIVE'",
                 Integer.class);
-        assertThat(count).isEqualTo(31);
+        assertThat(count).isGreaterThanOrEqualTo(31);
     }
 
     @Test

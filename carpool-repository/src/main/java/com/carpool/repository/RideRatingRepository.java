@@ -35,6 +35,15 @@ public interface RideRatingRepository extends JpaRepository<RideRating, Long> {
 
     Page<RideRating> findByRateeIdOrderByCreatedAtDesc(Long rateeId, Pageable pageable);
 
+    @Query("SELECT r FROM RideRating r " +
+           "JOIN FETCH r.rater " +
+           "JOIN FETCH r.ratee " +
+           "JOIN FETCH r.ride " +
+           "WHERE r.ratee.id = :rateeId " +
+           "ORDER BY r.createdAt DESC")
+    Page<RideRating> findByRateeIdWithAssociations(
+            @Param("rateeId") Long rateeId, Pageable pageable);
+
     /**
      * Calculate average star rating for a user.
      * Returns null if no ratings exist yet.

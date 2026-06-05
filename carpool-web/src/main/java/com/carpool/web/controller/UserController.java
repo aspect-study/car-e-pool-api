@@ -2,10 +2,13 @@ package com.carpool.web.controller;
 
 import com.carpool.common.response.ApiResponse;
 import com.carpool.service.dto.request.UpdateRoleRequest;
+import com.carpool.service.dto.response.FollowerResponse;
 import com.carpool.service.dto.response.UserResponse;
+import com.carpool.service.favorite.FavoriteService;
 import com.carpool.service.profile.ProfileService;
 import com.carpool.service.user.UserService;
 import com.carpool.service.vehicle.VehicleService;
+import java.util.List;
 import com.carpool.web.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -26,6 +29,7 @@ public class UserController {
     private final UserService userService;
     private final VehicleService vehicleService;
     private final ProfileService profileService;
+    private final FavoriteService favoriteService;
 
     @Operation(summary = "Get my profile",
             description = "Returns the currently authenticated user's profile. " +
@@ -239,5 +243,73 @@ public class UserController {
 
         userService.deleteAccount(currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @Operation(summary = "Save a user as favorite",
+            description = """
+                Save another user as a favorite driver/passenger.
+                Idempotent — no error if already saved.
+                Returns 400 if trying to save yourself.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Saved (or already saved)")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", description = "Cannot favorite yourself")
+    @PostMapping("/{userId}/favorite")
+    public ResponseEntity<ApiResponse<Void>> saveFavorite(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        favoriteService.saveFavorite(currentUser.getUserId(), userId);
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @Operation(summary = "Remove a user from favorites",
+            description = """
+                Remove a saved favorite. Idempotent — no error if not found.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Removed (or was not saved)")
+    @DeleteMapping("/{userId}/favorite")
+    public ResponseEntity<ApiResponse<Void>> removeFavorite(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        favoriteService.removeFavorite(currentUser.getUserId(), userId);
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @Operation(summary = "Get my favorites",
+            description = """
+                Returns all users saved as favorites by the authenticated user.
+                Ordered newest-first.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "List of saved favorites")
+    @GetMapping("/me/favorites")
+    public ResponseEntity<ApiResponse<List<FollowerResponse>>> getMyFavorites(
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                favoriteService.getMyFavoritesAsDtos(currentUser.getUserId())));
+    }
+
+    @Operation(summary = "Get my followers",
+            description = """
+                Returns all users who have saved the authenticated user as a favorite.
+                Ordered newest-first.
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "List of followers")
+    @GetMapping("/me/followers")
+    public ResponseEntity<ApiResponse<List<FollowerResponse>>> getMyFollowers(
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                favoriteService.getFollowers(currentUser.getUserId())));
     }
 }

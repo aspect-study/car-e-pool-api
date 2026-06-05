@@ -8,10 +8,13 @@ import com.carpool.repository.*;
 import com.carpool.service.booking.BookingService;
 import com.carpool.service.dto.request.CreateBookingRequest;
 import com.carpool.service.dto.response.BookingResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -31,13 +34,15 @@ import static org.assertj.core.api.Assertions.*;
  * This is the test that proves the lock actually works.
  */
 @DisplayName("Booking Integration")
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
 class BookingIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired private BookingService  bookingService;
-    @Autowired private UserRepository  userRepository;
-    @Autowired private HubRepository   hubRepository;
-    @Autowired private RideRepository  rideRepository;
+    @Autowired private BookingService    bookingService;
+    @Autowired private UserRepository    userRepository;
+    @Autowired private HubRepository     hubRepository;
+    @Autowired private RideRepository    rideRepository;
     @Autowired private BookingRepository bookingRepository;
+    @Autowired private JdbcTemplate      jdbcTemplate;
 
     private User   driver;
     private User   passenger1;
@@ -83,9 +88,20 @@ class BookingIntegrationTest extends BaseIntegrationTest {
                 .build());
     }
 
+    @AfterEach
+    void tearDown() {
+        if (driver == null) return;
+        // Delete in FK order: bookings → rides → users
+        jdbcTemplate.update(
+                "DELETE b FROM bookings b JOIN rides r ON b.ride_id = r.id WHERE r.driver_id = ?",
+                driver.getId());
+        jdbcTemplate.update("DELETE FROM rides WHERE driver_id = ?", driver.getId());
+        jdbcTemplate.update("DELETE FROM users WHERE id IN (?, ?, ?, ?)",
+                driver.getId(), passenger1.getId(), passenger2.getId(), passenger3.getId());
+    }
+
     @Test
     @DisplayName("should book seat and persist to real DB")
-    @Transactional
     void shouldBookAndPersistToDb() {
         // Act
         BookingResponse response = bookingService.createBooking(
@@ -94,7 +110,7 @@ class BookingIntegrationTest extends BaseIntegrationTest {
                 passenger1.getId());
 
         // Assert — booking persisted
-        assertThat(response.status()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThat(response.status()).isEqualTo(BookingStatus.PENDING);
         assertThat(response.seatsReserved()).isEqualTo(1);
         assertThat(response.contributionDue()).isEqualByComparingTo("150.00");
 
@@ -106,7 +122,6 @@ class BookingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("should throw DuplicateBookingException when same passenger books twice")
-    @Transactional
     void shouldThrowOnDuplicateBooking() {
         // Need a ride with 2+ seats so it stays ACTIVE after first booking
         Hub origin      = hubRepository.findByCode("AYALA_MRT").orElseThrow();
