@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: 2026-06-04 -->
+<!-- build: 2026-06-05 -->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -1918,6 +1918,134 @@ claude -p "generate missing tests for BookingService" \
     </div>
   </div>
 
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 3.11 Stop Hook Feedback Loop            -->
+  <!-- ─────────────────────────────────────── -->
+  <div id="sd311stop" class="stitle">🔁 3.11 Stop Hook Feedback Loop — Active vs Passive Hooks<span class="sub-tag">SD 3.11</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">Not all Stop hooks are passive observers. A Stop hook that outputs <code>{"systemMessage": "..."}</code> to stdout feeds that text back to Claude as a system-level message on the <strong>next turn</strong>. This turns the hook into an active feedback loop — Claude sees the error and can self-correct without manual intervention.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔍 Two Stop Hook Patterns</h3>
+      <ul>
+        <li><strong>Passive / Observational:</strong> logs data, creates audit files, sends notifications — exit 0, no stdout output. Claude is unaware it ran.</li>
+        <li><strong>Active / Feedback:</strong> runs a check after each turn, outputs <code>{"systemMessage": "…"}</code> if problems found — Claude reads this on its next prompt and can self-correct.</li>
+        <li><code>vault-writeback.sh</code> = passive (creates dispatch log, no stdout to Claude)</li>
+        <li><code>compile-check.sh</code> = active (outputs compile errors as <code>systemMessage</code>)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>⚙️ compile-check.sh Pattern</h3>
+      <ul>
+        <li>Runs <code>mvn test-compile -DskipTests -q</code> after every Claude turn</li>
+        <li>Fires <em>once per turn</em> — all files are already written before the check runs</li>
+        <li>On success: exits 0, no output → Claude is not interrupted</li>
+        <li>On failure: outputs <code>{"systemMessage": "COMPILATION ERRORS — …"}</code> → Claude sees the errors at the top of the next prompt and self-corrects</li>
+        <li>Key: the hook always exits 0 — it never blocks the turn, only informs the next one</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-lbl">compile-check.sh — Stop Hook as Active Feedback Loop<button class="copy-btn" onclick="copyCode(this)">[COPY]</button></div>
+    <pre>#!/usr/bin/env bash
+# Stop hook — runs mvn test-compile after Claude finishes a turn.
+# Fires once per turn (all files written before this runs).
+# Outputs systemMessage JSON so Claude sees errors on the next turn.
+
+OUTPUT=$(mvn test-compile -DskipTests --no-transfer-progress -q 2>&1)
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  MSG="COMPILATION ERRORS — fix before running tests:
+$OUTPUT"
+  # systemMessage key = Claude reads this as a system-level prompt on next turn
+  python3 -c "
+import json, sys
+msg = sys.stdin.read()
+print(json.dumps({'systemMessage': msg}))
+" &lt;&lt;&lt; "$MSG"
+fi
+
+exit 0   # ← ALWAYS exit 0 — feedback hook never blocks the current turn</pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">[TIP]</div>
+    <div>
+      <h4>Exam Key — systemMessage vs Exit Code</h4>
+      <p>A PreToolUse hook exits <strong>non-zero</strong> to <em>block</em> a tool call. A Stop hook that exits non-zero terminates the session abnormally. A Stop feedback hook always exits 0 and communicates via <code>systemMessage</code> JSON on stdout. These are three completely different mechanisms — know which one does what.</p>
+      <div style="margin-top:.6rem">
+        <table style="font-size:.78rem;width:100%">
+          <tr><th>Hook type</th><th>Block mechanism</th><th>Feedback mechanism</th><th>Our example</th></tr>
+          <tr><td>PreToolUse</td><td>Exit non-zero</td><td>stdout message shown to user</td><td><code>guard-bash.sh</code>, <code>flyway-gate.sh</code></td></tr>
+          <tr><td>PostToolUse</td><td>Exit non-zero</td><td>stdout replaces tool result</td><td>(normalizing timestamps)</td></tr>
+          <tr><td>Stop (passive)</td><td>N/A — observational</td><td>No feedback to Claude</td><td><code>vault-writeback.sh</code></td></tr>
+          <tr><td>Stop (active)</td><td>Exit 0 always</td><td><code>{"systemMessage":"…"}</code> to stdout → Claude reads next turn</td><td><code>compile-check.sh</code></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 3.12 Hard-Won Integration Test Gotchas  -->
+  <!-- ─────────────────────────────────────── -->
+  <div id="sd312test" class="stitle">🧪 3.12 Hard-Won Integration Test Gotchas<span class="sub-tag">SD 3.12</span></div>
+  <p style="font-size:.875rem;color:var(--muted);margin-bottom:.9rem">These patterns were learned from real failures in <code>carpool-web</code> integration tests. Each is a non-obvious trap that will likely appear in exam scenarios about agentic code generation quality and test infrastructure design.</p>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🔒 @Transactional on BaseIntegrationTest</h3>
+      <ul>
+        <li><strong>Problem:</strong> each test inserts rows; without cleanup, later tests see leftover data and produce false results</li>
+        <li><strong>Fix:</strong> add <code>@Transactional</code> to <code>BaseIntegrationTest</code> — Spring rolls back each test's transaction automatically after the test method exits</li>
+        <li><strong>Exam angle:</strong> agentic code generation that creates integration tests must inherit from a transactional base class; not doing so causes cross-test DB pollution</li>
+        <li><strong>Anti-pattern:</strong> relying on <code>@AfterEach deleteAll()</code> calls — order-dependent, breaks on test failure before cleanup</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>⚡ NOT_SUPPORTED Propagation for Concurrency Tests</h3>
+      <ul>
+        <li><strong>Problem:</strong> a pessimistic lock test wrapped in an outer <code>@Transactional</code> never actually contends — both threads share the same outer transaction and the lock is never released between calls</li>
+        <li><strong>Fix:</strong> annotate the concurrency test method with <code>@Transactional(propagation = Propagation.NOT_SUPPORTED)</code> — suspends the outer transaction so each thread gets its own real transaction and lock</li>
+        <li><strong>Exam angle:</strong> understanding transaction propagation is critical for validating concurrency guarantees at the integration test level</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <h3>🗺️ MapStruct Silent Null Without @Mapping</h3>
+      <ul>
+        <li><strong>Problem:</strong> MapStruct generates mapper code at compile time. If a target field has no matching source field name AND no explicit <code>@Mapping</code> annotation, MapStruct silently sets it to <code>null</code> — no warning, no error</li>
+        <li><strong>Fix:</strong> always add explicit <code>@Mapping(source = "...", target = "...")</code> for every non-trivial field in the mapper interface</li>
+        <li><strong>Project example:</strong> <code>EntityMapper.toRatingResponse()</code> and <code>toUserSummaryResponse()</code> produced all-null DTOs until explicit <code>@Mapping</code> annotations were added</li>
+        <li><strong>Exam angle:</strong> compile-time code generation tools can introduce runtime null silently — a CI compile check alone won't catch this; only integration tests that assert field values will</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🍴 forkCount=0 in Surefire — Java Version Fork Issue</h3>
+      <ul>
+        <li><strong>Problem:</strong> Maven Surefire's default forked JVM uses the JVM it discovers on PATH, which may differ from the Java version used to build the project — causing cryptic <code>UnsupportedClassVersionError</code> or module-path failures in integration tests</li>
+        <li><strong>Fix:</strong> add <code>&lt;forkCount&gt;0&lt;/forkCount&gt;</code> to the Surefire plugin config — runs tests in the same JVM as Maven, guaranteeing version consistency</li>
+        <li><strong>Trade-off:</strong> no process isolation between test runs; a JVM crash kills all tests. Acceptable for local dev and CI where version consistency matters more than isolation</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">[TRAP]</div>
+    <div>
+      <h4>Typed Exceptions Over Raw IllegalArgumentException</h4>
+      <p>When an agentic pipeline generates service code, it will often throw <code>IllegalArgumentException</code> or <code>IllegalStateException</code> as generic error signals. This is an anti-pattern — exception handlers in <code>GlobalExceptionHandler</code> cannot distinguish a booking conflict (409) from a bad request (400) if both throw <code>IllegalStateException</code>.</p>
+      <ul style="margin-top:.4rem">
+        <li><strong>Correct pattern:</strong> typed exception per HTTP status: <code>InvalidOperationException</code> → 400, <code>RatingConflictException</code> → 409, <code>ResourceNotFoundException</code> → 404, <code>NotRideOwnerException</code> → 403</li>
+        <li><strong>Exam angle:</strong> when reviewing AI-generated service code, the first thing to check is whether raw exceptions are being thrown where typed ones should be used — this is a predictable AI code generation flaw</li>
+      </ul>
+    </div>
+  </div>
+
 </div>
 
 
@@ -3368,7 +3496,8 @@ synthesis_report = {
     <tr><td>Subagent context isolation</td><td>Each subagent receives only its specific task + relevant context; NOT the full orchestrator history</td><td>Passing entire conversation history to every subagent — context bloat, information leakage</td></tr>
     <tr><td>PreToolUse hook</td><td>Fires before a tool executes; can block or modify the call — stronger than prompt guidance</td><td>Using system prompt instructions to prevent destructive tool calls instead of a hook</td></tr>
     <tr><td>PostToolUse hook</td><td>Fires after a tool runs; normalizes / trims output before the model sees it</td><td>Letting raw verbose tool output append verbatim — trimming belongs in PostToolUse, not model work</td></tr>
-    <tr><td>Stop hook</td><td>Fires when the session ends; used for logging and dispatch (e.g. vault-writeback)</td><td>Expecting the Stop hook to cancel or roll back work — it is observational only</td></tr>
+    <tr><td>Stop hook (passive)</td><td>Fires when the session ends; used for logging and dispatch (e.g. <code>vault-writeback.sh</code>) — Claude is unaware it ran</td><td>Expecting the Stop hook to cancel or roll back work — passive Stop hooks are observational only</td></tr>
+    <tr><td>Stop hook (active / feedback)</td><td>Outputs <code>{"systemMessage":"…"}</code> to stdout + exits 0 → Claude reads the message on its NEXT turn and self-corrects (e.g. <code>compile-check.sh</code>)</td><td>Exiting non-zero from a Stop hook — that terminates the session abnormally; always exit 0 from feedback Stop hooks</td></tr>
     <tr><td>Hub-and-spoke pattern</td><td>Central coordinator routes tasks to specialized subagents; synthesizes results at the hub</td><td>Sequential pipeline — one agent calls the next in a chain; context grows unbounded, no synthesis layer</td></tr>
     <tr><td>--resume flag</td><td>Continues an existing named session with full history intact</td><td>Starting a new session when resumption is needed — loses all prior context and continuity</td></tr>
     <tr><td>fork_session</td><td>Creates an independent branch from a shared baseline without modifying the original session</td><td>Using fork_session when you need simple continuation (--resume) — wrong tool for sequential work</td></tr>
@@ -3408,6 +3537,10 @@ synthesis_report = {
     <tr><td>Session isolation for review</td><td>Fresh independent instance catches issues the generator won't question</td><td>Self-review in same session that generated the code</td></tr>
     <tr><td>Remote Control</td><td>HTTPS relay (NOT SSH) — drives local session from any device; outbound only, no inbound ports; Pro/Max/Team/Enterprise plans only</td><td>Confusing with SSH or with "Claude Code on the web" (cloud execution)</td></tr>
     <tr><td><code>claude --remote-control</code></td><td>Interactive terminal + remote access; <code>claude remote-control</code> = headless server mode; <code>/remote-control</code> = enable in-session</td><td>Using server mode when you want an interactive terminal</td></tr>
+    <tr><td>Stop hook feedback via systemMessage</td><td>Stop hook outputs <code>{"systemMessage":"…"}</code> + exits 0 → Claude reads it next turn; the ONLY way a Stop hook communicates back to Claude</td><td>Confusing Stop hook feedback (exit 0 + JSON stdout) with PreToolUse blocking (exit non-zero)</td></tr>
+    <tr><td>Integration test @Transactional</td><td><code>@Transactional</code> on <code>BaseIntegrationTest</code> auto-rolls-back after each test method — prevents DB pollution across tests</td><td>Using <code>@AfterEach deleteAll()</code> — order-dependent, skips on test failure before cleanup runs</td></tr>
+    <tr><td>Concurrency test propagation</td><td><code>NOT_SUPPORTED</code> propagation on concurrency test methods suspends outer transaction so each thread gets its own real lock</td><td>Running pessimistic lock tests inside an outer <code>@Transactional</code> — threads share the transaction, lock is never actually contended</td></tr>
+    <tr><td>MapStruct silent null</td><td>Without explicit <code>@Mapping</code>, MapStruct silently maps unmatched fields to <code>null</code> — no warning, no compile error</td><td>Assuming compile success means mapper output is correct — only integration tests asserting field values catch this</td></tr>
   </table></div>
 
   <!-- D4 Quick -->
