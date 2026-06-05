@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Base class for integration tests.
@@ -25,7 +26,9 @@ import org.springframework.test.context.TestPropertySource;
                 "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Manila",
         "spring.datasource.username=carpool",
         "spring.datasource.password=carpool",
-        "carpool.telegram.bot-token="
+        "carpool.telegram.bot-token=",
+        "spring.autoconfigure.exclude=org.telegram.telegrambots.longpolling.starter.TelegramBotStarterConfiguration"
 })
+@Transactional
 public abstract class BaseIntegrationTest {
 }

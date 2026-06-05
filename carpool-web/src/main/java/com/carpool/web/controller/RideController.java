@@ -3,6 +3,7 @@ package com.carpool.web.controller;
 import com.carpool.common.response.ApiResponse;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.service.dto.request.CreateRideRequest;
+import com.carpool.service.dto.request.UpdateDepartureTimeRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.ride.RideService;
@@ -287,5 +288,38 @@ public class RideController {
 
         return ResponseEntity.ok(ApiResponse.ok(
                 rideService.reannounceRide(id, currentUser.getUserId())));
+    }
+
+    @Operation(summary = "Update ride departure time",
+            description = """
+                Driver updates the departure time of an ACTIVE or FULL ride.
+
+                - Notifies all confirmed passengers via Telegram automatically
+                - Updates the community group post with the new time
+
+                **Constraints:**
+                - New time must be at least 15 minutes from now
+                - New time cannot equal the current departure time
+                - Ride must be ACTIVE or FULL
+                - Only the ride owner can update the time
+                """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "Departure time updated — passengers notified")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", description = "Invalid time or ride not in updatable state")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403", description = "Not the ride owner")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404", description = "Ride not found")
+    @PatchMapping("/{id}/departure-time")
+    public ResponseEntity<ApiResponse<RideResponse>> updateDepartureTime(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateDepartureTimeRequest request,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        RideResponse ride = rideService.updateDepartureTime(
+                id, request.newDepartureTime(), currentUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok(ride));
     }
 }

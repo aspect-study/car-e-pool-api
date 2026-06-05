@@ -1,5 +1,6 @@
 package com.carpool.service.favorite;
 
+import com.carpool.common.exception.InvalidOperationException;
 import com.carpool.domain.entity.User;
 import com.carpool.domain.entity.UserFavorite;
 import com.carpool.repository.UserFavoriteRepository;
@@ -34,7 +35,7 @@ public class FavoriteService {
     @Transactional
     public void saveFavorite(Long followerId, Long favoriteId) {
         if (followerId.equals(favoriteId)) {
-            throw new IllegalArgumentException(
+            throw new InvalidOperationException(
                     "You cannot save yourself as a favorite.");
         }
 
@@ -46,11 +47,11 @@ public class FavoriteService {
         }
 
         User follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new InvalidOperationException(
                         "Follower not found: " + followerId));
 
         User favorite = userRepository.findById(favoriteId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new InvalidOperationException(
                         "Favorite user not found: " + favoriteId));
 
         favoriteRepository.save(UserFavorite.builder()
@@ -96,6 +97,18 @@ public class FavoriteService {
      */
     public List<UserFavorite> getMyFavorites(Long followerId) {
         return favoriteRepository.findByFollowerIdOrderByCreatedAtDesc(followerId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FollowerResponse> getMyFavoritesAsDtos(Long followerId) {
+        return favoriteRepository.findByFollowerIdOrderByCreatedAtDesc(followerId)
+                .stream()
+                .map(uf -> new FollowerResponse(
+                        uf.getFavorite().getId(),
+                        uf.getFavorite().getFullName(),
+                        uf.getFavorite().getTelegramHandle(),
+                        uf.getCreatedAt()))
+                .toList();
     }
 
     // ── Get followers ─────────────────────────────────────────────────────

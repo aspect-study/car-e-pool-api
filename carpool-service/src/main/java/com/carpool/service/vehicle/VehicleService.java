@@ -1,6 +1,8 @@
 package com.carpool.service.vehicle;
 
 import com.carpool.common.exception.InvalidRideStateException;
+import com.carpool.common.exception.NotRideOwnerException;
+import com.carpool.common.exception.ResourceNotFoundException;
 import com.carpool.common.exception.UserNotFoundException;
 import com.carpool.domain.entity.User;
 import com.carpool.domain.entity.Vehicle;
@@ -93,10 +95,10 @@ public class VehicleService {
     @Transactional
     public void removeVehicle(Long vehicleId, Long userId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new InvalidRideStateException("Vehicle not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("VEHICLE_NOT_FOUND", "Vehicle not found: " + vehicleId));
 
         if (!vehicle.getUser().getId().equals(userId)) {
-            throw new InvalidRideStateException("You can only remove your own vehicles.");
+            throw new NotRideOwnerException();
         }
 
         if (vehicle.getDeletedAt() != null) {

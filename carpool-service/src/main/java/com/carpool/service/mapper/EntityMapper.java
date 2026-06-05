@@ -33,4 +33,10 @@ public interface EntityMapper {
     @Mapping(target = "passengerMessage", source = "passengerMessage")
     @Mapping(target = "expiresAt",        source = "expiresAt")
     BookingResponse toBookingResponse(Booking booking);
+
+    @Mapping(target = "avgRating", ignore = true)
+    UserSummaryResponse toUserSummaryResponse(User user);
+
+    @Mapping(target = "rideId", source = "ride.id")
+    RatingResponse toRatingResponse(RideRating rating);
 }

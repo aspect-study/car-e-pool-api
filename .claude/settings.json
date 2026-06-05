@@ -43,6 +43,12 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/vault-writeback.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/compile-check.sh",
+            "timeout": 120,
+            "statusMessage": "Checking compilation..."
           }
         ]
       }
