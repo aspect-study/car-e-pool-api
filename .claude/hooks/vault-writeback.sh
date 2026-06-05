@@ -8,7 +8,8 @@ set -euo pipefail
 INPUT=$(cat)
 TIMESTAMP=$(date +"%H:%M")
 DATE=$(date +"%Y-%m-%d")
-LOG_DIR="memory/dispatch-logs"
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || dirname "$(dirname "$(readlink -f "$0")")")
+LOG_DIR="$PROJECT_ROOT/memory/dispatch-logs"
 LOG_FILE="$LOG_DIR/$DATE.md"
 
 mkdir -p "$LOG_DIR"

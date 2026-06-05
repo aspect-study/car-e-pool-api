@@ -26,6 +26,18 @@ except Exception:
     print('')
 " 2>/dev/null || echo "")
 
+# Block path traversal
+if echo "$FILE_PATH" | grep -q '\.\.'; then
+  echo "BLOCKED: Path traversal detected in file path: $FILE_PATH" >&2
+  exit 2
+fi
+
+# Block sensitive files
+if echo "$FILE_PATH" | grep -qE '(^|/)\.(env|git)(/|$)|\.pem$|\.key$|\.p12$|\.jks$|\.pkcs12$'; then
+  echo "BLOCKED: Operation on sensitive file not allowed: $FILE_PATH" >&2
+  exit 2
+fi
+
 # Only act on files inside db/migration/
 if ! echo "$FILE_PATH" | grep -q "db/migration"; then
   exit 0
