@@ -144,6 +144,13 @@ public class BotFlowHelper {
                 BotMessageBuilder.formatRideCard(active) +
                 "\n\nWhat would you like to do?";
 
+        long activeRideCount = rideService.getMyRides(carpoolUserId).stream()
+                .filter(r -> r.status() == RideStatus.ACTIVE
+                        || r.status() == RideStatus.FULL
+                        || r.status() == RideStatus.DEPARTED)
+                .count();
+        boolean canPostNewRide = activeRideCount < 2;
+
         long pendingCount = bookingService.countPendingRequestsForRide(rideId);
         boolean canReannounce = active.announceCount() != null && active.announceCount() < 10;
         List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
@@ -158,6 +165,9 @@ public class BotFlowHelper {
             if (!myBookings.isEmpty()) {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+            }
+            if (canPostNewRide) {
+                rows.add(List.of(BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString())));
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
 
@@ -181,6 +191,9 @@ public class BotFlowHelper {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
             }
+            if (canPostNewRide) {
+                rows.add(List.of(BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString())));
+            }
             rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
 
@@ -200,6 +213,9 @@ public class BotFlowHelper {
             if (!myBookings.isEmpty()) {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+            }
+            if (canPostNewRide) {
+                rows.add(List.of(BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString())));
             }
             rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
