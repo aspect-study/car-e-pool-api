@@ -26,7 +26,6 @@ target/
 # Internal project docs — not for public exposure
 # Leading slash anchors these to the repo root only
 /CLAUDE.md
-/USER_MANUAL.md
 /TODOS.md
 /docker-compose.yml
 /Dockerfile
