@@ -1,5 +1,6 @@
 # Local dev credentials — never commit
-application-local.properties
+app_config.dart
+**/application-local.properties
 
 # Compiled output
 target/
@@ -43,3 +44,14 @@ memory/dispatch-logs/
 
 # SQL files — migrations are local only; not exposed in the public repo
 *.sql
+
+# Flutter / Dart
+carpool-mobile/.dart_tool/
+carpool-mobile/build/
+carpool-mobile/.flutter-plugins
+carpool-mobile/.flutter-plugins-dependencies
+carpool-mobile/.packages
+carpool-mobile/**/*.g.dart
+carpool-mobile/**/*.freezed.dart
+carpool-mobile/**/token_storage_test.mocks.dart
+carpool-mobile/**/auth_notifier_test.mocks.dart
