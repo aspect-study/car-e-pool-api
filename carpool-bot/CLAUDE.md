@@ -41,18 +41,42 @@ Triggered when direction is already in state (e.g. "Try Different Time" re-entry
 
 Five edit-time callbacks are flow-sensitive: `CAL_NAV_EDIT_TIME`, `CAL_DATE_EDIT_TIME`, `RIDE_TIME_EDIT`, `TIME_NAV_EDIT`, `CONFIRM_EDIT_RIDE_TIME`. The entry point `EDIT_RIDE_TIME` is intentionally excluded — it reads `rideId` from the callback payload, not from `UserState`, so it works safely with a fresh session (via `UserState.initial()`).
 
-## Main Menu — Active-Ride Block
+## Main Menu — Active-Ride Routing & Ride Picker
 
-`BotFlowHelper.showMainMenu()` has two branches. When `hasActiveRide` is true, the active-ride block now also fetches `bookingService.getMyBookings(carpoolUserId)` and adds a `📜 My Bookings (N) → MY_BOOKINGS` row to all three sub-branches (DEPARTED, pendingCount > 0, and the default ACTIVE/FULL branch) whenever the list is non-empty. This allows drivers to access their passenger-side bookings without leaving the active-ride view.
+`BotFlowHelper.showMainMenu()` filters `getMyRides()` down to `activeRides` (status `ACTIVE`, `FULL`, or `DEPARTED`) and branches on the **count**:
 
-A `✏️ Edit Time → EDIT_RIDE_TIME:{rideId}` button is included in both the `pendingCount > 0` branch and the default ACTIVE/FULL branch. It is intentionally excluded from the DEPARTED branch — `RideService.updateDepartureTime()` rejects edits on DEPARTED rides at the service layer.
+- **0 active rides:** unchanged inactive-ride branch (Find a Ride, My Bookings, Ratings, Profile, etc.).
+- **Exactly 1:** delegates straight to `showRideManagementCard(chatId, carpoolUserId, activeRides.get(0).id(), bot)` — no picker shown.
+- **2 or more** (e.g. one `HOME_TO_WORK` + one `WORK_TO_HOME`, or a `DEPARTED` ride alongside an `ACTIVE`/`FULL` one): shows a **ride picker** instead — one button per ride labeled with its direction (`🏠 Home → Work` / `🏢 Work → Home`) plus a live pending-count badge (`⏳ N pending` / `✅ 0 pending`, from `bookingService.countPendingRequestsForRide(ride.id())`). Each button routes to `MANAGE_RIDE:{rideId}`. The picker header always reports the **actual** `activeRides.size()` — never hardcode "2"; a driver can have 3+ active rides (e.g. a `DEPARTED` ride plus two `ACTIVE`/`FULL` ones).
+
+`MANAGE_RIDE:{rideId}` is registered in `CallbackHandler` and routes to `flowHelper.showRideManagementCard(...)`.
+
+## Ride Management Card — `showRideManagementCard`
+
+`BotFlowHelper.showRideManagementCard(chatId, carpoolUserId, rideId, bot)` is the single-ride management view extracted from the old inline `showMainMenu` active-ride block. It is reached either directly (driver has exactly one active ride) or via the picker's `MANAGE_RIDE:{rideId}`.
+
+**Stale-button guards (checked before rendering anything):**
+- `rideService.getRideById(rideId)` wrapped in try-catch — shows "⚠️ This ride is no longer available." if the ride can't be loaded.
+- `active.driver().id().equals(carpoolUserId)` ownership check — shows "⚠️ This is not your ride." on mismatch.
+
+**Three status sub-branches** (`DEPARTED`, `pendingCount > 0`, default `ACTIVE`/`FULL`) mirror the old single-ride logic, now parameterized by `rideId`:
+- `bookingService.getMyBookings(carpoolUserId)` still backs the `📜 My Bookings (N) → MY_BOOKINGS` row in all three branches whenever non-empty.
+- `✏️ Edit Time → EDIT_RIDE_TIME:{rideId}` appears in the `pendingCount > 0` and default branches only — excluded from `DEPARTED` because `RideService.updateDepartureTime()` rejects edits on departed rides at the service layer.
+- `⏳ Pending (N)` now emits **`PENDING_REQUESTS:{rideId}`** (scoped to this ride), not the bare `PENDING_REQUESTS`. `DriverHandler.handlePendingRequests` branches on `ctx.entityId()`: non-null → `bookingService.getPendingRequestsForRide(rideId, carpoolUserId)`, null → the legacy all-rides `getPendingRequestsForDriver(carpoolUserId)`. The "◀️ Back to Pending" button on the request-detail screen now carries `b.rideId()` so it returns to the correctly-scoped list rather than the unscoped one.
+
+**`🚗 Post a Ride` button:** shown in all three sub-branches whenever `activeRideCount < 2` (re-derived per card render via `rideService.getMyRides(carpoolUserId)`, counting `ACTIVE`/`FULL`/`DEPARTED`). Lets a driver with a single active ride post a second one (typically the return leg) without cancelling the first.
+
+**`🔄 Repost {other direction}` button:** shown whenever `activeRideCount < 2` **and** the current ride's direction is `HOME_TO_WORK` or `WORK_TO_HOME` (never shown for `OTHER`). Routes to `DIRECTION:{otherDirection}`, pre-selecting the *opposite* direction so the driver lands one tap into posting the return leg. Label is direction-specific: `🔄 Repost 🏢 Work → Home` or `🔄 Repost 🏠 Home → Work`.
+
+Both buttons sit in the row immediately before `🔍 Find a Ride` / `👤 My Profile` (or just before `👤 My Profile` in the `DEPARTED` branch, which has no Find-a-Ride row).
 
 **Button naming convention — critical distinction:**
-- `👥 My Passengers` → callback `RIDE_BOOKINGS:{rideId}` — driver views passengers booked **onto their ride**. Appears in the active-ride menu and on ride cards when the viewer is the driver.
+- `👥 My Passengers` → callback `RIDE_BOOKINGS:{rideId}` — driver views passengers booked **onto their ride**. Appears in the ride management card and on ride cards when the viewer is the driver.
 - `📜 My Bookings (N)` → callback `MY_BOOKINGS` — user views their own bookings **as a passenger** on someone else's ride.
 - `✏️ Edit Time` → callback `EDIT_RIDE_TIME:{rideId}` — driver updates the departure time of their active or FULL ride.
+- `⏳ Pending (N)` → callback `PENDING_REQUESTS:{rideId}` — scoped to one ride; the legacy unscoped `PENDING_REQUESTS` (all rides) still works as a fallback when no `rideId` is present in the payload.
 
-These buttons coexist in the active-ride menu. Never use "View Bookings" — it was renamed to "My Passengers" precisely to avoid ambiguity with "My Bookings".
+These buttons coexist in the ride management card. Never use "View Bookings" — it was renamed to "My Passengers" precisely to avoid ambiguity with "My Bookings".
 
 ## Edit Departure Time Flow
 

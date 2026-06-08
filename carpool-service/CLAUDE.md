@@ -58,6 +58,8 @@ For the bot-side CarpoolBot methods (sendToGroup, sendToUser, group buttons, han
 
 **Auto-sync on acceptance (passenger's other rides):** When a driver accepts a booking, `BookingService.acceptBooking()` auto-cancels the same passenger's PENDING bookings on **other rides** (not on the same ride). Each auto-cancelled booking fires `BookingAutoSyncedEvent`. `GroupNotificationService.onBookingAutoSynced()` calls `refreshGroupPostAfterSeatFreed` on the other ride, refreshing its group announcement to reflect the freed seat. If that other ride was FULL and its announcement was already deleted, `refreshGroupPostAfterSeatFreed` posts a fresh announcement.
 
+**Ride-scoped pending requests (for drivers with multiple active rides):** `getPendingRequestsForRide(rideId, driverUserId)` and `countPendingRequestsForRide(rideId)` complement the existing driver-wide `getPendingRequestsForDriver` / `countPendingRequestsForDriver`. `BookingRepository.findPendingByRideId` does `JOIN FETCH b.passenger`, `JOIN FETCH b.ride r`, and `JOIN FETCH r.driver` — the latter two are required so the service-layer `.filter(b -> b.getRide().getDriver().getId().equals(driverUserId))` ownership check doesn't throw `LazyInitializationException` outside the transaction. `countPendingByRideId` is a plain `COUNT` query, no fetch joins needed.
+
 ## Direction-Scoped Conflict Checks
 
 Conflict checks are direction-scoped — a user can drive HOME_TO_WORK and hold a WORK_TO_HOME passenger booking at the same time. `RideDirection.label()` returns a human-readable string (`"home-to-work"`, `"work-to-home"`, `"other"`) used in all error messages.
