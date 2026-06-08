@@ -108,6 +108,8 @@ public class CallbackHandler {
         commands.put("CANCEL_BOOKING_REASON", bookingHandler::handleCancelBookingWithReason);
 
         // ── Driver management ─────────────────────────────────────────────
+        commands.put("MANAGE_RIDE", ctx -> flowHelper.showRideManagementCard(
+                ctx.chatId(), ctx.carpoolUserId(), ctx.entityId(), ctx.bot()));
         commands.put("MY_RIDES",     ctx -> driverHandler.showMyRides(
                 ctx.chatId(), ctx.carpoolUserId(), ctx.bot()));
         commands.put("RIDE_BOOKINGS", driverHandler::handleDriverBookings);

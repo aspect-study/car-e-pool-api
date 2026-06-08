@@ -62,85 +62,38 @@ public class BotFlowHelper {
         stateManager.reset(chatId);
 
         List<RideResponse> myRides = rideService.getMyRides(carpoolUserId);
-        boolean hasActiveRide = myRides.stream()
-                .anyMatch(r -> r.status() == RideStatus.ACTIVE
+        List<RideResponse> activeRides = myRides.stream()
+                .filter(r -> r.status() == RideStatus.ACTIVE
                         || r.status() == RideStatus.FULL
-                        || r.status() == RideStatus.DEPARTED);
+                        || r.status() == RideStatus.DEPARTED)
+                .toList();
 
-        if (hasActiveRide) {
-            RideResponse active = myRides.stream()
-                    .filter(r -> r.status() == RideStatus.ACTIVE
-                            || r.status() == RideStatus.FULL
-                            || r.status() == RideStatus.DEPARTED)
-                    .findFirst().orElseThrow();
-
-            String msg = "🚗 <b>Your Active Ride</b>\n\n" +
-                    BotMessageBuilder.formatRideCard(active) +
-                    "\n\nWhat would you like to do?";
-
-            long pendingCount = bookingService.countPendingRequestsForDriver(carpoolUserId);
-            boolean canReannounce = active.announceCount() != null && active.announceCount() < 10;
-            List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
-
+        if (activeRides.size() >= 2) {
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
-            if (active.status() == RideStatus.DEPARTED) {
-                rows.add(List.of(
-                        BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
-                        BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id(), ButtonStyle.SUCCESS.toString())
-                ));
-                if (!myBookings.isEmpty()) {
-                    rows.add(List.of(BotMessageBuilder.button(
-                            "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
-                }
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
-
-            } else if (pendingCount > 0) {
-                rows.add(List.of(
-                        BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
-                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(), ButtonStyle.SUCCESS.toString())
-                ));
-                rows.add(List.of(
-                        BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS", ButtonStyle.PRIMARY.toString()),
-                        BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(), ButtonStyle.DANGER.toString())
-                ));
-                rows.add(List.of(BotMessageBuilder.button("✏️ Edit Time", "EDIT_RIDE_TIME:" + active.id(), ButtonStyle.PRIMARY.toString())));
-                if (canReannounce) {
-                    rows.add(List.of(BotMessageBuilder.button(
-                            "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
-                            "REANNOUNCE_RIDE:" + active.id(),
-                            ButtonStyle.PRIMARY.toString())));
-                }
-                if (!myBookings.isEmpty()) {
-                    rows.add(List.of(BotMessageBuilder.button(
-                            "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
-                }
-                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
-
-            } else {
-                rows.add(List.of(
-                        BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(),  ButtonStyle.PRIMARY.toString()),
-                        BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(),  ButtonStyle.SUCCESS.toString())
-                ));
-                rows.add(List.of(BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(),  ButtonStyle.DANGER.toString())));
-                rows.add(List.of(BotMessageBuilder.button("✏️ Edit Time", "EDIT_RIDE_TIME:" + active.id(), ButtonStyle.SUCCESS.toString())));
-                if (canReannounce) {
-                    rows.add(List.of(BotMessageBuilder.button(
-                            "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
-                            "REANNOUNCE_RIDE:" + active.id(),
-                            ButtonStyle.PRIMARY.toString())));
-                }
-                if (!myBookings.isEmpty()) {
-                    rows.add(List.of(BotMessageBuilder.button(
-                            "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
-                }
-                rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
-                rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+            for (RideResponse ride : activeRides) {
+                long pending = bookingService.countPendingRequestsForRide(ride.id());
+                String badge = pending > 0 ? "⏳ " + pending + " pending" : "✅ 0 pending";
+                String dirLabel = switch (ride.direction()) {
+                    case HOME_TO_WORK -> "🏠 Home → Work";
+                    case WORK_TO_HOME -> "🏢 Work → Home";
+                    default           -> ride.direction().label();
+                };
+                rows.add(List.of(BotMessageBuilder.button(
+                        dirLabel + "  ·  " + badge,
+                        "MANAGE_RIDE:" + ride.id(),
+                        ButtonStyle.PRIMARY.toString())));
             }
+            List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
+            if (!myBookings.isEmpty()) {
+                rows.add(List.of(BotMessageBuilder.button(
+                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+            }
+            rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+            bot.send(sendWithInline(chatId,
+                    "🚗 You have 2 active rides. Which one would you like to manage?", rows));
 
-            bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId, msg));
-            bot.send(sendWithInline(chatId, "Choose an action:", rows));
+        } else if (activeRides.size() == 1) {
+            showRideManagementCard(chatId, carpoolUserId, activeRides.get(0).id(), bot);
 
         } else {
             List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
@@ -170,6 +123,90 @@ public class BotFlowHelper {
 
             bot.send(sendWithInline(chatId, prompt, rows));
         }
+    }
+
+    // ── Ride management card ──────────────────────────────────────────────
+
+    public void showRideManagementCard(Long chatId, Long carpoolUserId, Long rideId, CarpoolBot bot) {
+        RideResponse active;
+        try {
+            active = rideService.getRideById(rideId);
+        } catch (Exception e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ This ride is no longer available."));
+            return;
+        }
+        if (!active.driver().id().equals(carpoolUserId)) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ This is not your ride."));
+            return;
+        }
+
+        String msg = "🚗 <b>Your Active Ride</b>\n\n" +
+                BotMessageBuilder.formatRideCard(active) +
+                "\n\nWhat would you like to do?";
+
+        long pendingCount = bookingService.countPendingRequestsForRide(rideId);
+        boolean canReannounce = active.announceCount() != null && active.announceCount() < 10;
+        List<BookingResponse> myBookings = bookingService.getMyBookings(carpoolUserId);
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        if (active.status() == RideStatus.DEPARTED) {
+            rows.add(List.of(
+                    BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
+                    BotMessageBuilder.button("✅ Complete Ride",  "COMPLETE_RIDE:" + active.id(), ButtonStyle.SUCCESS.toString())
+            ));
+            if (!myBookings.isEmpty()) {
+                rows.add(List.of(BotMessageBuilder.button(
+                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+            }
+            rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+
+        } else if (pendingCount > 0) {
+            rows.add(List.of(
+                    BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(), ButtonStyle.PRIMARY.toString()),
+                    BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(), ButtonStyle.SUCCESS.toString())
+            ));
+            rows.add(List.of(
+                    BotMessageBuilder.button("⏳ Pending (" + pendingCount + ")", "PENDING_REQUESTS:" + active.id(), ButtonStyle.PRIMARY.toString()),
+                    BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(), ButtonStyle.DANGER.toString())
+            ));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Edit Time", "EDIT_RIDE_TIME:" + active.id(), ButtonStyle.PRIMARY.toString())));
+            if (canReannounce) {
+                rows.add(List.of(BotMessageBuilder.button(
+                        "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
+                        "REANNOUNCE_RIDE:" + active.id(),
+                        ButtonStyle.PRIMARY.toString())));
+            }
+            if (!myBookings.isEmpty()) {
+                rows.add(List.of(BotMessageBuilder.button(
+                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+            }
+            rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
+            rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+
+        } else {
+            rows.add(List.of(
+                    BotMessageBuilder.button("👥 My Passengers", "RIDE_BOOKINGS:" + active.id(),  ButtonStyle.PRIMARY.toString()),
+                    BotMessageBuilder.button("🚀 Start Ride",    "DEPART_RIDE:"  + active.id(),  ButtonStyle.SUCCESS.toString())
+            ));
+            rows.add(List.of(BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(),  ButtonStyle.DANGER.toString())));
+            rows.add(List.of(BotMessageBuilder.button("✏️ Edit Time", "EDIT_RIDE_TIME:" + active.id(), ButtonStyle.SUCCESS.toString())));
+            if (canReannounce) {
+                rows.add(List.of(BotMessageBuilder.button(
+                        "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
+                        "REANNOUNCE_RIDE:" + active.id(),
+                        ButtonStyle.PRIMARY.toString())));
+            }
+            if (!myBookings.isEmpty()) {
+                rows.add(List.of(BotMessageBuilder.button(
+                        "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
+            }
+            rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
+            rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+        }
+
+        bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId, msg));
+        bot.send(sendWithInline(chatId, "Choose an action:", rows));
     }
 
     // ── Direction selected ────────────────────────────────────────────────

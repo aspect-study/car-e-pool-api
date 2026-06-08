@@ -366,8 +366,10 @@ public class DriverHandler {
     // ── Pending requests ──────────────────────────────────────────────────
 
     public void handlePendingRequests(BotContext ctx) {
-        List<BookingResponse> pending =
-                bookingService.getPendingRequestsForDriver(ctx.carpoolUserId());
+        Long rideId = ctx.entityId();
+        List<BookingResponse> pending = (rideId != null)
+                ? bookingService.getPendingRequestsForRide(rideId, ctx.carpoolUserId())
+                : bookingService.getPendingRequestsForDriver(ctx.carpoolUserId());
 
         if (pending.isEmpty()) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -447,7 +449,7 @@ public class DriverHandler {
                                     "DECLINE_BOOKING:" + ctx.entityId(), ButtonStyle.DANGER.toString())
                     ),
                     List.of(BotMessageBuilder.button(
-                            "◀️ Back to Pending", "PENDING_REQUESTS", ButtonStyle.PRIMARY.toString()))
+                            "◀️ Back to Pending", "PENDING_REQUESTS:" + b.rideId(), ButtonStyle.PRIMARY.toString()))
             );
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), detail, rows));
 
