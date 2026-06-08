@@ -1,5 +1,5 @@
 # Car-E-Pool — User Manual
-**Version 1.6 | May 2026**
+**Version 1.7 | June 2026**
 
 ---
 
@@ -12,7 +12,7 @@
    - 3.2 Finding & Booking a Ride (Passenger)
    - 3.3 Managing Your Ride (Driver) — incl. Editing Departure Time
    - 3.4 Managing Your Bookings (Passenger)
-   - 3.5 Ratings & Favorites
+   - 3.5 Ratings & Favorites (incl. Ratings Wall)
    - 3.6 Hubs
    - 3.7 Profile & Vehicle Setup
 4. [Business Rules & Validations](#4-business-rules--validations)
@@ -132,6 +132,7 @@ Buttons are **color-coded** by intent:
 - 📜 **My Bookings (N)** — Shown when you have active bookings as a passenger
 - 🔄 **Repost a Ride** — Shown when you have past completed or cancelled rides
 - 👤 **My Profile** — View your stats, vehicles, and ratings
+- ⭐ **My Ratings** — View all ratings you have received
 
 **When you have an active (posted) ride, the menu shows your ride card and:**
 - 👥 **My Passengers** | 🚀 **Start Ride**
@@ -310,6 +311,8 @@ Tap **View #N** (e.g., "View #1", "View #2") to see the full ride card for that 
 📝 Cash only. AC on.
 ```
 
+Tap **⭐ See Ratings** on the ride card to open that driver's ratings wall — all reviews they have received, listed newest-first (see §3.5 Ratings Wall).
+
 #### Step 6 — Send Booking Request
 
 Tap **✅ Book This Ride**.
@@ -368,7 +371,7 @@ The bot shows preset decline reasons — select one:
 - 🔧 Vehicle issue
 - ❌ Other reason
 
-The passenger is notified with your selected reason, and the seat is freed back to your ride.
+The passenger is notified with your selected reason, and the seat is freed back to your ride. If the ride is ACTIVE with available seats and currently has no group announcement (e.g., the post was deleted when it went FULL), a fresh group announcement is posted automatically.
 
 #### Starting Your Ride
 
@@ -607,6 +610,26 @@ When a driver you follow posts a new ride, you receive a private notification:
 
 ---
 
+#### Ratings Wall
+
+The ratings wall shows all ratings a user has received, listed newest-first.
+
+**Entry points:**
+
+| Entry Point | What Opens |
+|-------------|-----------|
+| **⭐ My Ratings** — main menu (no active ride) | Your own ratings wall |
+| **⭐ See Ratings** — ride detail card | That driver's ratings wall |
+
+Each entry shows the star score (⭐ 1–5) and the reviewer's comment, if one was left. Results are paginated at **5 per page** — use **« Prev** / **Next »** to navigate.
+
+- Viewing your own ratings: header reads *"Your Ratings (N total)"*
+- Viewing another user's ratings: header reads *"Ratings for [Name] (N total)"*
+- No ratings yet: shows *"No ratings yet."*
+- Tap **✕ Close** to dismiss the ratings wall.
+
+---
+
 ### 3.6 Hubs
 
 **Hubs are named pickup and dropoff landmarks** shared across the community. Using consistent hub names ensures drivers and passengers can find each other reliably.
@@ -827,7 +850,7 @@ These happen without any user action:
 | Auto-delete on FULL | When the last seat is filled (ride becomes FULL), the group post is deleted automatically |
 | Re-announce | Replaces the existing group post (old deleted, new posted); maximum 9 re-announces per ride (10 total group posts) |
 | Re-announce with seat edit | When re-announcing, driver can update the seat count; entering 0 removes the post and marks ride FULL |
-| Auto-refresh on seat freed | When a confirmed passenger is removed by the driver (or auto-cancelled due to FULL), the group post is automatically refreshed to show the updated seat count |
+| Auto-refresh on seat freed | When a seat is freed — confirmed passenger removed by the driver, passenger cancels their own booking, a pending booking is declined, or a booking is auto-cancelled when the ride goes FULL — the group post is automatically refreshed. If the ride has no current announcement (e.g., the post was deleted when it went FULL), a fresh one is posted |
 | Auto-delete | Announcement is deleted when ride is DEPARTED, COMPLETED, or CANCELLED |
 | Auto-refresh before 48h | Active ride announcements that have been live for 36+ hours are automatically re-posted by the system before Telegram's 48-hour deletion limit is reached — the post reappears fresh in the group with no action required from the driver |
 | 48-hour safety | If the auto-refresh scheduler was down and a message has already exceeded 48 hours, it is skipped rather than causing an error (Telegram API limitation) |
@@ -1013,6 +1036,13 @@ A: Yes. Ratings are per-ride, not per person. Each completed ride is an independ
 
 ---
 
+**Q: How do I see the reviews left for a driver before booking?**
+A: From any ride detail card (after tapping **View #N** in search results), tap **⭐ See Ratings**. This opens that driver's ratings wall — all reviews they have received, newest-first, 5 per page. Use **« Prev** / **Next »** to browse. Tap **✕ Close** when done.
+
+You can also view your own received ratings anytime from the main menu using **⭐ My Ratings** (visible when you have no active ride).
+
+---
+
 **Q: I keep receiving alerts from a driver I no longer want to follow.**
 A: Tap **🔕 Unfollow** on any alert notification from that driver. The button is embedded directly in the alert message — no menu navigation needed. Your unfollow takes effect immediately.
 
@@ -1182,4 +1212,4 @@ A: No. Seat count is fixed at the time of booking and cannot be modified afterwa
 
 ---
 
-*End of Car-E-Pool User Manual — Version 1.6*
+*End of Car-E-Pool User Manual — Version 1.7*
