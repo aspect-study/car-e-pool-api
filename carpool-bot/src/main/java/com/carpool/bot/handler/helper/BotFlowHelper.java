@@ -149,7 +149,22 @@ public class BotFlowHelper {
                         || r.status() == RideStatus.FULL
                         || r.status() == RideStatus.DEPARTED)
                 .count();
-        boolean canPostNewRide = activeRideCount < 2;
+
+        List<InlineKeyboardButton> repostRow = null;
+        if (activeRideCount < 2
+                && (active.direction() == RideDirection.HOME_TO_WORK
+                    || active.direction() == RideDirection.WORK_TO_HOME)) {
+            RideDirection otherDir = active.direction() == RideDirection.HOME_TO_WORK
+                    ? RideDirection.WORK_TO_HOME
+                    : RideDirection.HOME_TO_WORK;
+            String otherLabel = otherDir == RideDirection.WORK_TO_HOME
+                    ? "🏢 Work → Home"
+                    : "🏠 Home → Work";
+            repostRow = List.of(BotMessageBuilder.button(
+                    "🔄 Repost " + otherLabel,
+                    "DIRECTION:" + otherDir.name(),
+                    ButtonStyle.SUCCESS.toString()));
+        }
 
         long pendingCount = bookingService.countPendingRequestsForRide(rideId);
         boolean canReannounce = active.announceCount() != null && active.announceCount() < 10;
@@ -166,8 +181,8 @@ public class BotFlowHelper {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
             }
-            if (canPostNewRide) {
-                rows.add(List.of(BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString())));
+            if (repostRow != null) {
+                rows.add(repostRow);
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
 
@@ -191,8 +206,8 @@ public class BotFlowHelper {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
             }
-            if (canPostNewRide) {
-                rows.add(List.of(BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString())));
+            if (repostRow != null) {
+                rows.add(repostRow);
             }
             rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
@@ -214,8 +229,8 @@ public class BotFlowHelper {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
             }
-            if (canPostNewRide) {
-                rows.add(List.of(BotMessageBuilder.button("🚗 Post a Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString())));
+            if (repostRow != null) {
+                rows.add(repostRow);
             }
             rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
