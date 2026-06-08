@@ -90,7 +90,7 @@ public class BotFlowHelper {
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
             bot.send(sendWithInline(chatId,
-                    "🚗 You have 2 active rides. Which one would you like to manage?", rows));
+                    "🚗 You have " + activeRides.size() + " active rides. Which one would you like to manage?", rows));
 
         } else if (activeRides.size() == 1) {
             showRideManagementCard(chatId, carpoolUserId, activeRides.get(0).id(), bot);
