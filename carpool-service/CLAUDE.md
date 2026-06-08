@@ -14,6 +14,8 @@ Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `Notifi
 
 **`onRideTimeChanged`** listens for `RideTimeChangedEvent` (`@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)`). Fetches all confirmed bookings for the ride; returns early if none. Formats new departure time as `"EEE, MMM d 'at' h:mm a"` (e.g. "Thu, May 23 at 7:30 AM"). Sends each confirmed passenger a DM with `✅ Keep Booking → KEEP_BOOKING:{bookingId}` and `❌ Cancel Booking → CANCEL_BOOKING:{bookingId}` inline buttons via the keyboard overload of `sendAndRecord`. Persists each notification with `NotificationTypes.RIDE_TIME_CHANGED` and PENDING → SENT/FAILED status.
 
+**Direction label in all notifications:** All 18 DM notifications (9 driver + 9 passenger) include a direction line (`🏠 Home → Work` or `🏢 Work → Home`) on the line immediately after the notification title. The private static helper `directionLabel(RideDirection direction)` in `NotificationService` is the single source of truth — returns `"🏠 Home → Work"`, `"🏢 Work → Home"`, or `"📍 Other"` (also null-safe). Never use `RideDirection.label()` in notification messages — it returns machine-readable lowercase strings, not display text.
+
 ## Multi-Vehicle Management
 
 `Vehicle` is a domain entity (soft-delete via `deletedAt`) with fields `user (FK LAZY)`, `plateNumber`, `model`, `color`, `seatCapacity (Integer)`. `VehicleRepository` exposes `findByUserIdAndDeletedAtIsNullOrderByCreatedAtAsc`, `findActiveByPlateForOtherUser`, and `existsByUserIdAndDeletedAtIsNull`.

@@ -38,6 +38,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Handles all driver-side ride management flows.
@@ -130,64 +132,63 @@ public class DriverHandler {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     """
                             📋 <b>Ride Bookings</b>
-                            
+
                             <i>No passengers have booked your ride yet.</i>"""));
             return;
         }
 
-        List<BookingResponse> confirmed = bookings.stream()
-                .filter(b -> b.status() == BookingStatus.CONFIRMED).toList();
-        List<BookingResponse> pending = bookings.stream()
-                .filter(b -> b.status() == BookingStatus.PENDING).toList();
+        long totalConfirmed = bookings.stream()
+                .filter(b -> b.status() == BookingStatus.CONFIRMED).count();
+        long totalPending = bookings.stream()
+                .filter(b -> b.status() == BookingStatus.PENDING).count();
 
         StringBuilder sb = new StringBuilder("📋 <b>Ride Bookings</b>\n\n");
         sb.append(String.format("✅ Confirmed: <b>%d</b>  ⏳ Pending: <b>%d</b>\n\n",
-                confirmed.size(), pending.size()));
+                totalConfirmed, totalPending));
+
+        Map<RideDirection, List<BookingResponse>> byDirection = bookings.stream()
+                .collect(Collectors.groupingBy(b -> b.ride().direction()));
+
+        List<RideDirection> orderedDirections = List
+                .of(RideDirection.HOME_TO_WORK, RideDirection.WORK_TO_HOME)
+                .stream()
+                .filter(byDirection::containsKey)
+                .collect(Collectors.toCollection(ArrayList::new));
+        byDirection.keySet().stream()
+                .filter(d -> d != RideDirection.HOME_TO_WORK && d != RideDirection.WORK_TO_HOME)
+                .forEach(orderedDirections::add);
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         int index = 1;
 
-        if (!confirmed.isEmpty()) {
-            sb.append("─── <b>Confirmed</b> ───\n");
+        for (RideDirection direction : orderedDirections) {
+            String dirLabel = switch (direction) {
+                case HOME_TO_WORK -> "🏠 Home → Work";
+                case WORK_TO_HOME -> "🏢 Work → Home";
+                default           -> "📍 Other";
+            };
+            sb.append("─── <b>").append(dirLabel).append("</b> ───\n");
+
+            List<BookingResponse> dirBookings = byDirection.get(direction);
+            List<BookingResponse> confirmed = dirBookings.stream()
+                    .filter(b -> b.status() == BookingStatus.CONFIRMED).toList();
+            List<BookingResponse> pending = dirBookings.stream()
+                    .filter(b -> b.status() == BookingStatus.PENDING).toList();
+
             for (BookingResponse b : confirmed) {
-                String paxHandle = b.passenger().telegramHandle() != null
-                        ? " (@" + HtmlEscapeUtil.escape(
-                        b.passenger().telegramHandle()) + ")" : "";
-                sb.append(String.format(
-                        "<b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share\n",
-                        index,
-                        HtmlEscapeUtil.escape(b.passenger().fullName()),
-                        paxHandle,
-                        b.seatsReserved(),
-                        b.contributionDue()));
-                rows.add(List.of(InlineKeyboardButton.builder()
-                        .text("✅ #" + index + " — " + b.passenger().fullName())
-                        .callbackData("VIEW_DRIVER_BOOKING:" + b.id())
-                        .build()));
+                appendBookingRow(sb, rows, b, index, "✅", "VIEW_DRIVER_BOOKING:");
+                index++;
+            }
+
+            if (!confirmed.isEmpty() && !pending.isEmpty()) {
+                sb.append("\n");
+            }
+
+            for (BookingResponse b : pending) {
+                appendBookingRow(sb, rows, b, index, "⏳", "VIEW_PENDING:");
                 index++;
             }
             sb.append("\n");
-        }
-
-        if (!pending.isEmpty()) {
-            sb.append("─── <b>Pending Approval</b> ───\n");
-            for (BookingResponse b : pending) {
-                String paxHandle = b.passenger().telegramHandle() != null
-                        ? " (@" + HtmlEscapeUtil.escape(
-                        b.passenger().telegramHandle()) + ")" : "";
-                sb.append(String.format(
-                        "<b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share\n",
-                        index,
-                        HtmlEscapeUtil.escape(b.passenger().fullName()),
-                        paxHandle,
-                        b.seatsReserved(),
-                        b.contributionDue()));
-                rows.add(List.of(InlineKeyboardButton.builder()
-                        .text("⏳ #" + index + " — " + b.passenger().fullName())
-                        .callbackData("VIEW_PENDING:" + b.id())
-                        .build()));
-                index++;
-            }
         }
 
         rows.add(List.of(BotMessageBuilder.menuButtonRow().getFirst()));
@@ -941,5 +942,24 @@ public class DriverHandler {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not complete ride. Please try again."));
         }
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────
+
+    private void appendBookingRow(StringBuilder sb,
+                                   List<List<InlineKeyboardButton>> rows,
+                                   BookingResponse b, int index,
+                                   String statusEmoji, String callbackPrefix) {
+        String paxHandle = b.passenger().telegramHandle() != null
+                ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")" : "";
+        sb.append(String.format(
+                "%s <b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share\n",
+                statusEmoji, index,
+                HtmlEscapeUtil.escape(b.passenger().fullName()), paxHandle,
+                b.seatsReserved(), b.contributionDue()));
+        rows.add(List.of(InlineKeyboardButton.builder()
+                .text(statusEmoji + " #" + index + " — " + b.passenger().fullName())
+                .callbackData(callbackPrefix + b.id())
+                .build()));
     }
 }

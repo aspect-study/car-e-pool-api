@@ -160,10 +160,9 @@ public class BotFlowHelper {
             String otherLabel = otherDir == RideDirection.WORK_TO_HOME
                     ? "🏢 Work → Home"
                     : "🏠 Home → Work";
-            repostRow = List.of(BotMessageBuilder.button(
-                    "🔄 Repost " + otherLabel,
-                    "DIRECTION:" + otherDir.name(),
-                    ButtonStyle.SUCCESS.toString()));
+            repostRow = List.of(
+                    BotMessageBuilder.button("🔄 Repost", "MY_RIDES", ButtonStyle.SUCCESS.toString()),
+                    BotMessageBuilder.button(otherLabel, "DIRECTION:" + otherDir.name(), ButtonStyle.SUCCESS.toString()));
         }
 
         long pendingCount = bookingService.countPendingRequestsForRide(rideId);
