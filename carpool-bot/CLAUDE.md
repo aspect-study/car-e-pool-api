@@ -233,6 +233,15 @@ Paginated view of received ratings (stars + optional comment) for any user. Stat
 
 **Page size:** 5 ratings per page. Navigation row: `« Prev` (hidden on page 0) · `Next »` (hidden on last page) · `✕ Close`.
 
+## Pending Hub Suggestions — Bulk Approval
+
+`ProfileHandler.handlePendingHubs` shows an `✅ Approve All (N)` row below the per-page list (in addition to the existing per-row `✅`/`❌` approve/reject buttons scoped to that page). `N` is the total pending count, not just the current page.
+
+- `APPROVE_ALL_HUBS` → `handleApproveAllHubs` — admin check, shows a confirm screen ("Approve all N pending hubs?") since bulk approval has no bulk-undo from the bot.
+- `CONFIRM_APPROVE_ALL_HUBS` → `handleConfirmApproveAllHubs` — admin check, calls `hubService.approveAllPendingHubs()` (see `carpool-service/CLAUDE.md`), then lists every approved hub's name + generated code in the confirmation message.
+
+Both callbacks are non-flow-sensitive, same as `PENDING_HUBS`/`APPROVE_HUB`/`REJECT_HUB` — no `SessionRecoveryHandler` change needed.
+
 ## Schedulers
 
 One scheduler in `carpool-bot/scheduler/`:

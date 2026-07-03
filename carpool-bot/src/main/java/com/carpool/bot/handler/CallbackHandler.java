@@ -159,6 +159,8 @@ public class CallbackHandler {
         commands.put("PENDING_HUBS", profileHandler::handlePendingHubs);
         commands.put("APPROVE_HUB", profileHandler::handleApproveHub);
         commands.put("REJECT_HUB", profileHandler::handleRejectHub);
+        commands.put("APPROVE_ALL_HUBS", profileHandler::handleApproveAllHubs);
+        commands.put("CONFIRM_APPROVE_ALL_HUBS", profileHandler::handleConfirmApproveAllHubs);
 
         // ── Terms ─────────────────────────────────────────────────────────
         commands.put("TERMS_WELCOME",    ctx -> profileHandler.handleTermsWelcome(

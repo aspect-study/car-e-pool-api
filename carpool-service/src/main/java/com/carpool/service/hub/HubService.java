@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -145,6 +146,29 @@ public class HubService {
                 .stream()
                 .map(mapper::toHubResponse)
                 .toList();
+    }
+
+    /**
+     * Admin: approve every pending hub in one pass. Reuses the same
+     * per-hub code generation as {@link #approveHub}; hubs are saved
+     * one at a time so each generateUniqueCode call sees prior codes
+     * from this batch (auto-flush before the findByCode query).
+     */
+    @Caching(evict = {
+            @CacheEvict(value = "hubs",       allEntries = true),
+            @CacheEvict(value = "hub-search", allEntries = true)
+    })
+    @Transactional
+    public List<HubResponse> approveAllPendingHubs() {
+        List<Hub> pending = hubRepository.findAllPending();
+        List<HubResponse> approved = new ArrayList<>();
+        for (Hub hub : pending) {
+            hub.setCode(generateUniqueCode(hub.getName()));
+            hub.setStatus(HubStatus.ACTIVE);
+            approved.add(mapper.toHubResponse(hubRepository.save(hub)));
+        }
+        log.info("Bulk-approved {} pending hubs", approved.size());
+        return approved;
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────

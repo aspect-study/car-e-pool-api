@@ -151,6 +151,8 @@ All entity→DTO mapping uses a single `EntityMapper` (MapStruct, compile-time g
 
 Admin hub management (list pending, approve, reject) is available in the bot under `MY_PROFILE → 🏘️ Pending Hubs` — gated by `BotConfig.isAdmin()`. No admin web UI exists yet.
 
+`HubService.approveAllPendingHubs()` bulk-approves every pending hub in one pass — loops `hubRepository.findAllPending()`, generating a unique code per hub via the same `generateUniqueCode` helper `approveHub` uses, saving each hub individually (not `saveAll`) so each subsequent `generateUniqueCode` call sees prior codes from the same batch via JPA auto-flush before `findByCode`. Same cache eviction (`hubs`, `hub-search`) as `approveHub`. Returns the list of approved `HubResponse`. See `carpool-bot/CLAUDE.md` for the bot-side confirm flow.
+
 ## Rating System
 
 Ratings are **per-ride**, not per user-pair. The same driver and passenger can rate each other again on every new completed ride — there is no "already rated this person" global block.

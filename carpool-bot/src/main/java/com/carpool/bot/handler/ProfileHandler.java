@@ -931,11 +931,80 @@ public class ProfileHandler {
         }
 
         rows.add(List.of(
+                BotMessageBuilder.button("✅ Approve All (" + pending.size() + ")", "APPROVE_ALL_HUBS", null)
+        ));
+        rows.add(List.of(
                 BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS:" + safePage, null),
                 BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
         ));
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(), rows));
+    }
+
+    public void handleApproveAllHubs(BotContext ctx) {
+        if (!botConfig.isAdmin(ctx.telegramId())) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You don't have permission to do this."));
+            return;
+        }
+
+        int pendingCount = hubService.getPendingHubs().size();
+        if (pendingCount == 0) {
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    "🏘️ <b>Pending Hub Suggestions</b>\n\n<i>No pending hubs at the moment.</i>",
+                    List.of(List.of(
+                            BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS", null),
+                            BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
+                    ))));
+            return;
+        }
+
+        ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                String.format("⚠️ <b>Approve all %d pending hubs?</b>\n\n" +
+                        "Each will be auto-assigned a code and become active immediately. This cannot be undone from this menu.",
+                        pendingCount),
+                List.of(List.of(
+                        BotMessageBuilder.button("✅ Yes, Approve All", "CONFIRM_APPROVE_ALL_HUBS", null),
+                        BotMessageBuilder.button("❌ Cancel", "PENDING_HUBS", null)
+                ))));
+    }
+
+    public void handleConfirmApproveAllHubs(BotContext ctx) {
+        if (!botConfig.isAdmin(ctx.telegramId())) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You don't have permission to do this."));
+            return;
+        }
+
+        try {
+            List<HubResponse> approved = hubService.approveAllPendingHubs();
+            if (approved.isEmpty()) {
+                ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                        "🏘️ <b>Pending Hub Suggestions</b>\n\n<i>No pending hubs at the moment.</i>",
+                        List.of(List.of(
+                                BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS", null),
+                                BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
+                        ))));
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder(String.format(
+                    "✅ <b>Approved %d Hub%s!</b>\n\n", approved.size(), approved.size() == 1 ? "" : "s"));
+            for (HubResponse hub : approved) {
+                sb.append(String.format("• <b>%s</b> — <code>%s</code>\n",
+                        HtmlEscapeUtil.escape(hub.name()), hub.code()));
+            }
+
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(),
+                    List.of(List.of(
+                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS", null),
+                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU", null)
+                    ))));
+        } catch (Exception e) {
+            log.error("Failed to bulk-approve pending hubs: {}", e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not approve all hubs. Please try again."));
+        }
     }
 
     public void handleApproveHub(BotContext ctx) {
