@@ -60,6 +60,8 @@ For the bot-side CarpoolBot methods (sendToGroup, sendToUser, group buttons, han
 
 **Ride-scoped pending requests (for drivers with multiple active rides):** `getPendingRequestsForRide(rideId, driverUserId)` and `countPendingRequestsForRide(rideId)` complement the existing driver-wide `getPendingRequestsForDriver` / `countPendingRequestsForDriver`. `BookingRepository.findPendingByRideId` does `JOIN FETCH b.passenger`, `JOIN FETCH b.ride r`, and `JOIN FETCH r.driver` — the latter two are required so the service-layer `.filter(b -> b.getRide().getDriver().getId().equals(driverUserId))` ownership check doesn't throw `LazyInitializationException` outside the transaction. `countPendingByRideId` is a plain `COUNT` query, no fetch joins needed.
 
+**`getBookingsByRideId(rideId, status, pageable, requestingDriverId)` — REST-facing, ownership-checked:** Loads the ride and throws `NotRideOwnerException` (403) if `requestingDriverId` isn't the ride's driver, before querying bookings. This was previously missing the ownership check entirely — any authenticated user could page through any ride's bookings by `rideId`. The unpaged `getBookingsByRideId(rideId)` overload has no such check and remains bot-internal only (never expose it via REST).
+
 ## Direction-Scoped Conflict Checks
 
 Conflict checks are direction-scoped — a user can drive HOME_TO_WORK and hold a WORK_TO_HOME passenger booking at the same time. `RideDirection.label()` returns a human-readable string (`"home-to-work"`, `"work-to-home"`, `"other"`) used in all error messages.
@@ -151,7 +153,7 @@ All entity→DTO mapping uses a single `EntityMapper` (MapStruct, compile-time g
 
 Admin hub management (list pending, approve, reject) is available in the bot under `MY_PROFILE → 🏘️ Pending Hubs` — gated by `BotConfig.isAdmin()`. No admin web UI exists yet.
 
-`HubService.approveAllPendingHubs()` bulk-approves every pending hub in one pass — loops `hubRepository.findAllPending()`, generating a unique code per hub via the same `generateUniqueCode` helper `approveHub` uses, saving each hub individually (not `saveAll`) so each subsequent `generateUniqueCode` call sees prior codes from the same batch via JPA auto-flush before `findByCode`. Same cache eviction (`hubs`, `hub-search`) as `approveHub`. Returns the list of approved `HubResponse`. See `carpool-bot/CLAUDE.md` for the bot-side confirm flow.
+`HubService.approveAllPendingHubs()` bulk-approves every pending hub in one pass — loops `hubRepository.findAllPending()`, generating a unique code per hub via the same `generateUniqueCode` helper `approveHub` uses, saving each hub individually (not `saveAll`) so each subsequent `generateUniqueCode` call sees prior codes from the same batch via JPA auto-flush before `findByCode`. Same cache eviction (`hubs`, `hub-search`) as `approveHub`. Returns the list of approved `HubResponse`. Exposed via `PATCH /api/v1/hubs/approve-all` (admin-only) alongside the bot-side confirm flow — see `carpool-bot/CLAUDE.md`.
 
 ## Rating System
 

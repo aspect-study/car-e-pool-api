@@ -455,7 +455,15 @@ public class BookingService {
     @Transactional(readOnly = true)
     public PagedResponse<BookingResponse> getBookingsByRideId(Long rideId,
                                                               BookingStatus status,
-                                                              Pageable pageable) {
+                                                              Pageable pageable,
+                                                              Long requestingDriverId) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(requestingDriverId)) {
+            throw new NotRideOwnerException();
+        }
+
         Page<BookingResponse> page = status != null
                 ? bookingRepository.findByRideIdAndStatus(rideId, status, pageable)
                   .map(mapper::toBookingResponse)

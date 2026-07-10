@@ -110,4 +110,18 @@ public class HubController {
         hubService.rejectHub(id);
         return ResponseEntity.ok(ApiResponse.ok());
     }
+
+    @Operation(summary = "[Admin] Approve all pending hubs",
+            description = "Bulk-approves every pending hub suggestion in one pass. " +
+                    "Auto-generates a unique code per hub, same as the single-approve endpoint.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    /**
+     * PATCH /api/v1/hubs/approve-all
+     * Admin only — bulk-approve every pending hub suggestion.
+     */
+    @PatchMapping("/approve-all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<HubResponse>>> approveAllHubs() {
+        return ResponseEntity.ok(ApiResponse.ok(hubService.approveAllPendingHubs()));
+    }
 }

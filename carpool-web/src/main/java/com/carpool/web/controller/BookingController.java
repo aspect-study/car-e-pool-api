@@ -96,7 +96,7 @@ public class BookingController {
                 Sort.by("createdAt").ascending());
 
         return ResponseEntity.ok(ApiResponse.ok(
-                bookingService.getBookingsByRideId(rideId, status, pageable)));
+                bookingService.getBookingsByRideId(rideId, status, pageable, currentUser.getUserId())));
     }
 
     /**
