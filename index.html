@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: 2026-06-04 -->
+<!-- build: 2026-07-22 -->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -161,7 +161,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
     <h1>Car-E-Pool</h1>
-    <p>User Manual — Version 1.8</p>
+    <p>User Manual — Version 1.9</p>
     <p style="margin-top:.2rem;font-size:.68rem;color:var(--muted)">© aspect;</p>
   </div>
   <nav class="sb-nav">
@@ -517,6 +517,18 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
       <li>New time must be <strong>≥ 15 minutes in the future</strong> and must differ from the current time</li>
     </ul>
     <p style="margin-top:.65rem;font-size:.83rem;color:var(--muted)"><strong>After confirming:</strong> (1) ride time is updated, (2) all confirmed passengers receive a DM with <strong>✅ Keep Booking</strong> / <strong>❌ Cancel Booking</strong> buttons, (3) the group announcement is deleted and reposted with the new time — no re-announce slot is consumed.</p>
+  </div>
+
+  <div class="stitle">🔀 Change Route</div>
+  <div class="card">
+    <p>Available on <span class="tag a">ACTIVE</span> or <span class="tag w">FULL</span> rides. Tap <strong>🔀 Change Route</strong> from the main menu — added so you don't have to cancel and repost just to fix a pickup or drop-off point.</p>
+    <ul style="margin-top:.6rem">
+      <li>Choose <strong>📍 Change Start</strong> or <strong>🏁 Change End</strong> — one side at a time</li>
+      <li>Type a nearby landmark (at least 3 characters) and pick from the matching hubs</li>
+      <li>The new hub must differ from the ride's current origin and destination — you can't set both ends to the same place</li>
+    </ul>
+    <p style="margin-top:.65rem;font-size:.83rem;color:var(--muted)"><strong>After confirming:</strong> (1) the route is updated immediately — no cancellation, so passengers are <strong>not</strong> sent a "ride cancelled" notice, (2) all confirmed passengers receive a DM showing the old and new route with <strong>✅ Keep Booking</strong> / <strong>❌ Cancel Booking</strong> buttons, (3) the group announcement is deleted and reposted with the new route.</p>
+    <div class="callout info" style="margin-top:.75rem"><span class="callout-icon">ℹ️</span><div class="cb"><h4>Only fixes the route</h4><p>Changing the route never changes your ride's direction (Home→Work / Work→Home). If you actually need to flip direction, cancel and post a new ride instead.</p></div></div>
   </div>
 
   <div class="stitle">📢 Re-Announce</div>
@@ -891,6 +903,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
         <tr><td>Contribution amount</td><td>Minimum ₱0.00 (free); no maximum</td></tr>
         <tr><td>Notes length</td><td>Maximum 300 characters</td></tr>
         <tr><td>Departure time edit</td><td>ACTIVE or FULL rides only; new time ≥ 15 min from now, must differ from current time</td></tr>
+        <tr><td>Route edit</td><td>ACTIVE or FULL rides only; at least one of origin/destination must change; new origin ≠ new destination; direction is never recomputed — no cancellation, so passengers are notified with Keep/Cancel instead of a "ride cancelled" notice</td></tr>
         <tr><td>Start ride guard</td><td>Can only mark DEPARTED within 60 minutes of scheduled departure</td></tr>
       </tbody>
     </table>
@@ -1135,7 +1148,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>I did not receive the 30-minute departure reminder.</span><span class="chev">▼</span></div><div class="acc-body"><p>Departure reminders are sent once per ride approximately 30 minutes before the scheduled departure. If the scheduler ran slightly late or the ride was modified close to that window, the reminder may have been skipped. This is a best-effort notification — always verify departure time from your booking confirmation.</p></div></div>
 
   <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border);text-align:center;font-size:.78rem;color:var(--muted)">
-    Car-E-Pool User Manual — Version 1.8 &nbsp;|&nbsp; June 2026 &nbsp;|&nbsp; © aspect;
+    Car-E-Pool User Manual — Version 1.9 &nbsp;|&nbsp; July 2026 &nbsp;|&nbsp; © aspect;
   </div>
 </section>
 
