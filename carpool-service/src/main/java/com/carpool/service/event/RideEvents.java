@@ -109,4 +109,12 @@ public final class RideEvents {
      * Triggers: notify all confirmed passengers (time changed — keep or cancel booking).
      */
     public record RideTimeChangedEvent(Ride ride) {}
+
+    /**
+     * Published when a driver changes the origin and/or destination of an active ride.
+     * Carries the pre-change hub names so passenger DMs can show old → new.
+     * Triggers: notify all confirmed passengers (route changed — keep or cancel booking),
+     * refresh group announcement.
+     */
+    public record RideRouteChangedEvent(Ride ride, String oldOriginName, String oldDestinationName) {}
 }

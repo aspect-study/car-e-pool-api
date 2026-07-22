@@ -4,6 +4,7 @@ import com.carpool.common.response.ApiResponse;
 import com.carpool.domain.enums.RideDirection;
 import com.carpool.service.dto.request.CreateRideRequest;
 import com.carpool.service.dto.request.UpdateDepartureTimeRequest;
+import com.carpool.service.dto.request.UpdateRouteRequest;
 import com.carpool.service.dto.request.UpdateRideStatusRequest;
 import com.carpool.service.dto.response.RideResponse;
 import com.carpool.service.ride.RideService;
@@ -320,6 +321,30 @@ public class RideController {
 
         RideResponse ride = rideService.updateDepartureTime(
                 id, request.newDepartureTime(), currentUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok(ride));
+    }
+
+    /**
+     * PATCH /api/v1/rides/{id}/route
+     * Driver changes the origin and/or destination of an active ride without cancelling it.
+     */
+    @Operation(summary = "Change a ride's origin and/or destination",
+            description = """
+                    Driver changes the route of an **ACTIVE** or **FULL** ride without cancelling it.
+                    A null field keeps the current hub. Confirmed passengers are notified with
+                    Keep/Cancel options and the group announcement is refreshed.
+
+                    Requires ride ownership.
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @PatchMapping("/{id}/route")
+    public ResponseEntity<ApiResponse<RideResponse>> updateRoute(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateRouteRequest request,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+
+        RideResponse ride = rideService.updateRoute(
+                id, request.originHubId(), request.destinationHubId(), currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.ok(ride));
     }
 }

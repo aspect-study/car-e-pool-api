@@ -90,6 +90,18 @@ The bot-side checks in `PostRideHandler`, `RideSearchHandler`, and `MessageHandl
 - `RideTimeChangedEvent` is handled by `NotificationService.onRideTimeChanged` (passenger DMs with Keep/Cancel buttons) and `GroupNotificationService.onRideTimeChanged` (group post refresh).
 - `NotificationTypes.RIDE_TIME_CHANGED` constant used for the notification type field.
 
+## Update Route (Origin/Destination) Without Cancellation
+
+`RideService.updateRoute(rideId, newOriginHubId, newDestinationHubId, callerId)` lets a driver change a ride's origin and/or destination without cancelling it, so accepted passengers aren't hit with a `RIDE_CANCELLED` DM for a route tweak:
+- Acquires `SELECT FOR UPDATE` via `rideRepository.findByIdWithLock(rideId)`, same as `updateDepartureTime`.
+- A `null` hub id means "keep the current hub" — callers can change just one side.
+- Validates: caller is ride owner (`NotRideOwnerException`); ride status is ACTIVE or FULL (`InvalidRideStateException`); at least one hub id is non-null (`InvalidRideStateException`); resolved origin ≠ resolved destination (`SameHubException`); the resulting route actually differs from the current one (`InvalidRideStateException`); each supplied hub id resolves to an existing hub (`HubNotFoundException`).
+- Ride `direction` is intentionally never recomputed — a driver reversing direction should post a new ride, not repurpose this endpoint.
+- Captures the old origin/destination hub names before mutating, updates `ride.originHub`/`ride.destinationHub`, saves, then publishes `RideEvents.RideRouteChangedEvent(saved, oldOriginName, oldDestinationName)`.
+- `RideRouteChangedEvent` is handled by `NotificationService.onRideRouteChanged` (confirmed-passenger DMs with Keep/Cancel buttons, reusing the same `KEEP_BOOKING`/`CANCEL_BOOKING` callbacks as the time-change flow) and `GroupNotificationService.onRideRouteChanged` (group post refresh, no 48h guard — mirrors `onRideTimeChanged`).
+- `NotificationTypes.RIDE_ROUTE_CHANGED` constant used for the notification type field.
+- Exposed via `PATCH /api/v1/rides/{id}/route` with `UpdateRouteRequest(originHubId, destinationHubId)` — both nullable, class-level `@AssertTrue` requires at least one non-null.
+
 ## Booking: Pessimistic Locking
 
 `BookingService.createBooking()` acquires `SELECT FOR UPDATE` on the ride row (`RideRepository.findByIdWithLock()`) to prevent double-booking the last seat. The lock is held for the full transaction duration.

@@ -195,6 +195,7 @@ public class BotFlowHelper {
                     BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(), ButtonStyle.DANGER.toString())
             ));
             rows.add(List.of(BotMessageBuilder.button("✏️ Edit Time", "EDIT_RIDE_TIME:" + active.id(), ButtonStyle.PRIMARY.toString())));
+            rows.add(List.of(BotMessageBuilder.button("🔀 Change Route", "EDIT_RIDE_ROUTE:" + active.id(), ButtonStyle.PRIMARY.toString())));
             if (canReannounce) {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📢 Re-announce (" + (10 - active.announceCount()) + " left)",
@@ -218,6 +219,7 @@ public class BotFlowHelper {
             ));
             rows.add(List.of(BotMessageBuilder.button("❌ Cancel Ride", "CANCEL_RIDE:" + active.id(),  ButtonStyle.DANGER.toString())));
             rows.add(List.of(BotMessageBuilder.button("✏️ Edit Time", "EDIT_RIDE_TIME:" + active.id(), ButtonStyle.SUCCESS.toString())));
+            rows.add(List.of(BotMessageBuilder.button("🔀 Change Route", "EDIT_RIDE_ROUTE:" + active.id(), ButtonStyle.PRIMARY.toString())));
             if (canReannounce) {
                 rows.add(List.of(BotMessageBuilder.button(
                         "📢 Re-announce (" + (10 - active.announceCount()) + " left)",

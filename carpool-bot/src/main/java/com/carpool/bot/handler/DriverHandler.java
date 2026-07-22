@@ -10,6 +10,7 @@ import com.carpool.bot.util.BotTimePickerUtil;
 import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.exception.InvalidRideStateException;
 import com.carpool.common.exception.NotRideOwnerException;
+import com.carpool.common.exception.SameHubException;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.RideDirection;
@@ -911,6 +912,98 @@ public class DriverHandler {
                     ctx.carpoolUserId(), e.getMessage(), e);
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not update departure time. Please try again."));
+        }
+    }
+
+    /** Entry: driver tapped "Change Route" on the ride management card. */
+    public void handleEditRideRoute(BotContext ctx) {
+        Long rideId = ctx.entityId();
+        try {
+            var ride = rideService.getRideById(rideId);
+            if (!ride.driver().id().equals(ctx.carpoolUserId())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+                return;
+            }
+            if (ride.status() != RideStatus.ACTIVE && ride.status() != RideStatus.FULL) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ Only active rides can have their route changed."));
+                return;
+            }
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withSelectedRideId(rideId)
+                    .withFlow(BotFlow.IDLE));
+
+            var rows = List.of(
+                    List.of(BotMessageBuilder.button(
+                            "📍 Change Start", "EDIT_ROUTE_ORIGIN:" + rideId, null)),
+                    List.of(BotMessageBuilder.button(
+                            "🏁 Change End", "EDIT_ROUTE_DEST:" + rideId, null)));
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    "🔀 <b>Change Route</b>\n\n" +
+                            "Current: <b>" + HtmlEscapeUtil.escape(ride.originHub().name()) +
+                            " → " + HtmlEscapeUtil.escape(ride.destinationHub().name()) + "</b>\n\n" +
+                            "What do you want to change?",
+                    rows));
+        } catch (Exception e) {
+            log.warn("Could not load ride for route edit id={}: {}", rideId, e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ This ride is no longer available."));
+        }
+    }
+
+    /** Driver chose to change the origin — prompt for a search term. */
+    public void handleEditRouteOriginStart(BotContext ctx) {
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withSelectedRideId(ctx.entityId())
+                .withFlow(BotFlow.EDIT_ROUTE_ORIGIN));
+        ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                "📍 <b>New start point?</b>\n\nType a nearby landmark. Example: <code>SM Southmall</code>"));
+    }
+
+    /** Driver chose to change the destination — prompt for a search term. */
+    public void handleEditRouteDestStart(BotContext ctx) {
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withSelectedRideId(ctx.entityId())
+                .withFlow(BotFlow.EDIT_ROUTE_DEST));
+        ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                "🏁 <b>New end point?</b>\n\nType a nearby landmark. Example: <code>BGC</code>"));
+    }
+
+    /** Driver picked the new origin hub from search results. */
+    public void handleEditHubOriginSelected(BotContext ctx) {
+        applyRouteChange(ctx, ctx.entityId(), null);
+    }
+
+    /** Driver picked the new destination hub from search results. */
+    public void handleEditHubDestSelected(BotContext ctx) {
+        applyRouteChange(ctx, null, ctx.entityId());
+    }
+
+    private void applyRouteChange(BotContext ctx, Long newOriginHubId, Long newDestHubId) {
+        Long rideId = ctx.state().getSelectedRideId();
+        if (rideId == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Session expired. Please reopen the ride from the main menu."));
+            stateManager.reset(ctx.chatId());
+            return;
+        }
+        try {
+            var updated = rideService.updateRoute(
+                    rideId, newOriginHubId, newDestHubId, ctx.carpoolUserId());
+            stateManager.reset(ctx.chatId());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "✅ <b>Route updated</b>\n\n" +
+                            "📍 " + HtmlEscapeUtil.escape(updated.originHub().name()) +
+                            " → " + HtmlEscapeUtil.escape(updated.destinationHub().name()) + "\n\n" +
+                            "Confirmed passengers have been notified."));
+        } catch (InvalidRideStateException | SameHubException e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ " + e.getMessage()));
+        } catch (NotRideOwnerException e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+        } catch (Exception e) {
+            log.warn("Route update failed rideId={}: {}", rideId, e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not update the route. Please try again."));
         }
     }
 

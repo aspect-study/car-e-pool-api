@@ -42,6 +42,8 @@ public enum BotFlow {
     EDIT_RIDE_TIME_SELECT_DATE,  // calendar shown for edit departure time flow
     EDIT_RIDE_TIME_PICK,         // waiting for time slot tap in edit time flow
     EDIT_RIDE_TIME_CONFIRM,      // confirmation screen before committing the update
+    EDIT_ROUTE_ORIGIN,           // awaiting text search for the new origin hub
+    EDIT_ROUTE_DEST,             // awaiting text search for the new destination hub
 
     // ── Passenger: Search rides ───────────────────────────────────────────────
     SEARCH_SELECT_DIRECTION,

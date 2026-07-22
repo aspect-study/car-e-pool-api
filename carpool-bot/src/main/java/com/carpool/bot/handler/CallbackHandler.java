@@ -132,6 +132,13 @@ public class CallbackHandler {
         commands.put("TIME_NAV_EDIT",           driverHandler::handleEditRideTimePickerNav);
         commands.put("RIDE_TIME_EDIT",          driverHandler::handleEditRideTimeSelected);
         commands.put("CONFIRM_EDIT_RIDE_TIME",  driverHandler::handleConfirmEditRideTime);
+        commands.put("EDIT_RIDE_ROUTE",     driverHandler::handleEditRideRoute);
+        commands.put("EDIT_ROUTE_ORIGIN",   driverHandler::handleEditRouteOriginStart);
+        commands.put("EDIT_ROUTE_DEST",     driverHandler::handleEditRouteDestStart);
+        commands.put("EDIT_HUB_ORIGIN",     driverHandler::handleEditHubOriginSelected);
+        commands.put("EDIT_HUB_DEST",       driverHandler::handleEditHubDestSelected);
+        commands.put("RETYPE_EDIT_ORIGIN",  driverHandler::handleEditRouteOriginStart);
+        commands.put("RETYPE_EDIT_DEST",    driverHandler::handleEditRouteDestStart);
         commands.put("KEEP_BOOKING", ctx -> {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     "✅ <b>Got it!</b>\n\nYou're still booked on this ride. We'll remind you before departure.",

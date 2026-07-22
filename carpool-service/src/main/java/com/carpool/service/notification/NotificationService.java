@@ -953,6 +953,53 @@ public class NotificationService {
                 rideId, confirmedBookings.size());
     }
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onRideRouteChanged(RideEvents.RideRouteChangedEvent event) {
+        Long rideId = event.ride().getId();
+        List<Booking> confirmedBookings = bookingRepository
+                .findActiveBookingsForRide(rideId)
+                .stream()
+                .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
+                .toList();
+
+        if (confirmedBookings.isEmpty()) {
+            log.info("Ride route changed with no confirmed passengers: rideId={}", rideId);
+            return;
+        }
+
+        Ride ride = confirmedBookings.get(0).getRide();
+
+        String msg = String.format(
+                "📍 <b>Ride Route Updated</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
+                        "Your driver changed the route for your upcoming ride.\n\n" +
+                        "Was: <s>%s → %s</s>\n" +
+                        "➡️ Now: <b>%s → %s</b>\n\n" +
+                        "Does this still work for you?",
+                HtmlEscapeUtil.escape(event.oldOriginName()),
+                HtmlEscapeUtil.escape(event.oldDestinationName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()));
+
+        for (Booking booking : confirmedBookings) {
+            sendAndRecord(booking.getPassenger(), NotificationTypes.RIDE_ROUTE_CHANGED, msg,
+                    Map.of("rideId", rideId, "bookingId", booking.getId()),
+                    List.of(
+                            List.of(
+                                    new TelegramNotificationPort.InlineButton(
+                                            "✅ Keep Booking", "KEEP_BOOKING:" + booking.getId()),
+                                    new TelegramNotificationPort.InlineButton(
+                                            "❌ Cancel Booking", "CANCEL_BOOKING:" + booking.getId())
+                            )
+                    ));
+        }
+
+        log.info("Ride route change notifications sent: rideId={} passengersNotified={}",
+                rideId, confirmedBookings.size());
+    }
+
     private static String directionLabel(RideDirection direction) {
         if (direction == null) return "📍 Other";
         return switch (direction) {

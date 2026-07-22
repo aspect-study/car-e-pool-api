@@ -106,6 +106,25 @@ Existing shared fields `selectedRideId`, `direction`, `calendarMonth`, and `time
 
 **Group post refresh:** `GroupNotificationService.onRideTimeChanged()` deletes the old group announcement and reposts a fresh one with the updated time. No 48-hour guard is applied — a time change is always high-signal. Returns early if `groupMessageId` is null or ride is not ACTIVE/FULL.
 
+## Edit Route Flow
+
+Drivers can change the origin and/or destination of an ACTIVE or FULL ride without cancelling it — added because cancelling sends accepted passengers a `RIDE_CANCELLED` DM even when the driver only meant to tweak the route. Entry point: `🔀 Change Route` button in the ride management card (`BotFlowHelper.showRideManagementCard`), placed directly after `✏️ Edit Time` in both the `pendingCount > 0` and default ACTIVE/FULL branches (not shown for `DEPARTED`, same restriction as Edit Time).
+
+**v1 scope:** the flow only lets a driver pick from existing matched hubs (`hubMatcher.suggest(text)`). It does not expose the post-ride flow's "add a brand-new custom location" path (`CONFIRM_CUSTOM_ORIGIN`/`_DEST`, PENDING hub creation) — a driver needing an unlisted hub still has to use it at ride-post time. One side (origin or destination) is changed per pass; there is no combined "edit both at once" screen.
+
+**BotFlow states:** `EDIT_ROUTE_ORIGIN` (awaiting text search for the new origin) and `EDIT_ROUTE_DEST` (awaiting text search for the new destination). No new `UserState` fields — reuses the existing `selectedRideId`.
+
+**Callbacks registered in `CallbackHandler`:**
+- `EDIT_RIDE_ROUTE` → `DriverHandler.handleEditRideRoute()` — validates ownership + status (ACTIVE/FULL), stores `selectedRideId` in `UserState`, shows a "Change Start / Change End" chooser.
+- `EDIT_ROUTE_ORIGIN` → `handleEditRouteOriginStart()` — sets flow to `EDIT_ROUTE_ORIGIN`, prompts for a search term.
+- `EDIT_ROUTE_DEST` → `handleEditRouteDestStart()` — sets flow to `EDIT_ROUTE_DEST`, prompts for a search term.
+- Text input in either flow is routed by `MessageHandler` to `PostRideHandler.handleEditRouteOriginSearch()` / `handleEditRouteDestSearch()` — reuses the existing private `buildHubButtonRows()` helper with new callback prefixes `EDIT_HUB_ORIGIN` / `EDIT_HUB_DEST` and retype actions `RETYPE_EDIT_ORIGIN` / `RETYPE_EDIT_DEST`.
+- `EDIT_HUB_ORIGIN` / `EDIT_HUB_DEST` → `DriverHandler.handleEditHubOriginSelected()` / `handleEditHubDestSelected()` — both delegate to a private `applyRouteChange()` that calls `rideService.updateRoute()`, resets state, and shows the new route on success. `InvalidRideStateException`/`SameHubException` and `NotRideOwnerException` are caught separately to show the exact validation message.
+
+**Session recovery:** `EDIT_ROUTE_ORIGIN`, `EDIT_ROUTE_DEST`, `EDIT_HUB_ORIGIN`, `EDIT_HUB_DEST`, `RETYPE_EDIT_ORIGIN`, `RETYPE_EDIT_DEST` are flow-sensitive in `SessionRecoveryHandler` (mirrors the five edit-time callbacks). `EDIT_RIDE_ROUTE` itself is intentionally excluded — it reads `rideId` from the callback payload, not from `UserState`, so it works safely with a fresh session after a bot restart.
+
+**Reused, unchanged:** `KEEP_BOOKING`/`CANCEL_BOOKING` callbacks and the passenger cancellation path (introduced by the time-change feature) — the route-change passenger DM (`NotificationService.onRideRouteChanged`) attaches the same two buttons.
+
 ## Departure Time Guard
 
 `DriverHandler.handleStartRide()` enforces a 1-hour early-start window. If the current time is more than 60 minutes before `ride.getDepartureTime()`, the handler rejects the tap and sends a countdown message ("You can start the ride in X hours Y minutes") instead of transitioning the ride to DEPARTED.

@@ -256,6 +256,60 @@ public class PostRideHandler {
                 buildHubButtonRows(filtered, "HUB_DEST", "RETYPE_DEST")));
     }
 
+    // ── Route-edit hub search (existing hubs only — no custom-hub path in v1) ──
+
+    /** Route-edit: driver typed a search term for the new origin hub. */
+    public void handleEditRouteOriginSearch(Long chatId, String text,
+                                            UserState state, CarpoolBot bot) {
+        if (state.getSelectedRideId() == null) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Session expired. Please reopen the ride from the main menu."));
+            stateManager.reset(chatId);
+            return;
+        }
+        if (text.trim().length() < 3) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please type at least 3 characters to search."));
+            return;
+        }
+        List<HubResponse> suggestions = hubMatcher.suggest(text);
+        if (suggestions.isEmpty()) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ No matching hub found. Try a nearby landmark:"));
+            return;
+        }
+        bot.send(flowHelper.sendWithInline(chatId,
+                "📍 <b>Select the new start point:</b>\n\nResults for \"" +
+                        HtmlEscapeUtil.escape(text) + "\":",
+                buildHubButtonRows(suggestions, "EDIT_HUB_ORIGIN", "RETYPE_EDIT_ORIGIN")));
+    }
+
+    /** Route-edit: driver typed a search term for the new destination hub. */
+    public void handleEditRouteDestSearch(Long chatId, String text,
+                                          UserState state, CarpoolBot bot) {
+        if (state.getSelectedRideId() == null) {
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Session expired. Please reopen the ride from the main menu."));
+            stateManager.reset(chatId);
+            return;
+        }
+        if (text.trim().length() < 3) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ Please type at least 3 characters to search."));
+            return;
+        }
+        List<HubResponse> suggestions = hubMatcher.suggest(text);
+        if (suggestions.isEmpty()) {
+            bot.send(BotMessageBuilder.textWithCancel(chatId,
+                    "⚠️ No matching hub found. Try a nearby landmark:"));
+            return;
+        }
+        bot.send(flowHelper.sendWithInline(chatId,
+                "🏁 <b>Select the new end point:</b>\n\nResults for \"" +
+                        HtmlEscapeUtil.escape(text) + "\":",
+                buildHubButtonRows(suggestions, "EDIT_HUB_DEST", "RETYPE_EDIT_DEST")));
+    }
+
     /**
      * Builds hub button rows — 2 columns for short names (≤20 chars),
      * 1 column for long names.
