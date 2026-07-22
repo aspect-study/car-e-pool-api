@@ -60,7 +60,8 @@ public class SessionRecoveryHandler {
     private static final Set<String> EDIT_ROUTE_ACTIONS = Set.of(
             "EDIT_ROUTE_ORIGIN", "EDIT_ROUTE_DEST",
             "EDIT_HUB_ORIGIN", "EDIT_HUB_DEST",
-            "RETYPE_EDIT_ORIGIN", "RETYPE_EDIT_DEST"
+            "RETYPE_EDIT_ORIGIN", "RETYPE_EDIT_DEST",
+            "EDIT_CONFIRM_CUSTOM_ORIGIN", "EDIT_CONFIRM_CUSTOM_DEST"
     );
 
     // ── Public API ────────────────────────────────────────────────────────

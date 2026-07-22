@@ -139,6 +139,8 @@ public class CallbackHandler {
         commands.put("EDIT_HUB_DEST",       driverHandler::handleEditHubDestSelected);
         commands.put("RETYPE_EDIT_ORIGIN",  driverHandler::handleEditRouteOriginStart);
         commands.put("RETYPE_EDIT_DEST",    driverHandler::handleEditRouteDestStart);
+        commands.put("EDIT_CONFIRM_CUSTOM_ORIGIN", postRideHandler::handleEditConfirmCustomOrigin);
+        commands.put("EDIT_CONFIRM_CUSTOM_DEST",   postRideHandler::handleEditConfirmCustomDest);
         commands.put("KEEP_BOOKING", ctx -> {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     "✅ <b>Got it!</b>\n\nYou're still booked on this ride. We'll remind you before departure.",

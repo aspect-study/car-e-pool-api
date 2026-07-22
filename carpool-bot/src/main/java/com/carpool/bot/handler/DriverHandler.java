@@ -931,6 +931,7 @@ public class DriverHandler {
             }
             stateManager.save(ctx.chatId(), ctx.state()
                     .withSelectedRideId(rideId)
+                    .withCarpoolUserId(ctx.carpoolUserId())
                     .withFlow(BotFlow.IDLE));
 
             var rows = List.of(
