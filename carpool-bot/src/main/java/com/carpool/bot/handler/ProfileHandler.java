@@ -709,28 +709,39 @@ public class ProfileHandler {
 
         AdminStatsService.AdminStats s = adminStatsService.getStats();
 
+        String ratingLine = s.avgPlatformRating() == null
+                ? "No ratings yet"
+                : String.format("%.1f ⭐ (%d ratings)", s.avgPlatformRating(), s.totalRatings());
+
         String report = String.format(
                 """
                         📊 <b>Admin Stats</b>
                         <i>%s</i>
-                        
+
                         👥 <b>Users</b>
-                        Total: <b>%d</b> | New today: <b>%d</b>
-                        
+                        Total: <b>%d</b> | New today: <b>%d</b> | New this week: <b>%d</b>
+
                         🚗 <b>Rides</b>
                         Active now: <b>%d</b> | Posted today: <b>%d</b>
-                        Total: <b>%d</b> | Completed: <b>%d</b> | Cancelled: <b>%d</b>
-                        
+                        Total: <b>%d</b> | Completed: <b>%d</b> | Cancelled: <b>%d</b> (%.1f%%)
+
                         📋 <b>Bookings</b>
                         Pending now: <b>%d</b> | Made today: <b>%d</b>
-                        Total: <b>%d</b> | Completed: <b>%d</b>""",
+                        Total: <b>%d</b> | Completed: <b>%d</b> (%.1f%%)
+                        Declined: <b>%d</b> | Cancelled (driver/passenger): <b>%d</b>/<b>%d</b> | Timed out: <b>%d</b>
+
+                        🏘️ <b>Community</b>
+                        Pending hub suggestions: <b>%d</b>
+                        Avg rating: <b>%s</b>""",
                 LocalDateTime.now(ZoneId.of("Asia/Manila"))
                         .format(DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")),
-                s.totalUsers(), s.newUsersToday(),
+                s.totalUsers(), s.newUsersToday(), s.newUsersThisWeek(),
                 s.activeRidesNow(), s.ridesPostedToday(),
-                s.totalRides(), s.completedRides(), s.cancelledRides(),
+                s.totalRides(), s.completedRides(), s.cancelledRides(), s.cancellationRate(),
                 s.pendingBookingsNow(), s.bookingsMadeToday(),
-                s.totalBookings(), s.completedBookings());
+                s.totalBookings(), s.completedBookings(), s.bookingCompletionRate(),
+                s.declinedBookings(), s.cancelledByDriverBookings(), s.cancelledByPassengerBookings(), s.timedOutBookings(),
+                s.pendingHubSuggestions(), ratingLine);
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), report,
                 List.of(

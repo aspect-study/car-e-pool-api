@@ -13,6 +13,11 @@ public interface HubRepository extends JpaRepository<Hub, Long> {
 
     List<Hub> findByStatusOrderByAreaAscNameAsc(HubStatus status);
 
+    /**
+     * Count hubs by status — used for admin stats (pending suggestions count).
+     */
+    long countByStatus(HubStatus status);
+
     Optional<Hub> findByCode(String code);
 
     boolean existsByNameIgnoreCaseAndArea(String name, String area);

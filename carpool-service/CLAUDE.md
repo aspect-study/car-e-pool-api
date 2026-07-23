@@ -187,6 +187,17 @@ V43 Flyway migration widens the DB unique constraint on `ride_ratings` from `(ri
 
 **REST-facing RatingResponse:** `RatingResponse` uses `UserSummaryResponse` (not `UserResponse`) for the `rater` and `ratee` fields. `UserSummaryResponse` intentionally omits `plateNumber`, `carModel`, and `carColor` — `GET /users/{userId}/ratings` is accessible by any authenticated user, so vehicle fields must not appear. `EntityMapper.toRatingResponse` requires `@Mapping(source = "ride.id", target = "rideId")` — MapStruct cannot auto-map nested `.id` fields and will silently produce null without this annotation.
 
+## Admin Stats
+
+`AdminStatsService.getStats()` (cached under `adminStats`/`global`, evicted nowhere — 30-min TTL via `CacheConfig`) returns an `AdminStats` record covering users, rides, bookings, and community health:
+
+- **Users:** `totalUsers`, `newUsersToday`, `newUsersThisWeek` (week starts Monday, `Asia/Manila`).
+- **Rides:** `activeRidesNow`, `totalRides`, `completedRides`, `cancelledRides`, `ridesPostedToday`, plus a derived `cancellationRate()` method (`cancelledRides / totalRides * 100`, not a stored field — always in sync).
+- **Bookings:** `pendingBookingsNow`, `totalBookings`, `completedBookings`, `bookingsMadeToday`, plus the full outcome breakdown `declinedBookings`, `cancelledByDriverBookings`, `cancelledByPassengerBookings`, `timedOutBookings` (previously invisible — `totalBookings` didn't reconcile with what was shown). Derived `bookingCompletionRate()` mirrors `cancellationRate()`.
+- **Community health:** `pendingHubSuggestions` (`HubRepository.countByStatus(PENDING)`), `avgPlatformRating` (nullable — `RideRatingRepository.findGlobalAverageRating()`, null when no ratings exist yet), `totalRatings`.
+
+Consumed by `ProfileHandler.handleAdminStats` (bot). The REST `AdminStatsResponse`/`ProfileService.getAdminStats()` path (used by `carpool-admin`) intentionally still maps only the original fields — not yet extended to the new ones.
+
 ## Schedulers
 
 Three schedulers in `carpool-service/scheduler/`:

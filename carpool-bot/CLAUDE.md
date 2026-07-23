@@ -257,6 +257,10 @@ Paginated view of received ratings (stars + optional comment) for any user. Stat
 
 **Page size:** 5 ratings per page. Navigation row: `« Prev` (hidden on page 0) · `Next »` (hidden on last page) · `✕ Close`.
 
+## Admin Stats Screen
+
+`ProfileHandler.handleAdminStats` (`ADMIN_STATS` callback) renders `AdminStatsService.getStats()` — see `carpool-service/CLAUDE.md` for the full field list. Beyond the original Users/Rides/Bookings totals, the screen now shows a booking outcomes line (Declined / Cancelled by driver / by passenger / Timed out — closes the gap where `totalBookings` didn't reconcile with what was visible), a cancellation-rate and completion-rate percentage next to the Rides/Bookings totals, and a new "🏘️ Community" section (pending hub suggestions count, platform average rating). `s.avgPlatformRating()` is nullable — rendered as "No ratings yet" when null instead of a raw `null`/NaN. Gated the same as before by `botConfig.isAdmin(ctx.telegramId())`.
+
 ## Pending Hub Suggestions — Bulk Approval
 
 `ProfileHandler.handlePendingHubs` shows an `✅ Approve All (N)` row below the per-page list (in addition to the existing per-row `✅`/`❌` approve/reject buttons scoped to that page). `N` is the total pending count, not just the current page.
