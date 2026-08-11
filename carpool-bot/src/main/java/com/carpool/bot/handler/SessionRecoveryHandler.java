@@ -55,6 +55,15 @@ public class SessionRecoveryHandler {
             "CONFIRM_EDIT_RIDE_TIME"
     );
 
+    // EDIT_RIDE_ROUTE is intentionally excluded — it's the entry point and reads rideId
+    // from the callback payload, not from UserState, so it works with a fresh session.
+    private static final Set<String> EDIT_ROUTE_ACTIONS = Set.of(
+            "EDIT_ROUTE_ORIGIN", "EDIT_ROUTE_DEST",
+            "EDIT_HUB_ORIGIN", "EDIT_HUB_DEST",
+            "RETYPE_EDIT_ORIGIN", "RETYPE_EDIT_DEST",
+            "EDIT_CONFIRM_CUSTOM_ORIGIN", "EDIT_CONFIRM_CUSTOM_DEST"
+    );
+
     // ── Public API ────────────────────────────────────────────────────────
 
     /**
@@ -64,7 +73,8 @@ public class SessionRecoveryHandler {
     public boolean isFlowSensitive(String action) {
         return POST_RIDE_ACTIONS.contains(action)
                 || RATING_ACTIONS.contains(action)
-                || EDIT_TIME_ACTIONS.contains(action);
+                || EDIT_TIME_ACTIONS.contains(action)
+                || EDIT_ROUTE_ACTIONS.contains(action);
     }
 
     /**

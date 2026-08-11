@@ -8,6 +8,7 @@ import com.carpool.domain.entity.User;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.NotificationStatus;
 import com.carpool.domain.enums.NotificationTypes;
+import com.carpool.domain.enums.RideDirection;
 import com.carpool.repository.BookingRepository;
 import com.carpool.repository.NotificationRepository;
 import com.carpool.repository.RideRepository;
@@ -128,7 +129,8 @@ public class NotificationService {
                 : "";
 
         String msg = String.format(
-                "🚫 <b>Booking Cancelled</b>\n\n" +
+                "🚫 <b>Booking Cancelled</b>\n" +
+                        directionLabel(booking.getRide().getDirection()) + "\n\n" +
                         "👤 <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
@@ -180,7 +182,8 @@ public class NotificationService {
                 : "";
 
         String msg = String.format(
-                "⚠️ <b>Ride Cancelled</b>\n\n" +
+                "⚠️ <b>Ride Cancelled</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "👤 Driver: <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
@@ -231,7 +234,8 @@ public class NotificationService {
         Ride ride = activeBookings.get(0).getRide();
 
         String msg = String.format(
-                "✅ <b>Ride Completed!</b>\n\n" +
+                "✅ <b>Ride Completed!</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n\n" +
                         "Thank you for carpooling! Please settle your gas share with the driver.",
@@ -249,7 +253,8 @@ public class NotificationService {
         for (Booking booking : activeBookings) {
             // Prompt passenger to rate driver
             String passengerRatingMsg = String.format(
-                    "⭐ <b>Rate Your Ride!</b>\n\n" +
+                    "⭐ <b>Rate Your Ride!</b>\n" +
+                            directionLabel(ride.getDirection()) + "\n\n" +
                             "How was your experience with driver <b>%s</b>?\n\n" +
                             "Tap below to leave a rating:",
                     HtmlEscapeUtil.escape(ride.getDriver().getFullName()));
@@ -268,7 +273,8 @@ public class NotificationService {
 
             // Prompt driver to rate passenger
             String driverRatingMsg = String.format(
-                    "⭐ <b>Rate Your Passenger!</b>\n\n" +
+                    "⭐ <b>Rate Your Passenger!</b>\n" +
+                            directionLabel(ride.getDirection()) + "\n\n" +
                             "How was <b>%s</b> as a passenger?\n\n" +
                             "Tap below to leave a rating:",
                     HtmlEscapeUtil.escape(booking.getPassenger().getFullName()));
@@ -326,7 +332,8 @@ public class NotificationService {
                 : "";
 
         String msg = String.format(
-                "🚗 <b>Your driver is on the way!</b>\n\n" +
+                "🚗 <b>Your driver is on the way!</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n\n" +
                         "👤 Driver: <b>%s</b>%s%s\n\n" +
@@ -424,7 +431,8 @@ public class NotificationService {
                 : "";
 
         String msg = String.format(
-                "❌ <b>Booking Request Declined</b>\n\n" +
+                "❌ <b>Booking Request Declined</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "👤 Driver: <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
@@ -460,7 +468,8 @@ public class NotificationService {
 
         // Notify passenger — request expired
         String paxMsg = String.format(
-                "⏰ <b>Booking Request Expired</b>\n\n" +
+                "⏰ <b>Booking Request Expired</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "Your booking request was not responded to by the driver.\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n\n" +
@@ -478,7 +487,8 @@ public class NotificationService {
                 : "";
 
         String driverMsg = String.format(
-                "⏰ <b>Booking Request Expired</b>\n\n" +
+                "⏰ <b>Booking Request Expired</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "The booking request from <b>%s</b>%s has expired " +
                         "because you did not respond in time.\n\n" +
                         "📍 %s → %s\n" +
@@ -517,7 +527,8 @@ public class NotificationService {
                 : "";
 
         String msg = String.format(
-                "⏰ <b>Reminder %d/3 — Pending Booking Request</b>\n\n" +
+                "⏰ <b>Reminder %d/3 — Pending Booking Request</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "👤 <b>%s</b>%s is waiting for your response.\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
@@ -564,7 +575,8 @@ public class NotificationService {
                 : "";
 
         String msg = String.format(
-                "⚠️ <b>Removed from Ride</b>\n\n" +
+                "⚠️ <b>Removed from Ride</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "You have been removed from the following ride:\n\n" +
                         "👤 Driver: <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
@@ -602,7 +614,8 @@ public class NotificationService {
                 : "";
 
         String msg = String.format(
-                "ℹ️ <b>Booking Request Withdrawn</b>\n\n" +
+                "ℹ️ <b>Booking Request Withdrawn</b>\n" +
+                        directionLabel(booking.getRide().getDirection()) + "\n\n" +
                         "👤 <b>%s</b>%s\n" +
                         "📍 %s → %s\n" +
                         "🕐 %s\n" +
@@ -695,7 +708,8 @@ public class NotificationService {
         }
 
         return String.format(
-                "✅ <b>Booking Confirmed!</b>\n\n" +
+                "✅ <b>Booking Confirmed!</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "📍 %s → %s\n" +
                         "🚏 Your pickup: <b>%s</b>\n" +
                         "🏁 Your dropoff: <b>%s</b>\n" +
@@ -735,7 +749,8 @@ public class NotificationService {
         String badgeLine = badge != null && !badge.isBlank() ? badge + "\n" : "";
 
         return String.format(
-                "🔔 <b>New Booking Request</b>\n\n" +
+                "🔔 <b>New Booking Request</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "👤 <b>%s</b>%s\n" +
                         "%s" +
                         "🚏 Pickup at: <b>%s</b>\n" +
@@ -781,7 +796,8 @@ public class NotificationService {
 
         // Departure was recent — passenger was booked but ride never departed
         String msg = String.format(
-                "🕐 <b>Ride Did Not Push Through</b>\n\n" +
+                "🕐 <b>Ride Did Not Push Through</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "The ride you booked has expired without departing:\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 Scheduled: %s\n\n" +
@@ -827,7 +843,8 @@ public class NotificationService {
 
         // Notify driver
         String driverMsg = String.format(
-                "🚀 <b>Departure Reminder</b>\n\n" +
+                "🚀 <b>Departure Reminder</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "Your ride departs in <b>~30 minutes</b>!\n\n" +
                         "📍 %s\n" +
                         "🕐 %s\n" +
@@ -862,7 +879,8 @@ public class NotificationService {
         // Notify each confirmed passenger
         for (Booking booking : confirmedBookings) {
             String passengerMsg = String.format(
-                    "🚀 <b>Departure Reminder</b>\n\n" +
+                    "🚀 <b>Departure Reminder</b>\n" +
+                            directionLabel(ride.getDirection()) + "\n\n" +
                             "Your ride departs in <b>~30 minutes</b>!\n\n" +
                             "📍 %s\n" +
                             "🕐 %s\n" +
@@ -908,7 +926,8 @@ public class NotificationService {
                 .format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"));
 
         String msg = String.format(
-                "⏰ <b>Ride Time Updated</b>\n\n" +
+                "⏰ <b>Ride Time Updated</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
                         "Your driver updated the departure time for your upcoming ride.\n\n" +
                         "📍 %s → %s\n" +
                         "🕐 New time: <b>%s</b>\n\n" +
@@ -932,6 +951,62 @@ public class NotificationService {
 
         log.info("Ride time change notifications sent: rideId={} passengersNotified={}",
                 rideId, confirmedBookings.size());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onRideRouteChanged(RideEvents.RideRouteChangedEvent event) {
+        Long rideId = event.ride().getId();
+        List<Booking> confirmedBookings = bookingRepository
+                .findActiveBookingsForRide(rideId)
+                .stream()
+                .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
+                .toList();
+
+        if (confirmedBookings.isEmpty()) {
+            log.info("Ride route changed with no confirmed passengers: rideId={}", rideId);
+            return;
+        }
+
+        Ride ride = confirmedBookings.get(0).getRide();
+
+        String msg = String.format(
+                "📍 <b>Ride Route Updated</b>\n" +
+                        directionLabel(ride.getDirection()) + "\n\n" +
+                        "Your driver changed the route for your upcoming ride.\n\n" +
+                        "Was: <s>%s → %s</s>\n" +
+                        "➡️ Now: <b>%s → %s</b>\n\n" +
+                        "Does this still work for you?",
+                HtmlEscapeUtil.escape(event.oldOriginName()),
+                HtmlEscapeUtil.escape(event.oldDestinationName()),
+                HtmlEscapeUtil.escape(ride.getOriginHub().getName()),
+                HtmlEscapeUtil.escape(ride.getDestinationHub().getName()));
+
+        for (Booking booking : confirmedBookings) {
+            sendAndRecord(booking.getPassenger(), NotificationTypes.RIDE_ROUTE_CHANGED, msg,
+                    Map.of("rideId", rideId, "bookingId", booking.getId()),
+                    List.of(
+                            List.of(
+                                    new TelegramNotificationPort.InlineButton(
+                                            "✅ Keep Booking", "KEEP_BOOKING:" + booking.getId()),
+                                    new TelegramNotificationPort.InlineButton(
+                                            "❌ Cancel Booking", "CANCEL_BOOKING:" + booking.getId())
+                            )
+                    ));
+        }
+
+        log.info("Ride route change notifications sent: rideId={} passengersNotified={}",
+                rideId, confirmedBookings.size());
+    }
+
+    private static String directionLabel(RideDirection direction) {
+        if (direction == null) return "📍 Other";
+        return switch (direction) {
+            case HOME_TO_WORK -> "🏠 Home → Work";
+            case WORK_TO_HOME -> "🏢 Work → Home";
+            default           -> "📍 Other";
+        };
     }
 
     private String buildVehicleLine(Ride ride) {

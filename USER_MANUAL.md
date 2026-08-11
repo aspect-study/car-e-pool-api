@@ -1,5 +1,5 @@
 # Car-E-Pool — User Manual
-**Version 1.7 | June 2026**
+**Version 1.8 | June 2026**
 
 ---
 
@@ -134,17 +134,22 @@ Buttons are **color-coded** by intent:
 - 👤 **My Profile** — View your stats, vehicles, and ratings
 - ⭐ **My Ratings** — View all ratings you have received
 
-**When you have an active (posted) ride, the menu shows your ride card and:**
+**When you have two or more active rides at once** (e.g. a Home→Work ride and a Work→Home ride posted simultaneously, or a DEPARTED ride alongside a newly-posted ACTIVE one), the main menu shows a **ride picker** instead of jumping to a single card — one button per ride, each labeled with its direction and a live pending-request count (e.g. "🏠 Home → Work · ⏳ 2 pending"). Tap a ride to open its management card, described next. See §3.3 "Managing Multiple Active Rides" for details.
+
+**When you have exactly one active (posted) ride, the menu shows your ride card and:**
 - 👥 **My Passengers** | 🚀 **Start Ride**
 - ⏳ **Pending (N)** | ❌ **Cancel Ride** — Shown when you have pending booking requests
 - 📢 **Re-announce (N left)** — Shown when re-announces are still available
 - ✏️ **Edit Time** — Change the departure time of your active or full ride
 - 📜 **My Bookings (N)** — Shown when you also have active bookings as a passenger
+- 🚗 **Post a Ride** — Shown when you have fewer than 2 active rides; starts the normal post-ride flow so you can post a second ride (e.g. your return leg) without cancelling this one
+- 🔄 **Repost [other direction]** — Shown when you have fewer than 2 active rides and your current ride's direction is Home↔Work; jumps straight into posting a ride in the *opposite* direction, skipping the direction-selection step
 - 🔍 **Find a Ride** | 👤 **My Profile**
 
 **When your ride has departed:**
 - 👥 **My Passengers** | ✅ **Complete Ride**
 - 📜 **My Bookings (N)** — Shown when you also have active bookings as a passenger
+- 🚗 **Post a Ride** | 🔄 **Repost [other direction]** — Same availability rules as above
 - 👤 **My Profile**
 
 > **Button naming:** **👥 My Passengers** shows the passengers booked onto *your* ride (driver view). **📜 My Bookings** shows *your own* bookings as a passenger on someone else's ride. Both can appear at the same time if you have an active ride and a passenger booking in a different direction.
@@ -342,6 +347,34 @@ Your booking request is sent. You will see:
 ### 3.3 Managing Your Ride (Driver)
 
 When you have an active ride, all management options appear **directly on the main menu** (see §2.5). Tap **👥 My Passengers** to see all confirmed and pending passengers on your active ride.
+
+#### Managing Multiple Active Rides (Ride Picker)
+
+You are not limited to one active ride — you can post in **both directions** at the same time (e.g. a morning Home→Work ride and an evening Work→Home ride), and a ride that has already **DEPARTED** continues to count as "active" until you complete it. Whenever you have **2 or more** such rides, opening the main menu shows a picker instead of going straight to a card:
+
+```
+🚗 You have 2 active rides. Which one would you like to manage?
+
+[🏠 Home → Work  ·  ⏳ 2 pending]
+[🏢 Work → Home  ·  ✅ 0 pending]
+[📜 My Bookings (1)]
+[👤 My Profile]
+```
+
+Each button shows the ride's direction and a **live pending-request count**. Tap a ride to open its full management card — the same view (👥 My Passengers, ⏳ Pending, 🚀 Start Ride, ✏️ Edit Time, etc.) described throughout this section, scoped to that one ride only. Pending requests, "◀️ Back to Pending" navigation, and all counts stay scoped to the ride you opened — accepting, declining, or reviewing requests on one ride never touches the other.
+
+> **Note:** With exactly **one** active ride, the picker is skipped entirely and the bot opens that ride's management card directly — the experience is unchanged from before.
+
+#### Posting a Second Ride While You Have One Active
+
+The **one active ride per direction** rule (§4.1) only blocks a *second* ride in the *same* direction — it does not stop you from running rides in both directions. If you currently have exactly one active ride, its management card shows two extra shortcuts so you can post the other leg of your commute without first cancelling:
+
+| Button | What it does |
+|--------|--------------|
+| 🚗 **Post a Ride** | Starts the normal post-ride flow from the direction-selection step |
+| 🔄 **Repost [other direction]** | Skips direction selection and jumps straight into posting a ride in the *opposite* direction — e.g. tapping it on a Home→Work ride takes you straight into posting a Work→Home ride |
+
+> **Note:** The 🔄 Repost shortcut only appears for **Home → Work** and **Work → Home** rides — it is hidden when your ride's direction is "Other," since there is no clear opposite to suggest. Both shortcuts disappear once you have 2 active rides; at that point use the **ride picker** above to manage your existing rides before posting a third.
 
 #### Viewing Pending Booking Requests
 
@@ -1099,6 +1132,11 @@ A: Yes. Type the same landmark name when prompted during ride posting. The syste
 
 ### 6.7 Notifications
 
+**Q: How can I tell which ride or booking a notification is about if I have rides going both ways?**
+A: Every DM notification — for both drivers and passengers — shows a direction line (🏠 Home → Work or 🏢 Work → Home) directly under the title, e.g. "🚫 Booking Cancelled / 🏠 Home → Work." This covers cancellations, completions, rating prompts, departure alerts, declines, expirations, reminders, removals, and withdrawals, so you can immediately tell which of your rides or bookings each message refers to.
+
+---
+
 **Q: I stopped receiving notifications from the bot.**
 A: You may have blocked the bot on Telegram. Open the bot's profile in Telegram, scroll down, and unblock it. You can also try sending `/start` again.
 
@@ -1120,6 +1158,16 @@ A: Departure reminders are sent once per ride approximately 30 minutes before th
 ---
 
 ### 6.8 Managing Your Ride (Driver)
+
+**Q: I posted rides in both directions (or have a departed ride and a new active one). How do I manage them separately?**
+A: Open the main menu — instead of jumping straight to a single ride card, the bot shows a **ride picker** listing each active ride with its direction and a live pending-request count. Tap the one you want to manage; everything from there (👥 My Passengers, ⏳ Pending, 🚀 Start Ride, ✏️ Edit Time, etc.) applies only to that ride. The picker only appears when you have **2 or more** active rides — with just one, the bot opens its card directly as before.
+
+---
+
+**Q: Can I post a ride for my way home while my morning ride is still active?**
+A: Yes. The "one active ride per direction" rule only stops you from posting a *second* ride in the *same* direction — it does not stop you from running rides both ways. As long as you have fewer than 2 active rides, your ride's management card shows **🚗 Post a Ride** and **🔄 Repost [other direction]** shortcuts, letting you post the return leg without cancelling your current ride. The 🔄 Repost shortcut pre-selects the opposite direction for you (it is hidden for "Other"-direction rides).
+
+---
 
 **Q: I need to change my departure time after posting. Can I do that?**
 A: Yes. Tap **✏️ Edit Time** from the main menu (available on ACTIVE and FULL rides). A calendar and time picker appear — select the new date and time. The new time must be at least 15 minutes from now. Once confirmed: (1) your ride is updated, (2) all confirmed passengers receive a notification with Keep/Cancel buttons, and (3) the community group announcement is refreshed automatically. Note that the ✏️ Edit Time button disappears once the ride has departed.
@@ -1212,4 +1260,4 @@ A: No. Seat count is fixed at the time of booking and cannot be modified afterwa
 
 ---
 
-*End of Car-E-Pool User Manual — Version 1.7*
+*End of Car-E-Pool User Manual — Version 1.8*

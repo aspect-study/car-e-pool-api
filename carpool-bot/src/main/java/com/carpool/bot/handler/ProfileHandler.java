@@ -709,28 +709,39 @@ public class ProfileHandler {
 
         AdminStatsService.AdminStats s = adminStatsService.getStats();
 
+        String ratingLine = s.avgPlatformRating() == null
+                ? "No ratings yet"
+                : String.format("%.1f ⭐ (%d ratings)", s.avgPlatformRating(), s.totalRatings());
+
         String report = String.format(
                 """
                         📊 <b>Admin Stats</b>
                         <i>%s</i>
-                        
+
                         👥 <b>Users</b>
-                        Total: <b>%d</b> | New today: <b>%d</b>
-                        
+                        Total: <b>%d</b> | New today: <b>%d</b> | New this week: <b>%d</b>
+
                         🚗 <b>Rides</b>
                         Active now: <b>%d</b> | Posted today: <b>%d</b>
-                        Total: <b>%d</b> | Completed: <b>%d</b> | Cancelled: <b>%d</b>
-                        
+                        Total: <b>%d</b> | Completed: <b>%d</b> | Cancelled: <b>%d</b> (%.1f%%)
+
                         📋 <b>Bookings</b>
                         Pending now: <b>%d</b> | Made today: <b>%d</b>
-                        Total: <b>%d</b> | Completed: <b>%d</b>""",
+                        Total: <b>%d</b> | Completed: <b>%d</b> (%.1f%%)
+                        Declined: <b>%d</b> | Cancelled (driver/passenger): <b>%d</b>/<b>%d</b> | Timed out: <b>%d</b>
+
+                        🏘️ <b>Community</b>
+                        Pending hub suggestions: <b>%d</b>
+                        Avg rating: <b>%s</b>""",
                 LocalDateTime.now(ZoneId.of("Asia/Manila"))
                         .format(DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")),
-                s.totalUsers(), s.newUsersToday(),
+                s.totalUsers(), s.newUsersToday(), s.newUsersThisWeek(),
                 s.activeRidesNow(), s.ridesPostedToday(),
-                s.totalRides(), s.completedRides(), s.cancelledRides(),
+                s.totalRides(), s.completedRides(), s.cancelledRides(), s.cancellationRate(),
                 s.pendingBookingsNow(), s.bookingsMadeToday(),
-                s.totalBookings(), s.completedBookings());
+                s.totalBookings(), s.completedBookings(), s.bookingCompletionRate(),
+                s.declinedBookings(), s.cancelledByDriverBookings(), s.cancelledByPassengerBookings(), s.timedOutBookings(),
+                s.pendingHubSuggestions(), ratingLine);
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), report,
                 List.of(
@@ -931,11 +942,80 @@ public class ProfileHandler {
         }
 
         rows.add(List.of(
+                BotMessageBuilder.button("✅ Approve All (" + pending.size() + ")", "APPROVE_ALL_HUBS", null)
+        ));
+        rows.add(List.of(
                 BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS:" + safePage, null),
                 BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
         ));
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(), rows));
+    }
+
+    public void handleApproveAllHubs(BotContext ctx) {
+        if (!botConfig.isAdmin(ctx.telegramId())) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You don't have permission to do this."));
+            return;
+        }
+
+        int pendingCount = hubService.getPendingHubs().size();
+        if (pendingCount == 0) {
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    "🏘️ <b>Pending Hub Suggestions</b>\n\n<i>No pending hubs at the moment.</i>",
+                    List.of(List.of(
+                            BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS", null),
+                            BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
+                    ))));
+            return;
+        }
+
+        ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                String.format("⚠️ <b>Approve all %d pending hubs?</b>\n\n" +
+                        "Each will be auto-assigned a code and become active immediately. This cannot be undone from this menu.",
+                        pendingCount),
+                List.of(List.of(
+                        BotMessageBuilder.button("✅ Yes, Approve All", "CONFIRM_APPROVE_ALL_HUBS", null),
+                        BotMessageBuilder.button("❌ Cancel", "PENDING_HUBS", null)
+                ))));
+    }
+
+    public void handleConfirmApproveAllHubs(BotContext ctx) {
+        if (!botConfig.isAdmin(ctx.telegramId())) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ You don't have permission to do this."));
+            return;
+        }
+
+        try {
+            List<HubResponse> approved = hubService.approveAllPendingHubs();
+            if (approved.isEmpty()) {
+                ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                        "🏘️ <b>Pending Hub Suggestions</b>\n\n<i>No pending hubs at the moment.</i>",
+                        List.of(List.of(
+                                BotMessageBuilder.button("🔄 Refresh", "PENDING_HUBS", null),
+                                BotMessageBuilder.button("🏠 Menu",    "MAIN_MENU", null)
+                        ))));
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder(String.format(
+                    "✅ <b>Approved %d Hub%s!</b>\n\n", approved.size(), approved.size() == 1 ? "" : "s"));
+            for (HubResponse hub : approved) {
+                sb.append(String.format("• <b>%s</b> — <code>%s</code>\n",
+                        HtmlEscapeUtil.escape(hub.name()), hub.code()));
+            }
+
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), sb.toString().trim(),
+                    List.of(List.of(
+                            BotMessageBuilder.button("🏘️ View Pending", "PENDING_HUBS", null),
+                            BotMessageBuilder.button("🏠 Menu",          "MAIN_MENU", null)
+                    ))));
+        } catch (Exception e) {
+            log.error("Failed to bulk-approve pending hubs: {}", e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not approve all hubs. Please try again."));
+        }
     }
 
     public void handleApproveHub(BotContext ctx) {

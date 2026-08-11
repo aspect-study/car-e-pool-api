@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: 2026-06-04 -->
+<!-- build: 2026-07-22 -->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -161,7 +161,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
     <h1>Car-E-Pool</h1>
-    <p>User Manual — Version 1.7</p>
+    <p>User Manual — Version 1.9</p>
     <p style="margin-top:.2rem;font-size:.68rem;color:var(--muted)">© aspect;</p>
   </div>
   <nav class="sb-nav">
@@ -315,7 +315,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
       </ul>
     </div>
     <div class="card">
-      <h3>Active Ride Posted</h3>
+      <h3>One Active Ride Posted</h3>
       <ul>
         <li>Ride card summary</li>
         <li>👥 My Passengers &nbsp;|&nbsp; 🚀 Start Ride</li>
@@ -323,11 +323,14 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
         <li>📢 Re-announce (N left)</li>
         <li>✏️ Edit Time</li>
         <li>📜 My Bookings (N) — if you also have passenger bookings</li>
+        <li>🚗 Post a Ride &nbsp;|&nbsp; 🔄 Repost [other direction] — when you have fewer than 2 active rides</li>
       </ul>
     </div>
   </div>
 
   <div class="callout tip"><span class="callout-icon">💡</span><div class="cb"><h4>Button distinction</h4><p><strong>👥 My Passengers</strong> shows passengers booked on <em>your</em> ride (driver view). <strong>📜 My Bookings</strong> shows your bookings as a passenger on someone else's ride. Both can appear at the same time.</p></div></div>
+
+  <div class="callout info"><span class="callout-icon">🧭</span><div class="cb"><h4>Two or more active rides → ride picker</h4><p>If you have <strong>2+ active rides</strong> at once (e.g. one Home→Work and one Work→Home, or a DEPARTED ride alongside a new ACTIVE one), the menu shows a picker — one button per ride with its direction and a live pending-request count — instead of opening a card directly. See <strong>🎛️ Manage Your Ride</strong> for details.</p></div></div>
 
   <div class="stitle">Available Commands</div>
   <div class="tbl-wrap">
@@ -417,6 +420,29 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
     <p>All management options appear on the main menu when you have an active ride. Tap <strong>👥 My Passengers</strong> to see your confirmed and pending passengers.</p>
   </div>
 
+  <div class="stitle">🧭 Managing Multiple Active Rides (Ride Picker)</div>
+  <div class="card">
+    <p>You can run rides in <strong>both directions</strong> at once (e.g. a morning Home→Work ride and an evening Work→Home ride), and a ride that has <strong>DEPARTED</strong> still counts as active until you complete it. Whenever you have <strong>2 or more</strong> active rides, opening the menu shows a picker instead of a single card:</p>
+    <pre>🚗 You have 2 active rides. Which one would you like to manage?
+
+[🏠 Home → Work  ·  ⏳ 2 pending]
+[🏢 Work → Home  ·  ✅ 0 pending]
+[📜 My Bookings (1)]
+[👤 My Profile]</pre>
+    <p style="margin-top:.6rem">Each button shows the ride's direction plus a <strong>live pending-request count</strong>. Tap one to open its full management card — scoped entirely to that ride. Pending requests, "◀️ Back to Pending" navigation, and all counts stay scoped to the ride you opened; actions on one never affect the other.</p>
+    <div class="callout info" style="margin-top:.7rem"><span class="callout-icon">ℹ️</span><div class="cb"><h4>One active ride? No picker.</h4><p>With exactly one active ride, the bot skips the picker and opens that ride's management card directly — unchanged from before.</p></div></div>
+  </div>
+
+  <div class="stitle">🚗 Posting a Second Ride While One Is Active</div>
+  <div class="card">
+    <p>The "one active ride per direction" rule (see Business Rules) only blocks a <em>second</em> ride in the <em>same</em> direction — it doesn't stop you from posting the return leg. With fewer than 2 active rides, your ride's management card shows two extra shortcuts:</p>
+    <ul style="margin-top:.5rem">
+      <li><strong>🚗 Post a Ride</strong> — starts the normal post-ride flow from direction selection</li>
+      <li><strong>🔄 Repost [other direction]</strong> — skips direction selection entirely and jumps straight into posting a ride in the <em>opposite</em> direction (e.g. tapping it on a Home→Work ride takes you straight into posting Work→Home)</li>
+    </ul>
+    <div class="callout warn" style="margin-top:.7rem"><span class="callout-icon">⚠️</span><div class="cb"><h4>Hidden for "Other" direction</h4><p>🔄 Repost only appears for Home↔Work rides — there's no clear "opposite" for an "Other" direction ride. Both shortcuts disappear once you have 2 active rides; use the ride picker above to manage them instead.</p></div></div>
+  </div>
+
   <div class="stitle">Responding to Booking Requests</div>
   <div class="g2">
     <div class="card">
@@ -491,6 +517,18 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
       <li>New time must be <strong>≥ 15 minutes in the future</strong> and must differ from the current time</li>
     </ul>
     <p style="margin-top:.65rem;font-size:.83rem;color:var(--muted)"><strong>After confirming:</strong> (1) ride time is updated, (2) all confirmed passengers receive a DM with <strong>✅ Keep Booking</strong> / <strong>❌ Cancel Booking</strong> buttons, (3) the group announcement is deleted and reposted with the new time — no re-announce slot is consumed.</p>
+  </div>
+
+  <div class="stitle">🔀 Change Route</div>
+  <div class="card">
+    <p>Available on <span class="tag a">ACTIVE</span> or <span class="tag w">FULL</span> rides. Tap <strong>🔀 Change Route</strong> from the main menu — added so you don't have to cancel and repost just to fix a pickup or drop-off point.</p>
+    <ul style="margin-top:.6rem">
+      <li>Choose <strong>📍 Change Start</strong> or <strong>🏁 Change End</strong> — one side at a time</li>
+      <li>Type a nearby landmark (at least 3 characters) and pick from the matching hubs</li>
+      <li>The new hub must differ from the ride's current origin and destination — you can't set both ends to the same place</li>
+    </ul>
+    <p style="margin-top:.65rem;font-size:.83rem;color:var(--muted)"><strong>After confirming:</strong> (1) the route is updated immediately — no cancellation, so passengers are <strong>not</strong> sent a "ride cancelled" notice, (2) all confirmed passengers receive a DM showing the old and new route with <strong>✅ Keep Booking</strong> / <strong>❌ Cancel Booking</strong> buttons, (3) the group announcement is deleted and reposted with the new route.</p>
+    <div class="callout info" style="margin-top:.75rem"><span class="callout-icon">ℹ️</span><div class="cb"><h4>Only fixes the route</h4><p>Changing the route never changes your ride's direction (Home→Work / Work→Home). If you actually need to flip direction, cancel and post a new ride instead.</p></div></div>
   </div>
 
   <div class="stitle">📢 Re-Announce</div>
@@ -865,6 +903,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
         <tr><td>Contribution amount</td><td>Minimum ₱0.00 (free); no maximum</td></tr>
         <tr><td>Notes length</td><td>Maximum 300 characters</td></tr>
         <tr><td>Departure time edit</td><td>ACTIVE or FULL rides only; new time ≥ 15 min from now, must differ from current time</td></tr>
+        <tr><td>Route edit</td><td>ACTIVE or FULL rides only; at least one of origin/destination must change; new origin ≠ new destination; direction is never recomputed — no cancellation, so passengers are notified with Keep/Cancel instead of a "ride cancelled" notice</td></tr>
         <tr><td>Start ride guard</td><td>Can only mark DEPARTED within 60 minutes of scheduled departure</td></tr>
       </tbody>
     </table>
@@ -1032,6 +1071,10 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>Can I edit my ride after posting?</span><span class="chev">▼</span></div><div class="acc-body"><p><strong>Departure time</strong> can be changed on any ACTIVE or FULL ride using <strong>✏️ Edit Time</strong> from the main menu (new time must be ≥ 15 minutes in the future). All confirmed passengers are notified and can choose to keep or cancel their booking. <strong>Route</strong> cannot be changed after posting — cancel and repost using <strong>🔄 Repost</strong> (pre-fills all original details). To adjust the <strong>available seat count</strong>, use <strong>📢 Re-announce</strong> — it lets you enter a new count before reposting.</p></div></div>
 
+  <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>I posted rides in both directions. How do I manage them separately?</span><span class="chev">▼</span></div><div class="acc-body"><p>Open the main menu — instead of opening a single card, the bot shows a <strong>ride picker</strong> listing each active ride with its direction and a live pending-request count. Tap the one you want to manage; everything from there (passengers, pending requests, starting/cancelling, editing time) applies only to that ride. With just one active ride, the picker is skipped and the bot opens its card directly.</p></div></div>
+
+  <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>Can I post a ride for my way home while my morning ride is still active?</span><span class="chev">▼</span></div><div class="acc-body"><p>Yes. The "one active ride per direction" rule only blocks a <em>second</em> ride in the <em>same</em> direction. As long as you have fewer than 2 active rides, your ride's management card shows <strong>🚗 Post a Ride</strong> and <strong>🔄 Repost [other direction]</strong> shortcuts so you can post the return leg without cancelling your current ride. 🔄 Repost pre-selects the opposite direction for you and is hidden for "Other"-direction rides.</p></div></div>
+
   <div class="stitle">Booking a Ride</div>
 
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>The ride I want shows "FULL".</span><span class="chev">▼</span></div><div class="acc-body"><p>All seats are taken. Check back later — if a confirmed passenger cancels, the ride reopens. You can also search for alternative rides.</p></div></div>
@@ -1094,6 +1137,8 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 
   <div class="stitle">Hubs &amp; Notifications</div>
 
+  <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>How can I tell which ride or booking a notification is about if I have rides going both ways?</span><span class="chev">▼</span></div><div class="acc-body"><p>Every DM notification — for drivers and passengers alike — now shows a direction line (🏠 Home → Work or 🏢 Work → Home) directly under the title, e.g. "🚫 Booking Cancelled / 🏠 Home → Work." This covers cancellations, completions, rating prompts, departure alerts, declines, expirations, reminders, removals, and withdrawals, so you can immediately tell which ride or booking each message refers to.</p></div></div>
+
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>My suggested hub has been pending for a long time.</span><span class="chev">▼</span></div><div class="acc-body"><p>Hub approvals are done manually by admins. Your suggested hub is usable on your rides immediately, even while PENDING. Contact your admin if you need it promoted to ACTIVE urgently.</p></div></div>
 
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>My previously suggested hub was rejected. Can I suggest it again?</span><span class="chev">▼</span></div><div class="acc-body"><p>Yes. Type the same landmark name when prompted. The system detects the rejected hub and automatically re-queues it for admin review (status changes from REJECTED back to PENDING).</p></div></div>
@@ -1103,7 +1148,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>I did not receive the 30-minute departure reminder.</span><span class="chev">▼</span></div><div class="acc-body"><p>Departure reminders are sent once per ride approximately 30 minutes before the scheduled departure. If the scheduler ran slightly late or the ride was modified close to that window, the reminder may have been skipped. This is a best-effort notification — always verify departure time from your booking confirmation.</p></div></div>
 
   <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border);text-align:center;font-size:.78rem;color:var(--muted)">
-    Car-E-Pool User Manual — Version 1.7 &nbsp;|&nbsp; June 2026 &nbsp;|&nbsp; © aspect;
+    Car-E-Pool User Manual — Version 1.9 &nbsp;|&nbsp; July 2026 &nbsp;|&nbsp; © aspect;
   </div>
 </section>
 

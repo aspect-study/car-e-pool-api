@@ -57,6 +57,13 @@ public interface RideRatingRepository extends JpaRepository<RideRating, Long> {
     long countByRateeId(Long rateeId);
 
     /**
+     * Calculate platform-wide average star rating across all ratings.
+     * Returns null if no ratings exist yet. Used for admin stats.
+     */
+    @Query("SELECT AVG(r.stars) FROM RideRating r")
+    Double findGlobalAverageRating();
+
+    /**
      * Calculate average rating as driver only.
      */
     @Query("SELECT AVG(r.stars) FROM RideRating r " +

@@ -14,6 +14,8 @@ Services publish `RideEvents.*` records via `ApplicationEventPublisher`. `Notifi
 
 **`onRideTimeChanged`** listens for `RideTimeChangedEvent` (`@Async + @TransactionalEventListener(AFTER_COMMIT) + @Transactional(REQUIRES_NEW)`). Fetches all confirmed bookings for the ride; returns early if none. Formats new departure time as `"EEE, MMM d 'at' h:mm a"` (e.g. "Thu, May 23 at 7:30 AM"). Sends each confirmed passenger a DM with `✅ Keep Booking → KEEP_BOOKING:{bookingId}` and `❌ Cancel Booking → CANCEL_BOOKING:{bookingId}` inline buttons via the keyboard overload of `sendAndRecord`. Persists each notification with `NotificationTypes.RIDE_TIME_CHANGED` and PENDING → SENT/FAILED status.
 
+**Direction label in all notifications:** All 18 DM notifications (9 driver + 9 passenger) include a direction line (`🏠 Home → Work` or `🏢 Work → Home`) on the line immediately after the notification title. The private static helper `directionLabel(RideDirection direction)` in `NotificationService` is the single source of truth — returns `"🏠 Home → Work"`, `"🏢 Work → Home"`, or `"📍 Other"` (also null-safe). Never use `RideDirection.label()` in notification messages — it returns machine-readable lowercase strings, not display text.
+
 ## Multi-Vehicle Management
 
 `Vehicle` is a domain entity (soft-delete via `deletedAt`) with fields `user (FK LAZY)`, `plateNumber`, `model`, `color`, `seatCapacity (Integer)`. `VehicleRepository` exposes `findByUserIdAndDeletedAtIsNullOrderByCreatedAtAsc`, `findActiveByPlateForOtherUser`, and `existsByUserIdAndDeletedAtIsNull`.
@@ -56,6 +58,10 @@ For the bot-side CarpoolBot methods (sendToGroup, sendToUser, group buttons, han
 
 **Auto-sync on acceptance (passenger's other rides):** When a driver accepts a booking, `BookingService.acceptBooking()` auto-cancels the same passenger's PENDING bookings on **other rides** (not on the same ride). Each auto-cancelled booking fires `BookingAutoSyncedEvent`. `GroupNotificationService.onBookingAutoSynced()` calls `refreshGroupPostAfterSeatFreed` on the other ride, refreshing its group announcement to reflect the freed seat. If that other ride was FULL and its announcement was already deleted, `refreshGroupPostAfterSeatFreed` posts a fresh announcement.
 
+**Ride-scoped pending requests (for drivers with multiple active rides):** `getPendingRequestsForRide(rideId, driverUserId)` and `countPendingRequestsForRide(rideId)` complement the existing driver-wide `getPendingRequestsForDriver` / `countPendingRequestsForDriver`. `BookingRepository.findPendingByRideId` does `JOIN FETCH b.passenger`, `JOIN FETCH b.ride r`, and `JOIN FETCH r.driver` — the latter two are required so the service-layer `.filter(b -> b.getRide().getDriver().getId().equals(driverUserId))` ownership check doesn't throw `LazyInitializationException` outside the transaction. `countPendingByRideId` is a plain `COUNT` query, no fetch joins needed.
+
+**`getBookingsByRideId(rideId, status, pageable, requestingDriverId)` — REST-facing, ownership-checked:** Loads the ride and throws `NotRideOwnerException` (403) if `requestingDriverId` isn't the ride's driver, before querying bookings. This was previously missing the ownership check entirely — any authenticated user could page through any ride's bookings by `rideId`. The unpaged `getBookingsByRideId(rideId)` overload has no such check and remains bot-internal only (never expose it via REST).
+
 ## Direction-Scoped Conflict Checks
 
 Conflict checks are direction-scoped — a user can drive HOME_TO_WORK and hold a WORK_TO_HOME passenger booking at the same time. `RideDirection.label()` returns a human-readable string (`"home-to-work"`, `"work-to-home"`, `"other"`) used in all error messages.
@@ -83,6 +89,18 @@ The bot-side checks in `PostRideHandler`, `RideSearchHandler`, and `MessageHandl
 - Updates `ride.departureTime`, saves, then publishes `RideEvents.RideTimeChangedEvent(saved)`.
 - `RideTimeChangedEvent` is handled by `NotificationService.onRideTimeChanged` (passenger DMs with Keep/Cancel buttons) and `GroupNotificationService.onRideTimeChanged` (group post refresh).
 - `NotificationTypes.RIDE_TIME_CHANGED` constant used for the notification type field.
+
+## Update Route (Origin/Destination) Without Cancellation
+
+`RideService.updateRoute(rideId, newOriginHubId, newDestinationHubId, callerId)` lets a driver change a ride's origin and/or destination without cancelling it, so accepted passengers aren't hit with a `RIDE_CANCELLED` DM for a route tweak:
+- Acquires `SELECT FOR UPDATE` via `rideRepository.findByIdWithLock(rideId)`, same as `updateDepartureTime`.
+- A `null` hub id means "keep the current hub" — callers can change just one side.
+- Validates: caller is ride owner (`NotRideOwnerException`); ride status is ACTIVE or FULL (`InvalidRideStateException`); at least one hub id is non-null (`InvalidRideStateException`); resolved origin ≠ resolved destination (`SameHubException`); the resulting route actually differs from the current one (`InvalidRideStateException`); each supplied hub id resolves to an existing hub (`HubNotFoundException`).
+- Ride `direction` is intentionally never recomputed — a driver reversing direction should post a new ride, not repurpose this endpoint.
+- Captures the old origin/destination hub names before mutating, updates `ride.originHub`/`ride.destinationHub`, saves, then publishes `RideEvents.RideRouteChangedEvent(saved, oldOriginName, oldDestinationName)`.
+- `RideRouteChangedEvent` is handled by `NotificationService.onRideRouteChanged` (confirmed-passenger DMs with Keep/Cancel buttons, reusing the same `KEEP_BOOKING`/`CANCEL_BOOKING` callbacks as the time-change flow) and `GroupNotificationService.onRideRouteChanged` (group post refresh, no 48h guard — mirrors `onRideTimeChanged`).
+- `NotificationTypes.RIDE_ROUTE_CHANGED` constant used for the notification type field.
+- Exposed via `PATCH /api/v1/rides/{id}/route` with `UpdateRouteRequest(originHubId, destinationHubId)` — both nullable, class-level `@AssertTrue` requires at least one non-null.
 
 ## Booking: Pessimistic Locking
 
@@ -147,6 +165,8 @@ All entity→DTO mapping uses a single `EntityMapper` (MapStruct, compile-time g
 
 Admin hub management (list pending, approve, reject) is available in the bot under `MY_PROFILE → 🏘️ Pending Hubs` — gated by `BotConfig.isAdmin()`. No admin web UI exists yet.
 
+`HubService.approveAllPendingHubs()` bulk-approves every pending hub in one pass — loops `hubRepository.findAllPending()`, generating a unique code per hub via the same `generateUniqueCode` helper `approveHub` uses, saving each hub individually (not `saveAll`) so each subsequent `generateUniqueCode` call sees prior codes from the same batch via JPA auto-flush before `findByCode`. Same cache eviction (`hubs`, `hub-search`) as `approveHub`. Returns the list of approved `HubResponse`. Exposed via `PATCH /api/v1/hubs/approve-all` (admin-only) alongside the bot-side confirm flow — see `carpool-bot/CLAUDE.md`.
+
 ## Rating System
 
 Ratings are **per-ride**, not per user-pair. The same driver and passenger can rate each other again on every new completed ride — there is no "already rated this person" global block.
@@ -166,6 +186,17 @@ V43 Flyway migration widens the DB unique constraint on `ride_ratings` from `(ri
 **Typed exceptions in RatingService:** Raw `IllegalArgumentException` and `IllegalStateException` throws have been replaced with typed `CarpoolException` subclasses: `InvalidOperationException` (400, error code `INVALID_OPERATION`) for bad-input cases (ride/user not found, invalid stars), and `RatingConflictException` (409, error code `RATING_CONFLICT`) for state-conflict cases (duplicate rating, ride not COMPLETED). Both classes live in `carpool-common`. `GlobalExceptionHandler` handles them via the existing `CarpoolException` handler — no handler changes needed.
 
 **REST-facing RatingResponse:** `RatingResponse` uses `UserSummaryResponse` (not `UserResponse`) for the `rater` and `ratee` fields. `UserSummaryResponse` intentionally omits `plateNumber`, `carModel`, and `carColor` — `GET /users/{userId}/ratings` is accessible by any authenticated user, so vehicle fields must not appear. `EntityMapper.toRatingResponse` requires `@Mapping(source = "ride.id", target = "rideId")` — MapStruct cannot auto-map nested `.id` fields and will silently produce null without this annotation.
+
+## Admin Stats
+
+`AdminStatsService.getStats()` (cached under `adminStats`/`global`, evicted nowhere — 30-min TTL via `CacheConfig`) returns an `AdminStats` record covering users, rides, bookings, and community health:
+
+- **Users:** `totalUsers`, `newUsersToday`, `newUsersThisWeek` (week starts Monday, `Asia/Manila`).
+- **Rides:** `activeRidesNow`, `totalRides`, `completedRides`, `cancelledRides`, `ridesPostedToday`, plus a derived `cancellationRate()` method (`cancelledRides / totalRides * 100`, not a stored field — always in sync).
+- **Bookings:** `pendingBookingsNow`, `totalBookings`, `completedBookings`, `bookingsMadeToday`, plus the full outcome breakdown `declinedBookings`, `cancelledByDriverBookings`, `cancelledByPassengerBookings`, `timedOutBookings` (previously invisible — `totalBookings` didn't reconcile with what was shown). Derived `bookingCompletionRate()` mirrors `cancellationRate()`.
+- **Community health:** `pendingHubSuggestions` (`HubRepository.countByStatus(PENDING)`), `avgPlatformRating` (nullable — `RideRatingRepository.findGlobalAverageRating()`, null when no ratings exist yet), `totalRatings`.
+
+Consumed by `ProfileHandler.handleAdminStats` (bot). The REST `AdminStatsResponse`/`ProfileService.getAdminStats()` path (used by `carpool-admin`) intentionally still maps only the original fields — not yet extended to the new ones.
 
 ## Schedulers
 

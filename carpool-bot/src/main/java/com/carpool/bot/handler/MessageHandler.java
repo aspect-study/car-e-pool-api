@@ -213,6 +213,10 @@ public class MessageHandler {
                     postRideHandler.handlePostRideOrigin(chatId, text, state, bot);
             case POST_RIDE_DESTINATION ->
                     postRideHandler.handlePostRideDestination(chatId, text, state, bot);
+            case EDIT_ROUTE_ORIGIN ->
+                    postRideHandler.handleEditRouteOriginSearch(chatId, text, state, bot);
+            case EDIT_ROUTE_DEST ->
+                    postRideHandler.handleEditRouteDestSearch(chatId, text, state, bot);
             case POST_RIDE_SEATS ->
                     postRideHandler.handlePostRideSeats(chatId, text, state, bot);
             case POST_RIDE_CONTRIBUTION ->

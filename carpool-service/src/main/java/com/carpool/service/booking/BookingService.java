@@ -369,6 +369,20 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
+    public long countPendingRequestsForRide(Long rideId) {
+        return bookingRepository.countPendingByRideId(rideId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getPendingRequestsForRide(Long rideId, Long driverUserId) {
+        return bookingRepository.findPendingByRideId(rideId)
+                .stream()
+                .filter(b -> b.getRide().getDriver().getId().equals(driverUserId))
+                .map(mapper::toBookingResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public PagedResponse<BookingResponse> getMyBookings(Long passengerUserId,
                                                         Pageable pageable) {
         Page<BookingResponse> page = bookingRepository
@@ -441,7 +455,15 @@ public class BookingService {
     @Transactional(readOnly = true)
     public PagedResponse<BookingResponse> getBookingsByRideId(Long rideId,
                                                               BookingStatus status,
-                                                              Pageable pageable) {
+                                                              Pageable pageable,
+                                                              Long requestingDriverId) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(requestingDriverId)) {
+            throw new NotRideOwnerException();
+        }
+
         Page<BookingResponse> page = status != null
                 ? bookingRepository.findByRideIdAndStatus(rideId, status, pageable)
                   .map(mapper::toBookingResponse)

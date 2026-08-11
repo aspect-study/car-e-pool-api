@@ -119,6 +119,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
     SELECT b FROM Booking b
     JOIN FETCH b.passenger
+    JOIN FETCH b.ride r
+    JOIN FETCH r.driver
     WHERE b.ride.id = :rideId
       AND b.status = 'PENDING'
     ORDER BY b.createdAt ASC
@@ -164,6 +166,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
       AND b.status = 'PENDING'
     """)
     long countPendingByDriverId(@Param("driverId") Long driverId);
+
+    @Query("""
+    SELECT COUNT(b) FROM Booking b
+    WHERE b.ride.id = :rideId
+      AND b.status = 'PENDING'
+    """)
+    long countPendingByRideId(@Param("rideId") Long rideId);
 
     /**
      * Count bookings by passenger and status — used for profile stats.

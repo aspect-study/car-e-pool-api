@@ -370,6 +370,38 @@ public class GroupNotificationService {
     }
 
     @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onRideRouteChanged(RideEvents.RideRouteChangedEvent event) {
+        Long rideId = event.ride().getId();
+        Ride ride = rideRepository.findById(rideId).orElse(null);
+        if (ride == null || ride.getGroupMessageId() == null) return;
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) return;
+
+        // No 48h guard — a route change is always high-signal and must be reflected immediately.
+        try {
+            try {
+                carpoolBot.deleteMessage(botConfig.getGroupChatId(), ride.getGroupMessageId());
+            } catch (Exception e) {
+                log.warn("Could not delete old group post before route-change refresh: rideId={} error={}",
+                        rideId, e.getMessage());
+            }
+
+            String message = buildRidePostedMessage(ride);
+            Integer messageId = carpoolBot.sendToGroup(
+                    message, ride.getId(), ride.getDriver().getId(), resolveTopicId(ride));
+            log.info("Group announcement refreshed after route change: rideId={}", rideId);
+
+            if (messageId != null) {
+                persistGroupMessageId(rideId, messageId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to refresh group announcement after route change: rideId={} error={}",
+                    rideId, e.getMessage(), e);
+        }
+    }
+
+    @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void refreshGroupAnnouncementForRide(Long rideId) {
         Ride ride = rideRepository.findById(rideId).orElse(null);

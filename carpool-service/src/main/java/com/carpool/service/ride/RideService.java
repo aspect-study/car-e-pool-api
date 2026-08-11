@@ -505,6 +505,68 @@ public class RideService {
     }
 
     /**
+     * Updates the origin and/or destination hub of an active ride without cancelling it.
+     * A null hub id means "keep the current one". Direction is intentionally NOT recomputed.
+     */
+    @Transactional
+    public RideResponse updateRoute(Long rideId, Long newOriginHubId,
+                                    Long newDestinationHubId, Long driverUserId) {
+        Ride ride = rideRepository.findByIdWithLock(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(driverUserId)) {
+            throw new NotRideOwnerException();
+        }
+
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
+            throw new InvalidRideStateException(
+                    "Only ACTIVE or FULL rides can have their route updated.");
+        }
+
+        if (newOriginHubId == null && newDestinationHubId == null) {
+            throw new InvalidRideStateException(
+                    "No changes made — provide a new origin and/or destination.");
+        }
+
+        Hub newOrigin = newOriginHubId != null
+                ? hubRepository.findById(newOriginHubId)
+                        .orElseThrow(() -> new HubNotFoundException(newOriginHubId))
+                : ride.getOriginHub();
+
+        Hub newDestination = newDestinationHubId != null
+                ? hubRepository.findById(newDestinationHubId)
+                        .orElseThrow(() -> new HubNotFoundException(newDestinationHubId))
+                : ride.getDestinationHub();
+
+        if (newOrigin.getId().equals(newDestination.getId())) {
+            throw new SameHubException();
+        }
+
+        boolean originChanged = !newOrigin.getId().equals(ride.getOriginHub().getId());
+        boolean destChanged   = !newDestination.getId().equals(ride.getDestinationHub().getId());
+        if (!originChanged && !destChanged) {
+            throw new InvalidRideStateException(
+                    "No changes made — the new route matches the current route.");
+        }
+
+        String oldOriginName      = ride.getOriginHub().getName();
+        String oldDestinationName = ride.getDestinationHub().getName();
+
+        ride.setOriginHub(newOrigin);
+        ride.setDestinationHub(newDestination);
+        Ride saved = rideRepository.save(ride);
+
+        log.info("Route updated: rideId={} oldOrigin={} newOrigin={} oldDest={} newDest={} driverId={}",
+                rideId, oldOriginName, newOrigin.getName(),
+                oldDestinationName, newDestination.getName(), driverUserId);
+
+        eventPublisher.publishEvent(
+                new RideEvents.RideRouteChangedEvent(saved, oldOriginName, oldDestinationName));
+
+        return mapper.toRideResponse(saved);
+    }
+
+    /**
      * Updates the available seat count on an active ride.
      * Used by re-announce flow to let the driver adjust seat count before bumping the post.
      */

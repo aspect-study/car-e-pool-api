@@ -10,6 +10,7 @@ import com.carpool.bot.util.BotTimePickerUtil;
 import com.carpool.bot.util.ButtonStyle;
 import com.carpool.common.exception.InvalidRideStateException;
 import com.carpool.common.exception.NotRideOwnerException;
+import com.carpool.common.exception.SameHubException;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.RideDirection;
@@ -38,6 +39,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Handles all driver-side ride management flows.
@@ -130,64 +133,63 @@ public class DriverHandler {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     """
                             📋 <b>Ride Bookings</b>
-                            
+
                             <i>No passengers have booked your ride yet.</i>"""));
             return;
         }
 
-        List<BookingResponse> confirmed = bookings.stream()
-                .filter(b -> b.status() == BookingStatus.CONFIRMED).toList();
-        List<BookingResponse> pending = bookings.stream()
-                .filter(b -> b.status() == BookingStatus.PENDING).toList();
+        long totalConfirmed = bookings.stream()
+                .filter(b -> b.status() == BookingStatus.CONFIRMED).count();
+        long totalPending = bookings.stream()
+                .filter(b -> b.status() == BookingStatus.PENDING).count();
 
         StringBuilder sb = new StringBuilder("📋 <b>Ride Bookings</b>\n\n");
         sb.append(String.format("✅ Confirmed: <b>%d</b>  ⏳ Pending: <b>%d</b>\n\n",
-                confirmed.size(), pending.size()));
+                totalConfirmed, totalPending));
+
+        Map<RideDirection, List<BookingResponse>> byDirection = bookings.stream()
+                .collect(Collectors.groupingBy(b -> b.ride().direction()));
+
+        List<RideDirection> orderedDirections = List
+                .of(RideDirection.HOME_TO_WORK, RideDirection.WORK_TO_HOME)
+                .stream()
+                .filter(byDirection::containsKey)
+                .collect(Collectors.toCollection(ArrayList::new));
+        byDirection.keySet().stream()
+                .filter(d -> d != RideDirection.HOME_TO_WORK && d != RideDirection.WORK_TO_HOME)
+                .forEach(orderedDirections::add);
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         int index = 1;
 
-        if (!confirmed.isEmpty()) {
-            sb.append("─── <b>Confirmed</b> ───\n");
+        for (RideDirection direction : orderedDirections) {
+            String dirLabel = switch (direction) {
+                case HOME_TO_WORK -> "🏠 Home → Work";
+                case WORK_TO_HOME -> "🏢 Work → Home";
+                default           -> "📍 Other";
+            };
+            sb.append("─── <b>").append(dirLabel).append("</b> ───\n");
+
+            List<BookingResponse> dirBookings = byDirection.get(direction);
+            List<BookingResponse> confirmed = dirBookings.stream()
+                    .filter(b -> b.status() == BookingStatus.CONFIRMED).toList();
+            List<BookingResponse> pending = dirBookings.stream()
+                    .filter(b -> b.status() == BookingStatus.PENDING).toList();
+
             for (BookingResponse b : confirmed) {
-                String paxHandle = b.passenger().telegramHandle() != null
-                        ? " (@" + HtmlEscapeUtil.escape(
-                        b.passenger().telegramHandle()) + ")" : "";
-                sb.append(String.format(
-                        "<b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share\n",
-                        index,
-                        HtmlEscapeUtil.escape(b.passenger().fullName()),
-                        paxHandle,
-                        b.seatsReserved(),
-                        b.contributionDue()));
-                rows.add(List.of(InlineKeyboardButton.builder()
-                        .text("✅ #" + index + " — " + b.passenger().fullName())
-                        .callbackData("VIEW_DRIVER_BOOKING:" + b.id())
-                        .build()));
+                appendBookingRow(sb, rows, b, index, "✅", "VIEW_DRIVER_BOOKING:");
+                index++;
+            }
+
+            if (!confirmed.isEmpty() && !pending.isEmpty()) {
+                sb.append("\n");
+            }
+
+            for (BookingResponse b : pending) {
+                appendBookingRow(sb, rows, b, index, "⏳", "VIEW_PENDING:");
                 index++;
             }
             sb.append("\n");
-        }
-
-        if (!pending.isEmpty()) {
-            sb.append("─── <b>Pending Approval</b> ───\n");
-            for (BookingResponse b : pending) {
-                String paxHandle = b.passenger().telegramHandle() != null
-                        ? " (@" + HtmlEscapeUtil.escape(
-                        b.passenger().telegramHandle()) + ")" : "";
-                sb.append(String.format(
-                        "<b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share\n",
-                        index,
-                        HtmlEscapeUtil.escape(b.passenger().fullName()),
-                        paxHandle,
-                        b.seatsReserved(),
-                        b.contributionDue()));
-                rows.add(List.of(InlineKeyboardButton.builder()
-                        .text("⏳ #" + index + " — " + b.passenger().fullName())
-                        .callbackData("VIEW_PENDING:" + b.id())
-                        .build()));
-                index++;
-            }
         }
 
         rows.add(List.of(BotMessageBuilder.menuButtonRow().getFirst()));
@@ -366,8 +368,10 @@ public class DriverHandler {
     // ── Pending requests ──────────────────────────────────────────────────
 
     public void handlePendingRequests(BotContext ctx) {
-        List<BookingResponse> pending =
-                bookingService.getPendingRequestsForDriver(ctx.carpoolUserId());
+        Long rideId = ctx.entityId();
+        List<BookingResponse> pending = (rideId != null)
+                ? bookingService.getPendingRequestsForRide(rideId, ctx.carpoolUserId())
+                : bookingService.getPendingRequestsForDriver(ctx.carpoolUserId());
 
         if (pending.isEmpty()) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
@@ -447,7 +451,7 @@ public class DriverHandler {
                                     "DECLINE_BOOKING:" + ctx.entityId(), ButtonStyle.DANGER.toString())
                     ),
                     List.of(BotMessageBuilder.button(
-                            "◀️ Back to Pending", "PENDING_REQUESTS", ButtonStyle.PRIMARY.toString()))
+                            "◀️ Back to Pending", "PENDING_REQUESTS:" + b.rideId(), ButtonStyle.PRIMARY.toString()))
             );
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), detail, rows));
 
@@ -911,6 +915,99 @@ public class DriverHandler {
         }
     }
 
+    /** Entry: driver tapped "Change Route" on the ride management card. */
+    public void handleEditRideRoute(BotContext ctx) {
+        Long rideId = ctx.entityId();
+        try {
+            var ride = rideService.getRideById(rideId);
+            if (!ride.driver().id().equals(ctx.carpoolUserId())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+                return;
+            }
+            if (ride.status() != RideStatus.ACTIVE && ride.status() != RideStatus.FULL) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                        "⚠️ Only active rides can have their route changed."));
+                return;
+            }
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withSelectedRideId(rideId)
+                    .withCarpoolUserId(ctx.carpoolUserId())
+                    .withFlow(BotFlow.IDLE));
+
+            var rows = List.of(
+                    List.of(BotMessageBuilder.button(
+                            "📍 Change Start", "EDIT_ROUTE_ORIGIN:" + rideId, null)),
+                    List.of(BotMessageBuilder.button(
+                            "🏁 Change End", "EDIT_ROUTE_DEST:" + rideId, null)));
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    "🔀 <b>Change Route</b>\n\n" +
+                            "Current: <b>" + HtmlEscapeUtil.escape(ride.originHub().name()) +
+                            " → " + HtmlEscapeUtil.escape(ride.destinationHub().name()) + "</b>\n\n" +
+                            "What do you want to change?",
+                    rows));
+        } catch (Exception e) {
+            log.warn("Could not load ride for route edit id={}: {}", rideId, e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ This ride is no longer available."));
+        }
+    }
+
+    /** Driver chose to change the origin — prompt for a search term. */
+    public void handleEditRouteOriginStart(BotContext ctx) {
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withSelectedRideId(ctx.entityId())
+                .withFlow(BotFlow.EDIT_ROUTE_ORIGIN));
+        ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                "📍 <b>New start point?</b>\n\nType a nearby landmark. Example: <code>SM Southmall</code>"));
+    }
+
+    /** Driver chose to change the destination — prompt for a search term. */
+    public void handleEditRouteDestStart(BotContext ctx) {
+        stateManager.save(ctx.chatId(), ctx.state()
+                .withSelectedRideId(ctx.entityId())
+                .withFlow(BotFlow.EDIT_ROUTE_DEST));
+        ctx.bot().send(BotMessageBuilder.textWithCancel(ctx.chatId(),
+                "🏁 <b>New end point?</b>\n\nType a nearby landmark. Example: <code>BGC</code>"));
+    }
+
+    /** Driver picked the new origin hub from search results. */
+    public void handleEditHubOriginSelected(BotContext ctx) {
+        applyRouteChange(ctx, ctx.entityId(), null);
+    }
+
+    /** Driver picked the new destination hub from search results. */
+    public void handleEditHubDestSelected(BotContext ctx) {
+        applyRouteChange(ctx, null, ctx.entityId());
+    }
+
+    private void applyRouteChange(BotContext ctx, Long newOriginHubId, Long newDestHubId) {
+        Long rideId = ctx.state().getSelectedRideId();
+        if (rideId == null) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Session expired. Please reopen the ride from the main menu."));
+            stateManager.reset(ctx.chatId());
+            return;
+        }
+        try {
+            var updated = rideService.updateRoute(
+                    rideId, newOriginHubId, newDestHubId, ctx.carpoolUserId());
+            stateManager.reset(ctx.chatId());
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "✅ <b>Route updated</b>\n\n" +
+                            "📍 " + HtmlEscapeUtil.escape(updated.originHub().name()) +
+                            " → " + HtmlEscapeUtil.escape(updated.destinationHub().name()) + "\n\n" +
+                            "Confirmed passengers have been notified."));
+        } catch (InvalidRideStateException | SameHubException e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ " + e.getMessage()));
+        } catch (NotRideOwnerException e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+        } catch (Exception e) {
+            log.warn("Route update failed rideId={}: {}", rideId, e.getMessage(), e);
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not update the route. Please try again."));
+        }
+    }
+
     public void handleCompleteRide(BotContext ctx) {
         try {
             rideService.updateRideStatus(ctx.entityId(),
@@ -939,5 +1036,24 @@ public class DriverHandler {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "⚠️ Could not complete ride. Please try again."));
         }
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────
+
+    private void appendBookingRow(StringBuilder sb,
+                                   List<List<InlineKeyboardButton>> rows,
+                                   BookingResponse b, int index,
+                                   String statusEmoji, String callbackPrefix) {
+        String paxHandle = b.passenger().telegramHandle() != null
+                ? " (@" + HtmlEscapeUtil.escape(b.passenger().telegramHandle()) + ")" : "";
+        sb.append(String.format(
+                "%s <b>%d.</b> %s%s\n    🪑 %d | ⛽ ₱%.2f share\n",
+                statusEmoji, index,
+                HtmlEscapeUtil.escape(b.passenger().fullName()), paxHandle,
+                b.seatsReserved(), b.contributionDue()));
+        rows.add(List.of(InlineKeyboardButton.builder()
+                .text(statusEmoji + " #" + index + " — " + b.passenger().fullName())
+                .callbackData(callbackPrefix + b.id())
+                .build()));
     }
 }

@@ -21,6 +21,7 @@ public final class NotificationTypes {
     public static final String RIDE_COMPLETED               = "RIDE_COMPLETED";
     public static final String RIDE_DEPARTED                = "RIDE_DEPARTED";
     public static final String RIDE_TIME_CHANGED            = "RIDE_TIME_CHANGED";
+    public static final String RIDE_ROUTE_CHANGED            = "RIDE_ROUTE_CHANGED";
 
     // Sent to BOTH (or per-role as needed)
     public static final String PAYMENT_REMINDER       = "PAYMENT_REMINDER";

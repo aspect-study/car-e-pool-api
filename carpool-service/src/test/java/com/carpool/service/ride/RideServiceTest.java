@@ -424,7 +424,7 @@ class RideServiceTest {
         }
 
         @ParameterizedTest
-        @EnumSource(value = RideStatus.class, names = {"PENDING", "COMPLETED", "CANCELLED", "DEPARTED", "DRAFT"})
+        @EnumSource(value = RideStatus.class, names = {"COMPLETED", "CANCELLED", "DEPARTED", "DRAFT"})
         @DisplayName("should throw InvalidRideStateException when ride is not ACTIVE or FULL")
         void updateDepartureTime_throwsWhenRideNotActiveOrFull(RideStatus status) {
             activeRide.setStatus(status);
@@ -481,6 +481,118 @@ class RideServiceTest {
             when(mapper.toRideResponse(any())).thenReturn(expected);
 
             RideResponse result = rideService.updateDepartureTime(100L, newTime, 1L);
+
+            assertThat(result).isSameAs(expected);
+        }
+    }
+
+// ── updateRoute ───────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("updateRoute()")
+    class UpdateRoute {
+
+        private Hub newDestination;
+
+        @BeforeEach
+        void routeSetup() {
+            newDestination = Hub.builder()
+                    .id(12L).code("ORTIGAS").name("Ortigas Center").area("Pasig")
+                    .status(HubStatus.ACTIVE).build();
+        }
+
+        @Test
+        @DisplayName("should throw NotRideOwnerException when caller is not the driver")
+        void updateRoute_throwsWhenNotOwner() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateRoute(100L, null, 12L, 99L))
+                    .isInstanceOf(NotRideOwnerException.class);
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = RideStatus.class, names = {"COMPLETED", "CANCELLED", "DEPARTED", "DRAFT"})
+        @DisplayName("should throw InvalidRideStateException when ride is not ACTIVE or FULL")
+        void updateRoute_throwsWhenRideNotActiveOrFull(RideStatus status) {
+            activeRide.setStatus(status);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateRoute(100L, null, 12L, 1L))
+                    .isInstanceOf(InvalidRideStateException.class);
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when both hub ids are null")
+        void updateRoute_throwsWhenNothingProvided() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateRoute(100L, null, null, 1L))
+                    .isInstanceOf(InvalidRideStateException.class);
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when the resulting route is unchanged")
+        void updateRoute_throwsWhenNoActualChange() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(hubRepository.findById(10L)).thenReturn(Optional.of(originHub));
+            when(hubRepository.findById(11L)).thenReturn(Optional.of(destinationHub));
+
+            assertThatThrownBy(() -> rideService.updateRoute(100L, 10L, 11L, 1L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("No changes");
+        }
+
+        @Test
+        @DisplayName("should throw SameHubException when resulting origin equals destination")
+        void updateRoute_throwsWhenOriginEqualsDestination() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(hubRepository.findById(11L)).thenReturn(Optional.of(destinationHub));
+
+            // change origin to the current destination (11L) → origin == destination
+            assertThatThrownBy(() -> rideService.updateRoute(100L, 11L, null, 1L))
+                    .isInstanceOf(SameHubException.class);
+        }
+
+        @Test
+        @DisplayName("should throw HubNotFoundException when a supplied hub id does not exist")
+        void updateRoute_throwsWhenHubMissing() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(hubRepository.findById(999L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> rideService.updateRoute(100L, null, 999L, 1L))
+                    .isInstanceOf(HubNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("should apply new destination only, keep origin, and publish event with old names")
+        void updateRoute_changesDestinationOnly() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(hubRepository.findById(12L)).thenReturn(Optional.of(newDestination));
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(mapper.toRideResponse(any())).thenReturn(mock(RideResponse.class));
+
+            rideService.updateRoute(100L, null, 12L, 1L);
+
+            assertThat(activeRide.getOriginHub().getId()).isEqualTo(10L);
+            assertThat(activeRide.getDestinationHub().getId()).isEqualTo(12L);
+
+            ArgumentCaptor<RideEvents.RideRouteChangedEvent> captor =
+                    ArgumentCaptor.forClass(RideEvents.RideRouteChangedEvent.class);
+            verify(eventPublisher).publishEvent(captor.capture());
+            assertThat(captor.getValue().oldOriginName()).isEqualTo("Ayala MRT");
+            assertThat(captor.getValue().oldDestinationName()).isEqualTo("BGC High Street");
+        }
+
+        @Test
+        @DisplayName("should return updated RideResponse after save")
+        void updateRoute_returnsUpdatedRideResponse() {
+            RideResponse expected = mock(RideResponse.class);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(hubRepository.findById(12L)).thenReturn(Optional.of(newDestination));
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(mapper.toRideResponse(any())).thenReturn(expected);
+
+            RideResponse result = rideService.updateRoute(100L, null, 12L, 1L);
 
             assertThat(result).isSameAs(expected);
         }

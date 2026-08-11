@@ -108,6 +108,8 @@ public class CallbackHandler {
         commands.put("CANCEL_BOOKING_REASON", bookingHandler::handleCancelBookingWithReason);
 
         // ── Driver management ─────────────────────────────────────────────
+        commands.put("MANAGE_RIDE", ctx -> flowHelper.showRideManagementCard(
+                ctx.chatId(), ctx.carpoolUserId(), ctx.entityId(), ctx.bot()));
         commands.put("MY_RIDES",     ctx -> driverHandler.showMyRides(
                 ctx.chatId(), ctx.carpoolUserId(), ctx.bot()));
         commands.put("RIDE_BOOKINGS", driverHandler::handleDriverBookings);
@@ -130,6 +132,15 @@ public class CallbackHandler {
         commands.put("TIME_NAV_EDIT",           driverHandler::handleEditRideTimePickerNav);
         commands.put("RIDE_TIME_EDIT",          driverHandler::handleEditRideTimeSelected);
         commands.put("CONFIRM_EDIT_RIDE_TIME",  driverHandler::handleConfirmEditRideTime);
+        commands.put("EDIT_RIDE_ROUTE",     driverHandler::handleEditRideRoute);
+        commands.put("EDIT_ROUTE_ORIGIN",   driverHandler::handleEditRouteOriginStart);
+        commands.put("EDIT_ROUTE_DEST",     driverHandler::handleEditRouteDestStart);
+        commands.put("EDIT_HUB_ORIGIN",     driverHandler::handleEditHubOriginSelected);
+        commands.put("EDIT_HUB_DEST",       driverHandler::handleEditHubDestSelected);
+        commands.put("RETYPE_EDIT_ORIGIN",  driverHandler::handleEditRouteOriginStart);
+        commands.put("RETYPE_EDIT_DEST",    driverHandler::handleEditRouteDestStart);
+        commands.put("EDIT_CONFIRM_CUSTOM_ORIGIN", postRideHandler::handleEditConfirmCustomOrigin);
+        commands.put("EDIT_CONFIRM_CUSTOM_DEST",   postRideHandler::handleEditConfirmCustomDest);
         commands.put("KEEP_BOOKING", ctx -> {
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     "✅ <b>Got it!</b>\n\nYou're still booked on this ride. We'll remind you before departure.",
@@ -157,6 +168,8 @@ public class CallbackHandler {
         commands.put("PENDING_HUBS", profileHandler::handlePendingHubs);
         commands.put("APPROVE_HUB", profileHandler::handleApproveHub);
         commands.put("REJECT_HUB", profileHandler::handleRejectHub);
+        commands.put("APPROVE_ALL_HUBS", profileHandler::handleApproveAllHubs);
+        commands.put("CONFIRM_APPROVE_ALL_HUBS", profileHandler::handleConfirmApproveAllHubs);
 
         // ── Terms ─────────────────────────────────────────────────────────
         commands.put("TERMS_WELCOME",    ctx -> profileHandler.handleTermsWelcome(
