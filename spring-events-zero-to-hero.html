@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring Boot Events — Zero to Hero</title>
+<meta name="description" content="Build Spring's event-driven notification pattern from an empty folder to a two-listener fan-out.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF6F0; --surface:#FFFFFF; --surface-2:#F4EFE6;
+  --ink:#1A2420; --ink-soft:#4B5751; --mist:#8A8375; --line:#E1D9CB;
+  --pine:#1F4E3D; --coral:#E8623D;
+  --success:#2F7D5C; --warning:#A8721F; --error:#B23A2E; --info:#2F5F81;
+  --success-bg:#E7F1EB; --warning-bg:#F7EEDC; --error-bg:#F7E6E3; --info-bg:#E4EDF4;
+  --code-bg:#1B2621; --code-ink:#E4E8E3;
+  --r-sm:6px; --r-md:10px; --r-lg:18px; --r-full:999px;
+  --maxw:1180px;
+  --shadow:0 1px 2px rgba(26,36,32,.05), 0 8px 24px -12px rgba(26,36,32,.14);
+  --ease-in:cubic-bezier(.4,0,.2,1);
+}
+:root[data-theme="dark"], html.dark{
+  --bg:#14120D; --surface:#1C2620; --surface-2:#212D26;
+  --ink:#EDE8DF; --ink-soft:#A9B3AC; --mist:#8A8375; --line:#2C3831;
+  --pine:#6FBE9C; --coral:#F0855F;
+  --success:#6FBE9C; --warning:#D9A94E; --error:#E08276; --info:#7FA9C9;
+  --success-bg:#1B2E26; --warning-bg:#2E2718; --error-bg:#301F1C; --info-bg:#1B2831;
+  --code-bg:#0E1512; --code-ink:#DDE4DF;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14120D; --surface:#1C2620; --surface-2:#212D26;
+    --ink:#EDE8DF; --ink-soft:#A9B3AC; --mist:#8A8375; --line:#2C3831;
+    --pine:#6FBE9C; --coral:#F0855F;
+    --success:#6FBE9C; --warning:#D9A94E; --error:#E08276; --info:#7FA9C9;
+    --success-bg:#1B2E26; --warning-bg:#2E2718; --error-bg:#301F1C; --info-bg:#1B2831;
+    --code-bg:#0E1512; --code-ink:#DDE4DF;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:80px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:"Fraunces", Georgia, "Times New Roman", serif; font-weight:600; line-height:1.15; margin:0}
+code,pre,kbd{font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+a{color:var(--pine)}
+
+/* ---------- progress + nav ---------- */
+#progress{position:fixed; top:0; left:0; height:3px; width:0%; background:var(--coral); z-index:60; transition:width .1s linear}
+.nav{
+  position:sticky; top:0; z-index:50; background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+}
+.nav-in{max-width:var(--maxw); margin:0 auto; padding:12px 24px; display:flex; align-items:center; gap:16px}
+.brand{display:flex; align-items:center; gap:10px; font-family:"Fraunces",serif; font-weight:600; font-size:17px; letter-spacing:-.01em}
+.brand svg{flex:0 0 auto}
+.nav-spacer{flex:1}
+.btn{
+  font-family:inherit; font-size:13px; font-weight:500; color:var(--ink-soft);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:7px 12px; cursor:pointer; transition:all .12s var(--ease-in); white-space:nowrap;
+}
+.btn:hover{color:var(--ink); border-color:var(--mist)}
+.btn:focus-visible{outline:2px solid var(--coral); outline-offset:2px}
+#tocToggle{display:none}
+
+/* ---------- layout ---------- */
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+.shell{display:grid; grid-template-columns:236px minmax(0,1fr); gap:48px; align-items:start; padding-bottom:96px}
+.toc{position:sticky; top:76px; max-height:calc(100vh - 100px); overflow-y:auto; padding:8px 0 24px}
+.toc-h{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--mist); font-weight:600; margin:0 0 10px 12px}
+.toc a{
+  display:block; padding:6px 12px; font-size:13.5px; color:var(--ink-soft); text-decoration:none;
+  border-left:2px solid var(--line); transition:all .12s var(--ease-in); line-height:1.35;
+}
+.toc a:hover{color:var(--ink); border-left-color:var(--mist)}
+.toc a.active{color:var(--pine); border-left-color:var(--coral); font-weight:600; background:var(--surface-2)}
+.toc a .n{color:var(--mist); font-family:"JetBrains Mono",monospace; font-size:11px; margin-right:7px}
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 40px; border-bottom:1px solid var(--line); margin-bottom:8px}
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600;
+  letter-spacing:.07em; text-transform:uppercase; color:var(--pine);
+  background:var(--success-bg); padding:5px 12px; border-radius:var(--r-full); margin-bottom:20px;
+}
+.hero h1{font-size:clamp(38px, 7vw, 68px); letter-spacing:-.025em; margin-bottom:18px}
+.hero h1 em{font-style:normal; color:var(--coral)}
+.lede{font-size:clamp(16px,2.2vw,19px); color:var(--ink-soft); max-width:62ch; margin:0 0 28px}
+.routeline{width:100%; max-width:520px; height:56px; display:block; margin-bottom:8px}
+.routeline path{fill:none; stroke:var(--pine); stroke-width:2; stroke-linecap:round; opacity:.55}
+.routeline circle{fill:var(--coral)}
+.rl-anim{stroke-dasharray:640; stroke-dashoffset:640; animation:draw 2.4s var(--ease-in) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.rl-anim{animation:none; stroke-dashoffset:0}}
+.meta-row{display:flex; flex-wrap:wrap; gap:8px}
+.pill{
+  font-size:12.5px; color:var(--ink-soft); background:var(--surface); border:1px solid var(--line);
+  padding:5px 12px; border-radius:var(--r-full); font-weight:500;
+}
+
+/* ---------- sections ---------- */
+section{padding-top:56px}
+.sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:10px; flex-wrap:wrap}
+.sec-num{
+  font-family:"JetBrains Mono",monospace; font-size:12px; font-weight:700; color:var(--coral);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:3px 9px; letter-spacing:.03em; flex:0 0 auto;
+}
+h2{font-size:clamp(25px,3.6vw,30px); letter-spacing:-.015em}
+h3{font-size:20px; margin:32px 0 10px; letter-spacing:-.01em}
+p{margin:0 0 16px; color:var(--ink-soft)}
+p strong, li strong{color:var(--ink); font-weight:600}
+.sec-sub{color:var(--mist); font-size:15px; margin:0 0 22px}
+ul,ol{color:var(--ink-soft); padding-left:22px; margin:0 0 16px}
+li{margin-bottom:7px}
+hr{border:0; border-top:1px solid var(--line); margin:48px 0 0}
+
+/* ---------- code ---------- */
+.code{
+  position:relative; background:var(--code-bg); border-radius:var(--r-md);
+  margin:0 0 20px; border:1px solid var(--line); overflow:hidden;
+}
+.code-top{
+  display:flex; align-items:center; gap:10px; padding:8px 12px 8px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03);
+}
+.file{
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; color:#9DB0A6;
+  letter-spacing:.02em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.file b{color:#D6E0DA; font-weight:500}
+.copy{
+  margin-left:auto; flex:0 0 auto; font-family:inherit; font-size:11px; font-weight:500;
+  color:#9DB0A6; background:transparent; border:1px solid rgba(255,255,255,.16);
+  border-radius:var(--r-sm); padding:4px 9px; cursor:pointer; transition:all .12s var(--ease-in);
+}
+.copy:hover{color:#fff; border-color:rgba(255,255,255,.4)}
+.copy.done{color:#8FD9B4; border-color:#8FD9B4}
+pre{margin:0; padding:16px; overflow-x:auto; -webkit-overflow-scrolling:touch}
+pre code{
+  font-size:13.5px; line-height:1.62; color:var(--code-ink); white-space:pre;
+  display:block; min-width:0;
+}
+@media (max-width:640px){pre code{font-size:12.5px}}
+.tok-key{color:#F0855F}
+.tok-ann{color:#E4B96B}
+.tok-str{color:#8FD9B4}
+.tok-com{color:#6E8078; font-style:italic}
+.tok-typ{color:#8FC3E0}
+.tok-num{color:#C6A6E8}
+code.inline{
+  background:var(--surface-2); border:1px solid var(--line); border-radius:4px;
+  padding:1.5px 6px; font-size:.875em; color:var(--pine); white-space:nowrap;
+}
+
+/* ---------- steps ---------- */
+.step{
+  display:flex; gap:14px; align-items:center; margin:0 0 14px;
+  padding:12px 16px; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-md); border-left:3px solid var(--pine);
+}
+.step-n{
+  flex:0 0 auto; width:26px; height:26px; border-radius:var(--r-full);
+  background:var(--pine); color:var(--bg); display:grid; place-items:center;
+  font-family:"JetBrains Mono",monospace; font-size:12px; font-weight:700;
+}
+:root[data-theme="dark"] .step-n, html.dark .step-n{color:#12241C}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .step-n{color:#12241C}}
+.step-t{font-size:14.5px; color:var(--ink); font-weight:500; line-height:1.4}
+
+/* ---------- callouts ---------- */
+.note{
+  padding:16px 18px; border-radius:var(--r-md); margin:0 0 20px;
+  border:1px solid var(--line); background:var(--surface); font-size:14.5px;
+}
+.note p:last-child{margin-bottom:0}
+.note .lab{
+  display:block; font-size:11px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; margin-bottom:6px;
+}
+.note.ok{background:var(--success-bg); border-color:transparent} .note.ok .lab{color:var(--success)}
+.note.warn{background:var(--warning-bg); border-color:transparent} .note.warn .lab{color:var(--warning)}
+.note.err{background:var(--error-bg); border-color:transparent} .note.err .lab{color:var(--error)}
+.note.info{background:var(--info-bg); border-color:transparent} .note.info .lab{color:var(--info)}
+
+/* ---------- output block ---------- */
+.out{
+  background:var(--surface-2); border:1px dashed var(--line); border-radius:var(--r-md);
+  padding:14px 16px; margin:0 0 20px; font-family:"JetBrains Mono",monospace;
+  font-size:13px; color:var(--ink); overflow-x:auto;
+}
+.out .lab{
+  display:block; font-family:"Instrument Sans",sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--mist); margin-bottom:8px;
+}
+
+/* ---------- tree ---------- */
+.tree{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:16px 18px; margin:0 0 20px; font-family:"JetBrains Mono",monospace;
+  font-size:13px; line-height:1.75; color:var(--ink-soft); overflow-x:auto; white-space:pre;
+}
+.tree b{color:var(--pine); font-weight:500}
+
+/* ---------- table ---------- */
+.tw{overflow-x:auto; margin:0 0 20px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface)}
+table{border-collapse:collapse; width:100%; min-width:520px; font-size:14px}
+th,td{text-align:left; padding:11px 16px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--mist); font-weight:600; background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td code{font-size:12.5px; color:var(--pine); white-space:nowrap}
+
+/* ---------- flow diagram ---------- */
+.flow{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:24px 20px; margin:0 0 20px; overflow-x:auto;
+}
+.flow svg{display:block; min-width:520px; width:100%; height:auto; margin:0 auto}
+.f-box{fill:var(--surface-2); stroke:var(--line)}
+.f-pine{fill:var(--pine)}
+.f-coral{fill:var(--coral)}
+.f-t{font-family:"Instrument Sans",sans-serif; font-size:12px; fill:var(--ink); font-weight:500}
+.f-s{font-family:"JetBrains Mono",monospace; font-size:10px; fill:var(--mist)}
+.f-line{stroke:var(--mist); stroke-width:1.5; fill:none}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line); padding:32px 0 64px; margin-top:24px; color:var(--mist); font-size:13.5px}
+footer a{color:var(--pine)}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr; gap:0}
+  .toc{
+    position:static; max-height:none; display:none; padding:16px 0 8px;
+    border-bottom:1px solid var(--line); margin-bottom:8px;
+  }
+  .toc.open{display:block}
+  #tocToggle{display:inline-block}
+  .hero{padding:40px 0 32px}
+  .wrap{padding:0 18px}
+  .nav-in{padding:10px 18px}
+  section{padding-top:44px}
+}
+@media (max-width:560px){
+  .brand span{display:none}
+  .step{padding:11px 13px; gap:11px}
+  .note{padding:14px 15px}
+}
+@media print{
+  .nav,#progress,.toc,.copy,footer{display:none !important}
+  .shell{grid-template-columns:1fr}
+  body{background:#fff; color:#000}
+  .code{break-inside:avoid} section{break-inside:avoid-page; padding-top:24px}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav class="nav">
+  <div class="nav-in">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+        <path d="M2 15 C 6 15, 6 7, 11 7 S 16 15, 20 15" fill="none" stroke="var(--pine)" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="2" cy="15" r="2.4" fill="var(--coral)"/>
+        <circle cx="20" cy="15" r="2.4" fill="var(--pine)"/>
+      </svg>
+      <span>Spring Events</span>
+    </div>
+    <div class="nav-spacer"></div>
+    <button class="btn" id="tocToggle" aria-expanded="false">Contents</button>
+    <button class="btn" id="printBtn">Print / PDF</button>
+    <button class="btn" id="themeBtn" aria-label="Toggle theme">Dark</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <svg class="routeline" viewBox="0 0 520 56" aria-hidden="true">
+      <path class="rl-anim" d="M8 44 C 90 44, 110 12, 180 12 S 280 44, 350 44 S 450 12, 512 12"/>
+      <circle cx="8" cy="44" r="5"/>
+      <circle cx="512" cy="12" r="5" style="fill:var(--pine)"/>
+    </svg>
+    <span class="eyebrow">Spring Boot · Tutorial</span>
+    <h1>Events, <em>Zero to Hero</em></h1>
+    <p class="lede">
+      Start with an empty folder. Finish with one event publishing to two independent
+      listeners that fire only after the database commits — the exact pattern the
+      carpool project uses for every notification.
+    </p>
+    <div class="meta-row">
+      <span class="pill">Spring Boot 3.x / 4.x</span>
+      <span class="pill">Java 21+</span>
+      <span class="pill">12 parts</span>
+      <span class="pill">~25 minutes</span>
+      <span class="pill">No prior events knowledge</span>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="toc" id="toc">
+      <p class="toc-h">Contents</p>
+      <a href="#why"><span class="n">00</span>Why events</a>
+      <a href="#create"><span class="n">01</span>Create the project</a>
+      <a href="#config"><span class="n">02</span>Configure the DB</a>
+      <a href="#entity"><span class="n">03</span>The entity</a>
+      <a href="#repo"><span class="n">04</span>The repository</a>
+      <a href="#event"><span class="n">05</span>The event</a>
+      <a href="#publish"><span class="n">06</span>Publish it</a>
+      <a href="#listener"><span class="n">07</span>The listener</a>
+      <a href="#async"><span class="n">08</span>Turn on async</a>
+      <a href="#controller"><span class="n">09</span>Trigger it</a>
+      <a href="#run"><span class="n">10</span>Run it</a>
+      <a href="#fanout"><span class="n">11</span>Two listeners</a>
+      <a href="#gotcha"><span class="n">12</span>The DB gotcha</a>
+      <a href="#real"><span class="n">13</span>The real thing</a>
+      <a href="#cheat"><span class="n">14</span>Cheat sheet</a>
+    </aside>
+
+    <main>
+
+<!-- ============ 0 ============ -->
+<section id="why">
+  <div class="sec-head"><span class="sec-num">00</span><h2>Why events at all</h2></div>
+  <p class="sec-sub">The problem this pattern solves, in two sentences.</p>
+
+  <p>A user registers. You want to send them a welcome message. The obvious move is to call the messaging code directly inside <code class="inline">register()</code>. That breaks in two ways:</p>
+  <ul>
+    <li><strong>The message goes out, then the transaction rolls back.</strong> You just welcomed a user that doesn't exist in the database.</li>
+    <li><strong>A slow network call holds your transaction open.</strong> The DB connection sits idle in the pool while you wait on someone else's API.</li>
+  </ul>
+  <p>Events fix both. The service says <em>"a user registered"</em> and moves on. Separate code listens, and only runs <strong>after the commit succeeds</strong>, on <strong>its own thread</strong>.</p>
+
+  <div class="note ok">
+    <span class="lab">What you'll build</span>
+    <p>A tiny Spring Boot app where <code class="inline">POST /users</code> saves a row, and two unrelated listeners react after the commit — one prints a welcome, one writes an audit line. Neither knows the other exists.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 1 ============ -->
+<section id="create">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Create the project</h2></div>
+  <p class="sec-sub">One command, no IDE required.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">terminal</span><button class="copy">Copy</button></div>
+<pre><code class="lang-sh">curl https://start.spring.io/starter.zip \
+  -d dependencies=web,data-jpa,h2 \
+  -d javaVersion=21 \
+  -d type=maven-project \
+  -d name=events-demo \
+  -d packageName=com.example.eventsdemo \
+  -o events-demo.zip</code></pre>
+  </div>
+
+  <p>Unzip it. Prefer clicking? Go to <a href="https://start.spring.io" target="_blank" rel="noopener">start.spring.io</a> and pick <strong>Spring Web</strong>, <strong>Spring Data JPA</strong>, and <strong>H2 Database</strong>.</p>
+
+  <p>You get this:</p>
+  <div class="tree">events-demo/
+├── pom.xml
+└── src/main/
+    ├── java/com/example/eventsdemo/
+    │   └── <b>EventsDemoApplication.java</b>
+    └── resources/
+        └── <b>application.properties</b></div>
+
+  <div class="note info">
+    <span class="lab">Three dependencies, three jobs</span>
+    <p><strong>Web</strong> gives you REST controllers. <strong>Data JPA</strong> gives you repositories and transactions. <strong>H2</strong> is a throwaway database that lives in memory — nothing to install, nothing to clean up.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 2 ============ -->
+<section id="config">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Configure the database</h2></div>
+  <p class="sec-sub">Three lines. Then forget about it.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">src/main/resources/<b>application.properties</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-props">spring.datasource.url=jdbc:h2:mem:demo
+spring.jpa.hibernate.ddl-auto=update
+spring.h2.console.enabled=true</code></pre>
+  </div>
+
+  <p><code class="inline">ddl-auto=update</code> tells Hibernate to create your tables from your entity classes at startup. Fine for a demo — real projects use Flyway migrations instead.</p>
+</section>
+
+<hr>
+
+<!-- ============ 3 ============ -->
+<section id="entity">
+  <div class="sec-head"><span class="sec-num">03</span><h2>The entity</h2></div>
+  <p class="sec-sub">One table, two columns.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>User.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    protected User() {}   // JPA requires a no-arg constructor
+
+    public User(String name) {
+        this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+}</code></pre>
+  </div>
+
+  <div class="note warn">
+    <span class="lab">Watch out</span>
+    <p>The <code class="inline">protected User() {}</code> is not optional. JPA constructs entities reflectively and needs a no-arg constructor. Leave it out and you get a startup failure that reads nothing like the actual cause.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 4 ============ -->
+<section id="repo">
+  <div class="sec-head"><span class="sec-num">04</span><h2>The repository</h2></div>
+  <p class="sec-sub">An empty interface that does a surprising amount.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>UserRepository.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {}</code></pre>
+  </div>
+
+  <p>You write zero methods. Spring generates the implementation at startup and hands you <code class="inline">save()</code>, <code class="inline">findById()</code>, <code class="inline">findAll()</code>, <code class="inline">delete()</code> and friends.</p>
+</section>
+
+<hr>
+
+<!-- ============ 5 ============ -->
+<section id="event">
+  <div class="sec-head"><span class="sec-num">05</span><h2>The event</h2></div>
+  <p class="sec-sub">The whole thing is one line.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>UserRegisteredEvent.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+public record UserRegisteredEvent(User user) {}</code></pre>
+  </div>
+
+  <p>No annotation. No interface to implement. No base class to extend. A <strong>record</strong> is a small immutable carrier — perfect, because an event describes something that <em>already happened</em> and must never be edited afterward.</p>
+
+  <div class="note info">
+    <span class="lab">Naming</span>
+    <p>Past tense, always: <code class="inline">UserRegisteredEvent</code>, not <code class="inline">RegisterUserEvent</code>. An event is a fact, not a command. Nobody can veto it.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 6 ============ -->
+<section id="publish">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Publish it</h2></div>
+  <p class="sec-sub">Inject the publisher, fire after the save.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>UserService.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public UserService(UserRepository userRepository,
+                       ApplicationEventPublisher eventPublisher) {
+        this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional
+    public User register(String name) {
+        User saved = userRepository.save(new User(name));
+
+        eventPublisher.publishEvent(new UserRegisteredEvent(saved));
+
+        return saved;
+    }
+}</code></pre>
+  </div>
+
+  <div class="step"><span class="step-n">1</span><span class="step-t">Add <code class="inline">ApplicationEventPublisher</code> as a constructor parameter — Spring injects it, you never create it.</span></div>
+  <div class="step"><span class="step-n">2</span><span class="step-t">Save first, publish second. The event should carry the <em>saved</em> entity, so it has a real database ID.</span></div>
+  <div class="step"><span class="step-n">3</span><span class="step-t">Keep <code class="inline">@Transactional</code> on the method. It's what makes "after commit" mean anything in step 07.</span></div>
+
+  <div class="note ok">
+    <span class="lab">Key insight</span>
+    <p><code class="inline">publishEvent(...)</code> does <strong>not</strong> run anything yet. It registers the event with the current transaction. Nothing happens until the method returns and the commit lands.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 7 ============ -->
+<section id="listener">
+  <div class="sec-head"><span class="sec-num">07</span><h2>The listener</h2></div>
+  <p class="sec-sub">Two annotations do all the work.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>WelcomeListener.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+@Component
+public class WelcomeListener {
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onUserRegistered(UserRegisteredEvent event) {
+        System.out.println("Welcome, " + event.user().getName() + "!");
+    }
+}</code></pre>
+  </div>
+
+  <p>Spring wires this up by <strong>the method's parameter type</strong>. No registration list, no config file. Publish a <code class="inline">UserRegisteredEvent</code> anywhere in the app and this method receives it.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Annotation</th><th>What it buys you</th></tr></thead>
+      <tbody>
+        <tr><td><code>@Component</code></td><td>Makes the class a Spring bean so it gets scanned. Without it, nothing is wired.</td></tr>
+        <tr><td><code>@Async</code></td><td>Runs on a separate thread. Your HTTP response returns immediately; slow work doesn't block the caller.</td></tr>
+        <tr><td><code>@TransactionalEventListener(AFTER_COMMIT)</code></td><td>Runs only after the publisher's transaction commits successfully. On rollback, it never runs at all.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note err">
+    <span class="lab">The classic mistake</span>
+    <p>Using plain <code class="inline">@EventListener</code> instead. That fires <strong>immediately</strong>, inside the transaction — so it also fires on transactions that later roll back. That's exactly the "welcomed a user who doesn't exist" bug. Reach for <code class="inline">@TransactionalEventListener(AFTER_COMMIT)</code> by default.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 8 ============ -->
+<section id="async">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Turn on async</h2></div>
+  <p class="sec-sub">One annotation, once, or <code class="inline">@Async</code> silently does nothing.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>EventsDemoApplication.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+@SpringBootApplication
+@EnableAsync
+public class EventsDemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(EventsDemoApplication.class, args);
+    }
+}</code></pre>
+  </div>
+
+  <div class="note warn">
+    <span class="lab">Silent failure</span>
+    <p>Forget <code class="inline">@EnableAsync</code> and there's no error, no warning — your listener just runs on the caller's thread. Everything still <em>works</em>, so this can hide for months until something slow blocks a request.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 9 ============ -->
+<section id="controller">
+  <div class="sec-head"><span class="sec-num">09</span><h2>Something to trigger it</h2></div>
+  <p class="sec-sub">A two-method REST controller.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>UserController.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping
+    public User register(@RequestParam String name) {
+        return userService.register(name);
+    }
+}</code></pre>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 10 ============ -->
+<section id="run">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Run it</h2></div>
+  <p class="sec-sub">First proof that the wiring works.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">terminal 1</span><button class="copy">Copy</button></div>
+<pre><code class="lang-sh">./mvnw spring-boot:run</code></pre>
+  </div>
+
+  <div class="code">
+    <div class="code-top"><span class="file">terminal 2</span><button class="copy">Copy</button></div>
+<pre><code class="lang-sh">curl -X POST "http://localhost:8080/users?name=Alice"</code></pre>
+  </div>
+
+  <div class="out">
+    <span class="lab">Application console</span>
+    Welcome, Alice!
+  </div>
+
+  <p>The HTTP response returns straight away with the saved JSON. The welcome line prints from a different thread, after the commit.</p>
+
+  <div class="note info">
+    <span class="lab">Prove it to yourself</span>
+    <p>Throw an exception at the end of <code class="inline">register()</code>, after the <code class="inline">publishEvent</code> line. The transaction rolls back and <strong>nothing prints</strong> — the listener never fires. Now swap <code class="inline">@TransactionalEventListener(AFTER_COMMIT)</code> for a plain <code class="inline">@EventListener</code> and try again: it prints, for a user that was never saved. That contrast is the entire lesson.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 11 ============ -->
+<section id="fanout">
+  <div class="sec-head"><span class="sec-num">11</span><h2>Hero move — two listeners, one event</h2></div>
+  <p class="sec-sub">Add a second reaction without touching the service.</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">com/example/eventsdemo/<b>AuditListener.java</b></span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">package com.example.eventsdemo;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+@Component
+public class AuditListener {
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onUserRegistered(UserRegisteredEvent event) {
+        System.out.println("Audit: user #" + event.user().getId() + " created");
+    }
+}</code></pre>
+  </div>
+
+  <p>New file. Nothing else changed — <code class="inline">UserService</code> is untouched. Run the same curl:</p>
+
+  <div class="out">
+    <span class="lab">Application console</span>
+    Welcome, Alice!<br>
+    Audit: user #1 created
+  </div>
+
+  <div class="flow">
+    <svg viewBox="0 0 560 250" role="img" aria-label="One publish fans out to two listeners after commit">
+      <rect class="f-box" x="150" y="8" width="260" height="52" rx="8"/>
+      <text class="f-t" x="280" y="30" text-anchor="middle">UserService.register()</text>
+      <text class="f-s" x="280" y="48" text-anchor="middle">@Transactional</text>
+
+      <path class="f-line" d="M280 60 L280 92"/>
+      <polygon class="f-coral" points="280,100 275,90 285,90"/>
+
+      <rect class="f-box" x="150" y="100" width="260" height="46" rx="8" style="stroke-dasharray:4 3"/>
+      <text class="f-t" x="280" y="122" text-anchor="middle">publishEvent(...) → COMMIT</text>
+      <text class="f-s" x="280" y="138" text-anchor="middle">nothing has run yet</text>
+
+      <path class="f-line" d="M280 146 L280 168 L120 168 L120 194"/>
+      <path class="f-line" d="M280 146 L280 168 L440 168 L440 194"/>
+      <polygon class="f-coral" points="120,202 115,192 125,192"/>
+      <polygon class="f-coral" points="440,202 435,192 445,192"/>
+      <text class="f-s" x="288" y="164">AFTER_COMMIT · @Async</text>
+
+      <rect class="f-box" x="18" y="202" width="204" height="42" rx="8"/>
+      <text class="f-t" x="120" y="221" text-anchor="middle">WelcomeListener</text>
+      <text class="f-s" x="120" y="236" text-anchor="middle">sends the greeting</text>
+
+      <rect class="f-box" x="338" y="202" width="204" height="42" rx="8"/>
+      <text class="f-t" x="440" y="221" text-anchor="middle">AuditListener</text>
+      <text class="f-s" x="440" y="236" text-anchor="middle">writes the audit line</text>
+    </svg>
+  </div>
+
+  <div class="note ok">
+    <span class="lab">This is the payoff</span>
+    <p>One publish, N reactions. The service never learns who is listening. Adding a third behaviour — analytics, a Slack ping, a welcome email — is a new file and <strong>zero edits</strong> to existing code.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 12 ============ -->
+<section id="gotcha">
+  <div class="sec-head"><span class="sec-num">12</span><h2>The gotcha: listeners that write to the DB</h2></div>
+  <p class="sec-sub">The one thing that will bite you in production.</p>
+
+  <p>The moment a listener saves something, you need a <strong>third</strong> annotation. After the commit there is no active transaction anymore — the old one is finished:</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">a listener that persists</span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">@Async
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+@Transactional(propagation = Propagation.REQUIRES_NEW)   // starts a fresh transaction
+public void onUserRegistered(UserRegisteredEvent event) {
+    notificationRepository.save(
+            new Notification(event.user().getId(), "WELCOME"));
+}</code></pre>
+  </div>
+
+  <div class="note err">
+    <span class="lab">Forget REQUIRES_NEW and…</span>
+    <p>You get an <code class="inline">IllegalTransactionStateException</code> at runtime — or worse, a silent no-op where the write is never flushed. This is the single most common bug in this pattern.</p>
+  </div>
+
+  <p>So the full stack, for a listener that both notifies <em>and</em> records:</p>
+
+  <div class="code">
+    <div class="code-top"><span class="file">the canonical three-annotation stack</span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">@Async                                                   // own thread
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)  // only after commit
+@Transactional(propagation = Propagation.REQUIRES_NEW)   // fresh transaction to write in</code></pre>
+  </div>
+
+  <div class="note info">
+    <span class="lab">Order matters</span>
+    <p>Spring applies <code class="inline">@Async</code> first (new thread), then <code class="inline">@Transactional</code> opens the new transaction <em>inside</em> that thread. Keep them in this order and it reads the way it executes.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 13 ============ -->
+<section id="real">
+  <div class="sec-head"><span class="sec-num">13</span><h2>The same pattern, in the real project</h2></div>
+  <p class="sec-sub">Everything above, scaled up — nothing new to learn.</p>
+
+  <p>In the carpool codebase, a driver changing a ride's route follows exactly these steps. Only the field count changes:</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Tutorial</th><th>Carpool project</th></tr></thead>
+      <tbody>
+        <tr><td><code>UserRegisteredEvent</code></td><td><code>RideEvents.RideRouteChangedEvent</code> — a record nested in one <code>RideEvents</code> holder class</td></tr>
+        <tr><td><code>UserService.register()</code></td><td><code>RideService.updateRoute()</code> — validates, locks the row, saves, then publishes</td></tr>
+        <tr><td><code>WelcomeListener</code></td><td><code>NotificationService.onRideRouteChanged</code> — DMs each confirmed passenger</td></tr>
+        <tr><td><code>AuditListener</code></td><td><code>GroupNotificationService.onRideRouteChanged</code> — refreshes the group announcement</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="code">
+    <div class="code-top"><span class="file">the real event — three fields instead of one</span><button class="copy">Copy</button></div>
+<pre><code class="lang-java">public record RideRouteChangedEvent(Ride ride,
+                                    String oldOriginName,
+                                    String oldDestinationName) {}</code></pre>
+  </div>
+
+  <p>Why three? The service captures the old hub names <strong>before</strong> overwriting them, and ships them inside the event. By the time the listener runs, the entity has already changed — the event is the only surviving memory of the old route, which is what lets the passenger DM read <em>"Was: A → B, Now: C → D"</em>.</p>
+
+  <div class="note ok">
+    <span class="lab">The rule that generalises</span>
+    <p>If a listener needs to know something that the save destroyed, put it in the event. Events carry facts, not just entity references.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ 14 ============ -->
+<section id="cheat">
+  <div class="sec-head"><span class="sec-num">14</span><h2>Cheat sheet</h2></div>
+  <p class="sec-sub">Everything, on one screen.</p>
+
+  <div class="step"><span class="step-n">1</span><span class="step-t">Define the event — <code class="inline">public record SomethingHappenedEvent(Entity e) {}</code></span></div>
+  <div class="step"><span class="step-n">2</span><span class="step-t">Inject <code class="inline">ApplicationEventPublisher</code> into the service</span></div>
+  <div class="step"><span class="step-n">3</span><span class="step-t">Call <code class="inline">publishEvent(...)</code> after the save, inside <code class="inline">@Transactional</code></span></div>
+  <div class="step"><span class="step-n">4</span><span class="step-t">Write a <code class="inline">@Component</code> with the three-annotation stack</span></div>
+  <div class="step"><span class="step-n">5</span><span class="step-t">Make sure <code class="inline">@EnableAsync</code> is on the application class</span></div>
+  <div class="step"><span class="step-n">6</span><span class="step-t">Need another reaction? New listener file. Never touch the publisher.</span></div>
+
+  <h3>Rules worth memorising</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Rule</th><th>Because</th></tr></thead>
+      <tbody>
+        <tr><td>Name events in the past tense</td><td>An event is a fact that already happened, not a request</td></tr>
+        <tr><td>Use records, never mutable classes</td><td>Multiple listeners share the same instance — a mutation in one corrupts the others</td></tr>
+        <tr><td>Prefer <code>@TransactionalEventListener(AFTER_COMMIT)</code> over <code>@EventListener</code></td><td>Plain <code>@EventListener</code> also fires for transactions that roll back</td></tr>
+        <tr><td>Add <code>REQUIRES_NEW</code> whenever the listener writes</td><td>There is no active transaction after commit</td></tr>
+        <tr><td>Never let a listener throw into the caller</td><td>It runs on another thread after commit — the exception is invisible. Wrap the risky part in try/catch and log it.</td></tr>
+        <tr><td>Publish once, react many times</td><td>The publisher must never grow a list of things to notify</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note ok">
+    <span class="lab">You're done</span>
+    <p>You built the pattern from an empty folder: an event, a publisher, two listeners, after-commit safety, and the transaction gotcha. That's the same machinery behind every ride notification, group announcement refresh, and audit row in the carpool project.</p>
+  </div>
+</section>
+
+    </main>
+  </div>
+
+  <footer>
+    <p style="margin:0">Spring Boot Events — Zero to Hero · Save this file anywhere and open it in any browser; it works offline.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- syntax highlighting ---------- */
+  var KEYWORDS = /^(public|private|protected|class|interface|record|enum|void|return|new|import|package|static|final|abstract|extends|implements|this|super|null|true|false|if|else|for|while|do|switch|case|break|continue|throw|throws|try|catch|finally|instanceof|int|long|double|boolean|char|byte|short|var)$/;
+
+  function esc(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function highlight(code){
+    var text = code.textContent;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(@\w+)|([A-Za-z_$][\w$]*)|(\b\d+(?:\.\d+)?\b)/g;
+    var out = "", last = 0, m;
+    while ((m = re.exec(text)) !== null){
+      out += esc(text.slice(last, m.index));
+      if (m[1])      out += '<span class="tok-com">' + esc(m[1]) + '</span>';
+      else if (m[2]) out += '<span class="tok-str">' + esc(m[2]) + '</span>';
+      else if (m[3]) out += '<span class="tok-ann">' + esc(m[3]) + '</span>';
+      else if (m[4]){
+        if (KEYWORDS.test(m[4]))            out += '<span class="tok-key">' + esc(m[4]) + '</span>';
+        else if (/^[A-Z]/.test(m[4]))       out += '<span class="tok-typ">' + esc(m[4]) + '</span>';
+        else                                 out += esc(m[4]);
+      }
+      else if (m[5]) out += '<span class="tok-num">' + esc(m[5]) + '</span>';
+      last = m.index + m[0].length;
+    }
+    out += esc(text.slice(last));
+    code.innerHTML = out;
+  }
+
+  var blocks = document.querySelectorAll("pre code");
+  for (var i = 0; i < blocks.length; i++){
+    if (blocks[i].className.indexOf("lang-props") === -1) highlight(blocks[i]);
+  }
+
+  /* ---------- copy buttons ---------- */
+  document.addEventListener("click", function(e){
+    var btn = e.target.closest(".copy");
+    if (!btn) return;
+    var code = btn.closest(".code").querySelector("code");
+    var done = function(){
+      btn.textContent = "Copied";
+      btn.classList.add("done");
+      setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(code.textContent).then(done, fallback);
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = code.textContent;
+      ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); done(); } catch(err){ btn.textContent = "Press Ctrl+C"; }
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* ---------- theme toggle ---------- */
+  var root = document.documentElement, themeBtn = document.getElementById("themeBtn");
+  var stored = null;
+  try { stored = localStorage.getItem("se-theme"); } catch(err){}
+  if (stored) root.setAttribute("data-theme", stored);
+
+  function currentIsDark(){
+    var t = root.getAttribute("data-theme");
+    if (t) return t === "dark";
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function syncLabel(){ themeBtn.textContent = currentIsDark() ? "Light" : "Dark"; }
+  syncLabel();
+
+  themeBtn.addEventListener("click", function(){
+    var next = currentIsDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("se-theme", next); } catch(err){}
+    syncLabel();
+  });
+
+  /* ---------- print ---------- */
+  document.getElementById("printBtn").addEventListener("click", function(){ window.print(); });
+
+  /* ---------- mobile TOC ---------- */
+  var toc = document.getElementById("toc"), tocToggle = document.getElementById("tocToggle");
+  tocToggle.addEventListener("click", function(){
+    var open = toc.classList.toggle("open");
+    tocToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  toc.addEventListener("click", function(e){
+    if (e.target.closest("a") && window.innerWidth <= 900){
+      toc.classList.remove("open");
+      tocToggle.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  /* ---------- scroll progress ---------- */
+  var bar = document.getElementById("progress");
+  function onScroll(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + "%";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- active TOC section ---------- */
+  var links = {}, sections = document.querySelectorAll("section[id]");
+  var anchors = toc.querySelectorAll("a");
+  for (var j = 0; j < anchors.length; j++) links[anchors[j].getAttribute("href").slice(1)] = anchors[j];
+
+  if ("IntersectionObserver" in window){
+    var seen = {};
+    var io = new IntersectionObserver(function(entries){
+      for (var k = 0; k < entries.length; k++) seen[entries[k].target.id] = entries[k].isIntersecting;
+      var active = null;
+      for (var s = 0; s < sections.length; s++){
+        if (seen[sections[s].id]){ active = sections[s].id; break; }
+      }
+      if (!active) return;
+      for (var id in links) links[id].classList.toggle("active", id === active);
+    }, { rootMargin: "-76px 0px -65% 0px", threshold: 0 });
+    for (var q = 0; q < sections.length; q++) io.observe(sections[q]);
+  }
+})();
+</script>
+</body>
+</html>
