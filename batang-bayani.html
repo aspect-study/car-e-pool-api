@@ -1,0 +1,785 @@
+<title>Batang Bayani</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700;800&display=swap">
+<style>
+  :root{
+    --bg:#FAF3E3;
+    --bg-alt:#F3E9CE;
+    --card:#FFFDF6;
+    --ink:#2B2A1E;
+    --ink-soft:#6B6350;
+    --accent:#F0A93B;
+    --accent-ink:#7A4A05;
+    --accent-soft:#FBE3B6;
+    --teal:#2E8B7A;
+    --teal-deep:#1F5C50;
+    --teal-soft:#DCEFE9;
+    --good:#4C8C4A;
+    --good-soft:#E3F0DE;
+    --bad:#C4552E;
+    --bad-soft:#F6E1D6;
+    --border:rgba(43,42,30,0.14);
+    --shadow:rgba(43,42,30,0.18);
+    --roof:#C4552E;
+    --roof-dark:#9C401F;
+    --wall:#E9C77E;
+    --wall-dark:#C9A25C;
+    --wood:#8B5E34;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141F1A;
+      --bg-alt:#1B2A23;
+      --card:#1E2E27;
+      --ink:#F1EAD6;
+      --ink-soft:#AEA98F;
+      --accent:#F3B65B;
+      --accent-ink:#FFE1AC;
+      --accent-soft:#3A2E17;
+      --teal:#59BBA3;
+      --teal-deep:#8CD9C4;
+      --teal-soft:#20362F;
+      --good:#8FCB84;
+      --good-soft:#233524;
+      --bad:#E2916C;
+      --bad-soft:#3A2620;
+      --border:rgba(241,234,214,0.16);
+      --shadow:rgba(0,0,0,0.45);
+      --roof:#D46A3A;
+      --roof-dark:#A34C24;
+      --wall:#C9A25C;
+      --wall-dark:#9C7B41;
+      --wood:#6E4A28;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141F1A;
+    --bg-alt:#1B2A23;
+    --card:#1E2E27;
+    --ink:#F1EAD6;
+    --ink-soft:#AEA98F;
+    --accent:#F3B65B;
+    --accent-ink:#FFE1AC;
+    --accent-soft:#3A2E17;
+    --teal:#59BBA3;
+    --teal-deep:#8CD9C4;
+    --teal-soft:#20362F;
+    --good:#8FCB84;
+    --good-soft:#233524;
+    --bad:#E2916C;
+    --bad-soft:#3A2620;
+    --border:rgba(241,234,214,0.16);
+    --shadow:rgba(0,0,0,0.45);
+    --roof:#D46A3A;
+    --roof-dark:#A34C24;
+    --wall:#C9A25C;
+    --wall-dark:#9C7B41;
+    --wood:#6E4A28;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(115deg, transparent 0 22px, rgba(43,42,30,0.025) 22px 23px),
+      repeating-linear-gradient(25deg, transparent 0 22px, rgba(43,42,30,0.025) 22px 23px),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Nunito', system-ui, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:clamp(16px,4vw,40px) 16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) body{
+      background:
+        repeating-linear-gradient(115deg, transparent 0 22px, rgba(241,234,214,0.03) 22px 23px),
+        repeating-linear-gradient(25deg, transparent 0 22px, rgba(241,234,214,0.03) 22px 23px),
+        var(--bg);
+    }
+  }
+  :root[data-theme="dark"] body{
+    background:
+      repeating-linear-gradient(115deg, transparent 0 22px, rgba(241,234,214,0.03) 22px 23px),
+      repeating-linear-gradient(25deg, transparent 0 22px, rgba(241,234,214,0.03) 22px 23px),
+      var(--bg);
+  }
+
+  .app{
+    width:100%;
+    max-width:560px;
+  }
+
+  .eyebrow{
+    font-family:'Nunito',sans-serif;
+    font-weight:800;
+    font-size:0.78rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--teal-deep);
+    text-align:center;
+    margin:0 0 6px;
+  }
+
+  h1,h2,h3{font-family:'Fredoka', system-ui, sans-serif; text-wrap:balance; margin:0;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:28px;
+    box-shadow:0 18px 40px -18px var(--shadow), 0 2px 0 var(--border);
+    padding:clamp(22px,5vw,36px);
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block; animation:rise 0.4s ease both;}
+  @media (prefers-reduced-motion: reduce){ .screen.active{animation:none;} }
+  @keyframes rise{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+
+  /* ---- Home ---- */
+  .hero{text-align:center; margin-bottom:20px;}
+  .hero-title{font-size:clamp(2rem,7vw,2.5rem); font-weight:700; color:var(--accent-ink); line-height:1.05;}
+  .hero-sub{font-size:1.02rem; color:var(--ink-soft); font-weight:700; margin-top:8px;}
+  .hero-scene{width:min(280px,72%); margin:16px auto 4px;}
+
+  .back-link{
+    background:none; border:none; cursor:pointer; padding:0 0 14px;
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:0.85rem;
+    color:var(--teal-deep); display:inline-flex; align-items:center; gap:6px;
+  }
+  .back-link:focus-visible{outline:2px solid var(--teal-deep); outline-offset:3px;}
+  .back-link svg{width:16px; height:16px;}
+
+  .lesson-card{padding:16px 18px; margin-bottom:12px;}
+  .lesson-top{display:flex; align-items:center; gap:14px;}
+  .lesson-icon{width:52px; height:52px; flex:none;}
+  .lesson-info{flex:1; min-width:0;}
+  .lesson-tag-label{font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--teal-deep);}
+  .lesson-title{font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.05rem; margin-top:2px; line-height:1.25;}
+  .mini-stars{display:flex; gap:2px; margin-top:6px;}
+  .mini-stars svg{width:15px; height:15px;}
+  .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.98rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+
+  /* ---- Buttons ---- */
+  .btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:1.1rem;
+    border:none;
+    border-radius:18px;
+    padding:16px 20px;
+    cursor:pointer;
+    color:#3A2707;
+    background:var(--accent);
+    box-shadow:0 6px 0 var(--accent-ink), 0 10px 18px -8px var(--shadow);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+    width:100%;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 var(--accent-ink), 0 6px 12px -8px var(--shadow);}
+  .btn:focus-visible{outline:3px solid var(--teal-deep); outline-offset:3px;}
+  .btn.secondary{
+    background:transparent;
+    color:var(--teal-deep);
+    box-shadow:none;
+    border:2px solid var(--teal);
+  }
+  .btn.secondary:active{transform:translateY(1px);}
+  .btn-row{display:flex; gap:12px; margin-top:18px;}
+  .btn-row .btn{width:auto; flex:1;}
+
+  /* ---- Flashcards ---- */
+  .flash-dots{display:flex; justify-content:center; gap:8px; margin-bottom:18px;}
+  .flash-dots span{width:8px; height:8px; border-radius:50%; background:var(--border);}
+  .flash-dots span.on{background:var(--teal);}
+  .flash-icon{width:76px; height:76px; margin:0 auto 14px; display:block;}
+  .flash-lesson-label{text-align:center; font-size:0.78rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px;}
+  .flash-title{font-size:1.3rem; font-weight:700; color:var(--teal-deep); text-align:center;}
+  .flash-text{font-size:1.12rem; line-height:1.55; text-align:center; margin-top:12px; color:var(--ink);}
+
+  /* ---- Quiz header ---- */
+  .quiz-head{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
+  .quiz-house-mini{width:56px; height:48px; flex:none;}
+  .quiz-progress{flex:1;}
+  .quiz-progress-label{font-size:0.82rem; font-weight:800; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em;}
+  .track{height:10px; border-radius:6px; background:var(--bg-alt); overflow:hidden; margin-top:6px; border:1px solid var(--border);}
+  .track-fill{height:100%; background:linear-gradient(90deg, var(--teal), var(--accent)); border-radius:6px; transition:width 0.4s ease;}
+
+  .q-kicker{font-size:0.78rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--teal-deep); margin-bottom:8px;}
+  .q-text{font-size:1.35rem; font-weight:700; font-family:'Fredoka',sans-serif; line-height:1.3; margin-bottom:18px;}
+
+  .opt{
+    display:flex; align-items:center; gap:12px;
+    width:100%; text-align:left;
+    background:var(--bg-alt);
+    border:2px solid var(--border);
+    border-radius:16px;
+    padding:14px 16px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+    color:var(--ink);
+    cursor:pointer;
+    margin-bottom:10px;
+    transition:border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+  }
+  .opt:hover{border-color:var(--teal);}
+  .opt:active{transform:scale(0.99);}
+  .opt:focus-visible{outline:3px solid var(--teal-deep); outline-offset:2px;}
+  .opt .bullet{width:22px; height:22px; flex:none; border-radius:50%; border:2px solid var(--ink-soft); opacity:0.55;}
+  .opt.correct{background:var(--good-soft); border-color:var(--good); color:var(--ink);}
+  .opt.correct .bullet{border-color:var(--good); background:var(--good);}
+  .opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .opt.wrong .bullet{border-color:var(--bad); background:var(--bad);}
+  .opt[disabled]{cursor:default;}
+
+  .tf-row{display:flex; gap:14px;}
+  .tf-btn{
+    flex:1; padding:26px 10px; border-radius:18px; border:2px solid var(--border);
+    background:var(--bg-alt); font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.15rem;
+    display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; color:var(--ink);
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .tf-btn svg{width:34px; height:34px;}
+  .tf-btn:hover{border-color:var(--teal);}
+  .tf-btn:active{transform:scale(0.98);}
+  .tf-btn:focus-visible{outline:3px solid var(--teal-deep); outline-offset:2px;}
+  .tf-btn.correct{background:var(--good-soft); border-color:var(--good);}
+  .tf-btn.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .tf-btn[disabled]{cursor:default;}
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; border-radius:16px; font-weight:700; font-size:1rem;
+    display:none; align-items:flex-start; gap:10px; line-height:1.45;
+  }
+  .feedback.show{display:flex; animation:pop 0.3s ease both;}
+  @media (prefers-reduced-motion: reduce){ .feedback.show{animation:none;} }
+  @keyframes pop{ from{opacity:0; transform:scale(0.95);} to{opacity:1; transform:none;} }
+  .feedback.good{background:var(--good-soft); color:var(--ink);}
+  .feedback.bad{background:var(--bad-soft); color:var(--ink);}
+  .feedback svg{width:22px; height:22px; flex:none; margin-top:1px;}
+
+  .next-wrap{margin-top:18px; display:none;}
+  .next-wrap.show{display:block;}
+
+  /* ---- Results ---- */
+  #screen-results .card{text-align:center;}
+  .result-house{width:min(220px,60%); margin:6px auto 8px;}
+  .stars{display:flex; justify-content:center; gap:6px; margin:10px 0 4px;}
+  .stars svg{width:38px; height:38px;}
+  .result-score{font-size:1.5rem; font-weight:700; font-family:'Fredoka',sans-serif; color:var(--accent-ink); margin-top:6px;}
+  .result-msg{font-size:1.08rem; color:var(--ink-soft); font-weight:700; margin-top:8px; line-height:1.5;}
+
+  /* ---- House SVG piece reveal ---- */
+  .piece{opacity:0; transform:scale(0.4); transform-box:fill-box; transform-origin:center; transition:opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1);}
+  .piece.revealed{opacity:1; transform:scale(1);}
+  @media (prefers-reduced-motion: reduce){ .piece{transition:opacity 0.2s ease;} .piece.revealed{transform:none;} }
+  .piece.base{opacity:1; transform:none; transition:none;}
+</style>
+
+<div class="app">
+  <p class="eyebrow">Makabansa 2 &middot; Ang Ating Komunidad</p>
+
+  <!-- HOME / LESSON MAP -->
+  <section id="screen-home" class="screen active">
+    <div class="hero">
+      <h1 class="hero-title">Batang Bayani</h1>
+      <p class="hero-sub">Piliin ang aralin at simulan ang pagsusulit!</p>
+      <svg class="hero-scene" viewBox="0 0 300 150" role="img" aria-label="Mga bahay-kubo sa isang komunidad">
+        <circle cx="245" cy="35" r="18" fill="var(--accent)" opacity="0.9"/>
+        <g>
+          <rect x="30" y="90" width="46" height="40" fill="var(--wall-dark)"/>
+          <polygon points="24,90 53,60 82,90" fill="var(--roof-dark)"/>
+        </g>
+        <g>
+          <rect x="95" y="70" width="62" height="60" fill="var(--wall)"/>
+          <polygon points="86,70 126,32 166,70" fill="var(--roof)"/>
+          <rect x="118" y="98" width="16" height="32" fill="var(--wood)"/>
+        </g>
+        <g>
+          <rect x="175" y="94" width="44" height="36" fill="var(--wall-dark)"/>
+          <polygon points="169,94 197,66 225,94" fill="var(--roof-dark)"/>
+        </g>
+        <rect x="0" y="130" width="300" height="4" fill="var(--teal)" opacity="0.5"/>
+      </svg>
+    </div>
+    <div id="home-list"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="screen-flash" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-flash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Listahan ng Aralin</button>
+      <p class="flash-lesson-label" id="flash-lesson-label"></p>
+      <div class="flash-dots" id="flash-dots"></div>
+      <div id="flash-body"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-flash-prev">Bumalik</button>
+        <button class="btn" id="btn-flash-next">Susunod</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Listahan ng Aralin</button>
+      <div class="quiz-head">
+        <svg class="quiz-house-mini" viewBox="0 0 120 100" role="img" aria-label="Gusaling itinatayo sa aralin">
+          <g id="house-mini"></g>
+        </svg>
+        <div class="quiz-progress">
+          <div class="quiz-progress-label" id="q-count">Tanong 1 sa 8</div>
+          <div class="track"><div class="track-fill" id="track-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="q-kicker" id="q-kicker">Piliin ang tamang sagot</div>
+      <div class="q-text" id="q-text"></div>
+      <div id="q-options"></div>
+      <div class="feedback" id="q-feedback"></div>
+      <div class="next-wrap" id="next-wrap">
+        <button class="btn" id="btn-next">Susunod &rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen">
+    <div class="card">
+      <h2 style="font-size:1.5rem;color:var(--teal-deep);">Tapos na ang Pagsusulit!</h2>
+      <svg class="result-house" viewBox="0 0 120 100" role="img" aria-label="Ang natapos na bahay ng aralin">
+        <g id="house-final"></g>
+      </svg>
+      <div class="stars" id="stars"></div>
+      <div class="result-score" id="result-score"></div>
+      <p class="result-msg" id="result-msg"></p>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-retry">Ulitin ang Aralin</button>
+        <button class="btn" id="btn-go-home">Listahan ng Aralin</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,13 9,18 20,6"/></svg>';
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+
+  function shuffle(arr){
+    for (var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function mc(q, opts, good, bad){
+    return { type:'mc', q:q, options: shuffle(opts.map(function(o){ return {text:o[0], correct:o[1]}; })), good:good, bad:bad };
+  }
+  function tf(q, answer, good, bad){
+    return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+
+  /* ================= LESSONS ================= */
+  var lessons = [
+    {
+      tag: 'Linggo 1 &middot; Araw 1',
+      title: 'Ano ang Komunidad?',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><rect x="20" y="34" width="16" height="16" fill="var(--wall-dark)"/><polygon points="16,34 28,22 40,34" fill="var(--roof-dark)"/><rect x="40" y="30" width="20" height="20" fill="var(--wall)"/><polygon points="35,30 50,16 65,30" fill="var(--roof)"/>',
+      flashcards: [
+        { title:'KOMUNIDAD', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><rect x="20" y="34" width="16" height="16" fill="var(--wall-dark)"/><polygon points="16,34 28,22 40,34" fill="var(--roof-dark)"/><rect x="40" y="30" width="20" height="20" fill="var(--wall)"/><polygon points="35,30 50,16 65,30" fill="var(--roof)"/>', text:'Ang komunidad ay mga taong nagsasama-sama sa iisang pook o lugar.' },
+        { title:'IISANG INTERES AT LAYUNIN', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 52c-10-8-18-15-18-24a11 11 0 0 1 18-8 11 11 0 0 1 18 8c0 9-8 16-18 24z" fill="var(--bad)"/>', text:'Ang mga tao sa isang komunidad ay may parehong hilig at layunin.' },
+        { title:'MGA TUNTUNIN', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Sumusunod ang bawat isa sa mga tuntunin upang maging maayos ang komunidad.' },
+        { title:'BAYANIHAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><circle cx="26" cy="30" r="6" fill="var(--wood)"/><circle cx="50" cy="30" r="6" fill="var(--roof)"/><path d="M14 54c2-10 10-14 24-14s22 4 24 14" fill="none" stroke="var(--teal-deep)" stroke-width="4" stroke-linecap="round"/>', text:'Tumutulong ang bawat miyembro sa isa\'t isa &mdash; ito ang diwa ng Bayanihan!' }
+      ],
+      quiz: [
+        mc('Ano ang tawag sa mga taong sama-samang naninirahan sa isang lugar?', [['Komunidad',true],['Palengke',false],['Paaralan',false]], 'Tama! Sila ay tinatawag na komunidad.', 'Ang tamang sagot ay Komunidad &mdash; mga taong sama-samang naninirahan sa isang pook.'),
+        tf('Ang komunidad ay binubuo lamang ng iisang pamilya.', false, 'Tama! Maraming pamilya ang bumubuo sa komunidad.', 'Dapat MALI ang sagot &mdash; maraming pamilya, hindi iisa lang, ang bumubuo sa komunidad.'),
+        tf('May iisang layunin ang mga tao sa isang komunidad.', true, 'Tama! Nagtutulungan sila para sa iisang layunin.', 'Dapat TAMA ang sagot &mdash; iisa ang layunin ng mga tao sa komunidad.'),
+        mc('Alin dito ang halimbawa ng komunidad?', [['Ang inyong Barangay',true],['Isang laruang bola',false],['Isang pantulog na kuwento',false]], 'Tama! Ang barangay ay isang komunidad.', 'Ang barangay ang halimbawa ng komunidad &mdash; dahil dito nagsasama-sama ang mga tao.'),
+        tf('Sumusunod sa mga tuntunin ang mga taong naninirahan sa komunidad.', true, 'Tama! Ang tuntunin ay tumutulong para tahimik at ligtas ang komunidad.', 'Dapat TAMA ang sagot &mdash; sumusunod tayo sa tuntunin ng ating komunidad.'),
+        mc('Ano ang ibig sabihin ng &ldquo;Bayanihan&rdquo;?', [['Pagtutulungan ng mga tao',true],['Paglalaro nang mag-isa',false],['Pagtulog buong araw',false]], 'Tama! Ang bayanihan ay pagtutulungan &mdash; diwa ito ng ating komunidad.', 'Ang BAYANIHAN ay pagtutulungan ng mga tao sa komunidad.'),
+        tf('Magkakaiba ang interes ng bawat tao sa iisang komunidad.', false, 'Tama! Sama-sama silang may iisang interes.', 'Dapat MALI ang sagot &mdash; iisa, hindi magkakaiba, ang interes nila.'),
+        mc('Sino-sino ang bumubuo sa isang komunidad?', [['Mga pamilyang naninirahan doon',true],['Mga gusali lamang',false],['Mga sasakyan lamang',false]], 'Tama! Ang mga pamilya ang bumubuo sa komunidad.', 'Ang mga PAMILYA ang bumubuo sa isang komunidad, hindi mga bagay lamang.')
+      ]
+    },
+    {
+      tag: 'Linggo 1 &middot; Araw 2',
+      title: 'Batayang Impormasyon ng Komunidad',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="16" y="24" width="44" height="28" rx="4" fill="var(--card)" stroke="var(--accent-ink)" stroke-width="2"/><circle cx="27" cy="38" r="6" fill="var(--accent)"/><rect x="38" y="32" width="16" height="3" fill="var(--ink-soft)"/><rect x="38" y="40" width="16" height="3" fill="var(--ink-soft)"/>',
+      flashcards: [
+        { title:'PANGALAN NG KOMUNIDAD', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="16" y="24" width="44" height="28" rx="4" fill="var(--card)" stroke="var(--accent-ink)" stroke-width="2"/><rect x="24" y="32" width="28" height="4" fill="var(--accent-ink)"/><rect x="24" y="40" width="18" height="4" fill="var(--ink-soft)"/>', text:'Ito ang tawag o pangalan ng ating komunidad, tulad ng pangalan ng barangay o bayan.' },
+        { title:'LOKASYON NG KOMUNIDAD', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><path d="M38 16c9 0 16 7 16 16 0 12-16 28-16 28s-16-16-16-28c0-9 7-16 16-16z" fill="var(--bad)"/><circle cx="38" cy="32" r="6" fill="var(--card)"/>', text:'Ito ang nagsasabi kung saan matatagpuan ang ating komunidad.' },
+        { title:'PINUNO NG KOMUNIDAD', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><circle cx="38" cy="28" r="9" fill="var(--wood)"/><path d="M20 56c2-12 10-17 18-17s16 5 18 17" fill="none" stroke="var(--good)" stroke-width="4" stroke-linecap="round"/>', text:'Kadalasan, makikita ang pinuno ng komunidad sa Barangay Hall.' },
+        { title:'WIKA', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><path d="M22 26h28v18H34l-6 7v-7h-6z" fill="var(--teal-deep)"/>', text:'Mahalaga ang wika upang magkaintindihan ang mga tao sa komunidad.' },
+        { title:'POPULASYON', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="26" cy="34" r="7" fill="var(--wood)"/><circle cx="50" cy="34" r="7" fill="var(--roof)"/><circle cx="38" cy="30" r="8" fill="var(--teal-deep)"/>', text:'Tumutukoy ito sa bilang ng mga taong naninirahan sa komunidad.' }
+      ],
+      quiz: [
+        mc('Ano ang tawag sa taong namumuno sa komunidad, na kadalasang nakikita sa Barangay Hall?', [['Pinuno',true],['Guro',false],['Doktor',false]], 'Tama! Siya ang pinuno ng komunidad.', 'Ang tawag dito ay Pinuno ng Komunidad, kadalasang nakikita sa Barangay Hall.'),
+        tf('Mahalaga ang wika upang magkaintindihan ang mga tao sa komunidad.', true, 'Tama! Nagkakaintindihan ang mga tao dahil sa wika.', 'Dapat TAMA ang sagot &mdash; kailangan natin ng wika para magkaintindihan.'),
+        mc('Alin sa mga sumusunod ang bahagi ng batayang impormasyon ng komunidad?', [['Pangalan ng Komunidad',true],['Kulay ng Kotse',false],['Uri ng Prutas',false]], 'Tama! Ang pangalan ng komunidad ay batayang impormasyon.', 'Ang Pangalan ng Komunidad ang bahagi ng batayang impormasyon nito.'),
+        tf('Ang populasyon ay tumutukoy sa bilang ng mga taong naninirahan sa komunidad.', true, 'Tama! Iyan nga ang ibig sabihin ng populasyon.', 'Dapat TAMA ang sagot &mdash; ang populasyon ay bilang ng mga taong naninirahan doon.'),
+        mc('Saan karaniwang makikita ang pinuno ng komunidad?', [['Barangay Hall',true],['Sinehan',false],['Palengke',false]], 'Tama! Karaniwan siyang makikita sa Barangay Hall.', 'Kadalasan, makikita ang pinuno ng komunidad sa Barangay Hall.'),
+        tf('Hindi mahalaga malaman ang lokasyon ng ating komunidad.', false, 'Tama! Mahalaga itong malaman.', 'Dapat MALI ang sagot &mdash; mahalagang malaman ang lokasyon ng ating komunidad.'),
+        mc('Ano ang tawag sa pangunahing detalye na naglalarawan sa komunidad?', [['Batayang Impormasyon',true],['Larong Bayan',false],['Kanta',false]], 'Tama! Iyan ang batayang impormasyon ng komunidad.', 'Ang tawag dito ay Batayang Impormasyon ng Komunidad.'),
+        tf('Iba&rsquo;t ibang wika ang maaaring gamitin ng mga tao sa iisang komunidad depende sa kanilang lugar.', true, 'Tama! Iba&rsquo;t ibang wika ang ginagamit sa iba&rsquo;t ibang lugar.', 'Dapat TAMA ang sagot &mdash; nag-iiba ang wikang ginagamit depende sa lugar.')
+      ]
+    },
+    {
+      tag: 'Linggo 1 &middot; Araw 3',
+      title: 'Kahalagahan ng Komunidad',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><path d="M38 52c-10-8-18-15-18-24a11 11 0 0 1 18-8 11 11 0 0 1 18 8c0 9-8 16-18 24z" fill="var(--bad)"/>',
+      flashcards: [
+        { title:'SUPORTA AT TULONG', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><path d="M38 52c-10-8-18-15-18-24a11 11 0 0 1 18-8 11 11 0 0 1 18 8c0 9-8 16-18 24z" fill="var(--bad)"/>', text:'Kapag kasapi ka ng komunidad, nakakakuha ka ng suporta at tulong mula rito.' },
+        { title:'POOK NG PAGKATUTO', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><rect x="20" y="26" width="36" height="26" rx="2" fill="var(--card)" stroke="var(--teal-deep)" stroke-width="2"/><rect x="26" y="32" width="24" height="3" fill="var(--teal-deep)"/><rect x="26" y="39" width="24" height="3" fill="var(--teal-deep)"/><rect x="26" y="46" width="14" height="3" fill="var(--teal-deep)"/>', text:'Maraming pook sa komunidad ang maaaring gamitin para sa pagkatuto.' },
+        { title:'UGNAYAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><circle cx="28" cy="34" r="7" fill="var(--wood)"/><circle cx="48" cy="34" r="7" fill="var(--roof)"/><path d="M28 41c2 6 6 10 10 10s8-4 10-10" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round"/>', text:'Ang pagiging kabahagi ng komunidad ay bumubuo ng ugnayan sa iba.' },
+        { title:'INTERES', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><polygon points="38,18 44,32 59,33 47,42 51,57 38,48 25,57 29,42 17,33 32,32" fill="var(--accent)"/>', text:'Kapag kabahagi ka ng komunidad, natataguyod ang iyong interes.' }
+      ],
+      quiz: [
+        tf('Kapag kasapi ka ng komunidad, nakakakuha ka ng tulong at suporta.', true, 'Tama! Iyan ang isa sa kahalagahan ng komunidad.', 'Dapat TAMA ang sagot &mdash; nakakakuha tayo ng suporta mula sa komunidad.'),
+        mc('Ano ang nabubuo kapag ikaw ay naging bahagi ng komunidad?', [['Ugnayan',true],['Gulo',false],['Takot',false]], 'Tama! Nabubuo ang ugnayan sa ibang tao.', 'Ang UGNAYAN ang nabubuo kapag ikaw ay bahagi ng komunidad.'),
+        tf('Walang mapupuntahang lugar sa komunidad na pwedeng pagkatutuhan.', false, 'Tama! Maraming pook sa komunidad na pwedeng pagkatutuhan.', 'Dapat MALI ang sagot &mdash; maraming pook sa komunidad na pwedeng pagkatutuhan.'),
+        mc('Bakit mahalaga ang komunidad?', [['Nagbibigay ito ng suporta at tulong',true],['Wala itong gamit',false],['Nagpapahirap ito',false]], 'Tama! Ang komunidad ay nagbibigay ng suporta at tulong.', 'Mahalaga ang komunidad dahil nagbibigay ito ng suporta at tulong sa atin.'),
+        tf('Natataguyod ang ating interes kapag tayo ay kabahagi ng komunidad.', true, 'Tama! Iyan ang isa sa kahalagahan nito.', 'Dapat TAMA ang sagot &mdash; natataguyod ang ating interes bilang kabahagi ng komunidad.'),
+        mc('Alin ang halimbawa ng pook sa komunidad na pwede pagkatutuhan?', [['Silid-aklatan',true],['Kalan',false],['Bintana',false]], 'Tama! Ang silid-aklatan ay mabuting pook para sa pagkatuto.', 'Ang SILID-AKLATAN ay isang pook sa komunidad na pwedeng pagkatutuhan.'),
+        tf('Ang komunidad ay hindi nakakatulong sa ating pagbuo ng ugnayan sa ibang tao.', false, 'Tama! Nakakatulong nga ito para makabuo ng ugnayan.', 'Dapat MALI ang sagot &mdash; nakakatulong ang komunidad para makabuo tayo ng ugnayan.'),
+        mc('Ano ang mararamdaman mo kung ikaw ay bahagi ng isang komunidad na nagtutulungan?', [['Ligtas at masaya',true],['Malungkot lagi',false],['Galit lagi',false]], 'Tama! Ligtas at masaya ang pakiramdam sa nagtutulungang komunidad.', 'Sa komunidad na nagtutulungan, ang madarama natin ay LIGTAS AT MASAYA.')
+      ]
+    },
+    {
+      tag: 'Linggo 2',
+      title: 'Klima at Panahon',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><circle cx="30" cy="32" r="10" fill="var(--accent)"/><path d="M20 50a10 10 0 0 1 3-19 13 13 0 0 1 25 4 9 9 0 0 1-2 15z" fill="var(--card)" stroke="var(--teal-deep)" stroke-width="2"/>',
+      flashcards: [
+        { title:'PANAHON', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><circle cx="30" cy="32" r="10" fill="var(--accent)"/><path d="M20 50a10 10 0 0 1 3-19 13 13 0 0 1 25 4 9 9 0 0 1-2 15z" fill="var(--card)" stroke="var(--teal-deep)" stroke-width="2"/>', text:'Ang araw-araw na pagbabago sa ating himpapawid na nararanasan natin sa loob ng maikling oras.' },
+        { title:'KLIMA', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M18 44c8-14 32-14 40 0" fill="none" stroke="var(--accent-ink)" stroke-width="4" stroke-linecap="round"/><path d="M18 52c8-14 32-14 40 0" fill="none" stroke="var(--accent-ink)" stroke-width="4" stroke-linecap="round" opacity="0.5"/>', text:'Ang pangkalahatang lagay ng panahon na nararanasan sa loob ng mahabang panahon.' },
+        { title:'TAG-INIT', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><circle cx="38" cy="38" r="14" fill="var(--bad)"/><g stroke="var(--bad)" stroke-width="3" stroke-linecap="round"><line x1="38" y1="12" x2="38" y2="18"/><line x1="38" y1="58" x2="38" y2="64"/><line x1="12" y1="38" x2="18" y2="38"/><line x1="58" y1="38" x2="64" y2="38"/></g>', text:'Panahong nakararanas tayo ng tagtuyot dahil sa sobrang init ng araw.' },
+        { title:'TAG-ULAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><path d="M20 34a10 10 0 0 1 3-19 13 13 0 0 1 25 4 9 9 0 0 1-2 15z" fill="var(--card)" stroke="var(--teal-deep)" stroke-width="2"/><g stroke="var(--teal-deep)" stroke-width="3" stroke-linecap="round"><line x1="26" y1="48" x2="22" y2="58"/><line x1="38" y1="48" x2="34" y2="58"/><line x1="50" y1="48" x2="46" y2="58"/></g>', text:'Nakararanas tayo ng malamig, maulan, at mahanging panahon.' },
+        { title:'ANGKOP NA KASUOTAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M28 24l10-6 10 6-4 6h-12z" fill="var(--good)"/><path d="M24 30l14-6 14 6-4 24H28z" fill="var(--good)"/>', text:'Dapat tayong magsuot ng angkop na damit ayon sa panahon, tulad ng kapote kapag maulan.' }
+      ],
+      quiz: [
+        mc('Ano ang tawag sa araw-araw na pagbabago sa ating himpapawid?', [['Panahon',true],['Klima',false],['Populasyon',false]], 'Tama! Iyan ang panahon.', 'Ang PANAHON ang tawag sa araw-araw na pagbabago sa himpapawid.'),
+        tf('Ang klima ay ang pangkalahatang lagay ng panahon sa loob ng mahabang panahon.', true, 'Tama! Iyan nga ang ibig sabihin ng klima.', 'Dapat TAMA ang sagot &mdash; ang klima ay lagay ng panahon sa mahabang panahon.'),
+        mc('Anong uri ng panahon ang nararanasan natin kapag sobrang init ng araw at tagtuyot?', [['Tag-init',true],['Tag-ulan',false],['Maulap',false]], 'Tama! Iyan ang tag-init.', 'Ang TAG-INIT ang nararanasan kapag sobrang init at tagtuyot.'),
+        tf('Sa Pilipinas, dalawa ang pangkalahatang uri ng klima: tag-init at tag-ulan.', true, 'Tama! Tag-init at tag-ulan ang dalawang uri ng klima.', 'Dapat TAMA ang sagot &mdash; tag-init at tag-ulan ang dalawang pangkalahatang uri ng klima.'),
+        mc('Sino ang tanggapan ng pamahalaan na nag-uulat ng pagtataya ng panahon?', [['PAGASA',true],['DepEd',false],['Barangay',false]], 'Tama! Ang PAGASA ang nag-uulat ng panahon.', 'Ang PAGASA ang tanggapan ng pamahalaan na nag-uulat ng pagtataya ng panahon.'),
+        tf('Kapag tag-ulan, dapat kang magsuot ng shorts at tsinelas papasok sa paaralan.', false, 'Tama! Hindi iyan angkop sa tag-ulan.', 'Dapat MALI ang sagot &mdash; kailangan ng payong o kapote sa tag-ulan, hindi shorts lamang.'),
+        mc('Ano ang angkop na dalhin kapag malakas ang ulan papasok sa paaralan?', [['Payong o kapote',true],['Salamin sa araw',false],['Bola',false]], 'Tama! Kailangan ng payong o kapote sa malakas na ulan.', 'Ang PAYONG O KAPOTE ang angkop dalhin kapag malakas ang ulan.'),
+        tf('Ang panahon ay palaging pareho araw-araw.', false, 'Tama! Nagbabago ang panahon araw-araw.', 'Dapat MALI ang sagot &mdash; nagbabago-bago ang panahon araw-araw.')
+      ]
+    },
+    {
+      tag: 'Linggo 3 &middot; Araw 1',
+      title: 'Lokasyon ng Komunidad ayon sa Kapaligiran',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 16c9 0 16 7 16 16 0 12-16 28-16 28s-16-16-16-28c0-9 7-16 16-16z" fill="var(--bad)"/><circle cx="38" cy="32" r="6" fill="var(--card)"/>',
+      flashcards: [
+        { title:'LOKASYON', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 16c9 0 16 7 16 16 0 12-16 28-16 28s-16-16-16-28c0-9 7-16 16-16z" fill="var(--bad)"/><circle cx="38" cy="32" r="6" fill="var(--card)"/>', text:'Tawag sa pook, lugar, o puwesto kung saan makikita ang isang bagay.' },
+        { title:'POOK-RURAL', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M22 52V32l8-6 8 6v20z" fill="var(--wood)"/><circle cx="48" cy="30" r="8" fill="var(--good)"/><rect x="44" y="38" width="8" height="14" fill="var(--good)"/>', text:'Matatagpuan sa tahimik na nayon sa mga probinsiya; maraming puno at malawak na palayan o palaisdaan.' },
+        { title:'POOK-URBAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><rect x="20" y="26" width="12" height="30" fill="var(--wall-dark)"/><rect x="34" y="18" width="12" height="38" fill="var(--teal-deep)"/><rect x="48" y="32" width="10" height="24" fill="var(--wall)"/>', text:'May malalaking gusali, pagawaan, at iba&rsquo;t ibang establisimyento, gayundin ng maraming sasakyan.' },
+        { title:'PAGPILI NG TIRAHAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 52c-10-8-18-15-18-24a11 11 0 0 1 18-8 11 11 0 0 1 18 8c0 9-8 16-18 24z" fill="var(--accent)"/>', text:'Parehong may magagandang katangian ang pook-rural at pook-urban.' }
+      ],
+      quiz: [
+        mc('Ano ang tawag sa pook, lugar, o puwesto kung saan matatagpuan ang isang bagay?', [['Lokasyon',true],['Populasyon',false],['Klima',false]], 'Tama! Iyan ang lokasyon.', 'Ang LOKASYON ang tawag sa pook, lugar, o puwesto ng isang bagay.'),
+        tf('Sa pook-rural karaniwang makikita ang malalaking gusali at pagawaan.', false, 'Tama! Iyan ay katangian ng pook-urban.', 'Dapat MALI ang sagot &mdash; ang malalaking gusali at pagawaan ay makikita sa POOK-URBAN.'),
+        mc('Alin ang katangian ng pook-rural?', [['Malawak na palayan at palaisdaan',true],['Maraming gusali',false],['Maraming pabrika',false]], 'Tama! Palayan at palaisdaan ang makikita sa pook-rural.', 'Ang MALAWAK NA PALAYAN AT PALAISDAAN ay katangian ng pook-rural.'),
+        tf('Maraming sasakyan ang karaniwang makikita sa pook-urban.', true, 'Tama! Maraming sasakyan sa pook-urban.', 'Dapat TAMA ang sagot &mdash; maraming klase ng sasakyan ang makikita sa pook-urban.'),
+        mc('Saan karaniwang matatagpuan ang tahimik na nayon?', [['Pook-rural',true],['Pook-urban',false],['Karagatan',false]], 'Tama! Ang tahimik na nayon ay nasa pook-rural.', 'Ang tahimik na nayon ay matatagpuan sa POOK-RURAL.'),
+        tf('Magkatulad lang palagi ang pook-rural at pook-urban.', false, 'Tama! Magkaiba ang mga katangian nila.', 'Dapat MALI ang sagot &mdash; magkaiba ang katangian ng pook-rural at pook-urban.'),
+        mc('Ano ang makikita sa pook-urban?', [['Mga establisimyento at pagawaan',true],['Palaisdaan lamang',false],['Bundok lamang',false]], 'Tama! Establisimyento at pagawaan ang makikita sa pook-urban.', 'Ang MGA ESTABLISIMYENTO AT PAGAWAAN ay makikita sa pook-urban.'),
+        tf('Ang lokasyon ng komunidad ay maaaring ilarawan bilang pook-rural o pook-urban.', true, 'Tama! Ganito nga inilalarawan ang lokasyon nito.', 'Dapat TAMA ang sagot &mdash; pook-rural o pook-urban ang paglalarawan sa lokasyon ng komunidad.')
+      ]
+    },
+    {
+      tag: 'Linggo 3 &middot; Araw 2',
+      title: 'Lawak at Populasyon ng Komunidad',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><circle cx="26" cy="34" r="7" fill="var(--wood)"/><circle cx="50" cy="34" r="7" fill="var(--roof)"/><circle cx="38" cy="30" r="8" fill="var(--teal-deep)"/><path d="M14 56c2-9 9-13 24-13s22 4 24 13" fill="none" stroke="var(--ink-soft)" stroke-width="3" stroke-linecap="round"/>',
+      flashcards: [
+        { title:'LAWAK', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="18" y="18" width="40" height="40" fill="none" stroke="var(--accent-ink)" stroke-width="3"/><line x1="18" y1="18" x2="58" y2="58" stroke="var(--accent-ink)" stroke-width="2" opacity="0.5"/>', text:'Tumutukoy sa laki ng sakop ng isang lugar; sinusukat sa kilometro kuwadrado.' },
+        { title:'POPULASYON', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><circle cx="26" cy="34" r="7" fill="var(--wood)"/><circle cx="50" cy="34" r="7" fill="var(--roof)"/><circle cx="38" cy="30" r="8" fill="var(--teal-deep)"/>', text:'Tumutukoy sa bilang ng mga taong naninirahan sa isang komunidad.' },
+        { title:'MAKAPAL NA DENSIDAD', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><circle cx="24" cy="30" r="5" fill="var(--bad)"/><circle cx="36" cy="28" r="5" fill="var(--bad)"/><circle cx="48" cy="30" r="5" fill="var(--bad)"/><circle cx="30" cy="42" r="5" fill="var(--bad)"/><circle cx="42" cy="42" r="5" fill="var(--bad)"/><circle cx="54" cy="42" r="5" fill="var(--bad)"/>', text:'Kapag makapal ang populasyon, maraming taong naninirahan doon &mdash; karaniwan sa pook-urban.' },
+        { title:'MANIPIS NA DENSIDAD', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><circle cx="28" cy="34" r="6" fill="var(--good)"/><circle cx="50" cy="44" r="6" fill="var(--good)"/>', text:'Kapag manipis ang populasyon, kaunti ang taong naninirahan doon &mdash; karaniwan sa pook-rural.' }
+      ],
+      quiz: [
+        mc('Ano ang tawag sa laki ng sakop ng isang lugar?', [['Lawak',true],['Wika',false],['Kulay',false]], 'Tama! Iyan ang lawak.', 'Ang LAWAK ang tawag sa laki ng sakop ng isang lugar.'),
+        tf('Ang populasyon ay tumutukoy sa bilang ng mga taong naninirahan sa isang lugar.', true, 'Tama! Iyan nga ang ibig sabihin ng populasyon.', 'Dapat TAMA ang sagot &mdash; ang populasyon ay bilang ng mga taong naninirahan sa lugar.'),
+        mc('Anong panukat ang karaniwang ginagamit para sa lawak ng malalaking lugar?', [['Kilometro kuwadrado',true],['Kilo',false],['Litro',false]], 'Tama! Kilometro kuwadrado ang panukat sa lawak.', 'Ang KILOMETRO KUWADRADO ang karaniwang panukat sa lawak ng malalaking lugar.'),
+        tf('Kapag makapal ang populasyon ng isang lugar, kaunti lang ang taong naninirahan doon.', false, 'Tama! Sa makapal na populasyon, marami ang naninirahan.', 'Dapat MALI ang sagot &mdash; sa makapal na populasyon, MARAMI ang naninirahan.'),
+        mc('Karaniwang saan makikita ang makapal na densidad ng populasyon?', [['Pook-urban',true],['Gitna ng gubat',false],['Ilalim ng dagat',false]], 'Tama! Makapal ang populasyon sa pook-urban.', 'Ang POOK-URBAN ang karaniwang may makapal na densidad ng populasyon.'),
+        tf('Ang densidad ng populasyon ay sukat sa kapal o nipis ng populasyon sa isang lugar.', true, 'Tama! Iyan nga ang densidad ng populasyon.', 'Dapat TAMA ang sagot &mdash; ang densidad ay sukat sa kapal o nipis ng populasyon.'),
+        mc('Ano ang epekto kung marami kang kapitbahay malapit sa inyo?', [['Makapal na populasyon',true],['Manipis na populasyon',false],['Walang populasyon',false]], 'Tama! Marami kapitbahay ay makapal na populasyon.', 'Kung marami ang kapitbahay, ito ay MAKAPAL NA POPULASYON.'),
+        tf('Pareho lang lagi ang populasyon ng lahat ng komunidad.', false, 'Tama! Nagkakaiba-iba ang populasyon ng bawat komunidad.', 'Dapat MALI ang sagot &mdash; nagkakaiba-iba ang populasyon ng iba&rsquo;t ibang komunidad.')
+      ]
+    },
+    {
+      tag: 'Linggo 3 &middot; Araw 3',
+      title: 'Anyong-Lupa',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><polygon points="14,54 30,26 40,42 48,30 62,54" fill="var(--good)"/><polygon points="40,42 48,30 54,40 46,54 34,54" fill="var(--teal-deep)" opacity="0.5"/>',
+      flashcards: [
+        { title:'KAPATAGAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><rect x="16" y="44" width="44" height="8" fill="var(--good)"/>', text:'Anyong-lupa na patag at malawak.' },
+        { title:'BUNDOK', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><polygon points="38,14 58,54 18,54" fill="var(--teal-deep)"/>', text:'Mataas na anyong-lupa na matarik at matayog.' },
+        { title:'BULKAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><polygon points="38,16 56,54 20,54" fill="var(--bad)"/><circle cx="38" cy="20" r="5" fill="var(--ink-soft)"/>', text:'Anyong-lupa na may butas o bunganga sa taas.' },
+        { title:'LAMBAK', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><polygon points="16,54 28,24 40,54" fill="var(--accent)"/><polygon points="36,54 48,24 60,54" fill="var(--accent)"/>', text:'Patag na lupa na matatagpuan sa pagitan ng dalawang mataas na anyong-lupa.' },
+        { title:'PULO O ISLA', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><path d="M14 46c8-8 40-8 48 0" fill="none" stroke="var(--teal-deep)" stroke-width="4" stroke-linecap="round"/><polygon points="28,44 38,26 48,44" fill="var(--good)"/>', text:'Anyong-lupa na napapaligiran ng katubigan.' }
+      ],
+      quiz: [
+        mc('Anong anyong-lupa ang patag at malawak?', [['Kapatagan',true],['Bundok',false],['Bulkan',false]], 'Tama! Ang kapatagan ay patag at malawak.', 'Ang KAPATAGAN ang anyong-lupa na patag at malawak.'),
+        tf('Ang bundok ay mataas at matarik na anyong-lupa.', true, 'Tama! Mataas at matarik nga ang bundok.', 'Dapat TAMA ang sagot &mdash; ang bundok ay mataas at matarik na anyong-lupa.'),
+        mc('Ano ang tawag sa hilera ng mga bundok?', [['Bulubundukin',true],['Talampas',false],['Look',false]], 'Tama! Bulubundukin ang tawag dito.', 'Ang BULUBUNDUKIN ang tawag sa hilera ng mga bundok.'),
+        tf('Ang bulkan ay walang butas o bunganga sa taas.', false, 'Tama! Meron itong butas o bunganga.', 'Dapat MALI ang sagot &mdash; may butas o bunganga sa taas ang bulkan.'),
+        mc('Anong anyong-lupa ang mas maliit kaysa bundok?', [['Burol',true],['Karagatan',false],['Golpo',false]], 'Tama! Ang burol ay mas maliit sa bundok.', 'Ang BUROL ay hawig sa bundok ngunit mas maliit.'),
+        tf('Ang lambak ay matatagpuan sa pagitan ng dalawang mataas na anyong-lupa.', true, 'Tama! Nasa pagitan nga ito ng dalawang bundok.', 'Dapat TAMA ang sagot &mdash; ang lambak ay nasa pagitan ng dalawang mataas na anyong-lupa.'),
+        mc('Anong anyong-lupa ang napapaligiran ng katubigan?', [['Pulo o Isla',true],['Talampas',false],['Kapatagan',false]], 'Tama! Ang pulo o isla ay napapaligiran ng tubig.', 'Ang PULO O ISLA ang anyong-lupa na napapaligiran ng katubigan.'),
+        mc('Ano ang tawag sa patag na lupain na nasa ibabaw ng isang bundok?', [['Talampas',true],['Lambak',false],['Burol',false]], 'Tama! Iyan ang talampas.', 'Ang TALAMPAS ay patag na lupain na nasa ibabaw ng mataas na anyong-lupa.')
+      ]
+    },
+    {
+      tag: 'Linggo 4 &middot; Araw 1',
+      title: 'Anyong-Tubig',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><path d="M14 34c6-6 12-6 18 0s12 6 18 0 12-6 18 0" fill="none" stroke="var(--teal-deep)" stroke-width="4" stroke-linecap="round"/><path d="M14 46c6-6 12-6 18 0s12 6 18 0 12-6 18 0" fill="none" stroke="var(--teal)" stroke-width="4" stroke-linecap="round"/>',
+      flashcards: [
+        { title:'KARAGATAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><path d="M14 32c6-6 12-6 18 0s12 6 18 0 12-6 18 0" fill="none" stroke="var(--teal-deep)" stroke-width="4" stroke-linecap="round"/><path d="M14 44c6-6 12-6 18 0s12 6 18 0 12-6 18 0" fill="none" stroke="var(--teal-deep)" stroke-width="4" stroke-linecap="round"/><path d="M14 56c6-6 12-6 18 0s12 6 18 0 12-6 18 0" fill="none" stroke="var(--teal)" stroke-width="4" stroke-linecap="round"/>', text:'Ang pinakamalawak na anyong-tubig.' },
+        { title:'DAGAT', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M14 40c6-6 12-6 18 0s12 6 18 0 12-6 18 0" fill="none" stroke="var(--teal-deep)" stroke-width="4" stroke-linecap="round"/><path d="M14 50c6-6 12-6 18 0s12 6 18 0 12-6 18 0" fill="none" stroke="var(--teal)" stroke-width="4" stroke-linecap="round"/>', text:'Malaking anyong-tubig-alat na karugtong ng karagatan.' },
+        { title:'ILOG', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M46 14c-14 10-4 22-14 32s2 18-4 18" fill="none" stroke="var(--teal-deep)" stroke-width="5" stroke-linecap="round"/>', text:'Mahaba at makipot na anyong-tubig na umaagos patungong dagat.' },
+        { title:'LAWA', icon:'<circle cx="38" cy="38" r="34" fill="var(--teal-soft)"/><ellipse cx="38" cy="40" rx="20" ry="12" fill="var(--teal-deep)"/><path d="M14 52c8-4 40-4 48 0" fill="none" stroke="var(--good)" stroke-width="4" stroke-linecap="round"/>', text:'Anyong-tubig na napapalibutan ng lupa.' },
+        { title:'TALON', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="32" y="16" width="10" height="34" fill="var(--teal-deep)"/><path d="M28 50c4 4 12 4 16 0" fill="none" stroke="var(--teal)" stroke-width="3" stroke-linecap="round"/>', text:'Anyong-tubig kung saan ang agos ng ilog ay bumabagsak mula sa mataas na lugar.' }
+      ],
+      quiz: [
+        mc('Ano ang pinakamalawak na anyong-tubig?', [['Karagatan',true],['Ilog',false],['Lawa',false]], 'Tama! Ang karagatan ang pinakamalawak.', 'Ang KARAGATAN ang pinakamalawak na anyong-tubig.'),
+        tf('Ang ilog ay umaagos patungong dagat.', true, 'Tama! Umaagos nga ang ilog patungong dagat.', 'Dapat TAMA ang sagot &mdash; ang ilog ay umaagos patungong dagat.'),
+        mc('Anong anyong-tubig ang napapalibutan ng lupa?', [['Lawa',true],['Golpo',false],['Karagatan',false]], 'Tama! Ang lawa ay napapalibutan ng lupa.', 'Ang LAWA ang anyong-tubig na napapalibutan ng lupa.'),
+        tf('Ang talon ay kung saan bumabagsak ang agos ng ilog mula sa mataas na lugar.', true, 'Tama! Iyan nga ang talon.', 'Dapat TAMA ang sagot &mdash; ang talon ay kung saan bumabagsak ang agos mula sa mataas na lugar.'),
+        mc('Ano ang tawag sa maliit na bahagi ng dagat na napapaligiran ng lupa?', [['Look',true],['Talon',false],['Bundok',false]], 'Tama! Iyan ang look.', 'Ang LOOK ang tawag sa maliit na bahagi ng dagat na napapaligiran ng lupa.'),
+        tf('Ang golpo ay maliit at mababaw na bahagi ng dagat.', false, 'Tama! Malawak at malalim ang golpo, hindi maliit.', 'Dapat MALI ang sagot &mdash; ang golpo ay malawak at malalim, hindi maliit.'),
+        mc('Alin ang mahaba at makipot na anyong-tubig?', [['Ilog',true],['Dagat',false],['Golpo',false]], 'Tama! Ang ilog ay mahaba at makipot.', 'Ang ILOG ang mahaba at makipot na anyong-tubig.'),
+        tf('Ang dagat ay anyong-tubig-alat na karugtong ng karagatan.', true, 'Tama! Karugtong nga ito ng karagatan.', 'Dapat TAMA ang sagot &mdash; ang dagat ay anyong-tubig-alat na karugtong ng karagatan.')
+      ]
+    }
+  ];
+
+  /* ================= House SVG ================= */
+  function houseMarkup(){
+    return ''
+      + '<rect class="piece base" data-piece="0" x="0" y="90" width="120" height="4" fill="var(--teal)" opacity="0.45"/>'
+      + '<g class="piece" data-piece="1"><rect x="34" y="70" width="6" height="22" fill="var(--wood)"/><rect x="80" y="70" width="6" height="22" fill="var(--wood)"/></g>'
+      + '<g class="piece" data-piece="2"><rect x="28" y="64" width="64" height="8" fill="var(--wood)"/></g>'
+      + '<g class="piece" data-piece="3"><rect x="30" y="42" width="26" height="24" fill="var(--wall-dark)"/></g>'
+      + '<g class="piece" data-piece="4"><rect x="64" y="42" width="26" height="24" fill="var(--wall)"/></g>'
+      + '<g class="piece" data-piece="5"><polygon points="24,42 60,14 60,42" fill="var(--roof-dark)"/></g>'
+      + '<g class="piece" data-piece="6"><polygon points="60,42 60,14 96,42" fill="var(--roof)"/></g>'
+      + '<g class="piece" data-piece="7"><rect x="52" y="50" width="14" height="16" fill="var(--wood)"/><circle cx="63" cy="58" r="1.4" fill="var(--accent-soft)"/></g>'
+      + '<g class="piece" data-piece="8"><rect x="59" y="4" width="2" height="12" fill="var(--wood)"/><polygon points="61,4 75,9 61,14" fill="var(--teal)"/></g>';
+  }
+  document.getElementById('house-mini').innerHTML = houseMarkup();
+  document.getElementById('house-final').innerHTML = houseMarkup();
+
+  function revealPiece(n){
+    document.querySelectorAll('[data-piece="'+n+'"]').forEach(function(el){ el.classList.add('revealed'); });
+  }
+  function resetHouse(){
+    document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
+  }
+  function starsMarkup(filledCount, total){
+    var out = '';
+    for (var i = 1; i <= total; i++){
+      var filled = i <= filledCount;
+      out += '<svg viewBox="0 0 24 24" fill="' + (filled ? 'var(--accent)' : 'none') + '" stroke="var(--accent)" stroke-width="' + (total > 3 ? '2' : '1.6') + '"><polygon points="12,2 15,9 22,9.5 16.5,14.2 18.5,21.5 12,17.5 5.5,21.5 7.5,14.2 2,9.5 9,9"/></svg>';
+    }
+    return out;
+  }
+
+  /* ================= Screens ================= */
+  var screens = ['home','flash','quiz','results'];
+  function showScreen(name){
+    screens.forEach(function(s){
+      document.getElementById('screen-'+s).classList.toggle('active', s === name);
+    });
+  }
+
+  /* ================= Home ================= */
+  function renderHome(){
+    var list = document.getElementById('home-list');
+    list.innerHTML = lessons.map(function(l, i){
+      return '<div class="card lesson-card">' +
+        '<div class="lesson-top">' +
+          '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
+          '<div class="lesson-info">' +
+            '<div class="lesson-tag-label">' + l.tag + '</div>' +
+            '<div class="lesson-title">' + l.title + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(l.stars, 3) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn" data-lesson="' + i + '">' + (l.stars > 0 ? 'Ulitin ang Aralin' : 'Simulan') + '</button>' +
+      '</div>';
+    }).join('');
+    list.querySelectorAll('button[data-lesson]').forEach(function(b){
+      b.addEventListener('click', function(){
+        currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
+        flashIdx = 0;
+        renderFlash();
+        showScreen('flash');
+      });
+    });
+  }
+  function goHome(){ renderHome(); showScreen('home'); }
+  document.getElementById('back-from-flash').addEventListener('click', goHome);
+  document.getElementById('back-from-quiz').addEventListener('click', goHome);
+  document.getElementById('btn-go-home').addEventListener('click', goHome);
+
+  /* ================= Flashcards ================= */
+  var currentLesson = 0;
+  var flashIdx = 0;
+  function renderFlash(){
+    var lesson = lessons[currentLesson];
+    var f = lesson.flashcards[flashIdx];
+    document.getElementById('flash-lesson-label').textContent = lesson.title;
+    document.getElementById('flash-body').innerHTML =
+      '<svg class="flash-icon" viewBox="0 0 76 76">' + f.icon + '</svg>' +
+      '<h3 class="flash-title">' + f.title + '</h3>' +
+      '<p class="flash-text">' + f.text + '</p>';
+    document.getElementById('flash-dots').innerHTML = lesson.flashcards.map(function(_, i){
+      return '<span class="' + (i === flashIdx ? 'on' : '') + '"></span>';
+    }).join('');
+    document.getElementById('btn-flash-prev').style.visibility = flashIdx === 0 ? 'hidden' : 'visible';
+    document.getElementById('btn-flash-next').textContent = flashIdx === lesson.flashcards.length - 1 ? 'Simulan ang Pagsusulit' : 'Susunod';
+  }
+  document.getElementById('btn-flash-prev').addEventListener('click', function(){
+    if (flashIdx > 0){ flashIdx--; renderFlash(); }
+  });
+  document.getElementById('btn-flash-next').addEventListener('click', function(){
+    var lesson = lessons[currentLesson];
+    if (flashIdx < lesson.flashcards.length - 1){ flashIdx++; renderFlash(); }
+    else { startQuiz(); }
+  });
+
+  /* ================= Quiz ================= */
+  var qIdx = 0, score = 0, answered = false;
+
+  function startQuiz(){
+    qIdx = 0; score = 0; resetHouse();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function renderQuestion(){
+    answered = false;
+    var quizData = lessons[currentLesson].quiz;
+    var item = quizData[qIdx];
+    document.getElementById('q-count').textContent = 'Tanong ' + (qIdx + 1) + ' sa ' + quizData.length;
+    document.getElementById('track-fill').style.width = Math.round((qIdx / quizData.length) * 100) + '%';
+    document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'Tama o Mali?' : 'Piliin ang tamang sagot';
+    var qText = item.q.replace(/&ldquo;/g,'“').replace(/&rdquo;/g,'”').replace(/&rsquo;/g,'’');
+    document.getElementById('q-text').textContent = qText;
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback'; fb.innerHTML = '';
+    document.getElementById('next-wrap').classList.remove('show');
+
+    var optWrap = document.getElementById('q-options');
+    optWrap.innerHTML = '';
+
+    if (item.type === 'tf'){
+      var row = document.createElement('div');
+      row.className = 'tf-row';
+      var trueBtn = document.createElement('button');
+      trueBtn.className = 'tf-btn'; trueBtn.innerHTML = CHECK_ICON + '<span>Tama</span>';
+      var falseBtn = document.createElement('button');
+      falseBtn.className = 'tf-btn'; falseBtn.innerHTML = X_ICON + '<span>Mali</span>';
+      trueBtn.addEventListener('click', function(){ handleTF(true, trueBtn); });
+      falseBtn.addEventListener('click', function(){ handleTF(false, falseBtn); });
+      row.appendChild(trueBtn); row.appendChild(falseBtn);
+      optWrap.appendChild(row);
+    } else {
+      item.options.forEach(function(opt){
+        var b = document.createElement('button');
+        b.className = 'opt';
+        b.innerHTML = '<span class="bullet"></span><span>' + opt.text + '</span>';
+        b.addEventListener('click', function(){ handleMC(opt, b, optWrap); });
+        optWrap.appendChild(b);
+      });
+    }
+  }
+
+  function lockOptions(){
+    document.querySelectorAll('.opt, .tf-btn').forEach(function(el){ el.disabled = true; });
+  }
+
+  function showFeedback(isCorrect){
+    var quizData = lessons[currentLesson].quiz;
+    var item = quizData[qIdx];
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
+    var msg = (isCorrect ? item.good : item.bad).replace(/&mdash;/g,'—').replace(/&rsquo;/g,'’');
+    fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + msg + '</span>';
+    document.getElementById('next-wrap').classList.add('show');
+    if (isCorrect){ score++; revealPiece(qIdx + 1); }
+  }
+
+  function handleMC(opt, btnEl, optWrap){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var quizData = lessons[currentLesson].quiz;
+    optWrap.querySelectorAll('.opt').forEach(function(el, i){
+      var thisOpt = quizData[qIdx].options[i];
+      if (thisOpt.correct) el.classList.add('correct');
+      else if (el === btnEl) el.classList.add('wrong');
+    });
+    showFeedback(opt.correct);
+  }
+
+  function handleTF(choice, chosenBtn){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var quizData = lessons[currentLesson].quiz;
+    var correct = quizData[qIdx].answer;
+    var isRight = (choice === correct);
+    chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
+    if (!isRight){
+      var rightBtn = (correct === true) ? chosenBtn.parentElement.children[0] : chosenBtn.parentElement.children[1];
+      rightBtn.classList.add('correct');
+    }
+    showFeedback(isRight);
+  }
+
+  document.getElementById('btn-next').addEventListener('click', function(){
+    var quizData = lessons[currentLesson].quiz;
+    if (qIdx < quizData.length - 1){ qIdx++; renderQuestion(); }
+    else { finishQuiz(); }
+  });
+
+  function finishQuiz(){
+    document.getElementById('track-fill').style.width = '100%';
+    var quizData = lessons[currentLesson].quiz;
+    var total = quizData.length;
+    var starCount = score === total ? 3 : (score >= Math.ceil(total * 0.6) ? 2 : 1);
+    lessons[currentLesson].stars = Math.max(lessons[currentLesson].stars, starCount);
+    document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
+    document.getElementById('result-score').textContent = 'Nakuha mo ang ' + score + ' sa ' + total + ' na tanong!';
+    var msg;
+    if (starCount === 3) msg = 'Ikaw ay isang tunay na Bayani ng Komunidad! Kumpleto ang iyong bahay!';
+    else if (starCount === 2) msg = 'Magaling! Halos tapos na ang bahay ng aralin — subukan muli para makumpleto ito!';
+    else msg = 'Magandang simula! Balikan natin ang aralin at subukan muli — kaya mo yan!';
+    document.getElementById('result-msg').textContent = msg;
+    showScreen('results');
+  }
+
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    lessons[currentLesson].quiz.forEach(function(item){ if (item.options) shuffle(item.options); });
+    startQuiz();
+  });
+
+  renderHome();
+})();
+</script>
