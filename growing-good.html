@@ -1,0 +1,687 @@
+<title>Growing Good</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Quicksand:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#F3F1E4;
+    --bg-alt:#EAE6D2;
+    --card:#FFFEF8;
+    --ink:#2A2E22;
+    --ink-soft:#6E7360;
+    --accent:#D9667B;
+    --accent-ink:#8A3348;
+    --accent-soft:#F6DCE1;
+    --green:#6B9071;
+    --green-deep:#3F5D42;
+    --green-soft:#DCEADD;
+    --lav:#8E86C9;
+    --lav-deep:#5B54A0;
+    --lav-soft:#E7E4F5;
+    --good:#5B8C5A;
+    --good-soft:#E1EEE0;
+    --bad:#C1584A;
+    --bad-soft:#F5DED9;
+    --border:rgba(42,46,34,0.14);
+    --shadow:rgba(42,46,34,0.18);
+    --soil:#8B6A4A;
+    --soil-dark:#6B4E33;
+    --petal:#E8879B;
+    --petal-deep:#C15571;
+    --leaf:#7FAE7C;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1C1F17;
+      --bg-alt:#252A1E;
+      --card:#20241B;
+      --ink:#EDE9D6;
+      --ink-soft:#A8A691;
+      --accent:#EE8A9C;
+      --accent-ink:#FFD3DC;
+      --accent-soft:#3A2429;
+      --green:#8DBB8A;
+      --green-deep:#B7DCB2;
+      --green-soft:#233A26;
+      --lav:#ADA6E6;
+      --lav-deep:#CFC9F5;
+      --lav-soft:#2A2745;
+      --good:#8FCB8A;
+      --good-soft:#233524;
+      --bad:#E2917F;
+      --bad-soft:#3A241F;
+      --border:rgba(237,233,214,0.16);
+      --shadow:rgba(0,0,0,0.45);
+      --soil:#9C7952;
+      --soil-dark:#7A5B3B;
+      --petal:#F1A0B0;
+      --petal-deep:#E17E92;
+      --leaf:#9AC896;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1C1F17;
+    --bg-alt:#252A1E;
+    --card:#20241B;
+    --ink:#EDE9D6;
+    --ink-soft:#A8A691;
+    --accent:#EE8A9C;
+    --accent-ink:#FFD3DC;
+    --accent-soft:#3A2429;
+    --green:#8DBB8A;
+    --green-deep:#B7DCB2;
+    --green-soft:#233A26;
+    --lav:#ADA6E6;
+    --lav-deep:#CFC9F5;
+    --lav-soft:#2A2745;
+    --good:#8FCB8A;
+    --good-soft:#233524;
+    --bad:#E2917F;
+    --bad-soft:#3A241F;
+    --border:rgba(237,233,214,0.16);
+    --shadow:rgba(0,0,0,0.45);
+    --soil:#9C7952;
+    --soil-dark:#7A5B3B;
+    --petal:#F1A0B0;
+    --petal-deep:#E17E92;
+    --leaf:#9AC896;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(217,102,123,0.06), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(107,144,113,0.08), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Quicksand', system-ui, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:clamp(16px,4vw,40px) 16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) body{
+      background:
+        radial-gradient(circle at 12% 8%, rgba(238,138,156,0.08), transparent 40%),
+        radial-gradient(circle at 88% 92%, rgba(141,187,138,0.08), transparent 40%),
+        var(--bg);
+    }
+  }
+  :root[data-theme="dark"] body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(238,138,156,0.08), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(141,187,138,0.08), transparent 40%),
+      var(--bg);
+  }
+
+  .app{ width:100%; max-width:560px; }
+
+  .eyebrow{
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--green-deep);
+    text-align:center;
+    margin:0 0 6px;
+  }
+
+  h1,h2,h3{font-family:'Baloo 2', system-ui, sans-serif; text-wrap:balance; margin:0;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:26px;
+    box-shadow:0 18px 40px -18px var(--shadow), 0 2px 0 var(--border);
+    padding:clamp(22px,5vw,36px);
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block; animation:rise 0.4s ease both;}
+  @media (prefers-reduced-motion: reduce){ .screen.active{animation:none;} }
+  @keyframes rise{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+
+  /* ---- Home ---- */
+  .hero{text-align:center; margin-bottom:20px;}
+  .hero-title{font-size:clamp(2rem,7vw,2.5rem); font-weight:700; color:var(--accent-ink); line-height:1.05;}
+  .hero-sub{font-size:1.02rem; color:var(--ink-soft); font-weight:700; margin-top:8px;}
+  .hero-scene{width:min(280px,72%); margin:16px auto 4px;}
+
+  .back-link{
+    background:none; border:none; cursor:pointer; padding:0 0 14px;
+    font-family:'Quicksand',sans-serif; font-weight:700; font-size:0.85rem;
+    color:var(--green-deep); display:inline-flex; align-items:center; gap:6px;
+  }
+  .back-link:focus-visible{outline:2px solid var(--green-deep); outline-offset:3px;}
+  .back-link svg{width:16px; height:16px;}
+
+  .lesson-card{padding:16px 18px; margin-bottom:12px;}
+  .lesson-top{display:flex; align-items:center; gap:14px;}
+  .lesson-icon{width:52px; height:52px; flex:none;}
+  .lesson-info{flex:1; min-width:0;}
+  .lesson-tag-label{font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--green-deep);}
+  .lesson-title{font-family:'Baloo 2',sans-serif; font-weight:600; font-size:1.05rem; margin-top:2px; line-height:1.25;}
+  .mini-stars{display:flex; gap:2px; margin-top:6px;}
+  .mini-stars svg{width:15px; height:15px;}
+  .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.98rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+
+  /* ---- Buttons ---- */
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
+    font-size:1.1rem;
+    border:none;
+    border-radius:18px;
+    padding:16px 20px;
+    cursor:pointer;
+    color:#3A1420;
+    background:var(--accent);
+    box-shadow:0 6px 0 var(--accent-ink), 0 10px 18px -8px var(--shadow);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+    width:100%;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 var(--accent-ink), 0 6px 12px -8px var(--shadow);}
+  .btn:focus-visible{outline:3px solid var(--green-deep); outline-offset:3px;}
+  .btn.secondary{
+    background:transparent;
+    color:var(--green-deep);
+    box-shadow:none;
+    border:2px solid var(--green);
+  }
+  .btn.secondary:active{transform:translateY(1px);}
+  .btn-row{display:flex; gap:12px; margin-top:18px;}
+  .btn-row .btn{width:auto; flex:1;}
+
+  /* ---- Flashcards ---- */
+  .flash-dots{display:flex; justify-content:center; gap:8px; margin-bottom:18px;}
+  .flash-dots span{width:8px; height:8px; border-radius:50%; background:var(--border);}
+  .flash-dots span.on{background:var(--green);}
+  .flash-icon{width:76px; height:76px; margin:0 auto 14px; display:block;}
+  .flash-lesson-label{text-align:center; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px;}
+  .flash-title{font-size:1.3rem; font-weight:700; color:var(--green-deep); text-align:center;}
+  .flash-text{font-size:1.12rem; line-height:1.55; text-align:center; margin-top:12px; color:var(--ink);}
+
+  /* ---- Quiz header ---- */
+  .quiz-head{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
+  .quiz-plant-mini{width:52px; height:52px; flex:none;}
+  .quiz-progress{flex:1;}
+  .quiz-progress-label{font-size:0.82rem; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em;}
+  .track{height:10px; border-radius:6px; background:var(--bg-alt); overflow:hidden; margin-top:6px; border:1px solid var(--border);}
+  .track-fill{height:100%; background:linear-gradient(90deg, var(--green), var(--accent)); border-radius:6px; transition:width 0.4s ease;}
+
+  .q-kicker{font-size:0.78rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--green-deep); margin-bottom:8px;}
+  .q-text{font-size:1.35rem; font-weight:700; font-family:'Baloo 2',sans-serif; line-height:1.3; margin-bottom:18px;}
+
+  .opt{
+    display:flex; align-items:center; gap:12px;
+    width:100%; text-align:left;
+    background:var(--bg-alt);
+    border:2px solid var(--border);
+    border-radius:16px;
+    padding:14px 16px;
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+    color:var(--ink);
+    cursor:pointer;
+    margin-bottom:10px;
+    transition:border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+  }
+  .opt:hover{border-color:var(--green);}
+  .opt:active{transform:scale(0.99);}
+  .opt:focus-visible{outline:3px solid var(--green-deep); outline-offset:2px;}
+  .opt .bullet{width:22px; height:22px; flex:none; border-radius:50%; border:2px solid var(--ink-soft); opacity:0.55;}
+  .opt.correct{background:var(--good-soft); border-color:var(--good); color:var(--ink);}
+  .opt.correct .bullet{border-color:var(--good); background:var(--good);}
+  .opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .opt.wrong .bullet{border-color:var(--bad); background:var(--bad);}
+  .opt[disabled]{cursor:default;}
+
+  .tf-row{display:flex; gap:14px;}
+  .tf-btn{
+    flex:1; padding:26px 10px; border-radius:18px; border:2px solid var(--border);
+    background:var(--bg-alt); font-family:'Baloo 2',sans-serif; font-weight:600; font-size:1.15rem;
+    display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; color:var(--ink);
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .tf-btn svg{width:34px; height:34px;}
+  .tf-btn:hover{border-color:var(--green);}
+  .tf-btn:active{transform:scale(0.98);}
+  .tf-btn:focus-visible{outline:3px solid var(--green-deep); outline-offset:2px;}
+  .tf-btn.correct{background:var(--good-soft); border-color:var(--good);}
+  .tf-btn.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .tf-btn[disabled]{cursor:default;}
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; border-radius:16px; font-weight:700; font-size:1rem;
+    display:none; align-items:flex-start; gap:10px; line-height:1.45;
+  }
+  .feedback.show{display:flex; animation:pop 0.3s ease both;}
+  @media (prefers-reduced-motion: reduce){ .feedback.show{animation:none;} }
+  @keyframes pop{ from{opacity:0; transform:scale(0.95);} to{opacity:1; transform:none;} }
+  .feedback.good{background:var(--good-soft); color:var(--ink);}
+  .feedback.bad{background:var(--bad-soft); color:var(--ink);}
+  .feedback svg{width:22px; height:22px; flex:none; margin-top:1px;}
+
+  .next-wrap{margin-top:18px; display:none;}
+  .next-wrap.show{display:block;}
+
+  /* ---- Results ---- */
+  #screen-results .card{text-align:center;}
+  .result-plant{width:min(200px,56%); margin:6px auto 8px;}
+  .stars{display:flex; justify-content:center; gap:6px; margin:10px 0 4px;}
+  .stars svg{width:38px; height:38px;}
+  .result-score{font-size:1.5rem; font-weight:700; font-family:'Baloo 2',sans-serif; color:var(--accent-ink); margin-top:6px;}
+  .result-msg{font-size:1.08rem; color:var(--ink-soft); font-weight:700; margin-top:8px; line-height:1.5;}
+
+  /* ---- Plant SVG piece reveal ---- */
+  .piece{opacity:0; transform:scale(0.4); transform-box:fill-box; transform-origin:center; transition:opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1);}
+  .piece.revealed{opacity:1; transform:scale(1);}
+  @media (prefers-reduced-motion: reduce){ .piece{transition:opacity 0.2s ease;} .piece.revealed{transform:none;} }
+  .piece.base{opacity:1; transform:none; transition:none;}
+</style>
+
+<div class="app">
+  <p class="eyebrow">GMRC 2 &middot; Growing Good</p>
+
+  <!-- HOME / LESSON MAP -->
+  <section id="screen-home" class="screen active">
+    <div class="hero">
+      <h1 class="hero-title">Growing Good</h1>
+      <p class="hero-sub">Pick a lesson and watch yourself grow!</p>
+      <svg class="hero-scene" viewBox="0 0 300 120" role="img" aria-label="A row of small growing plants">
+        <circle cx="255" cy="26" r="16" fill="var(--accent)" opacity="0.85"/>
+        <rect x="0" y="98" width="300" height="10" fill="var(--soil)"/>
+        <g>
+          <rect x="58" y="70" width="4" height="28" fill="var(--green-deep)"/>
+          <circle cx="60" cy="66" r="8" fill="var(--petal)"/>
+        </g>
+        <g>
+          <rect x="148" y="58" width="4" height="40" fill="var(--green-deep)"/>
+          <path d="M150 74c-10-6-20 0-18 8 8 4 18-2 18-8z" fill="var(--leaf)"/>
+          <path d="M150 66c10-6 20 0 18 8-8 4-18-2-18-8z" fill="var(--green)"/>
+          <circle cx="150" cy="54" r="9" fill="var(--accent)"/>
+        </g>
+        <g>
+          <rect x="228" y="80" width="4" height="18" fill="var(--green-deep)"/>
+          <circle cx="230" cy="78" r="5" fill="var(--leaf)"/>
+        </g>
+      </svg>
+    </div>
+    <div id="home-list"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="screen-flash" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-flash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Lesson List</button>
+      <p class="flash-lesson-label" id="flash-lesson-label"></p>
+      <div class="flash-dots" id="flash-dots"></div>
+      <div id="flash-body"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-flash-prev">Back</button>
+        <button class="btn" id="btn-flash-next">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Lesson List</button>
+      <div class="quiz-head">
+        <svg class="quiz-plant-mini" viewBox="0 0 120 100" role="img" aria-label="A plant growing as you answer">
+          <g id="plant-mini"></g>
+        </svg>
+        <div class="quiz-progress">
+          <div class="quiz-progress-label" id="q-count">Question 1 of 8</div>
+          <div class="track"><div class="track-fill" id="track-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
+      <div class="q-text" id="q-text"></div>
+      <div id="q-options"></div>
+      <div class="feedback" id="q-feedback"></div>
+      <div class="next-wrap" id="next-wrap">
+        <button class="btn" id="btn-next">Next &rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen">
+    <div class="card">
+      <h2 style="font-size:1.5rem;color:var(--green-deep);">Quiz Complete!</h2>
+      <svg class="result-plant" viewBox="0 0 120 100" role="img" aria-label="Your fully grown plant">
+        <g id="plant-final"></g>
+      </svg>
+      <div class="stars" id="stars"></div>
+      <div class="result-score" id="result-score"></div>
+      <p class="result-msg" id="result-msg"></p>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-retry">Retry Lesson</button>
+        <button class="btn" id="btn-go-home">Lesson List</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,13 9,18 20,6"/></svg>';
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+
+  function shuffle(arr){
+    for (var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function mc(q, opts, good, bad){
+    return { type:'mc', q:q, options: shuffle(opts.map(function(o){ return {text:o[0], correct:o[1]}; })), good:good, bad:bad };
+  }
+  function tf(q, answer, good, bad){
+    return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+
+  /* ================= LESSONS ================= */
+  var lessons = [
+    {
+      tag: 'Lesson 3',
+      title: 'I Got This Feeling',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 54c-11-9-20-17-20-27a12 12 0 0 1 20-9 12 12 0 0 1 20 9c0 10-9 18-20 27z" fill="var(--accent)"/><path d="M38 54c-11-9-20-17-20-27a12 12 0 0 1 6-10c2 10 8 20 14 37z" fill="var(--lav)" opacity="0.6"/>',
+      flashcards: [
+        { title:'EMOTIONS', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 54c-11-9-20-17-20-27a12 12 0 0 1 20-9 12 12 0 0 1 20 9c0 10-9 18-20 27z" fill="var(--accent)"/>', text:'Emotions are the feelings we have inside. They help us understand how we feel and how we react to different situations.' },
+        { title:'HAPPINESS', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><circle cx="38" cy="36" r="16" fill="var(--good)"/><path d="M30 40c3 4 15 4 18 0" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round"/>', text:'A feeling of joy. It is related to cheerfulness, excitement, and enjoyment.' },
+        { title:'SADNESS', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><circle cx="38" cy="36" r="16" fill="var(--lav)"/><path d="M30 44c3-4 15-4 18 0" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round"/>', text:'The opposite of happiness. It is normal and okay to feel sad sometimes.' },
+        { title:'ANGER', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><circle cx="38" cy="36" r="16" fill="var(--bad)"/><path d="M28 30l8 4M48 30l-8 4" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round"/>', text:'A feeling often related to irritability, tension, and anxiety.' },
+        { title:'FEAR &amp; DISGUST', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><circle cx="30" cy="38" r="10" fill="var(--lav)"/><circle cx="50" cy="38" r="10" fill="var(--green)"/>', text:'Fear is being scared of danger. Disgust is a strong dislike of something unpleasant.' },
+        { title:'CATCH YOUR FEELINGS', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Be Calm, Accept your feelings, Try doing something, Call for help &mdash; CATCH helps you handle strong feelings the right way.' }
+      ],
+      quiz: [
+        mc('What do we call the feelings we have inside that help us understand how we react to situations?', [['Emotions',true],['Opinions',false],['Rules',false]], 'That’s right! Those are our emotions.', 'The correct answer is Emotions &mdash; the feelings we have inside.'),
+        mc('Which emotion is a feeling of joy and excitement?', [['Happiness',true],['Anger',false],['Fear',false]], 'Yes! Happiness is a feeling of joy.', 'Happiness is the feeling of joy, excitement, and enjoyment.'),
+        tf('It is normal and okay to feel sad sometimes.', true, 'That’s right! Everyone feels sad sometimes, and that’s okay.', 'The answer should be True &mdash; it is normal and okay to feel sad sometimes.'),
+        mc('Which emotion is often related to irritability and tension?', [['Anger',true],['Happiness',false],['Disgust',false]], 'Correct! Anger is linked to irritability and tension.', 'Anger is the emotion related to irritability, tension, and anxiety.'),
+        tf('Fear is a natural response to danger or threat.', true, 'That’s right! Fear helps us respond to danger.', 'The answer should be True &mdash; fear is a natural response to danger or threat.'),
+        mc('What is disgust usually triggered by?', [['Something unpleasant, like a bad smell or taste',true],['Something fun',false],['Something exciting',false]], 'Yes! Disgust is triggered by something unpleasant.', 'Disgust is triggered by something unpleasant, like a bad smell or taste.'),
+        mc('In the CATCH plan, what does the &ldquo;C&rdquo; stand for?', [['Be Calm',true],['Cry loudly',false],['Complain',false]], 'That’s right! C stands for Be Calm.', 'In CATCH, the &ldquo;C&rdquo; stands for Be Calm.'),
+        tf('The CATCH plan reminds us to call for help when we need it.', true, 'Correct! Calling for help is part of the CATCH plan.', 'The answer should be True &mdash; CATCH reminds us to call for help when we need it.')
+      ]
+    },
+    {
+      tag: 'Lesson 4',
+      title: 'I Pray',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><rect x="26" y="38" width="24" height="20" fill="var(--card)" stroke="var(--lav)" stroke-width="2"/><polygon points="20,38 38,22 56,38" fill="var(--lav)"/><rect x="36" y="10" width="4" height="10" fill="var(--lav)"/><rect x="33" y="13" width="10" height="3" fill="var(--lav)"/>',
+      flashcards: [
+        { title:'PRAYER', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><circle cx="28" cy="34" r="7" fill="var(--lav)"/><circle cx="48" cy="34" r="7" fill="var(--lav-deep)"/><path d="M14 56c2-9 9-13 24-13s22 4 24 13" fill="none" stroke="var(--lav)" stroke-width="3" stroke-linecap="round"/>', text:'Prayer is our way of talking to God &mdash; anytime, anywhere.' },
+        { title:'CHURCH', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><rect x="26" y="38" width="24" height="20" fill="var(--card)" stroke="var(--lav)" stroke-width="2"/><polygon points="20,38 38,22 56,38" fill="var(--lav)"/><rect x="36" y="10" width="4" height="10" fill="var(--lav)"/><rect x="33" y="13" width="10" height="3" fill="var(--lav)"/>', text:'A special place where people go to pray, worship God, and learn about His love.' },
+        { title:'RELIGION', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 52c-10-8-18-15-18-24a11 11 0 0 1 18-8 11 11 0 0 1 18 8c0 9-8 16-18 24z" fill="var(--good)"/>', text:'What people believe about God and how they worship Him. It teaches us to pray, be kind, and do what is right.' },
+        { title:'GIVE THANKS &amp; ASK', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M22 46c0-14 32-14 32 0" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><circle cx="38" cy="24" r="7" fill="var(--accent)"/>', text:'We pray to thank God for our blessings, and to ask Him for help with our needs.' },
+        { title:'PRAISE &amp; BE SORRY', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><polygon points="38,18 44,32 59,33 47,42 51,57 38,48 25,57 29,42 17,33 32,32" fill="var(--lav)"/>', text:'We pray to praise God’s goodness, and to say sorry and ask for forgiveness.' }
+      ],
+      quiz: [
+        mc('What is prayer?', [['Our way of talking to God',true],['A kind of song',false],['A type of game',false]], 'Yes! Prayer is our way of talking to God.', 'Prayer is our way of talking to God, anytime and anywhere.'),
+        mc('Where do people go to pray, worship God, and learn about His love?', [['Church',true],['Market',false],['Playground',false]], 'That’s right! Church is a special place for that.', 'Church is where people go to pray, worship God, and learn about His love.'),
+        tf('Religion teaches people how to pray, be kind, and do what is right.', true, 'Correct! That is what religion teaches us.', 'The answer should be True &mdash; religion teaches us to pray, be kind, and do what is right.'),
+        mc('Which of these is a reason why we pray?', [['To give thanks to God',true],['To ignore others',false],['To avoid our family',false]], 'Yes! We pray to give thanks to God.', 'One reason we pray is To give thanks to God for our blessings.'),
+        tf('We only pray when we need to ask God for something.', false, 'That’s right! We also pray to give thanks, praise God, and say sorry.', 'The answer should be False &mdash; we also pray to give thanks, praise God, and say sorry.'),
+        mc('When we say sorry to God and promise not to do it again, what are we doing?', [['Asking for forgiveness',true],['Showing off',false],['Complaining',false]], 'Correct! That is asking for forgiveness.', 'Saying sorry and promising not to do it again is asking for forgiveness.'),
+        tf('We can talk to God anytime and anywhere through prayer.', true, 'That’s right! Prayer lets us talk to God anytime, anywhere.', 'The answer should be True &mdash; we can talk to God anytime and anywhere through prayer.'),
+        mc('What do we do when we &ldquo;praise and adore&rdquo; God in prayer?', [['Appreciate God’s goodness',true],['Ask for toys only',false],['Argue with Him',false]], 'Yes! We appreciate God’s goodness.', 'To praise and adore means we appreciate God’s goodness.')
+      ]
+    },
+    {
+      tag: 'Week 2',
+      title: 'I Take Care of Myself',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--green-soft)"/><path d="M38 16c8 12 14 20 14 28a14 14 0 1 1-28 0c0-8 6-16 14-28z" fill="var(--green)"/><circle cx="30" cy="52" r="4" fill="var(--card)" opacity="0.7"/>',
+      flashcards: [
+        { title:'HAND-WASHING', icon:'<circle cx="38" cy="38" r="34" fill="var(--green-soft)"/><path d="M38 16c8 12 14 20 14 28a14 14 0 1 1-28 0c0-8 6-16 14-28z" fill="var(--green)"/><circle cx="30" cy="52" r="4" fill="var(--card)" opacity="0.7"/>', text:'One of the best ways to keep germs away &mdash; wash your hands after playing and before you eat.' },
+        { title:'IMMUNE SYSTEM', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'A network of tissues and organs that work together to protect your body from germs and sickness.' },
+        { title:'ADEQUATE NUTRITION', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="38" cy="38" r="16" fill="var(--accent)"/><path d="M38 22v8M30 30l6 4M46 30l-6 4" fill="none" stroke="var(--card)" stroke-width="2" stroke-linecap="round"/>', text:'Eating healthy, nutritious food instead of junk food helps you feel strong and well.' },
+        { title:'PHYSICAL FITNESS', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><circle cx="38" cy="24" r="7" fill="var(--lav)"/><path d="M38 31v16M28 40h20M30 56l8-9 8 9" fill="none" stroke="var(--lav)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>', text:'Exercise strengthens your heart and body. Try to be active for at least one hour every day.' },
+        { title:'QUALITY SLEEP', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><path d="M46 20a16 16 0 1 0 12 26 16 16 0 0 1-12-26z" fill="var(--lav-deep)"/>', text:'Children need 10 to 11 hours of sleep to stay healthy and grow properly.' },
+        { title:'HYGIENE &amp; MENTAL HEALTH', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 54c-10-8-18-15-18-24a11 11 0 0 1 18-8 11 11 0 0 1 18 8c0 9-8 16-18 24z" fill="var(--good)"/>', text:'Keeping clean keeps you healthy, and taking care of your feelings keeps your mind healthy too.' }
+      ],
+      quiz: [
+        mc('What helps keep your body safe from germs and sickness by working together inside you?', [['Immune System',true],['Backbone',false],['Eyebrows',false]], 'Yes! The immune system protects your body.', 'The Immune System works together to protect your body from germs and sickness.'),
+        tf('Washing your hands is one of the best ways to keep germs away.', true, 'That’s right! Hand-washing keeps germs away.', 'The answer should be True &mdash; washing your hands is one of the best ways to keep germs away.'),
+        mc('What should you use to cover your mouth when you cough or sneeze, instead of your hand?', [['A tissue or your elbow',true],['A friend’s shirt',false],['Nothing',false]], 'Correct! Use a tissue or your elbow.', 'You should use a tissue or your elbow, not your hand.'),
+        tf('Eating junk food all the time will help you feel strong and healthy.', false, 'That’s right! Junk food can make you feel weak and tired.', 'The answer should be False &mdash; junk food can make you feel weak and tired, not strong.'),
+        mc('How many hours of sleep do children need to stay healthy?', [['10 to 11 hours',true],['2 to 3 hours',false],['20 hours',false]], 'Yes! Children need 10 to 11 hours of sleep.', 'Children need 10 to 11 hours of sleep to stay healthy.'),
+        tf('Exercise helps strengthen your heart and other body organs.', true, 'That’s right! Exercise strengthens your heart and organs.', 'The answer should be True &mdash; exercise strengthens your heart and other body organs.'),
+        mc('What do we call taking care of yourself and your surroundings to stay clean?', [['Hygiene',true],['Homework',false],['Chores',false]], 'Correct! That is hygiene.', 'Hygiene means taking care of yourself and your surroundings to stay clean.'),
+        tf('Taking care of your feelings is also part of staying healthy.', true, 'That’s right! Mental health matters too.', 'The answer should be True &mdash; taking care of your feelings is also part of staying healthy.')
+      ]
+    }
+  ];
+
+  /* ================= Plant SVG ================= */
+  function plantMarkup(){
+    return ''
+      + '<ellipse class="piece base" data-piece="0" cx="60" cy="90" rx="50" ry="8" fill="var(--soil)"/>'
+      + '<ellipse class="piece" data-piece="1" cx="60" cy="84" rx="5" ry="4" fill="var(--soil-dark)"/>'
+      + '<g class="piece" data-piece="2"><rect x="58" y="74" width="4" height="12" fill="var(--green-deep)"/><path d="M60 76c4-4 10-2 10 2-6 2-10-1-10-2z" fill="var(--leaf)"/></g>'
+      + '<g class="piece" data-piece="3"><rect x="58" y="60" width="4" height="14" fill="var(--green-deep)"/></g>'
+      + '<g class="piece" data-piece="4"><path d="M60 66c-10-6-22 0-20 8 10 4 20-2 20-8z" fill="var(--leaf)"/></g>'
+      + '<g class="piece" data-piece="5"><path d="M60 60c10-6 22 0 20 8-10 4-20-2-20-8z" fill="var(--green)"/></g>'
+      + '<g class="piece" data-piece="6"><rect x="58" y="46" width="4" height="14" fill="var(--green-deep)"/></g>'
+      + '<g class="piece" data-piece="7"><circle cx="60" cy="42" r="7" fill="var(--petal-deep)"/></g>'
+      + '<g class="piece" data-piece="8"><circle cx="52" cy="36" r="6" fill="var(--petal)"/><circle cx="68" cy="36" r="6" fill="var(--petal)"/><circle cx="60" cy="26" r="6" fill="var(--petal)"/><circle cx="60" cy="44" r="6" fill="var(--petal)"/><circle cx="60" cy="35" r="5" fill="var(--accent)"/></g>';
+  }
+  document.getElementById('plant-mini').innerHTML = plantMarkup();
+  document.getElementById('plant-final').innerHTML = plantMarkup();
+
+  function revealPiece(n){
+    document.querySelectorAll('[data-piece="'+n+'"]').forEach(function(el){ el.classList.add('revealed'); });
+  }
+  function resetPlant(){
+    document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
+  }
+  function starsMarkup(filledCount, total){
+    var out = '';
+    for (var i = 1; i <= total; i++){
+      var filled = i <= filledCount;
+      out += '<svg viewBox="0 0 24 24" fill="' + (filled ? 'var(--accent)' : 'none') + '" stroke="var(--accent)" stroke-width="' + (total > 3 ? '2' : '1.6') + '"><polygon points="12,2 15,9 22,9.5 16.5,14.2 18.5,21.5 12,17.5 5.5,21.5 7.5,14.2 2,9.5 9,9"/></svg>';
+    }
+    return out;
+  }
+
+  /* ================= Screens ================= */
+  var screens = ['home','flash','quiz','results'];
+  function showScreen(name){
+    screens.forEach(function(s){
+      document.getElementById('screen-'+s).classList.toggle('active', s === name);
+    });
+  }
+
+  /* ================= Home ================= */
+  function renderHome(){
+    var list = document.getElementById('home-list');
+    list.innerHTML = lessons.map(function(l, i){
+      return '<div class="card lesson-card">' +
+        '<div class="lesson-top">' +
+          '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
+          '<div class="lesson-info">' +
+            '<div class="lesson-tag-label">' + l.tag + '</div>' +
+            '<div class="lesson-title">' + l.title + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(l.stars, 3) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn" data-lesson="' + i + '">' + (l.stars > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
+      '</div>';
+    }).join('');
+    list.querySelectorAll('button[data-lesson]').forEach(function(b){
+      b.addEventListener('click', function(){
+        currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
+        flashIdx = 0;
+        renderFlash();
+        showScreen('flash');
+      });
+    });
+  }
+  function goHome(){ renderHome(); showScreen('home'); }
+  document.getElementById('back-from-flash').addEventListener('click', goHome);
+  document.getElementById('back-from-quiz').addEventListener('click', goHome);
+  document.getElementById('btn-go-home').addEventListener('click', goHome);
+
+  /* ================= Flashcards ================= */
+  var currentLesson = 0;
+  var flashIdx = 0;
+  function renderFlash(){
+    var lesson = lessons[currentLesson];
+    var f = lesson.flashcards[flashIdx];
+    document.getElementById('flash-lesson-label').textContent = lesson.title;
+    document.getElementById('flash-body').innerHTML =
+      '<svg class="flash-icon" viewBox="0 0 76 76">' + f.icon + '</svg>' +
+      '<h3 class="flash-title">' + f.title + '</h3>' +
+      '<p class="flash-text">' + f.text + '</p>';
+    document.getElementById('flash-dots').innerHTML = lesson.flashcards.map(function(_, i){
+      return '<span class="' + (i === flashIdx ? 'on' : '') + '"></span>';
+    }).join('');
+    document.getElementById('btn-flash-prev').style.visibility = flashIdx === 0 ? 'hidden' : 'visible';
+    document.getElementById('btn-flash-next').textContent = flashIdx === lesson.flashcards.length - 1 ? 'Start Quiz' : 'Next';
+  }
+  document.getElementById('btn-flash-prev').addEventListener('click', function(){
+    if (flashIdx > 0){ flashIdx--; renderFlash(); }
+  });
+  document.getElementById('btn-flash-next').addEventListener('click', function(){
+    var lesson = lessons[currentLesson];
+    if (flashIdx < lesson.flashcards.length - 1){ flashIdx++; renderFlash(); }
+    else { startQuiz(); }
+  });
+
+  /* ================= Quiz ================= */
+  var qIdx = 0, score = 0, answered = false;
+
+  function startQuiz(){
+    qIdx = 0; score = 0; resetPlant();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function decode(str){
+    return str
+      .replace(/&ldquo;/g,'“').replace(/&rdquo;/g,'”')
+      .replace(/&rsquo;/g,'’').replace(/&mdash;/g,'—');
+  }
+
+  function renderQuestion(){
+    answered = false;
+    var quizData = lessons[currentLesson].quiz;
+    var item = quizData[qIdx];
+    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + quizData.length;
+    document.getElementById('track-fill').style.width = Math.round((qIdx / quizData.length) * 100) + '%';
+    document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
+    document.getElementById('q-text').textContent = decode(item.q);
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback'; fb.innerHTML = '';
+    document.getElementById('next-wrap').classList.remove('show');
+
+    var optWrap = document.getElementById('q-options');
+    optWrap.innerHTML = '';
+
+    if (item.type === 'tf'){
+      var row = document.createElement('div');
+      row.className = 'tf-row';
+      var trueBtn = document.createElement('button');
+      trueBtn.className = 'tf-btn'; trueBtn.innerHTML = CHECK_ICON + '<span>True</span>';
+      var falseBtn = document.createElement('button');
+      falseBtn.className = 'tf-btn'; falseBtn.innerHTML = X_ICON + '<span>False</span>';
+      trueBtn.addEventListener('click', function(){ handleTF(true, trueBtn); });
+      falseBtn.addEventListener('click', function(){ handleTF(false, falseBtn); });
+      row.appendChild(trueBtn); row.appendChild(falseBtn);
+      optWrap.appendChild(row);
+    } else {
+      item.options.forEach(function(opt){
+        var b = document.createElement('button');
+        b.className = 'opt';
+        b.innerHTML = '<span class="bullet"></span><span>' + decode(opt.text) + '</span>';
+        b.addEventListener('click', function(){ handleMC(opt, b, optWrap); });
+        optWrap.appendChild(b);
+      });
+    }
+  }
+
+  function lockOptions(){
+    document.querySelectorAll('.opt, .tf-btn').forEach(function(el){ el.disabled = true; });
+  }
+
+  function showFeedback(isCorrect){
+    var quizData = lessons[currentLesson].quiz;
+    var item = quizData[qIdx];
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
+    fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
+    document.getElementById('next-wrap').classList.add('show');
+    if (isCorrect){ score++; revealPiece(qIdx + 1); }
+  }
+
+  function handleMC(opt, btnEl, optWrap){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var quizData = lessons[currentLesson].quiz;
+    optWrap.querySelectorAll('.opt').forEach(function(el, i){
+      var thisOpt = quizData[qIdx].options[i];
+      if (thisOpt.correct) el.classList.add('correct');
+      else if (el === btnEl) el.classList.add('wrong');
+    });
+    showFeedback(opt.correct);
+  }
+
+  function handleTF(choice, chosenBtn){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var quizData = lessons[currentLesson].quiz;
+    var correct = quizData[qIdx].answer;
+    var isRight = (choice === correct);
+    chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
+    if (!isRight){
+      var rightBtn = (correct === true) ? chosenBtn.parentElement.children[0] : chosenBtn.parentElement.children[1];
+      rightBtn.classList.add('correct');
+    }
+    showFeedback(isRight);
+  }
+
+  document.getElementById('btn-next').addEventListener('click', function(){
+    var quizData = lessons[currentLesson].quiz;
+    if (qIdx < quizData.length - 1){ qIdx++; renderQuestion(); }
+    else { finishQuiz(); }
+  });
+
+  function finishQuiz(){
+    document.getElementById('track-fill').style.width = '100%';
+    var quizData = lessons[currentLesson].quiz;
+    var total = quizData.length;
+    var starCount = score === total ? 3 : (score >= Math.ceil(total * 0.6) ? 2 : 1);
+    lessons[currentLesson].stars = Math.max(lessons[currentLesson].stars, starCount);
+    document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
+    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right!';
+    var msg;
+    if (starCount === 3) msg = 'Amazing! Your plant is in full bloom — you’re growing beautifully!';
+    else if (starCount === 2) msg = 'Great job! Your plant is almost in bloom — try again to help it flower!';
+    else msg = 'Good start! Let’s review the lesson and try again — you can do it!';
+    document.getElementById('result-msg').textContent = msg;
+    showScreen('results');
+  }
+
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    lessons[currentLesson].quiz.forEach(function(item){ if (item.options) shuffle(item.options); });
+    startQuiz();
+  });
+
+  renderHome();
+})();
+</script>
