@@ -1,0 +1,563 @@
+<title>Block Bot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F2FF; --surface:#FFFFFF; --surface2:#EFE9FF;
+  --ink:#241C3D; --ink-soft:#5B5478;
+  --accent:#7C3AED; --accent-ink:#FFFFFF;
+  --gold:#FFC93C; --coral:#FF6B6B;
+  --good:#22A560; --bad:#E0483E;
+  --border:#E1D8FA;
+  --shadow: 0 8px 24px rgba(124,58,237,0.14);
+  --radius:20px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161022; --surface:#211934; --surface2:#2A2044;
+    --ink:#F2EEFF; --ink-soft:#B8AEDD;
+    --accent:#9D6BFF; --accent-ink:#161022;
+    --gold:#FFD666; --coral:#FF8A80;
+    --good:#3FCB86; --bad:#FF6B60;
+    --border:#382A57;
+    --shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161022; --surface:#211934; --surface2:#2A2044;
+  --ink:#F2EEFF; --ink-soft:#B8AEDD;
+  --accent:#9D6BFF; --accent-ink:#161022;
+  --gold:#FFD666; --coral:#FF8A80;
+  --good:#3FCB86; --bad:#FF6B60;
+  --border:#382A57;
+  --shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Mulish',system-ui,sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Lilita One',cursive; font-weight:400; letter-spacing:0.02em;}
+.app{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
+.hidden{display:none !important;}
+button{font-family:inherit; cursor:pointer;}
+button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+/* HOME */
+.hero{display:flex; align-items:center; gap:14px; margin:10px 0 20px;}
+.hero-bot{width:76px; height:92px; flex:none;}
+.hero h1{font-size:2.1rem; margin:0; color:var(--accent);}
+.hero p{margin:4px 0 0; color:var(--ink-soft); font-size:0.95rem;}
+.lesson-grid{display:grid; gap:14px;}
+.lesson-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
+  text-align:left; width:100%;
+}
+.lesson-emoji{font-size:2rem; flex:none; width:52px; height:52px; border-radius:14px;
+  background:var(--surface2); display:flex; align-items:center; justify-content:center;}
+.lesson-info{flex:1; min-width:0;}
+.lesson-info h3{margin:0 0 2px; font-size:1.15rem;}
+.lesson-info p{margin:0; color:var(--ink-soft); font-size:0.85rem;}
+.stars{margin-top:6px; font-size:0.95rem; letter-spacing:2px;}
+.star-on{color:var(--gold);}
+.star-off{color:var(--border);}
+.go-btn{
+  flex:none; background:var(--accent); color:var(--accent-ink); border:none; border-radius:12px;
+  padding:10px 16px; font-weight:800; font-size:0.9rem;
+}
+
+/* FLASHCARDS */
+.screen-head{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+.back-btn{background:none; border:none; color:var(--accent); font-weight:800; font-size:0.95rem; padding:6px 4px;}
+.screen-head h2{margin:0; font-size:1.4rem; flex:1;}
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:32px 24px; box-shadow:var(--shadow); gap:14px;
+}
+.card-icon{font-size:2.6rem;}
+.card-term{font-family:'Lilita One',cursive; font-size:1.6rem; color:var(--accent);}
+.card-def{font-size:1.05rem; color:var(--ink-soft); line-height:1.5;}
+.card-nav{display:flex; justify-content:space-between; align-items:center; margin-top:16px; gap:10px;}
+.nav-btn{
+  background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:12px;
+  padding:12px 18px; font-weight:700;
+}
+.nav-btn:disabled{opacity:0.4; cursor:default;}
+.dots{display:flex; gap:6px;}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--border);}
+.dot.active{background:var(--accent);}
+.primary-btn{
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:14px;
+  padding:14px 22px; font-weight:800; font-size:1rem; width:100%; margin-top:18px;
+}
+
+/* QUIZ */
+.quiz-top{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+.progress-bar{flex:1; height:10px; background:var(--surface2); border-radius:6px; overflow:hidden;}
+.progress-fill{height:100%; background:var(--accent); transition:width .3s;}
+.quiz-bot{width:44px; height:52px; flex:none;}
+.q-text{font-size:1.2rem; font-weight:800; margin:6px 0 16px;}
+.options{display:grid; gap:10px;}
+.option{
+  background:var(--surface); border:2px solid var(--border); border-radius:14px; padding:14px 16px;
+  text-align:left; font-size:1rem; font-weight:600; color:var(--ink);
+}
+.option.correct{border-color:var(--good); background:color-mix(in srgb, var(--good) 14%, var(--surface));}
+.option.incorrect{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--surface));}
+.option:disabled{cursor:default;}
+.feedback{margin-top:14px; padding:14px 16px; border-radius:14px; font-size:0.95rem; line-height:1.5;}
+.feedback.good{background:color-mix(in srgb, var(--good) 16%, var(--surface)); color:var(--ink);}
+.feedback.bad{background:color-mix(in srgb, var(--bad) 16%, var(--surface)); color:var(--ink);}
+.feedback strong{display:block; margin-bottom:4px; font-family:'Lilita One',cursive; font-size:1.05rem;}
+
+/* RESULTS */
+.results{text-align:center; padding:20px 10px;}
+.results-bot{width:160px; height:190px; margin:0 auto 14px;}
+.results h2{font-size:1.8rem; color:var(--accent); margin:0 0 4px;}
+.score-line{font-size:1.1rem; color:var(--ink-soft); margin-bottom:10px;}
+.results-stars{font-size:2rem; letter-spacing:8px; margin-bottom:18px;}
+.results-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+.secondary-btn{
+  background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:14px;
+  padding:12px 20px; font-weight:700;
+}
+
+/* bot pieces */
+.piece{opacity:0; transform:scale(0.6); transform-origin:center; transition:opacity .35s ease, transform .35s ease;}
+.piece.on{opacity:1; transform:scale(1);}
+</style>
+
+<div class="app">
+
+  <!-- HOME -->
+  <section id="screen-home">
+    <div class="hero">
+      <svg class="hero-bot" viewBox="0 0 200 240" id="hero-bot-svg"></svg>
+      <div>
+        <h1>Block Bot</h1>
+        <p>Build your robot with base-ten blocks! Review each topic, then take the quiz — every correct answer snaps on a new part.</p>
+      </div>
+    </div>
+    <div class="lesson-grid" id="lesson-grid"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="screen-cards" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="goHome()">&larr; Back</button>
+      <h2 id="cards-title"></h2>
+    </div>
+    <div class="card">
+      <div class="card-icon" id="card-icon"></div>
+      <div class="card-term" id="card-term"></div>
+      <div class="card-def" id="card-def"></div>
+    </div>
+    <div class="card-nav">
+      <button class="nav-btn" id="card-prev" onclick="cardStep(-1)">&larr; Prev</button>
+      <div class="dots" id="card-dots"></div>
+      <button class="nav-btn" id="card-next" onclick="cardStep(1)">Next &rarr;</button>
+    </div>
+    <button class="primary-btn" onclick="startQuiz()">Start the Quiz!</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="goHome()">&larr; Back</button>
+      <h2 id="quiz-title"></h2>
+    </div>
+    <div class="quiz-top">
+      <div class="progress-bar"><div class="progress-fill" id="quiz-progress"></div></div>
+      <svg class="quiz-bot" viewBox="0 0 200 240" id="quiz-bot-svg"></svg>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="q-options"></div>
+    <div id="q-feedback"></div>
+    <button class="primary-btn hidden" id="q-next-btn" onclick="nextQuestion()">Next &rarr;</button>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="hidden">
+    <div class="results">
+      <svg class="results-bot" viewBox="0 0 200 240" id="results-bot-svg"></svg>
+      <h2 id="results-heading"></h2>
+      <div class="score-line" id="results-score"></div>
+      <div class="results-stars" id="results-stars"></div>
+      <div class="results-actions">
+        <button class="primary-btn" style="width:auto" onclick="retryLesson()">Try Again</button>
+        <button class="secondary-btn" onclick="goHome()">Lesson Map</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const LESSONS = [
+  {
+    id:'blocks', emoji:'🧱', title:'Base-Ten Blocks', subtitle:'Counting Up to 1000',
+    flashcards:[
+      {icon:'🔲', term:'1 One (Unit)', def:'The smallest base-ten block. Just 1 tiny square.'},
+      {icon:'📏', term:'1 Ten (Rod)', def:'1 rod = 10 ones lined up together.'},
+      {icon:'🟪', term:'1 Hundred (Flat)', def:'1 flat = 10 rods, or 10 tens, put side by side.'},
+      {icon:'🧊', term:'1 Thousand (Block)', def:'1 big block = 10 flats, or 10 hundreds, stacked up.'},
+      {icon:'🔢', term:'Example: 1109', def:'1109 = 1 thousand, 1 hundred, 0 tens, 9 ones.'},
+    ],
+    quiz:[
+      {q:'How many ones make 1 ten?', options:['5','10','1','100'], correct:1, explain:'A rod (ten) is made of 10 small unit blocks lined up.'},
+      {q:'How many tens make 1 hundred?', options:['1','100','10','5'], correct:2, explain:'A flat (hundred) is made of 10 rods (tens) side by side.'},
+      {q:'How many hundreds make 1 thousand?', options:['10','1000','100','1'], correct:0, explain:'A thousand block is made of 10 flats (hundreds) stacked up.'},
+      {q:'True or False: 1 rod represents 1 ten.', options:['True','False'], correct:0, explain:'Yes! A rod is 10 ones joined together, so it equals 1 ten.'},
+      {q:'The number 509 is made of how many hundreds and ones?', options:['5 hundreds, 9 ones','5 tens, 9 ones','9 hundreds, 5 ones','5 hundreds, 0 ones'], correct:0, explain:'509 = 5 flats (hundreds) + 0 rods (tens) + 9 units (ones).'},
+      {q:'1109 is made of how many thousands, hundreds, tens, and ones?', options:['1 thousand, 0 hundreds, 1 ten, 9 ones','1 thousand, 1 hundred, 0 tens, 9 ones','0 thousands, 1 hundred, 1 ten, 9 ones','1 thousand, 1 hundred, 9 tens, 0 ones'], correct:1, explain:'1109 = 1 block + 1 flat + 0 rods + 9 units.'},
+      {q:'True or False: A flat block is the same as 10 units.', options:['True','False'], correct:1, explain:'A flat equals 10 rods (100 units), not just 10 units — that would only be 1 rod.'},
+      {q:'Which blocks show 3406 (3 thousands, 4 hundreds, 6 ones)?', options:['3 blocks, 4 flats, 6 units','3 flats, 4 blocks, 6 rods','6 blocks, 4 flats, 3 units','3 rods, 4 units, 6 blocks'], correct:0, explain:'3406 = 3 thousand blocks + 4 hundred flats + 0 tens + 6 unit ones.'},
+    ]
+  },
+  {
+    id:'readwrite', emoji:'✍️', title:'Reading & Writing Numbers', subtitle:'Symbols and Words',
+    flashcards:[
+      {icon:'🔡', term:'1137', def:'In words: one thousand one hundred thirty-seven.'},
+      {icon:'🔡', term:'954', def:'In words: nine hundred fifty-four.'},
+      {icon:'🔡', term:'307', def:'In words: three hundred and seven.'},
+      {icon:'📐', term:'Spacing Rule', def:'For numerals with 5 digits or more, put a space after every place value, like 12 345.'},
+      {icon:'📝', term:'Writing Rule', def:'When writing number words, say the digit first, then the name of its place (thousand, hundred).'},
+    ],
+    quiz:[
+      {q:'How do you write 954 in words?', options:['nine hundred fifty-four','nine hundred fifteen','ninety-five hundred four','nine hundred and forty'], correct:0, explain:'954 has 9 hundreds, 5 tens, 4 ones: nine hundred fifty-four.'},
+      {q:'How do you write 1562 in words?', options:['one thousand five hundred sixty-two','fifteen hundred sixty-two only','one thousand fifty-two','five thousand one hundred sixty-two'], correct:0, explain:'1562 = one thousand five hundred sixty-two.'},
+      {q:'What numeral is "five thousand two hundred thirty-one"?', options:['5231','5321','2531','5213'], correct:0, explain:'Five thousand, two hundred, thirty-one = 5231.'},
+      {q:'What numeral is "nine thousand six hundred eighty-four"?', options:['9648','9684','6984','9864'], correct:1, explain:'Nine thousand, six hundred, eighty-four = 9684.'},
+      {q:'True or False: In writing numerals with 5 digits or more, we put a space after every place value.', options:['True','False'], correct:0, explain:'That is the rule — for example, 12 345 has a space after the thousands place.'},
+      {q:'How do you write 301 in words?', options:['three hundred and one','thirty-one','three hundred ten','three thousand one'], correct:0, explain:'301 = three hundred and one.'},
+      {q:'How do you write 1705 in words?', options:['one thousand seven hundred and five','seventeen hundred and five only','one thousand seventy-five','seven thousand one hundred five'], correct:0, explain:'1705 = one thousand seven hundred and five.'},
+      {q:'True or False: We write the period name first, then the digit, like "thousand-one".', options:['True','False'], correct:1, explain:'It is the other way around — we write the digit first, then the name of the period, like "one thousand".'},
+    ]
+  },
+  {
+    id:'skip', emoji:'⏭️', title:'Skip Counting', subtitle:'By 2s, 5s, 10s, 50s, and 100s',
+    flashcards:[
+      {icon:'2️⃣', term:'Skip by 2s', def:'2, 4, 6, 8, 10, 12, 14, 16, 18, 20...'},
+      {icon:'5️⃣', term:'Skip by 5s', def:'5, 10, 15, 20, 25, 30, 35, 40, 45, 50...'},
+      {icon:'🔟', term:'Skip by 10s', def:'10, 20, 30, 40, 50, 60, 70, 80, 90, 100...'},
+      {icon:'5️⃣0️⃣', term:'Skip by 50s', def:'50, 100, 150, 200, 250, 300, 350, 400, 450, 500...'},
+      {icon:'💯', term:'Skip by 100s', def:'100, 200, 300, 400, 500, 600, 700, 800, 900, 1000...'},
+      {icon:'➕', term:'The Big Rule', def:'Skip counting just means adding the SAME number every time to get the next one.'},
+    ],
+    quiz:[
+      {q:'Skip count by 2s: 2, 4, 6, __, 10', options:['7','8','9','12'], correct:1, explain:'Adding 2 each time: 6 + 2 = 8.'},
+      {q:'Skip count by 5s: 15, 20, __, 30', options:['22','24','25','26'], correct:2, explain:'Adding 5 each time: 20 + 5 = 25.'},
+      {q:'Skip count by 10s: 40, 50, __, 70', options:['55','60','65','61'], correct:1, explain:'Adding 10 each time: 50 + 10 = 60.'},
+      {q:'Skip count by 50s: 150, 200, __, 300', options:['225','240','250','260'], correct:2, explain:'Adding 50 each time: 200 + 50 = 250.'},
+      {q:'Skip count by 100s: 500, 600, __, 800', options:['650','700','750','710'], correct:1, explain:'Adding 100 each time: 600 + 100 = 700.'},
+      {q:'True or False: Skip counting means adding a different number each time.', options:['True','False'], correct:1, explain:'Skip counting always adds the SAME number every time — like always +2, or always +50.'},
+      {q:'Skip count by 10s: 70, 80, 90, __', options:['95','100','110','99'], correct:1, explain:'Adding 10 each time: 90 + 10 = 100.'},
+      {q:'Skip count by 5s: 40, 45, __', options:['48','50','55','46'], correct:1, explain:'Adding 5 each time: 45 + 5 = 50.'},
+    ]
+  },
+  {
+    id:'compare', emoji:'⚖️', title:'Comparing Numbers', subtitle:'Using <, >, and =',
+    flashcards:[
+      {icon:'>', term:'Greater Than (>)', def:'The open side faces the bigger number.'},
+      {icon:'<', term:'Less Than (<)', def:'The open side faces the bigger number, so the point faces the smaller one.'},
+      {icon:'=', term:'Equal To (=)', def:'Both numbers have the exact same value.'},
+      {icon:'📊', term:'How to Compare', def:'Compare the hundreds digit first. If they are equal, compare tens, then ones.'},
+      {icon:'🔍', term:'Example', def:'443 vs 210: hundreds 4 > 2, so 443 > 210.'},
+    ],
+    quiz:[
+      {q:'Which symbol means "greater than"?', options:['<','>','=','+'], correct:1, explain:'The > symbol opens toward the bigger number.'},
+      {q:'Compare: 443 ___ 210', options:['>','<','='], correct:0, explain:'443 has more hundreds (4) than 210 (2), so 443 is greater.'},
+      {q:'Compare: 443 ___ 470', options:['>','<','='], correct:1, explain:'The hundreds are equal (4=4), but tens: 4 is less than 7, so 443 < 470.'},
+      {q:'Compare: 470 ___ 470', options:['>','<','='], correct:2, explain:'Every digit matches, so the numbers are equal.'},
+      {q:'True or False: 136 is smaller than 225.', options:['True','False'], correct:0, explain:'136 has 1 hundred, 225 has 2 hundreds, so 136 is smaller.'},
+      {q:'Compare: 99 ___ 99', options:['>','<','='], correct:2, explain:'Same number on both sides means they are equal.'},
+      {q:'Compare: 56 ___ 75', options:['>','<','='], correct:1, explain:'56 has fewer tens (5) than 75 (7), so 56 is less than 75.'},
+      {q:'True or False: When comparing numbers, we look at the ones digit first.', options:['True','False'], correct:1, explain:'We always compare the biggest place value first — hundreds, then tens, then ones.'},
+    ]
+  },
+  {
+    id:'order', emoji:'📶', title:'Ordering Numbers', subtitle:'Smallest to Greatest',
+    flashcards:[
+      {icon:'⬆️', term:'Ascending Order', def:'Arranging numbers from smallest to greatest.'},
+      {icon:'⬇️', term:'Descending Order', def:'Arranging numbers from greatest to smallest.'},
+      {icon:'🧮', term:'How to Order', def:'First compare the numbers using their place values, then arrange them in the order you need.'},
+      {icon:'🔎', term:'Example', def:'Compare 238, 170, 209 by hundreds and tens: order is 170, 209, 238.'},
+    ],
+    quiz:[
+      {q:'What does "ascending order" mean?', options:['Smallest to greatest','Greatest to smallest','Random order','Odd numbers only'], correct:0, explain:'Ascending means the numbers climb up from smallest to greatest.'},
+      {q:'What does "descending order" mean?', options:['Smallest to greatest','Greatest to smallest','Random order','Even numbers only'], correct:1, explain:'Descending means the numbers go down from greatest to smallest.'},
+      {q:'Order 238, 170, 209 from smallest to greatest:', options:['170, 209, 238','238, 209, 170','209, 170, 238','170, 238, 209'], correct:0, explain:'Comparing hundreds and tens: 170 is smallest, then 209, then 238.'},
+      {q:'True or False: 935 is less than 943.', options:['True','False'], correct:0, explain:'Comparing tens: 3 is less than 4, so 935 < 943.'},
+      {q:'True or False: 625 is less than 421.', options:['True','False'], correct:1, explain:'625 has more hundreds (6) than 421 (4), so 625 is greater, not less.'},
+      {q:'To order numbers, what should you do first?', options:['Compare their place values','Guess','Add them together','Multiply them'], correct:0, explain:'You must compare place values (hundreds, then tens, then ones) before you can put numbers in order.'},
+      {q:'Which is the greatest: 529, 592, or 421?', options:['529','592','421'], correct:1, explain:'Comparing tens: 592 has 9 tens, more than 529 (2 tens) and 421 (2 tens).'},
+      {q:'Arrange 873, 730, 625 from greatest to smallest:', options:['873, 730, 625','625, 730, 873','730, 873, 625','625, 873, 730'], correct:0, explain:'Comparing hundreds: 873 (8) is greatest, then 730 (7), then 625 (6).'},
+    ]
+  },
+  {
+    id:'ordinal', emoji:'🥇', title:'Ordinal Numbers', subtitle:'1st up to 20th',
+    flashcards:[
+      {icon:'🏁', term:'What are Ordinal Numbers?', def:'Numbers that tell the position or order of something, like 1st, 2nd, 3rd.'},
+      {icon:'⭐', term:'The Special Three', def:'1st, 2nd, and 3rd do not just add "th" — they are special.'},
+      {icon:'🔤', term:'The "th" Rule', def:'For numbers ending in 0 or 4-9, add "th": 10th, 14th, 17th.'},
+      {icon:'🔟', term:'11th-20th', def:'All of these end in "th," even 11th and 12th: eleventh, twelfth, up to twentieth.'},
+    ],
+    quiz:[
+      {q:'What is the ordinal number for 1?', options:['1th','1st','1nd','first only'], correct:1, explain:'1 becomes "1st" — one of the three special ordinal endings.'},
+      {q:'What is the ordinal number for 3?', options:['3th','3rd','3nd','3st'], correct:1, explain:'3 becomes "3rd" — another one of the special endings.'},
+      {q:'What is the ordinal word for 5th?', options:['fiveth','fifth','fivth','fifeth'], correct:1, explain:'5th is written as "fifth" in words.'},
+      {q:'True or False: For numbers ending in 4-9, we add "th."', options:['True','False'], correct:0, explain:'Yes — like 14th, 17th, 19th, following the "th" rule.'},
+      {q:'What is 10 in ordinal form?', options:['10st','10nd','10th','tenst'], correct:2, explain:'10 becomes "10th," following the "th" rule.'},
+      {q:'What is 14 in ordinal form?', options:['14st','14th','14rd','14nd'], correct:1, explain:'14 becomes "14th," following the "th" rule.'},
+      {q:'True or False: Ordinal numbers tell how many things there are.', options:['True','False'], correct:1, explain:'Ordinal numbers tell POSITION or order (1st, 2nd...), not how many — that is what cardinal numbers do.'},
+      {q:'What is the ordinal word for 20th?', options:['twentyth','twentieth','twenth','twentith'], correct:1, explain:'20th is written as "twentieth" in words.'},
+    ]
+  },
+  {
+    id:'placevalue', emoji:'🔟', title:'Place Value', subtitle:'Hundreds, Tens, and Ones',
+    flashcards:[
+      {icon:'📍', term:'What is Place Value?', def:'It tells you what a digit is worth, based on where it sits: hundreds, tens, or ones.'},
+      {icon:'🧩', term:'315 Broken Down', def:'315 = 3 hundreds + 1 ten + 5 ones.'},
+      {icon:'➕', term:'Expanded Form', def:'300 + 10 + 5 = 315.'},
+      {icon:'🔢', term:'473 Broken Down', def:'473 = 4 hundreds, 7 tens, 3 ones.'},
+      {icon:'🔢', term:'609 Broken Down', def:'609 = 6 hundreds, 0 tens, 9 ones.'},
+    ],
+    quiz:[
+      {q:'In 315, what is the value of the digit 3?', options:['3 ones','3 tens','3 hundreds','3 thousands'], correct:2, explain:'The 3 is in the hundreds place, so it is worth 3 hundreds (300).'},
+      {q:'In 473, what does the 7 represent?', options:['7 ones','7 tens','7 hundreds','7 thousands'], correct:1, explain:'The 7 sits in the tens place, so it means 7 tens (70).'},
+      {q:'In 609, what does the 0 represent?', options:['0 ones','0 tens','0 hundreds','0 thousands'], correct:1, explain:'There are 0 tens in 609 — the tens place is empty.'},
+      {q:'What is 300 + 10 + 5 in expanded form?', options:['135','315','351','305'], correct:1, explain:'3 hundreds + 1 ten + 5 ones = 315.'},
+      {q:'Write the number: 1 hundred, 2 tens, 3 ones', options:['123','132','213','321'], correct:0, explain:'1 hundred + 2 tens + 3 ones = 123.'},
+      {q:'Write the number: 3 hundreds, 5 tens, 8 ones', options:['358','385','538','853'], correct:0, explain:'3 hundreds + 5 tens + 8 ones = 358.'},
+      {q:'True or False: Place value tells us what a digit is worth based on its position.', options:['True','False'], correct:0, explain:'Exactly — the same digit means something different depending on where it sits.'},
+      {q:'What number does 6 hundreds, 0 tens, 9 ones make?', options:['690','609','906','960'], correct:1, explain:'6 hundreds + 0 tens + 9 ones = 609.'},
+    ]
+  },
+];
+
+const STORAGE_KEY = 'blockbot_progress_v1';
+function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+let progress = loadProgress();
+
+/* ---- Block Bot SVG ---- */
+function botMarkup(){
+  return `
+  <g class="piece" data-n="1">
+    <rect x="66" y="205" width="20" height="20" rx="4" fill="var(--gold)"/>
+    <rect x="114" y="205" width="20" height="20" rx="4" fill="var(--gold)"/>
+  </g>
+  <g class="piece" data-n="2">
+    <rect x="70" y="160" width="16" height="48" rx="4" fill="var(--accent)"/>
+    <rect x="114" y="160" width="16" height="48" rx="4" fill="var(--accent)"/>
+  </g>
+  <g class="piece" data-n="3">
+    <rect x="50" y="105" width="100" height="65" rx="10" fill="var(--coral)"/>
+    <line x1="50" y1="127" x2="150" y2="127" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>
+    <line x1="50" y1="149" x2="150" y2="149" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>
+    <line x1="83" y1="105" x2="83" y2="170" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>
+    <line x1="117" y1="105" x2="117" y2="170" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>
+  </g>
+  <g class="piece" data-n="4">
+    <rect x="28" y="112" width="16" height="50" rx="6" fill="var(--accent)" transform="rotate(8 36 137)"/>
+  </g>
+  <g class="piece" data-n="5">
+    <rect x="156" y="112" width="16" height="50" rx="6" fill="var(--accent)" transform="rotate(-8 164 137)"/>
+  </g>
+  <g class="piece" data-n="6">
+    <rect x="65" y="55" width="70" height="55" rx="14" fill="var(--surface)" stroke="var(--border)" stroke-width="3"/>
+    <circle cx="86" cy="80" r="6" fill="var(--ink-soft)" class="eye"/>
+    <circle cx="114" cy="80" r="6" fill="var(--ink-soft)" class="eye"/>
+    <path d="M84 96 Q100 104 116 96" stroke="var(--ink-soft)" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+  <g class="piece" data-n="7">
+    <line x1="100" y1="55" x2="100" y2="38" stroke="var(--gold)" stroke-width="4"/>
+    <circle cx="100" cy="32" r="8" fill="var(--gold)"/>
+  </g>
+  <g class="piece" data-n="8">
+    <circle cx="100" cy="137" r="14" fill="var(--gold)" opacity="0.9"/>
+    <circle cx="86" cy="80" r="6" fill="var(--accent)"/>
+    <circle cx="114" cy="80" r="6" fill="var(--accent)"/>
+    <circle cx="30" cy="60" r="3" fill="var(--gold)"/>
+    <circle cx="172" cy="70" r="4" fill="var(--coral)"/>
+    <circle cx="150" cy="40" r="3" fill="var(--accent)"/>
+  </g>`;
+}
+function renderBot(svgEl, n){
+  svgEl.innerHTML = botMarkup();
+  svgEl.querySelectorAll('.piece').forEach(p=>{
+    if(parseInt(p.dataset.n) <= n) p.classList.add('on');
+  });
+}
+
+/* ---- State ---- */
+let currentLessonIdx = 0;
+let cardIdx = 0;
+let quizIdx = 0;
+let quizScore = 0;
+let answered = false;
+
+const homeScreen = document.getElementById('screen-home');
+const cardsScreen = document.getElementById('screen-cards');
+const quizScreen = document.getElementById('screen-quiz');
+const resultsScreen = document.getElementById('screen-results');
+
+function showScreen(el){
+  [homeScreen, cardsScreen, quizScreen, resultsScreen].forEach(s=>s.classList.add('hidden'));
+  el.classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function starsFor(score){
+  if(score >= 8) return 3;
+  if(score >= 6) return 2;
+  if(score >= 4) return 1;
+  return 0;
+}
+
+function renderHome(){
+  renderBot(document.getElementById('hero-bot-svg'), 8);
+  const grid = document.getElementById('lesson-grid');
+  grid.innerHTML = '';
+  LESSONS.forEach((lesson, i)=>{
+    const best = progress[lesson.id] || 0;
+    const stars = starsFor(best);
+    const card = document.createElement('button');
+    card.className = 'lesson-card';
+    card.onclick = ()=>openLesson(i);
+    card.innerHTML = `
+      <div class="lesson-emoji">${lesson.emoji}</div>
+      <div class="lesson-info">
+        <h3>${lesson.title}</h3>
+        <p>${lesson.subtitle}</p>
+        <div class="stars">${[1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('')}</div>
+      </div>
+      <div class="go-btn">${best>0?'Review':'Start'}</div>
+    `;
+    grid.appendChild(card);
+  });
+  showScreen(homeScreen);
+}
+
+function goHome(){ renderHome(); }
+
+function openLesson(i){
+  currentLessonIdx = i;
+  cardIdx = 0;
+  renderCard();
+  showScreen(cardsScreen);
+}
+
+function renderCard(){
+  const lesson = LESSONS[currentLessonIdx];
+  document.getElementById('cards-title').textContent = lesson.title;
+  const fc = lesson.flashcards[cardIdx];
+  document.getElementById('card-icon').textContent = fc.icon;
+  document.getElementById('card-term').textContent = fc.term;
+  document.getElementById('card-def').textContent = fc.def;
+  document.getElementById('card-prev').disabled = cardIdx === 0;
+  document.getElementById('card-next').disabled = cardIdx === lesson.flashcards.length - 1;
+  const dots = document.getElementById('card-dots');
+  dots.innerHTML = '';
+  lesson.flashcards.forEach((_, idx)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (idx === cardIdx ? ' active' : '');
+    dots.appendChild(d);
+  });
+}
+
+function cardStep(dir){
+  const lesson = LESSONS[currentLessonIdx];
+  cardIdx = Math.max(0, Math.min(lesson.flashcards.length - 1, cardIdx + dir));
+  renderCard();
+}
+
+function startQuiz(){
+  quizIdx = 0;
+  quizScore = 0;
+  renderQuestion();
+  showScreen(quizScreen);
+}
+
+function renderQuestion(){
+  const lesson = LESSONS[currentLessonIdx];
+  answered = false;
+  document.getElementById('quiz-title').textContent = lesson.title;
+  const total = lesson.quiz.length;
+  document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
+  renderBot(document.getElementById('quiz-bot-svg'), quizScore);
+  const q = lesson.quiz[quizIdx];
+  document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: ${q.q}`;
+  const opts = document.getElementById('q-options');
+  opts.innerHTML = '';
+  q.options.forEach((opt, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = opt;
+    b.onclick = ()=>selectOption(idx);
+    opts.appendChild(b);
+  });
+  document.getElementById('q-feedback').innerHTML = '';
+  document.getElementById('q-next-btn').classList.add('hidden');
+}
+
+function selectOption(idx){
+  if(answered) return;
+  answered = true;
+  const lesson = LESSONS[currentLessonIdx];
+  const q = lesson.quiz[quizIdx];
+  const buttons = document.querySelectorAll('#q-options .option');
+  buttons.forEach((b, i)=>{
+    b.disabled = true;
+    if(i === q.correct) b.classList.add('correct');
+    else if(i === idx) b.classList.add('incorrect');
+  });
+  const correct = idx === q.correct;
+  if(correct) quizScore++;
+  renderBot(document.getElementById('quiz-bot-svg'), quizScore);
+  const fb = document.getElementById('q-feedback');
+  fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite.'}</strong>${q.explain}</div>`;
+  document.getElementById('q-next-btn').classList.remove('hidden');
+}
+
+function nextQuestion(){
+  const lesson = LESSONS[currentLessonIdx];
+  quizIdx++;
+  if(quizIdx >= lesson.quiz.length){
+    finishQuiz();
+  } else {
+    renderQuestion();
+  }
+}
+
+function finishQuiz(){
+  const lesson = LESSONS[currentLessonIdx];
+  const best = Math.max(progress[lesson.id] || 0, quizScore);
+  progress[lesson.id] = best;
+  saveProgress(progress);
+  renderResults();
+  showScreen(resultsScreen);
+}
+
+function renderResults(){
+  const lesson = LESSONS[currentLessonIdx];
+  renderBot(document.getElementById('results-bot-svg'), quizScore);
+  const stars = starsFor(quizScore);
+  document.getElementById('results-heading').textContent =
+    stars === 3 ? 'Block Bot Complete!' : stars > 0 ? 'Great Progress!' : 'Keep Building!';
+  document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${lesson.quiz.length} on ${lesson.title}`;
+  document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
+}
+
+function retryLesson(){
+  startQuiz();
+}
+
+renderHome();
+</script>
