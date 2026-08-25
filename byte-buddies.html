@@ -1,0 +1,678 @@
+<title>Byte Buddies</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Rubik:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#EEF1F4;
+    --bg-alt:#E2E7EC;
+    --card:#FFFFFF;
+    --ink:#1B2430;
+    --ink-soft:#5C6B7A;
+    --accent:#1FA9BB;
+    --accent-ink:#0E5C66;
+    --accent-soft:#D8F1F3;
+    --indigo:#5B5FE0;
+    --indigo-deep:#33379C;
+    --indigo-soft:#E3E3FB;
+    --amber:#F2A93B;
+    --amber-deep:#8A5E14;
+    --amber-soft:#FBE9C9;
+    --good:#3F9D5C;
+    --good-soft:#E1F0E4;
+    --bad:#D1554A;
+    --bad-soft:#F7DEDB;
+    --border:rgba(27,36,48,0.13);
+    --shadow:rgba(27,36,48,0.18);
+    --case:#B9C2CB;
+    --case-dark:#8A94A0;
+    --screen-glow:#7FE6D8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12161C;
+      --bg-alt:#1A1F27;
+      --card:#181D25;
+      --ink:#E9EDF2;
+      --ink-soft:#98A3B3;
+      --accent:#4FD3E3;
+      --accent-ink:#B9F1F6;
+      --accent-soft:#193238;
+      --indigo:#8B8FEF;
+      --indigo-deep:#C2C4FA;
+      --indigo-soft:#252A4D;
+      --amber:#F5C06E;
+      --amber-deep:#FCE3B4;
+      --amber-soft:#3A2E15;
+      --good:#7BC98F;
+      --good-soft:#1F3324;
+      --bad:#E2897E;
+      --bad-soft:#3A2320;
+      --border:rgba(233,237,242,0.14);
+      --shadow:rgba(0,0,0,0.5);
+      --case:#4A5563;
+      --case-dark:#2E3742;
+      --screen-glow:#3FCBBC;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12161C;
+    --bg-alt:#1A1F27;
+    --card:#181D25;
+    --ink:#E9EDF2;
+    --ink-soft:#98A3B3;
+    --accent:#4FD3E3;
+    --accent-ink:#B9F1F6;
+    --accent-soft:#193238;
+    --indigo:#8B8FEF;
+    --indigo-deep:#C2C4FA;
+    --indigo-soft:#252A4D;
+    --amber:#F5C06E;
+    --amber-deep:#FCE3B4;
+    --amber-soft:#3A2E15;
+    --good:#7BC98F;
+    --good-soft:#1F3324;
+    --bad:#E2897E;
+    --bad-soft:#3A2320;
+    --border:rgba(233,237,242,0.14);
+    --shadow:rgba(0,0,0,0.5);
+    --case:#4A5563;
+    --case-dark:#2E3742;
+    --screen-glow:#3FCBBC;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 10% 6%, rgba(31,169,187,0.07), transparent 42%),
+      radial-gradient(circle at 92% 90%, rgba(91,95,224,0.07), transparent 42%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Rubik', system-ui, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:clamp(16px,4vw,40px) 16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) body{
+      background:
+        radial-gradient(circle at 10% 6%, rgba(79,211,227,0.1), transparent 42%),
+        radial-gradient(circle at 92% 90%, rgba(139,143,239,0.1), transparent 42%),
+        var(--bg);
+    }
+  }
+  :root[data-theme="dark"] body{
+    background:
+      radial-gradient(circle at 10% 6%, rgba(79,211,227,0.1), transparent 42%),
+      radial-gradient(circle at 92% 90%, rgba(139,143,239,0.1), transparent 42%),
+      var(--bg);
+  }
+
+  .app{ width:100%; max-width:560px; }
+
+  .eyebrow{
+    font-family:'Rubik',sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--indigo-deep);
+    text-align:center;
+    margin:0 0 6px;
+  }
+
+  h1,h2,h3{font-family:'Righteous', system-ui, sans-serif; text-wrap:balance; margin:0; font-weight:400;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    box-shadow:0 18px 40px -18px var(--shadow), 0 2px 0 var(--border);
+    padding:clamp(22px,5vw,36px);
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block; animation:rise 0.4s ease both;}
+  @media (prefers-reduced-motion: reduce){ .screen.active{animation:none;} }
+  @keyframes rise{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+
+  /* ---- Home ---- */
+  .hero{text-align:center; margin-bottom:20px;}
+  .hero-title{font-size:clamp(2rem,7vw,2.6rem); color:var(--accent-ink); line-height:1.05;}
+  .hero-sub{font-size:1.02rem; color:var(--ink-soft); font-weight:500; margin-top:8px;}
+  .hero-scene{width:min(280px,74%); margin:16px auto 4px;}
+
+  .back-link{
+    background:none; border:none; cursor:pointer; padding:0 0 14px;
+    font-family:'Rubik',sans-serif; font-weight:700; font-size:0.85rem;
+    color:var(--indigo-deep); display:inline-flex; align-items:center; gap:6px;
+  }
+  .back-link:focus-visible{outline:2px solid var(--indigo-deep); outline-offset:3px;}
+  .back-link svg{width:16px; height:16px;}
+
+  .lesson-card{padding:16px 18px; margin-bottom:12px;}
+  .lesson-top{display:flex; align-items:center; gap:14px;}
+  .lesson-icon{width:52px; height:52px; flex:none;}
+  .lesson-info{flex:1; min-width:0;}
+  .lesson-tag-label{font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--indigo-deep);}
+  .lesson-title{font-family:'Righteous',sans-serif; font-size:1.05rem; margin-top:3px; line-height:1.3;}
+  .mini-stars{display:flex; gap:2px; margin-top:6px;}
+  .mini-stars svg{width:15px; height:15px;}
+  .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.95rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+
+  /* ---- Buttons ---- */
+  .btn{
+    font-family:'Righteous', sans-serif;
+    font-size:1.05rem;
+    border:none;
+    border-radius:14px;
+    padding:16px 20px;
+    cursor:pointer;
+    color:#04262A;
+    background:var(--accent);
+    box-shadow:0 6px 0 var(--accent-ink), 0 10px 18px -8px var(--shadow);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+    width:100%;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 var(--accent-ink), 0 6px 12px -8px var(--shadow);}
+  .btn:focus-visible{outline:3px solid var(--indigo-deep); outline-offset:3px;}
+  .btn.secondary{
+    background:transparent;
+    color:var(--indigo-deep);
+    box-shadow:none;
+    border:2px solid var(--indigo);
+  }
+  .btn.secondary:active{transform:translateY(1px);}
+  .btn-row{display:flex; gap:12px; margin-top:18px;}
+  .btn-row .btn{width:auto; flex:1;}
+
+  /* ---- Flashcards ---- */
+  .flash-dots{display:flex; justify-content:center; gap:8px; margin-bottom:18px;}
+  .flash-dots span{width:8px; height:8px; border-radius:50%; background:var(--border);}
+  .flash-dots span.on{background:var(--indigo);}
+  .flash-icon{width:76px; height:76px; margin:0 auto 14px; display:block;}
+  .flash-lesson-label{text-align:center; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px;}
+  .flash-title{font-size:1.25rem; font-family:'Righteous',sans-serif; color:var(--indigo-deep); text-align:center;}
+  .flash-text{font-size:1.1rem; line-height:1.55; text-align:center; margin-top:12px; color:var(--ink);}
+
+  /* ---- Quiz header ---- */
+  .quiz-head{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
+  .quiz-pc-mini{width:68px; height:48px; flex:none;}
+  .quiz-progress{flex:1;}
+  .quiz-progress-label{font-size:0.82rem; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em;}
+  .track-bar{height:10px; border-radius:6px; background:var(--bg-alt); overflow:hidden; margin-top:6px; border:1px solid var(--border);}
+  .track-fill{height:100%; background:linear-gradient(90deg, var(--indigo), var(--accent)); border-radius:6px; transition:width 0.4s ease;}
+
+  .q-kicker{font-size:0.78rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--indigo-deep); margin-bottom:8px;}
+  .q-text{font-size:1.3rem; font-family:'Righteous',sans-serif; line-height:1.35; margin-bottom:18px;}
+
+  .opt{
+    display:flex; align-items:center; gap:12px;
+    width:100%; text-align:left;
+    background:var(--bg-alt);
+    border:2px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    font-family:'Rubik',sans-serif;
+    font-weight:500;
+    font-size:1.02rem;
+    color:var(--ink);
+    cursor:pointer;
+    margin-bottom:10px;
+    transition:border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+  }
+  .opt:hover{border-color:var(--accent);}
+  .opt:active{transform:scale(0.99);}
+  .opt:focus-visible{outline:3px solid var(--indigo-deep); outline-offset:2px;}
+  .opt .bullet{width:22px; height:22px; flex:none; border-radius:50%; border:2px solid var(--ink-soft); opacity:0.55;}
+  .opt.correct{background:var(--good-soft); border-color:var(--good); color:var(--ink);}
+  .opt.correct .bullet{border-color:var(--good); background:var(--good);}
+  .opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .opt.wrong .bullet{border-color:var(--bad); background:var(--bad);}
+  .opt[disabled]{cursor:default;}
+
+  .tf-row{display:flex; gap:14px;}
+  .tf-btn{
+    flex:1; padding:26px 10px; border-radius:14px; border:2px solid var(--border);
+    background:var(--bg-alt); font-family:'Righteous',sans-serif; font-size:1.1rem;
+    display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; color:var(--ink);
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .tf-btn svg{width:34px; height:34px;}
+  .tf-btn:hover{border-color:var(--accent);}
+  .tf-btn:active{transform:scale(0.98);}
+  .tf-btn:focus-visible{outline:3px solid var(--indigo-deep); outline-offset:2px;}
+  .tf-btn.correct{background:var(--good-soft); border-color:var(--good);}
+  .tf-btn.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .tf-btn[disabled]{cursor:default;}
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; border-radius:14px; font-weight:500; font-size:0.98rem;
+    display:none; align-items:flex-start; gap:10px; line-height:1.45;
+  }
+  .feedback.show{display:flex; animation:pop 0.3s ease both;}
+  @media (prefers-reduced-motion: reduce){ .feedback.show{animation:none;} }
+  @keyframes pop{ from{opacity:0; transform:scale(0.95);} to{opacity:1; transform:none;} }
+  .feedback.good{background:var(--good-soft); color:var(--ink);}
+  .feedback.bad{background:var(--bad-soft); color:var(--ink);}
+  .feedback svg{width:22px; height:22px; flex:none; margin-top:1px;}
+
+  .next-wrap{margin-top:18px; display:none;}
+  .next-wrap.show{display:block;}
+
+  /* ---- Results ---- */
+  #screen-results .card{text-align:center;}
+  .result-pc{width:min(260px,74%); margin:6px auto 8px;}
+  .stars{display:flex; justify-content:center; gap:6px; margin:10px 0 4px;}
+  .stars svg{width:38px; height:38px;}
+  .result-score{font-size:1.3rem; font-family:'Righteous',sans-serif; color:var(--accent-ink); margin-top:6px;}
+  .result-msg{font-size:1.05rem; color:var(--ink-soft); font-weight:500; margin-top:8px; line-height:1.5;}
+
+  /* ---- PC SVG piece reveal ---- */
+  .piece{opacity:0; transform:scale(0.5); transform-box:fill-box; transform-origin:center; transition:opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1);}
+  .piece.revealed{opacity:1; transform:scale(1);}
+  @media (prefers-reduced-motion: reduce){ .piece{transition:opacity 0.2s ease;} .piece.revealed{transform:none;} }
+  .piece.base{opacity:1; transform:none; transition:none;}
+</style>
+
+<div class="app">
+  <p class="eyebrow">Computer 2 &middot; Byte Buddies</p>
+
+  <!-- HOME / LESSON MAP -->
+  <section id="screen-home" class="screen active">
+    <div class="hero">
+      <h1 class="hero-title">Byte Buddies</h1>
+      <p class="hero-sub">Pick a lesson and power up your PC!</p>
+      <svg class="hero-scene" viewBox="0 0 140 100" role="img" aria-label="A friendly desktop computer">
+        <rect x="6" y="84" width="128" height="4" fill="var(--case-dark)"/>
+        <rect x="112" y="44" width="22" height="40" rx="3" fill="var(--case)"/>
+        <circle cx="123" cy="50" r="1.8" fill="var(--amber)"/>
+        <rect x="20" y="48" width="12" height="24" rx="3" fill="var(--indigo)"/>
+        <circle cx="26" cy="56" r="3" fill="var(--indigo-deep)"/><circle cx="26" cy="64" r="3" fill="var(--indigo-deep)"/>
+        <rect x="96" y="48" width="12" height="24" rx="3" fill="var(--indigo)"/>
+        <circle cx="102" cy="56" r="3" fill="var(--indigo-deep)"/><circle cx="102" cy="64" r="3" fill="var(--indigo-deep)"/>
+        <rect x="60" y="72" width="12" height="10" fill="var(--case-dark)"/>
+        <rect x="50" y="80" width="32" height="4" rx="2" fill="var(--case-dark)"/>
+        <rect x="38" y="32" width="52" height="38" rx="4" fill="var(--case)"/>
+        <rect x="43" y="37" width="42" height="28" rx="2" fill="var(--screen-glow)"/>
+        <circle cx="58" cy="48" r="2.2" fill="var(--ink)"/><circle cx="70" cy="48" r="2.2" fill="var(--ink)"/>
+        <path d="M56 56c4 4 10 4 14 0" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/>
+        <rect x="30" y="72" width="44" height="10" rx="2" fill="var(--case)"/>
+        <ellipse cx="82" cy="76" rx="6" ry="8" fill="var(--case)"/>
+      </svg>
+    </div>
+    <div id="home-list"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="screen-flash" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-flash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Lesson List</button>
+      <p class="flash-lesson-label" id="flash-lesson-label"></p>
+      <div class="flash-dots" id="flash-dots"></div>
+      <div id="flash-body"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-flash-prev">Back</button>
+        <button class="btn" id="btn-flash-next">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Lesson List</button>
+      <div class="quiz-head">
+        <svg class="quiz-pc-mini" viewBox="0 0 140 100" role="img" aria-label="A computer being built as you answer">
+          <g id="pc-mini"></g>
+        </svg>
+        <div class="quiz-progress">
+          <div class="quiz-progress-label" id="q-count">Question 1 of 8</div>
+          <div class="track-bar"><div class="track-fill" id="track-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
+      <div class="q-text" id="q-text"></div>
+      <div id="q-options"></div>
+      <div class="feedback" id="q-feedback"></div>
+      <div class="next-wrap" id="next-wrap">
+        <button class="btn" id="btn-next">Next &rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen">
+    <div class="card">
+      <h2 style="font-size:1.4rem;color:var(--indigo-deep);">Quiz Complete!</h2>
+      <svg class="result-pc" viewBox="0 0 140 100" role="img" aria-label="Your fully built computer">
+        <g id="pc-final"></g>
+      </svg>
+      <div class="stars" id="stars"></div>
+      <div class="result-score" id="result-score"></div>
+      <p class="result-msg" id="result-msg"></p>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-retry">Retry Lesson</button>
+        <button class="btn" id="btn-go-home">Lesson List</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,13 9,18 20,6"/></svg>';
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+
+  function shuffle(arr){
+    for (var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function mc(q, opts, good, bad){
+    return { type:'mc', q:q, options: shuffle(opts.map(function(o){ return {text:o[0], correct:o[1]}; })), good:good, bad:bad };
+  }
+  function tf(q, answer, good, bad){
+    return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+
+  /* ================= LESSONS ================= */
+  var lessons = [
+    {
+      tag: 'Lesson 1',
+      title: 'Taking Care of Myself &amp; My Computer',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="18" y="20" width="40" height="28" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><rect x="32" y="48" width="12" height="8" fill="var(--accent)"/><rect x="26" y="56" width="24" height="4" fill="var(--accent)"/><path d="M38 26c-3-3-9-1-9 4 0 5 9 10 9 10s9-5 9-10c0-5-6-6-9-4z" fill="var(--amber)"/>',
+      flashcards: [
+        { title:'SIT PROPERLY', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="38" cy="24" r="7" fill="var(--accent)"/><path d="M30 56v-14a8 8 0 0 1 16 0v14" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><line x1="30" y1="56" x2="30" y2="62" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><line x1="46" y1="56" x2="46" y2="62" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>', text:'Sit with your back against the backrest, knees at a right angle, and feet flat on the floor.' },
+        { title:'MONITOR DISTANCE', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="20" y="24" width="36" height="26" rx="3" fill="var(--indigo)"/><rect x="30" y="50" width="16" height="6" fill="var(--indigo-deep)"/>', text:'Place the monitor directly in front of you, slightly below your eye level.' },
+        { title:'KEYBOARD &amp; MOUSE POSITION', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><rect x="16" y="34" width="36" height="12" rx="2" fill="var(--good)"/><ellipse cx="58" cy="40" rx="6" ry="8" fill="var(--good)"/>', text:'Bring your chair close to the keyboard, and keep the mouse near it so your arms don’t stretch too far.' },
+        { title:'TAKE SHORT BREAKS', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="38" cy="38" r="16" fill="none" stroke="var(--amber-deep)" stroke-width="3"/><line x1="38" y1="38" x2="38" y2="26" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/><line x1="38" y1="38" x2="47" y2="44" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/>', text:'Rest your eyes and stretch every 30 minutes to keep your body relaxed.' },
+        { title:'CLEAN &amp; DRY HANDS', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 16c8 12 14 20 14 28a14 14 0 1 1-28 0c0-8 6-16 14-28z" fill="var(--accent)"/>', text:'Make sure your hands are clean and dry before using the computer, and keep food and drinks away.' },
+        { title:'HANDLE WITH CARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Press keys softly, don’t touch the screen, and cover the computer when not in use.' }
+      ],
+      quiz: [
+        mc('What should your feet be like when sitting at the computer?', [['Flat on the floor',true],['Crossed',false],['Off the chair',false]], 'That’s right! Your feet should be flat on the floor.', 'The correct answer is Flat on the floor — this helps you sit properly.'),
+        tf('The monitor should be placed far above your eye level.', false, 'Correct! It should be slightly below your eye level, not far above.', 'The answer should be False — the monitor should be slightly below your eye level.'),
+        mc('Where should you keep the mouse?', [['Near the keyboard',true],['On the floor',false],['Far from the keyboard',false]], 'Yes! Keeping the mouse near the keyboard is best.', 'The mouse should be kept Near the keyboard so your arms don’t stretch too far.'),
+        tf('You should take a short break and stretch every 30 minutes.', true, 'That’s right! Short breaks help your body relax.', 'The answer should be True — take a short break and stretch every 30 minutes.'),
+        mc('What should you do before using the computer?', [['Make sure your hands are clean and dry',true],['Eat a snack',false],['Wet your hands',false]], 'Correct! Clean, dry hands protect the computer.', 'You should make sure your hands are clean and dry before using the computer.'),
+        tf('It is okay to keep food and drinks next to your computer.', false, 'That’s right! Food and drinks should be kept away from the computer.', 'The answer should be False — keep food and drinks away from your computer.'),
+        mc('How should you press the keys on the keyboard?', [['Softly',true],['As hard as you can',false],['With a pencil',false]], 'Yes! Pressing keys softly protects the keyboard.', 'You should press the keys Softly.'),
+        tf('You should cover your computer when it is not in use.', true, 'Correct! Covering it keeps it free from dust and dirt.', 'The answer should be True — cover your computer when it is not in use.')
+      ]
+    },
+    {
+      tag: 'Lesson 2',
+      title: 'Computer Laboratory Rules',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><rect x="22" y="18" width="32" height="40" rx="4" fill="var(--card)" stroke="var(--good)" stroke-width="2"/><rect x="30" y="14" width="16" height="8" rx="2" fill="var(--good)"/><polyline points="28,34 33,39 44,28" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="28" y="46" width="20" height="3" fill="var(--good)"/>',
+      flashcards: [
+        { title:'LINE UP QUIETLY', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><circle cx="26" cy="30" r="6" fill="var(--indigo)"/><circle cx="40" cy="30" r="6" fill="var(--indigo)"/><circle cx="54" cy="30" r="6" fill="var(--indigo)"/><rect x="20" y="40" width="12" height="16" rx="3" fill="var(--indigo)"/><rect x="34" y="40" width="12" height="16" rx="3" fill="var(--indigo)"/><rect x="48" y="40" width="12" height="16" rx="3" fill="var(--indigo)"/>', text:'Line up quietly by the door — no pushing, screaming, or running.' },
+        { title:'WAIT FOR INSTRUCTIONS', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="18" y="20" width="40" height="28" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><circle cx="38" cy="34" r="7" fill="var(--accent)"/>', text:'Sit at your assigned seat and wait for your teacher’s instructions before touching the computer.' },
+        { title:'RAISE YOUR HAND', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><path d="M30 54V32a4 4 0 0 1 8 0v10M38 42v-16a4 4 0 0 1 8 0v16M46 42v-8a4 4 0 0 1 8 0v14c0 10-6 16-14 16s-14-6-14-14" fill="none" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Raise your hand if you need help or have a question.' },
+        { title:'USE ONLY WHAT YOU’RE TOLD', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><rect x="20" y="24" width="36" height="26" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="2"/><line x1="24" y1="28" x2="52" y2="46" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"/>', text:'Open only the programs your teacher tells you to use — no games or random websites.' },
+        { title:'SAVE YOUR WORK', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M22 22h26l8 8v24H22z" fill="var(--good)"/><rect x="28" y="22" width="14" height="10" fill="var(--card)"/><rect x="27" y="40" width="22" height="12" fill="var(--card)"/>', text:'Always remember to save your work and keep your files organized.' }
+      ],
+      quiz: [
+        mc('What should you do when lining up to enter the computer laboratory?', [['Line up quietly',true],['Push and run',false],['Scream loudly',false]], 'That’s right! We line up quietly.', 'You should Line up quietly — no pushing, screaming, or running.'),
+        tf('You should touch the computer right away before your teacher gives instructions.', false, 'Correct! Wait for instructions first.', 'The answer should be False — wait for your teacher’s instructions before touching the computer.'),
+        mc('What should you do if you need help from your teacher?', [['Raise your hand',true],['Shout across the room',false],['Leave your seat',false]], 'Yes! Raising your hand is the right way to ask for help.', 'You should Raise your hand if you need help or have a question.'),
+        tf('You may open any program or website you like during computer class.', false, 'That’s right! Only open what your teacher instructs.', 'The answer should be False — open only the programs your teacher tells you to use.'),
+        mc('What should you remember to do with your work?', [['Save it and keep files organized',true],['Delete it',false],['Ignore it',false]], 'Correct! Saving and organizing your work matters.', 'You should Save your work and keep your files organized.'),
+        tf('You should eat and drink while using the computer laboratory computers.', false, 'Correct! Food and drinks should stay away from the lab computers.', 'The answer should be False — do not eat or drink inside the computer laboratory.'),
+        mc('When should you turn off the computer?', [['When your teacher instructs you to',true],['Whenever you want',false],['Right when you sit down',false]], 'That’s right! Only turn it off when told to.', 'You should turn off the computer only When your teacher instructs you to.'),
+        tf('Before leaving, you should push back your chair and pick up litter.', true, 'Yes! Leave your area the way you found it.', 'The answer should be True — push back your chair and pick up litter before leaving.')
+      ]
+    },
+    {
+      tag: 'Lesson 3',
+      title: 'Elements of a Computer System',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="24" y="18" width="28" height="40" rx="3" fill="var(--indigo)"/><circle cx="38" cy="28" r="4" fill="var(--card)"/><rect x="30" y="38" width="16" height="3" fill="var(--card)"/><rect x="30" y="45" width="16" height="3" fill="var(--card)"/>',
+      flashcards: [
+        { title:'HARDWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="24" y="18" width="28" height="40" rx="3" fill="var(--indigo)"/><circle cx="38" cy="28" r="4" fill="var(--card)"/><rect x="30" y="38" width="16" height="3" fill="var(--card)"/><rect x="30" y="45" width="16" height="3" fill="var(--card)"/>', text:'The physical parts of a computer that we can see and touch, like the monitor, keyboard, and mouse.' },
+        { title:'SOFTWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="18" y="24" width="40" height="28" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><polygon points="32,32 32,44 44,38" fill="var(--accent)"/>', text:'The programs in our computer that tell the hardware what to do, like Windows or Microsoft Word.' },
+        { title:'PEOPLEWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="28" cy="30" r="7" fill="var(--amber-deep)"/><circle cx="48" cy="30" r="7" fill="var(--amber-deep)"/><path d="M16 56c2-10 9-14 12-14s10 4 12 14M40 56c2-10 9-14 12-14s6 2 8 6" fill="none" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/>', text:'The people who use the computer, like our teachers, classmates, and ourselves.' },
+        { title:'WORKING TOGETHER', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><circle cx="26" cy="38" r="9" fill="var(--good)"/><circle cx="50" cy="38" r="9" fill="var(--indigo)"/><circle cx="38" cy="24" r="9" fill="var(--amber)"/>', text:'Hardware, software, and peopleware all work together to make a computer system useful.' },
+        { title:'PARTS OF A COMPUTER', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="38" y="32" width="52" height="38" rx="4" fill="var(--indigo)" transform="translate(-19,-11) scale(0.7)"/><rect x="16" y="20" width="44" height="32" rx="3" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><rect x="24" y="28" width="28" height="16" fill="var(--indigo-soft)"/>', text:'The monitor, keyboard, mouse, hard disk, RAM, speakers, motherboard, and fan are all parts of a computer.' }
+      ],
+      quiz: [
+        mc('What do we call the physical parts of a computer that we can see and touch?', [['Hardware',true],['Software',false],['Peopleware',false]], 'That’s right! Those are hardware.', 'The physical parts we can see and touch are called Hardware.'),
+        tf('The monitor and keyboard are examples of hardware.', true, 'Correct! They are physical parts we can touch.', 'The answer should be True — the monitor and keyboard are examples of hardware.'),
+        mc('What do we call the programs that tell the hardware what to do?', [['Software',true],['Hardware',false],['Peopleware',false]], 'Yes! Those are software.', 'Programs that tell the hardware what to do are called Software.'),
+        tf('Microsoft Word is an example of hardware.', false, 'Correct! Microsoft Word is software, not hardware.', 'The answer should be False — Microsoft Word is an example of software.'),
+        mc('Who are considered "peopleware"?', [['The people using the computer',true],['The computer programs',false],['The computer parts',false]], 'That’s right! Peopleware are the people who use the computer.', 'Peopleware refers to The people using the computer.'),
+        mc('Which of these is an example of software?', [['Microsoft Paint',true],['Mouse',false],['Monitor',false]], 'Correct! Microsoft Paint is a program, so it’s software.', 'Microsoft Paint is an example of Software.'),
+        tf('Hardware, software, and peopleware all work together in a computer system.', true, 'Yes! All three work together to make the system useful.', 'The answer should be True — hardware, software, and peopleware all work together.'),
+        mc('What part of the computer do we use to see the screen?', [['Monitor',true],['Speaker',false],['Fan',false]], 'That’s right! We use the monitor to see the screen.', 'We use the Monitor to see the screen.')
+      ]
+    }
+  ];
+
+  /* ================= Computer SVG ================= */
+  function pcMarkup(){
+    return ''
+      + '<rect class="piece base" data-piece="0" x="6" y="84" width="128" height="4" fill="var(--case-dark)"/>'
+      + '<g class="piece" data-piece="1"><rect x="112" y="44" width="22" height="40" rx="3" fill="var(--case)"/><rect x="117" y="50" width="3" height="14" fill="var(--case-dark)"/><rect x="117" y="68" width="3" height="10" fill="var(--case-dark)"/></g>'
+      + '<g class="piece" data-piece="2"><rect x="60" y="72" width="12" height="10" fill="var(--case-dark)"/><rect x="50" y="80" width="32" height="4" rx="2" fill="var(--case-dark)"/></g>'
+      + '<g class="piece" data-piece="3"><rect x="38" y="32" width="52" height="38" rx="4" fill="var(--case)"/><rect x="43" y="37" width="42" height="28" rx="2" fill="var(--ink)"/></g>'
+      + '<g class="piece" data-piece="4"><rect x="30" y="72" width="44" height="10" rx="2" fill="var(--case)"/><rect x="34" y="75" width="6" height="2" fill="var(--case-dark)"/><rect x="42" y="75" width="6" height="2" fill="var(--case-dark)"/><rect x="50" y="75" width="6" height="2" fill="var(--case-dark)"/><rect x="58" y="75" width="6" height="2" fill="var(--case-dark)"/><rect x="66" y="75" width="6" height="2" fill="var(--case-dark)"/></g>'
+      + '<g class="piece" data-piece="5"><ellipse cx="82" cy="76" rx="6" ry="8" fill="var(--case)"/><line x1="82" y1="70" x2="82" y2="76" stroke="var(--case-dark)" stroke-width="1.5"/></g>'
+      + '<g class="piece" data-piece="6"><rect x="20" y="48" width="12" height="24" rx="3" fill="var(--indigo)"/><circle cx="26" cy="56" r="3" fill="var(--indigo-deep)"/><circle cx="26" cy="64" r="3" fill="var(--indigo-deep)"/><rect x="96" y="48" width="12" height="24" rx="3" fill="var(--indigo)"/><circle cx="102" cy="56" r="3" fill="var(--indigo-deep)"/><circle cx="102" cy="64" r="3" fill="var(--indigo-deep)"/></g>'
+      + '<g class="piece" data-piece="7"><circle cx="123" cy="50" r="1.8" fill="var(--amber)"/><path d="M60 82v4M120 84v-6" stroke="var(--case-dark)" stroke-width="1.5" fill="none"/></g>'
+      + '<g class="piece" data-piece="8"><rect x="43" y="37" width="42" height="28" rx="2" fill="var(--screen-glow)"/><circle cx="58" cy="48" r="2.2" fill="var(--ink)"/><circle cx="70" cy="48" r="2.2" fill="var(--ink)"/><path d="M56 56c4 4 10 4 14 0" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/></g>';
+  }
+  document.getElementById('pc-mini').innerHTML = pcMarkup();
+  document.getElementById('pc-final').innerHTML = pcMarkup();
+
+  function revealPiece(n){
+    document.querySelectorAll('[data-piece="'+n+'"]').forEach(function(el){ el.classList.add('revealed'); });
+  }
+  function resetPc(){
+    document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
+  }
+  function starsMarkup(filledCount, total){
+    var out = '';
+    for (var i = 1; i <= total; i++){
+      var filled = i <= filledCount;
+      out += '<svg viewBox="0 0 24 24" fill="' + (filled ? 'var(--amber)' : 'none') + '" stroke="var(--amber)" stroke-width="' + (total > 3 ? '2' : '1.6') + '"><polygon points="12,2 15,9 22,9.5 16.5,14.2 18.5,21.5 12,17.5 5.5,21.5 7.5,14.2 2,9.5 9,9"/></svg>';
+    }
+    return out;
+  }
+
+  /* ================= Screens ================= */
+  var screens = ['home','flash','quiz','results'];
+  function showScreen(name){
+    screens.forEach(function(s){
+      document.getElementById('screen-'+s).classList.toggle('active', s === name);
+    });
+  }
+
+  /* ================= Home ================= */
+  function renderHome(){
+    var list = document.getElementById('home-list');
+    list.innerHTML = lessons.map(function(l, i){
+      return '<div class="card lesson-card">' +
+        '<div class="lesson-top">' +
+          '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
+          '<div class="lesson-info">' +
+            '<div class="lesson-tag-label">' + l.tag + '</div>' +
+            '<div class="lesson-title">' + l.title + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(l.stars, 3) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn" data-lesson="' + i + '">' + (l.stars > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
+      '</div>';
+    }).join('');
+    list.querySelectorAll('button[data-lesson]').forEach(function(b){
+      b.addEventListener('click', function(){
+        currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
+        flashIdx = 0;
+        renderFlash();
+        showScreen('flash');
+      });
+    });
+  }
+  function goHome(){ renderHome(); showScreen('home'); }
+  document.getElementById('back-from-flash').addEventListener('click', goHome);
+  document.getElementById('back-from-quiz').addEventListener('click', goHome);
+  document.getElementById('btn-go-home').addEventListener('click', goHome);
+
+  /* ================= Flashcards ================= */
+  var currentLesson = 0;
+  var flashIdx = 0;
+  function renderFlash(){
+    var lesson = lessons[currentLesson];
+    var f = lesson.flashcards[flashIdx];
+    document.getElementById('flash-lesson-label').textContent = lesson.title.replace(/&amp;/g,'&');
+    document.getElementById('flash-body').innerHTML =
+      '<svg class="flash-icon" viewBox="0 0 76 76">' + f.icon + '</svg>' +
+      '<h3 class="flash-title">' + f.title + '</h3>' +
+      '<p class="flash-text">' + f.text + '</p>';
+    document.getElementById('flash-dots').innerHTML = lesson.flashcards.map(function(_, i){
+      return '<span class="' + (i === flashIdx ? 'on' : '') + '"></span>';
+    }).join('');
+    document.getElementById('btn-flash-prev').style.visibility = flashIdx === 0 ? 'hidden' : 'visible';
+    document.getElementById('btn-flash-next').textContent = flashIdx === lesson.flashcards.length - 1 ? 'Start Quiz' : 'Next';
+  }
+  document.getElementById('btn-flash-prev').addEventListener('click', function(){
+    if (flashIdx > 0){ flashIdx--; renderFlash(); }
+  });
+  document.getElementById('btn-flash-next').addEventListener('click', function(){
+    var lesson = lessons[currentLesson];
+    if (flashIdx < lesson.flashcards.length - 1){ flashIdx++; renderFlash(); }
+    else { startQuiz(); }
+  });
+
+  /* ================= Quiz ================= */
+  var qIdx = 0, score = 0, answered = false;
+
+  function startQuiz(){
+    qIdx = 0; score = 0; resetPc();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function decode(str){
+    return str
+      .replace(/&ldquo;/g,'“').replace(/&rdquo;/g,'”')
+      .replace(/&rsquo;/g,'’').replace(/&mdash;/g,'—').replace(/&amp;/g,'&');
+  }
+
+  function renderQuestion(){
+    answered = false;
+    var quizData = lessons[currentLesson].quiz;
+    var item = quizData[qIdx];
+    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + quizData.length;
+    document.getElementById('track-fill').style.width = Math.round((qIdx / quizData.length) * 100) + '%';
+    document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
+    document.getElementById('q-text').textContent = decode(item.q);
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback'; fb.innerHTML = '';
+    document.getElementById('next-wrap').classList.remove('show');
+
+    var optWrap = document.getElementById('q-options');
+    optWrap.innerHTML = '';
+
+    if (item.type === 'tf'){
+      var row = document.createElement('div');
+      row.className = 'tf-row';
+      var trueBtn = document.createElement('button');
+      trueBtn.className = 'tf-btn'; trueBtn.innerHTML = CHECK_ICON + '<span>True</span>';
+      var falseBtn = document.createElement('button');
+      falseBtn.className = 'tf-btn'; falseBtn.innerHTML = X_ICON + '<span>False</span>';
+      trueBtn.addEventListener('click', function(){ handleTF(true, trueBtn); });
+      falseBtn.addEventListener('click', function(){ handleTF(false, falseBtn); });
+      row.appendChild(trueBtn); row.appendChild(falseBtn);
+      optWrap.appendChild(row);
+    } else {
+      item.options.forEach(function(opt){
+        var b = document.createElement('button');
+        b.className = 'opt';
+        b.innerHTML = '<span class="bullet"></span><span>' + decode(opt.text) + '</span>';
+        b.addEventListener('click', function(){ handleMC(opt, b, optWrap); });
+        optWrap.appendChild(b);
+      });
+    }
+  }
+
+  function lockOptions(){
+    document.querySelectorAll('.opt, .tf-btn').forEach(function(el){ el.disabled = true; });
+  }
+
+  function showFeedback(isCorrect){
+    var quizData = lessons[currentLesson].quiz;
+    var item = quizData[qIdx];
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
+    fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
+    document.getElementById('next-wrap').classList.add('show');
+    if (isCorrect){ score++; revealPiece(qIdx + 1); }
+  }
+
+  function handleMC(opt, btnEl, optWrap){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var quizData = lessons[currentLesson].quiz;
+    optWrap.querySelectorAll('.opt').forEach(function(el, i){
+      var thisOpt = quizData[qIdx].options[i];
+      if (thisOpt.correct) el.classList.add('correct');
+      else if (el === btnEl) el.classList.add('wrong');
+    });
+    showFeedback(opt.correct);
+  }
+
+  function handleTF(choice, chosenBtn){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var quizData = lessons[currentLesson].quiz;
+    var correct = quizData[qIdx].answer;
+    var isRight = (choice === correct);
+    chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
+    if (!isRight){
+      var rightBtn = (correct === true) ? chosenBtn.parentElement.children[0] : chosenBtn.parentElement.children[1];
+      rightBtn.classList.add('correct');
+    }
+    showFeedback(isRight);
+  }
+
+  document.getElementById('btn-next').addEventListener('click', function(){
+    var quizData = lessons[currentLesson].quiz;
+    if (qIdx < quizData.length - 1){ qIdx++; renderQuestion(); }
+    else { finishQuiz(); }
+  });
+
+  function finishQuiz(){
+    document.getElementById('track-fill').style.width = '100%';
+    var quizData = lessons[currentLesson].quiz;
+    var total = quizData.length;
+    var starCount = score === total ? 3 : (score >= Math.ceil(total * 0.6) ? 2 : 1);
+    lessons[currentLesson].stars = Math.max(lessons[currentLesson].stars, starCount);
+    document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
+    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right!';
+    var msg;
+    if (starCount === 3) msg = 'Powered up! Your computer is fully built and glowing — great work!';
+    else if (starCount === 2) msg = 'Nice work! Your computer is almost built — try again to finish the setup!';
+    else msg = 'Good try! Let’s review the lesson and build it again — you can do it!';
+    document.getElementById('result-msg').textContent = msg;
+    showScreen('results');
+  }
+
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    lessons[currentLesson].quiz.forEach(function(item){ if (item.options) shuffle(item.options); });
+    startQuiz();
+  });
+
+  renderHome();
+})();
+</script>
