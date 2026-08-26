@@ -1,0 +1,588 @@
+<title>Kuwentista</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chewy&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF6EC; --surface:#FFFFFF; --surface2:#FBEADF;
+  --ink:#2B2440; --ink-soft:#6A6083;
+  --accent:#D6467E; --accent-ink:#FFFFFF;
+  --gold:#F2A83C; --navy:#2C4A6E;
+  --good:#2F9C5D; --bad:#D8433A;
+  --border:#F0DCC7;
+  --shadow: 0 8px 24px rgba(214,70,126,0.14);
+  --radius:20px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1D1626; --surface:#2A2036; --surface2:#352840;
+    --ink:#F5EEFB; --ink-soft:#C3B6D6;
+    --accent:#F073A0; --accent-ink:#1D1626;
+    --gold:#F5C168; --navy:#7FA6D6;
+    --good:#4FCB84; --bad:#F0766B;
+    --border:#443652;
+    --shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1D1626; --surface:#2A2036; --surface2:#352840;
+  --ink:#F5EEFB; --ink-soft:#C3B6D6;
+  --accent:#F073A0; --accent-ink:#1D1626;
+  --gold:#F5C168; --navy:#7FA6D6;
+  --good:#4FCB84; --bad:#F0766B;
+  --border:#443652;
+  --shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Poppins',system-ui,sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Chewy',cursive; font-weight:400; letter-spacing:0.01em;}
+.app{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
+.hidden{display:none !important;}
+button{font-family:inherit; cursor:pointer;}
+button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+/* HOME */
+.hero{display:flex; align-items:center; gap:14px; margin:10px 0 20px;}
+.hero-book{width:84px; height:84px; flex:none;}
+.hero h1{font-size:2.2rem; margin:0; color:var(--accent);}
+.hero p{margin:4px 0 0; color:var(--ink-soft); font-size:0.95rem;}
+.lesson-grid{display:grid; gap:14px;}
+.lesson-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
+  text-align:left; width:100%;
+}
+.lesson-emoji{font-size:2rem; flex:none; width:52px; height:52px; border-radius:14px;
+  background:var(--surface2); display:flex; align-items:center; justify-content:center;}
+.lesson-info{flex:1; min-width:0;}
+.lesson-info h3{margin:0 0 2px; font-size:1.1rem;}
+.lesson-info p{margin:0; color:var(--ink-soft); font-size:0.85rem;}
+.stars{margin-top:6px; font-size:0.95rem; letter-spacing:2px;}
+.star-on{color:var(--gold);}
+.star-off{color:var(--border);}
+.go-btn{
+  flex:none; background:var(--accent); color:var(--accent-ink); border:none; border-radius:12px;
+  padding:10px 16px; font-weight:700; font-size:0.85rem;
+}
+
+/* FLASHCARDS */
+.screen-head{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+.back-btn{background:none; border:none; color:var(--accent); font-weight:700; font-size:0.95rem; padding:6px 4px;}
+.screen-head h2{margin:0; font-size:1.35rem; flex:1;}
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:32px 24px; box-shadow:var(--shadow); gap:14px;
+}
+.card-icon{font-size:2.6rem;}
+.card-term{font-family:'Chewy',cursive; font-size:1.5rem; color:var(--accent);}
+.card-def{font-size:1.02rem; color:var(--ink-soft); line-height:1.5;}
+.card-nav{display:flex; justify-content:space-between; align-items:center; margin-top:16px; gap:10px;}
+.nav-btn{
+  background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:12px;
+  padding:12px 18px; font-weight:600;
+}
+.nav-btn:disabled{opacity:0.4; cursor:default;}
+.dots{display:flex; gap:6px;}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--border);}
+.dot.active{background:var(--accent);}
+.primary-btn{
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:14px;
+  padding:14px 22px; font-weight:700; font-size:1rem; width:100%; margin-top:18px;
+}
+
+/* QUIZ */
+.quiz-top{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+.progress-bar{flex:1; height:10px; background:var(--surface2); border-radius:6px; overflow:hidden;}
+.progress-fill{height:100%; background:var(--accent); transition:width .3s;}
+.quiz-book{width:46px; height:46px; flex:none;}
+.q-text{font-size:1.15rem; font-weight:700; margin:6px 0 16px;}
+.options{display:grid; gap:10px;}
+.option{
+  background:var(--surface); border:2px solid var(--border); border-radius:14px; padding:14px 16px;
+  text-align:left; font-size:1rem; font-weight:600; color:var(--ink);
+}
+.option.correct{border-color:var(--good); background:color-mix(in srgb, var(--good) 14%, var(--surface));}
+.option.incorrect{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--surface));}
+.option:disabled{cursor:default;}
+.feedback{margin-top:14px; padding:14px 16px; border-radius:14px; font-size:0.95rem; line-height:1.5;}
+.feedback.good{background:color-mix(in srgb, var(--good) 16%, var(--surface)); color:var(--ink);}
+.feedback.bad{background:color-mix(in srgb, var(--bad) 16%, var(--surface)); color:var(--ink);}
+.feedback strong{display:block; margin-bottom:4px; font-family:'Chewy',cursive; font-size:1.05rem;}
+
+/* RESULTS */
+.results{text-align:center; padding:20px 10px;}
+.results-book{width:180px; height:180px; margin:0 auto 14px;}
+.results h2{font-size:1.75rem; color:var(--accent); margin:0 0 4px;}
+.score-line{font-size:1.05rem; color:var(--ink-soft); margin-bottom:10px;}
+.results-stars{font-size:2rem; letter-spacing:8px; margin-bottom:18px;}
+.results-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+.secondary-btn{
+  background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:14px;
+  padding:12px 20px; font-weight:600;
+}
+
+/* book pieces */
+.piece{opacity:0; transform:scale(0.6); transform-origin:center; transition:opacity .35s ease, transform .35s ease;}
+.piece.on{opacity:1; transform:scale(1);}
+</style>
+
+<div class="app">
+
+  <!-- HOME -->
+  <section id="screen-home">
+    <div class="hero">
+      <svg class="hero-book" viewBox="0 0 200 200" id="hero-book-svg"></svg>
+      <div>
+        <h1>Kuwentista</h1>
+        <p>Alamin ang wikang Filipino, sagutan ang pagsusulit, at buuin ang iyong sariling kuwento pahina-pahina!</p>
+      </div>
+    </div>
+    <div class="lesson-grid" id="lesson-grid"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="screen-cards" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="goHome()">&larr; Balik</button>
+      <h2 id="cards-title"></h2>
+    </div>
+    <div class="card">
+      <div class="card-icon" id="card-icon"></div>
+      <div class="card-term" id="card-term"></div>
+      <div class="card-def" id="card-def"></div>
+    </div>
+    <div class="card-nav">
+      <button class="nav-btn" id="card-prev" onclick="cardStep(-1)">&larr; Balik</button>
+      <div class="dots" id="card-dots"></div>
+      <button class="nav-btn" id="card-next" onclick="cardStep(1)">Susunod &rarr;</button>
+    </div>
+    <button class="primary-btn" onclick="startQuiz()">Simulan ang Pagsusulit!</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="goHome()">&larr; Balik</button>
+      <h2 id="quiz-title"></h2>
+    </div>
+    <div class="quiz-top">
+      <div class="progress-bar"><div class="progress-fill" id="quiz-progress"></div></div>
+      <svg class="quiz-book" viewBox="0 0 200 200" id="quiz-book-svg"></svg>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="q-options"></div>
+    <div id="q-feedback"></div>
+    <button class="primary-btn hidden" id="q-next-btn" onclick="nextQuestion()">Susunod &rarr;</button>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="hidden">
+    <div class="results">
+      <svg class="results-book" viewBox="0 0 200 200" id="results-book-svg"></svg>
+      <h2 id="results-heading"></h2>
+      <div class="score-line" id="results-score"></div>
+      <div class="results-stars" id="results-stars"></div>
+      <div class="results-actions">
+        <button class="primary-btn" style="width:auto" onclick="retryLesson()">Ulitin</button>
+        <button class="secondary-btn" onclick="goHome()">Balik sa Aralin</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const LESSONS = [
+  {
+    id:'alpabeto', emoji:'🔤', title:'Alpabetong Pilipino', subtitle:'Ang mga Titik ng Wikang Filipino',
+    flashcards:[
+      {icon:'🔡', term:'Alpabetong Filipino', def:'Binubuo ng 28 na titik: 20 mula sa Abakada, at 8 dagdag mula sa Ingles at Espanyol.'},
+      {icon:'🅰️', term:'Patinig (Vowels)', def:'A, E, I, O, U — limang patinig sa Filipino.'},
+      {icon:'🔠', term:'Katinig (Consonants)', def:'Ang mga letrang hindi patinig, tulad ng B, K, D, G, at marami pang iba.'},
+      {icon:'✨', term:'Ñ at NG', def:'Dalawang natatanging titik. Ang Ñ ay binibigkas nang pa-Espanyol.'},
+      {icon:'🔡', term:'Malaki at Maliit na Titik', def:'Kailangan malaman kung paano isulat at basahin ang malaking titik (uppercase) at maliit na titik (lowercase).'},
+    ],
+    quiz:[
+      {q:'Ilang titik mayroon ang Alpabetong Filipino?', options:['26','28','20','30'], correct:1, explain:'May 28 na titik ang Alpabetong Filipino.'},
+      {q:'Ilan ang patinig sa Filipino?', options:['5','6','4','7'], correct:0, explain:'May limang patinig: A, E, I, O, U.'},
+      {q:'Alin dito ang patinig?', options:['B','K','E','T'], correct:2, explain:'Ang E ay isa sa limang patinig sa Filipino.'},
+      {q:'Alin dito ang katinig?', options:['A','O','M','U'], correct:2, explain:'Ang M ay katinig, hindi patinig.'},
+      {q:'Tama o Mali: Ang Ñ ay binibigkas nang pa-Ingles.', options:['Tama','Mali'], correct:1, explain:'Ang Ñ ay binibigkas nang pa-Espanyol, hindi pa-Ingles.'},
+      {q:'Ilang letra ang dagdag mula sa Ingles at Espanyol sa Abakada?', options:['8','10','5','20'], correct:0, explain:'May 8 dagdag na letra mula sa Ingles at Espanyol.'},
+      {q:'Ano ang unang letra ng Alpabetong Filipino?', options:['A','B','Z','NG'], correct:0, explain:'Ang A ang unang titik ng Alpabetong Filipino.'},
+      {q:'Tama o Mali: Mahalaga ang wastong paggamit ng titik para malinaw ang kahulugan ng salita.', options:['Tama','Mali'], correct:0, explain:'Tama — ang wastong titik ay nagpapalinaw ng kahulugan ng salita.'},
+    ]
+  },
+  {
+    id:'pangngalan', emoji:'🏷️', title:'Uri ng Pangngalan', subtitle:'Pambalana at Pantangi',
+    flashcards:[
+      {icon:'🏷️', term:'Pangngalan', def:'Bahagi ng pananalita na tumutukoy sa pangalan ng tao, hayop, bagay, lugar, o pangyayari.'},
+      {icon:'🔡', term:'Pambalana', def:'Karaniwang ngalan; nagsisimula sa maliit na titik. Hal: guro, aso, paaralan.'},
+      {icon:'🔠', term:'Pantangi', def:'Tiyak o espesipikong ngalan; laging nagsisimula sa malaking titik. Hal: Maynila, Bantay.'},
+      {icon:'🧑', term:'Halimbawa: Jose Rizal', def:'Ito ay Pantangi dahil tiyak na pangalan ng isang tao.'},
+      {icon:'🏫', term:'Halimbawa: paaralan', def:'Ito ay Pambalana dahil karaniwang ngalan ng isang lugar.'},
+    ],
+    quiz:[
+      {q:'Ano ang pangngalan?', options:['pangalan ng tao, hayop, bagay, lugar, o pangyayari','salitang naglalarawan','salitang kumikilos','panghalili sa pangngalan'], correct:0, explain:'Ang pangngalan ay tumutukoy sa pangalan ng tao, hayop, bagay, lugar, o pangyayari.'},
+      {q:'"Si Jose Rizal ay bayani." Ano ang uri ng "Jose Rizal"?', options:['Pambalana','Pantangi'], correct:1, explain:'"Jose Rizal" ay Pantangi — tiyak na pangalan ng isang tao.'},
+      {q:'"Nasa paaralan ang mga bata." Ano ang uri ng "paaralan"?', options:['Pambalana','Pantangi'], correct:0, explain:'"paaralan" ay Pambalana — karaniwang ngalan ng isang lugar.'},
+      {q:'Tama o Mali: Ang Pangngalang Pantangi ay laging nagsisimula sa malaking titik.', options:['Tama','Mali'], correct:0, explain:'Tama — laging malaking titik ang unang letra ng Pantangi.'},
+      {q:'Alin sa mga ito ang halimbawa ng Pambalana?', options:['Maynila','aso','Bantay','Ana'], correct:1, explain:'"aso" ay karaniwang ngalan ng hayop kaya ito ay Pambalana.'},
+      {q:'Alin sa mga ito ang halimbawa ng Pantangi?', options:['guro','upuan','Ginoong Santos','libro'], correct:2, explain:'"Ginoong Santos" ay tiyak na pangalan ng isang tao kaya ito ay Pantangi.'},
+      {q:'Tama o Mali: Ang Pambalana ay nagsisimula sa malaking titik maliban kung ito ay nasa simula ng pangungusap.', options:['Tama','Mali'], correct:0, explain:'Tama — hindi ito nagsisimula sa malaking titik maliban na lamang kung nasa simula ng pangungusap.'},
+      {q:'"May aklat sa mesa." Ano ang uri ng "aklat"?', options:['Pambalana','Pantangi'], correct:0, explain:'"aklat" ay Pambalana — karaniwang ngalan ng isang bagay.'},
+    ]
+  },
+  {
+    id:'panghalip', emoji:'🙋', title:'Panghalip: Panao at Pananong', subtitle:'Ako, Ikaw, Siya... Sino? Ano?',
+    flashcards:[
+      {icon:'🔁', term:'Panghalip', def:'Salitang ipinapalit sa pangngalan upang maiwasan ang paulit-ulit na paggamit ng salita.'},
+      {icon:'🙋', term:'Panghalip Panao', def:'Panghalili sa ngalan ng tao. Hal: ako, ikaw, siya, tayo, sila.'},
+      {icon:'1️⃣', term:'Unang Panauhan', def:'Tumutukoy sa nagsasalita: ako, ko, akin, tayo, kami.'},
+      {icon:'2️⃣', term:'Ikalawang Panauhan', def:'Tumutukoy sa kinakausap: ikaw, ka, mo, kayo, inyo.'},
+      {icon:'3️⃣', term:'Ikatlong Panauhan', def:'Tumutukoy sa pinag-uusapan: siya, niya, sila, kanila.'},
+      {icon:'❓', term:'Panghalip Pananong', def:'Ginagamit sa pagtatanong: sino, ano, saan, kailan, ilan, bakit, paano. Laging may (?) sa dulo.'},
+    ],
+    quiz:[
+      {q:'Ano ang panghalip?', options:['salitang ipinapalit sa pangngalan','salitang naglalarawan','salitang kumikilos','pangalan ng bagay'], correct:0, explain:'Ang panghalip ay ginagamit panghalili sa pangngalan.'},
+      {q:'"Ako ay aalis mamayang gabi." Anong panauhan ang "Ako"?', options:['Una','Ikalawa','Ikatlo'], correct:0, explain:'"Ako" ay tumutukoy sa nagsasalita, kaya ito ay Unang Panauhan.'},
+      {q:'"Ikaw at ako ay sasama kay Ate." Anong panauhan ang "Ikaw"?', options:['Una','Ikalawa','Ikatlo'], correct:1, explain:'"Ikaw" ay tumutukoy sa kinakausap, kaya ito ay Ikalawang Panauhan.'},
+      {q:'"Sila ay may pupuntahan." Anong panauhan ang "Sila"?', options:['Una','Ikalawa','Ikatlo'], correct:2, explain:'"Sila" ay tumutukoy sa pinag-uusapan, kaya ito ay Ikatlong Panauhan.'},
+      {q:'Alin sa mga ito ang panghalip pananong?', options:['siya','tayo','Sino','kami'], correct:2, explain:'"Sino" ay ginagamit sa pagtatanong kaya ito ay panghalip pananong.'},
+      {q:'Tama o Mali: Ang panghalip pananong ay laging may tandang pananong (?) sa dulo ng pangungusap.', options:['Tama','Mali'], correct:0, explain:'Tama — laging may (?) ang pangungusap na gumagamit ng panghalip pananong.'},
+      {q:'"___ ang dala mo?" Anong panghalip pananong ang bagay dito?', options:['Sino','Ano','Saan','Kailan'], correct:1, explain:'"Ano" ang ginagamit kapag tinatanong ang isang bagay.'},
+      {q:'Tama o Mali: Ang panghalip panao ay ginagamit kapag nagtatanong.', options:['Tama','Mali'], correct:1, explain:'Mali — ang panghalip panao ay panghalili sa ngalan ng tao; ang panghalip pananong ang ginagamit sa pagtatanong.'},
+    ]
+  },
+  {
+    id:'magkatugma', emoji:'🎵', title:'Salitang Magkatugma', subtitle:'Rhyming Words',
+    flashcards:[
+      {icon:'🎵', term:'Salitang Magkatugma', def:'Mga salitang magkapareho o halos magkaparehong tunog sa hulihan.'},
+      {icon:'🐶', term:'Halimbawa', def:'"aso - oso" at "araw - ilaw" ay magkatugmang mga salita.'},
+      {icon:'📖', term:'Saan Ginagamit', def:'Sa tula, awit, bugtong, at salawikain, para maging masaya at madaling tandaan.'},
+      {icon:'🏠', term:'Higit pang Halimbawa', def:'"bahay - anay" at "ilog - talbog" ay magkatugma rin.'},
+      {icon:'✅', term:'Tandaan', def:'Kapag pareho ang tunog sa dulo ng salita, magkatugma ang mga ito.'},
+    ],
+    quiz:[
+      {q:'Ano ang salitang magkatugma?', options:['magkaparehong tunog sa hulihan','magkaparehong kahulugan','magkaparehong bilang ng titik','magkasalungat na kahulugan'], correct:0, explain:'Ang salitang magkatugma ay magkaparehong tunog sa dulo ng salita.'},
+      {q:'Alin ang katugma ng "pagong"?', options:['bato','gulong','bilang'], correct:1, explain:'"pagong" at "gulong" ay magkatugma sa tunog.'},
+      {q:'Alin ang katugma ng "mais"?', options:['walis','amin','anino'], correct:0, explain:'"mais" at "walis" ay magkatugma sa tunog.'},
+      {q:'Alin ang katugma ng "mata"?', options:['buto','pusa','sapatos'], correct:1, explain:'"mata" at "pusa" ay magkatugma sa tunog.'},
+      {q:'Alin ang katugma ng "patatas"?', options:['gatas','pusa','lunes'], correct:0, explain:'"patatas" at "gatas" ay magkatugma dahil parehong nagtatapos sa "-tas."'},
+      {q:'Alin ang katugma ng "sapatos"?', options:['medyas','kubyertos','lunes'], correct:1, explain:'"sapatos" at "kubyertos" ay magkatugma sa tunog.'},
+      {q:'Tama o Mali: Ginagamit ang salitang magkatugma sa tula at awit para maging masaya at masining pakinggan.', options:['Tama','Mali'], correct:0, explain:'Tama — nagpapaganda ito ng tunog ng tula at awit.'},
+      {q:'Alin sa mga ito ang magkatugmang pares?', options:['aso-oso','aso-pusa','bahay-mesa','araw-buwan'], correct:0, explain:'"aso" at "oso" ay magkatugma dahil magkaparehong tunog sa dulo.'},
+    ]
+  },
+  {
+    id:'panguri', emoji:'🎨', title:'Pang-uri at Pangungusap na Paturol', subtitle:'Mga Salitang Naglalarawan',
+    flashcards:[
+      {icon:'🎨', term:'Pang-uri', def:'Salitang naglalarawan o nagbibigay-katangian sa pangngalan o panghalip.'},
+      {icon:'🌈', term:'Mga Uri ng Pang-uri', def:'Kulay (pula), Hugis (bilog), Laki (malaki), Bilang (dalawa), Katangian (mabait), Lasa (matamis), Amoy (mabango).'},
+      {icon:'📝', term:'Pangungusap na Paturol', def:'Nagsasabi ng impormasyon o katotohanan; nagtatapos sa tuldok (.).'},
+      {icon:'✅', term:'Halimbawa: Paturol', def:'"Malinis ang aming silid-aralan." — Ito ay pangungusap na paturol.'},
+      {icon:'🍬', term:'Halimbawa: Pang-uri', def:'"Matamis ang manggang hinog." — "matamis" ang pang-uri (lasa).'},
+    ],
+    quiz:[
+      {q:'Ano ang pang-uri?', options:['salitang naglalarawan','salitang kumikilos','pangalan ng bagay','panghalili sa pangngalan'], correct:0, explain:'Ang pang-uri ay salitang naglalarawan sa pangngalan o panghalip.'},
+      {q:'Ano ang pangungusap na paturol?', options:['nagsasabi ng impormasyon at nagtatapos sa tuldok','nagtatanong','nag-uutos','masiglang pahayag'], correct:0, explain:'Ang pangungusap na paturol ay naglalahad ng impormasyon at nagtatapos sa tuldok (.).'},
+      {q:'Alin dito ang halimbawa ng pang-uri na kulay?', options:['bilog','pula','malaki','isa'], correct:1, explain:'"pula" ay naglalarawan ng kulay.'},
+      {q:'Alin dito ang halimbawa ng pang-uri na lasa?', options:['matamis','maganda','malaki','bilog'], correct:0, explain:'"matamis" ay naglalarawan ng lasa.'},
+      {q:'"Naglalaro ang mga bata sa parke." Ito ba ay pangungusap na paturol?', options:['Oo','Hindi'], correct:0, explain:'Oo — nagsasaad ito ng impormasyon at nagtatapos sa tuldok.'},
+      {q:'"Saan ka pupunta?" Ito ba ay pangungusap na paturol?', options:['Oo','Hindi'], correct:1, explain:'Hindi — ito ay pangungusap na patanong, hindi paturol.'},
+      {q:'Tama o Mali: Ang pangungusap na paturol ay laging nagtatapos sa tandang pananong (?).', options:['Tama','Mali'], correct:1, explain:'Mali — ang pangungusap na paturol ay nagtatapos sa tuldok (.), hindi tandang pananong.'},
+      {q:'Alin ang pang-uri sa "Mabango ang bulaklak sa hardin"?', options:['bulaklak','hardin','Mabango','sa'], correct:2, explain:'"Mabango" ang naglalarawan sa amoy ng bulaklak.'},
+    ]
+  },
+  {
+    id:'pandiwa', emoji:'🏃', title:'Pandiwa', subtitle:'Mga Salitang Kumikilos',
+    flashcards:[
+      {icon:'🏃', term:'Pandiwa', def:'Salitang nagsasaad ng kilos, galaw, o estado. Katumbas sa Ingles: verb.'},
+      {icon:'🍽️', term:'Halimbawa', def:'"Kumakain", "Tumatakbo", "Naglalaro" ay mga pandiwa.'},
+      {icon:'❓', term:'Tanong na Sinasagot', def:'Ang pandiwa ay sumasagot sa tanong na "Ano ang ginagawa?"'},
+      {icon:'🔤', term:'Mga Panlapi', def:'Karaniwang makikita ang mga panlaping nag-, um-, ma-, -in sa pandiwa.'},
+      {icon:'🏞️', term:'Halimbawa sa Pangungusap', def:'"Tumatakbo si Ben sa palaruan." — "Tumatakbo" ang pandiwa.'},
+    ],
+    quiz:[
+      {q:'Ano ang pandiwa?', options:['salitang nagsasaad ng kilos','salitang naglalarawan','pangalan ng bagay','panghalili sa pangngalan'], correct:0, explain:'Ang pandiwa ay nagsasaad ng kilos, galaw, o estado.'},
+      {q:'Alin dito ang pandiwa?', options:['lapis','kumakain','bola','ulam'], correct:1, explain:'"kumakain" ay nagsasaad ng kilos, kaya ito ay pandiwa.'},
+      {q:'"Naglalaro si Ben sa bakuran." Alin ang pandiwa?', options:['Ben','bakuran','Naglalaro'], correct:2, explain:'"Naglalaro" ang salitang nagsasaad ng kilos sa pangungusap.'},
+      {q:'Anong tanong ang sinasagot ng pandiwa?', options:['Sino?','Saan?','Ano ang ginagawa?','Ilan?'], correct:2, explain:'Ang pandiwa ay sumasagot sa tanong na "Ano ang ginagawa?"'},
+      {q:'Alin dito ang HINDI pandiwa?', options:['umaawit','tumatakbo','kahon','naglalaba'], correct:2, explain:'"kahon" ay pangngalan, hindi pandiwa — walang kilos na ipinahihiwatig.'},
+      {q:'Tama o Mali: Ang pandiwa ay mahalaga sa pagbuo ng makabuluhang pangungusap.', options:['Tama','Mali'], correct:0, explain:'Tama — ang pandiwa ang nagsasabi ng kilos o aksiyon sa pangungusap.'},
+      {q:'"Nagbabasa si Liza ng aklat." Alin ang pandiwa?', options:['Liza','aklat','Nagbabasa'], correct:2, explain:'"Nagbabasa" ang salitang nagsasaad ng kilos.'},
+      {q:'Alin sa mga panlapi ang karaniwang makikita sa pandiwa?', options:['-uri','nag-','pang-','ika-'], correct:1, explain:'Ang "nag-" ay isang panlaping karaniwang ginagamit sa pandiwa.'},
+    ]
+  },
+  {
+    id:'intonasyon', emoji:'🎤', title:'Wastong Intonasyon at Diin', subtitle:'Tinig, Bigkas, at Damdamin',
+    flashcards:[
+      {icon:'📈', term:'Intonasyon', def:'Ang pagtaas at pagbaba ng boses kapag tayo ay nagsasalita.'},
+      {icon:'🔊', term:'Diin', def:'Ang pagbibigay-lakas o bigat sa pagbigkas ng isang pantig o salita.'},
+      {icon:'🐢', term:'Malumay', def:'Binibigkas nang dahan-dahan, walang tuldik. Hal: bahay, aso, guro.'},
+      {icon:'⚡', term:'Mabilis', def:'Binibigkas nang mabilis, may tuldik na pahilis (´). Hal: banál, takbó.'},
+      {icon:'😊', term:'Ekspresyon', def:'Ang pagpapahayag ng damdamin gaya ng tuwa, lungkot, galit, o takot.'},
+    ],
+    quiz:[
+      {q:'Ano ang intonasyon?', options:['pagtaas at pagbaba ng boses','bilis ng pagbasa','dami ng salita','uri ng pangngalan'], correct:0, explain:'Ang intonasyon ay ang pagtaas at pagbaba ng boses kapag nagsasalita.'},
+      {q:'Ano ang diin?', options:['pagbibigay-lakas sa pagbigkas ng salita','pagtatapos ng pangungusap','uri ng pandiwa','bilang ng patinig'], correct:0, explain:'Ang diin ay ang pagbibigay-lakas o bigat sa pagbigkas ng isang pantig o salita.'},
+      {q:'Alin ang halimbawang binibigkas nang malumay (walang tuldik)?', options:['bahay','banál','araŵ','sabî'], correct:0, explain:'"bahay" ay binibigkas nang dahan-dahan, walang tuldik.'},
+      {q:'Tama o Mali: Kapag nagkamali ng diin, maaaring mag-iba ang kahulugan ng salita.', options:['Tama','Mali'], correct:0, explain:'Tama — kaya dapat wastong bigkas ang gamitin.'},
+      {q:'Ano ang tinatawag sa pagpapahayag ng damdamin sa pagsasalita?', options:['Ekspresyon','Intonasyon','Pang-uri','Pandiwa'], correct:0, explain:'Ekspresyon ang tawag sa pagpapahayag ng damdamin o reaksyon.'},
+      {q:'Aling emosyon ang bagay sa "Wala na ang aking alagang aso."?', options:['tuwa','lungkot','galit','takot'], correct:1, explain:'Lungkot ang nararamdaman kapag nawalan ng alagang hayop.'},
+      {q:'Tama o Mali: Pababa ang boses sa dulo kapag ito ay tanong.', options:['Tama','Mali'], correct:0, explain:'Tama — may pababang tono ang boses sa dulo ng pagtatanong.'},
+      {q:'Aling emosyon ang bagay sa "Ay! May daga sa ilalim ng mesa!"?', options:['tuwa','lungkot','galit','takot'], correct:3, explain:'Takot ang nararamdaman sa biglaang paghahayag ng ganitong pangyayari.'},
+    ]
+  },
+  {
+    id:'kwento', emoji:'📖', title:'Maikling Kwento at Tampok na Akda', subtitle:'Tauhan, Tagpuan, Pangyayari',
+    flashcards:[
+      {icon:'📖', term:'Maikling Kwento', def:'Maikli, may simula, gitna, at wakas, may suliranin, at may tauhan.'},
+      {icon:'🧑', term:'Tauhan', def:'Ang mga gumaganap sa kuwento.'},
+      {icon:'🗺️', term:'Tagpuan', def:'Nagsasabi kung saan at kailan nangyari ang kuwento.'},
+      {icon:'🔁', term:'Simula, Gitna, Wakas', def:'Simula: ipinakikilala ang tauhan/tagpuan. Gitna: ang suliranin. Wakas: nalulutas ang suliranin.'},
+      {icon:'📜', term:'Akda', def:'Likhang-sulat na naglalaman ng kaisipan, karanasan, o aral; maaaring alamat, kuwento, o tula.'},
+      {icon:'🍍', term:'Aral ng Alamat ng Pinya', def:'Huwag agad umasa sa iba; maging masipag at matiyaga.'},
+    ],
+    quiz:[
+      {q:'Ano ang tauhan sa isang kwento?', options:['ang gumaganap sa kuwento','ang lugar ng kuwento','ang aral ng kuwento','ang pamagat ng kuwento'], correct:0, explain:'Ang tauhan ay ang mga gumaganap sa kuwento.'},
+      {q:'Ano ang tagpuan?', options:['sinasabi kung saan at kailan nangyari ang kuwento','ang tauhan sa kuwento','ang wakas ng kuwento','ang moral ng kuwento'], correct:0, explain:'Ang tagpuan ay nagsasabi kung saan at kailan naganap ang kuwento.'},
+      {q:'Sa aling bahagi ng kwento ipinakikilala ang tauhan at tagpuan?', options:['Simula','Gitna','Wakas'], correct:0, explain:'Sa Simula ipinakikilala ang mga tauhan at tagpuan.'},
+      {q:'Sa aling bahagi nalulutas ang suliranin?', options:['Simula','Gitna','Wakas'], correct:2, explain:'Sa Wakas nalulutas ang suliranin at nagtatapos ang kuwento.'},
+      {q:'Sa kwentong "Leon at Daga," ano ang ginawa ng daga para tulungan ang leon?', options:['Kinagat ang lubid','Tumakbo palayo','Kumanta','Natulog'], correct:0, explain:'Kinagat ng daga ang lubid upang mapalaya ang leon.'},
+      {q:'Ano ang tawag sa likhang-sulat na naglalaman ng kaisipan, karanasan, o aral?', options:['Akda','Tagpuan','Diin','Pang-uri'], correct:0, explain:'Ang akda ay likhang-sulat na naglalaman ng kaisipan, karanasan, pangyayari, o aral.'},
+      {q:'Sa "Alamat ng Pinya," ano ang aral ng kuwento?', options:['Huwag agad umasa sa iba','Laging matakot','Huwag magtiwala sa pamilya','Hindi mahalaga ang pag-aaral'], correct:0, explain:'Itinuturo ng alamat na huwag agad umasa sa iba at maging masipag.'},
+      {q:'Tama o Mali: Ang alamat ay isang uri ng kuwentong-bayan tungkol sa kung paano nagsimula ang isang bagay.', options:['Tama','Mali'], correct:0, explain:'Tama — inilalarawan ng alamat kung paano nagsimula o nagkaroon ng isang bagay, hayop, o lugar.'},
+    ]
+  },
+];
+
+const STORAGE_KEY = 'kuwentista_progress_v1';
+function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+let progress = loadProgress();
+
+/* ---- Storybook SVG ---- */
+function bookMarkup(){
+  return `
+  <g class="piece" data-n="1">
+    <rect x="30" y="140" width="140" height="14" rx="4" fill="var(--navy)"/>
+    <path d="M40 60 L40 148 Q100 138 160 148 L160 60 Q100 50 40 60 Z" fill="var(--surface)" stroke="var(--border)" stroke-width="3"/>
+  </g>
+  <g class="piece" data-n="2">
+    <path d="M40 60 Q100 50 160 60 L160 70 Q100 60 40 70 Z" fill="var(--accent)"/>
+    <line x1="100" y1="55" x2="100" y2="145" stroke="var(--border)" stroke-width="2"/>
+  </g>
+  <g class="piece" data-n="3">
+    <text x="70" y="80" font-family="Chewy, cursive" font-size="13" fill="var(--accent)">Kwento</text>
+    <text x="112" y="80" font-family="Chewy, cursive" font-size="13" fill="var(--gold)">Ko</text>
+  </g>
+  <g class="piece" data-n="4">
+    <circle cx="62" cy="105" r="9" fill="var(--gold)"/>
+    <circle cx="59" cy="102" r="1.6" fill="var(--ink)"/>
+    <circle cx="65" cy="102" r="1.6" fill="var(--ink)"/>
+    <path d="M58 109 Q62 112 66 109" stroke="var(--ink)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M56 96 Q62 90 68 96" stroke="var(--ink)" stroke-width="1.4" fill="none"/>
+  </g>
+  <g class="piece" data-n="5">
+    <ellipse cx="132" cy="107" rx="10" ry="8" fill="var(--navy)"/>
+    <circle cx="128" cy="104" r="1.4" fill="#fff"/>
+    <circle cx="136" cy="104" r="1.4" fill="#fff"/>
+    <path d="M124 98 L118 92 M140 98 L146 92" stroke="var(--navy)" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g class="piece" data-n="6">
+    <circle cx="100" cy="118" r="6" fill="var(--gold)"/>
+    <path d="M90 130 Q100 122 110 130" stroke="var(--navy)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+  <g class="piece" data-n="7">
+    <text x="55" y="128" font-family="Poppins, sans-serif" font-size="10" font-weight="700" fill="var(--accent)">. ? !</text>
+    <path d="M150 118 q6 -8 12 0 q-6 6 -6 10 q0 -4 -6 -10 Z" fill="var(--accent)"/>
+  </g>
+  <g class="piece" data-n="8">
+    <path d="M42 55 Q100 30 158 55" stroke="var(--gold)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="70" y="45" font-family="Chewy, cursive" font-size="11" fill="var(--navy)">WAKAS</text>
+    <circle cx="35" cy="65" r="2.5" fill="var(--accent)"/>
+    <circle cx="165" cy="65" r="2.5" fill="var(--gold)"/>
+    <circle cx="25" cy="90" r="2" fill="var(--navy)"/>
+    <circle cx="175" cy="90" r="2" fill="var(--accent)"/>
+  </g>`;
+}
+function renderBook(svgEl, n){
+  svgEl.innerHTML = bookMarkup();
+  svgEl.querySelectorAll('.piece').forEach(p=>{
+    if(parseInt(p.dataset.n) <= n) p.classList.add('on');
+  });
+}
+
+/* ---- State ---- */
+let currentLessonIdx = 0;
+let cardIdx = 0;
+let quizIdx = 0;
+let quizScore = 0;
+let answered = false;
+
+const homeScreen = document.getElementById('screen-home');
+const cardsScreen = document.getElementById('screen-cards');
+const quizScreen = document.getElementById('screen-quiz');
+const resultsScreen = document.getElementById('screen-results');
+
+function showScreen(el){
+  [homeScreen, cardsScreen, quizScreen, resultsScreen].forEach(s=>s.classList.add('hidden'));
+  el.classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function starsFor(score){
+  if(score >= 8) return 3;
+  if(score >= 6) return 2;
+  if(score >= 4) return 1;
+  return 0;
+}
+
+function renderHome(){
+  renderBook(document.getElementById('hero-book-svg'), 8);
+  const grid = document.getElementById('lesson-grid');
+  grid.innerHTML = '';
+  LESSONS.forEach((lesson, i)=>{
+    const best = progress[lesson.id] || 0;
+    const stars = starsFor(best);
+    const card = document.createElement('button');
+    card.className = 'lesson-card';
+    card.onclick = ()=>openLesson(i);
+    card.innerHTML = `
+      <div class="lesson-emoji">${lesson.emoji}</div>
+      <div class="lesson-info">
+        <h3>${lesson.title}</h3>
+        <p>${lesson.subtitle}</p>
+        <div class="stars">${[1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('')}</div>
+      </div>
+      <div class="go-btn">${best>0?'Balikan':'Simulan'}</div>
+    `;
+    grid.appendChild(card);
+  });
+  showScreen(homeScreen);
+}
+
+function goHome(){ renderHome(); }
+
+function openLesson(i){
+  currentLessonIdx = i;
+  cardIdx = 0;
+  renderCard();
+  showScreen(cardsScreen);
+}
+
+function renderCard(){
+  const lesson = LESSONS[currentLessonIdx];
+  document.getElementById('cards-title').textContent = lesson.title;
+  const fc = lesson.flashcards[cardIdx];
+  document.getElementById('card-icon').textContent = fc.icon;
+  document.getElementById('card-term').textContent = fc.term;
+  document.getElementById('card-def').textContent = fc.def;
+  document.getElementById('card-prev').disabled = cardIdx === 0;
+  document.getElementById('card-next').disabled = cardIdx === lesson.flashcards.length - 1;
+  const dots = document.getElementById('card-dots');
+  dots.innerHTML = '';
+  lesson.flashcards.forEach((_, idx)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (idx === cardIdx ? ' active' : '');
+    dots.appendChild(d);
+  });
+}
+
+function cardStep(dir){
+  const lesson = LESSONS[currentLessonIdx];
+  cardIdx = Math.max(0, Math.min(lesson.flashcards.length - 1, cardIdx + dir));
+  renderCard();
+}
+
+function startQuiz(){
+  quizIdx = 0;
+  quizScore = 0;
+  renderQuestion();
+  showScreen(quizScreen);
+}
+
+function renderQuestion(){
+  const lesson = LESSONS[currentLessonIdx];
+  answered = false;
+  document.getElementById('quiz-title').textContent = lesson.title;
+  const total = lesson.quiz.length;
+  document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
+  renderBook(document.getElementById('quiz-book-svg'), quizScore);
+  const q = lesson.quiz[quizIdx];
+  document.getElementById('q-text').textContent = `Tanong ${quizIdx+1} sa ${total}: ${q.q}`;
+  const opts = document.getElementById('q-options');
+  opts.innerHTML = '';
+  q.options.forEach((opt, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = opt;
+    b.onclick = ()=>selectOption(idx);
+    opts.appendChild(b);
+  });
+  document.getElementById('q-feedback').innerHTML = '';
+  document.getElementById('q-next-btn').classList.add('hidden');
+}
+
+function selectOption(idx){
+  if(answered) return;
+  answered = true;
+  const lesson = LESSONS[currentLessonIdx];
+  const q = lesson.quiz[quizIdx];
+  const buttons = document.querySelectorAll('#q-options .option');
+  buttons.forEach((b, i)=>{
+    b.disabled = true;
+    if(i === q.correct) b.classList.add('correct');
+    else if(i === idx) b.classList.add('incorrect');
+  });
+  const correct = idx === q.correct;
+  if(correct) quizScore++;
+  renderBook(document.getElementById('quiz-book-svg'), quizScore);
+  const fb = document.getElementById('q-feedback');
+  fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Tama! 🎉':'Hindi tama.'}</strong>${q.explain}</div>`;
+  document.getElementById('q-next-btn').classList.remove('hidden');
+}
+
+function nextQuestion(){
+  const lesson = LESSONS[currentLessonIdx];
+  quizIdx++;
+  if(quizIdx >= lesson.quiz.length){
+    finishQuiz();
+  } else {
+    renderQuestion();
+  }
+}
+
+function finishQuiz(){
+  const lesson = LESSONS[currentLessonIdx];
+  const best = Math.max(progress[lesson.id] || 0, quizScore);
+  progress[lesson.id] = best;
+  saveProgress(progress);
+  renderResults();
+  showScreen(resultsScreen);
+}
+
+function renderResults(){
+  const lesson = LESSONS[currentLessonIdx];
+  renderBook(document.getElementById('results-book-svg'), quizScore);
+  const stars = starsFor(quizScore);
+  document.getElementById('results-heading').textContent =
+    stars === 3 ? 'Kumpleto ang Kwento!' : stars > 0 ? 'Magaling!' : 'Magpatuloy Tayo!';
+  document.getElementById('results-score').textContent = `Nakakuha ka ng ${quizScore} sa ${lesson.quiz.length} sa ${lesson.title}`;
+  document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
+}
+
+function retryLesson(){
+  startQuiz();
+}
+
+renderHome();
+</script>
