@@ -1,0 +1,657 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Rise & Shine: GMRC Champions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF7EC;
+  --card:#FFFFFF;
+  --ink:#2B2320;
+  --accent:#1B7A79;
+  --accent-dark:#0E4F4E;
+  --accent-soft:#E4F3F1;
+  --gold:#FFB627;
+  --coral:#FF6F59;
+  --muted:#8A7F73;
+  --border:#F0E4D2;
+  --good:#2E9E5B;
+  --bad:#E15555;
+  --shadow: 0 10px 28px rgba(43,35,32,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15201F;
+    --card:#1E2C2A;
+    --ink:#F5EFE3;
+    --accent:#3FBDBA;
+    --accent-dark:#9AE8E5;
+    --accent-soft:#243836;
+    --gold:#FFC65C;
+    --coral:#FF8A73;
+    --muted:#B9AE9E;
+    --border:#2C3B39;
+    --good:#4FCB82;
+    --bad:#FF7A7A;
+    --shadow: 0 10px 28px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15201F;
+  --card:#1E2C2A;
+  --ink:#F5EFE3;
+  --accent:#3FBDBA;
+  --accent-dark:#9AE8E5;
+  --accent-soft:#243836;
+  --gold:#FFC65C;
+  --coral:#FF8A73;
+  --muted:#B9AE9E;
+  --border:#2C3B39;
+  --good:#4FCB82;
+  --bad:#FF7A7A;
+  --shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Nunito',sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
+#app{max-width:720px;margin:0 auto;padding:20px 16px 60px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.hero{
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  color:#fff;
+  border-radius:22px;
+  padding:26px 22px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+.hero h1{margin:0 0 6px;font-size:1.7rem;}
+.hero p{margin:0;opacity:.92;line-height:1.5;font-size:.95rem;}
+.hero .badge{
+  display:inline-block;background:rgba(255,255,255,.18);
+  padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:800;
+  letter-spacing:.04em;margin-bottom:10px;
+}
+
+.card-list{display:flex;flex-direction:column;gap:12px;}
+.item-card{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, border-color .15s ease;
+}
+.item-card:hover{transform:translateY(-2px);border-color:var(--accent);}
+.item-card .icon{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--accent-soft);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;
+}
+.item-card .info{flex:1;min-width:0;}
+.item-card .info h3{margin:0 0 3px;font-size:1.05rem;}
+.item-card .info p{margin:0;color:var(--muted);font-size:.82rem;}
+.stars{font-size:.95rem;letter-spacing:1px;color:var(--gold);white-space:nowrap;}
+.stars .off{color:var(--border);}
+
+.final-card{
+  border-color:var(--gold);
+  background:linear-gradient(135deg,var(--accent-soft),var(--card));
+}
+.final-badge{
+  display:inline-block;background:var(--gold);color:#3A2900;
+  font-size:.68rem;font-weight:800;padding:2px 10px;border-radius:999px;
+  margin-bottom:4px;letter-spacing:.03em;
+}
+.strategy-card{border-color:var(--coral);}
+.strategy-card .icon{background:#FFEAE6;}
+
+.topbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.btn-icon{
+  background:var(--card);border:2px solid var(--border);border-radius:12px;
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.1rem;color:var(--ink);flex-shrink:0;
+}
+.topbar h2{margin:0;font-size:1.15rem;flex:1;}
+
+.flash-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.flashcard{
+  width:100%;min-height:220px;
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:26px 22px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;cursor:pointer;
+  position:relative;
+}
+.flashcard .tag{
+  position:absolute;top:14px;left:16px;font-size:.7rem;font-weight:800;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.05em;
+}
+.flashcard h3{margin:6px 0 10px;font-size:1.3rem;color:var(--accent-dark);}
+.flashcard p{margin:0;font-size:1rem;line-height:1.55;}
+.flashcard .hint{margin-top:14px;font-size:.78rem;color:var(--muted);}
+.flash-nav{display:flex;align-items:center;gap:16px;width:100%;justify-content:space-between;}
+.flash-dots{font-size:.85rem;color:var(--muted);font-weight:700;}
+
+.btn{
+  font-family:'Baloo 2',cursive;
+  border:none;border-radius:14px;
+  padding:13px 22px;font-size:1rem;font-weight:700;
+  cursor:pointer;color:#fff;
+  background:var(--accent);
+  box-shadow:0 6px 0 var(--accent-dark);
+  transition:transform .1s ease;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-dark);}
+.btn.gold{background:var(--gold);box-shadow:0 6px 0 #C98600;color:#3A2900;}
+.btn.gold:active{box-shadow:0 2px 0 #C98600;}
+.btn.ghost{background:var(--card);color:var(--ink);border:2px solid var(--border);box-shadow:none;}
+.btn.full{width:100%;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.progress-bar{
+  height:10px;background:var(--border);border-radius:999px;overflow:hidden;margin-bottom:18px;
+}
+.progress-bar .fill{height:100%;background:var(--gold);transition:width .3s ease;}
+
+.quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.85rem;color:var(--muted);font-weight:700;}
+.medal-box{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:10px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+.medal-box svg{width:100%;max-width:150px;display:block;margin:0 auto;}
+
+.passage{
+  background:var(--accent-soft);border:2px solid var(--accent);border-radius:16px;
+  padding:16px;margin-bottom:16px;font-size:.95rem;line-height:1.6;
+}
+.passage strong{color:var(--accent-dark);}
+
+.q-card{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:20px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.q-card h3{margin:0 0 16px;font-size:1.1rem;line-height:1.5;}
+.option{
+  display:block;width:100%;text-align:left;
+  background:var(--bg);border:2px solid var(--border);border-radius:14px;
+  padding:13px 16px;margin-bottom:10px;font-size:.95rem;font-family:'Nunito',sans-serif;
+  cursor:pointer;color:var(--ink);font-weight:700;
+}
+.option:hover{border-color:var(--accent);}
+.option.correct{background:#E5F6EB;border-color:var(--good);color:#1B6B3C;}
+.option.wrong{background:#FCE9E9;border-color:var(--bad);color:#A82F2F;}
+.option:disabled{cursor:default;}
+.explain{
+  margin-top:12px;padding:12px 14px;background:var(--accent-soft);
+  border-radius:12px;font-size:.88rem;line-height:1.5;color:var(--ink);
+}
+
+.results-hero{text-align:center;padding:20px 0;}
+.results-hero .big-stars{font-size:2.2rem;color:var(--gold);letter-spacing:4px;}
+.results-hero h2{margin:8px 0 4px;}
+.results-hero p{color:var(--muted);margin:0 0 16px;}
+.result-actions{display:flex;flex-direction:column;gap:10px;}
+
+.strategy-list{display:flex;flex-direction:column;gap:12px;}
+.tip{
+  background:var(--card);border:2px solid var(--border);border-left:6px solid var(--coral);
+  border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.tip h4{margin:0 0 5px;font-size:.98rem;color:var(--accent-dark);}
+.tip p{margin:0;font-size:.9rem;line-height:1.55;}
+.tip .kicker{font-size:.7rem;font-weight:800;color:var(--coral);text-transform:uppercase;letter-spacing:.05em;}
+</style>
+
+<div id="app">
+
+  <div id="home" class="screen active">
+    <div class="hero">
+      <span class="badge">GMRC · Grade 5 Practice</span>
+      <h1>Rise & Shine 🏅</h1>
+      <p>Build your Champion Medal one correct answer at a time! Study Knowing Yourself, Saving & Spending, and Valuing Human Dignity — then take the Mock Exam and check the Exam Strategy guide so you're ready to ace your teacher's test.</p>
+    </div>
+    <div class="card-list" id="homeList"></div>
+  </div>
+
+  <div id="flashScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" onclick="goHome()">←</div>
+      <h2 id="flashTitle"></h2>
+    </div>
+    <div class="flash-wrap">
+      <div class="flashcard" id="flashCard" onclick="flipCard()">
+        <span class="tag" id="flashTag">Term</span>
+        <h3 id="flashFront"></h3>
+        <p id="flashBack" style="display:none;"></p>
+        <div class="hint" id="flashHint">Tap the card to flip</div>
+      </div>
+      <div class="flash-nav">
+        <button class="btn ghost" onclick="prevCard()">◀ Prev</button>
+        <span class="flash-dots" id="flashDots"></span>
+        <button class="btn ghost" onclick="nextCard()">Next ▶</button>
+      </div>
+      <button class="btn gold full" onclick="startQuiz()">Start Quiz 🏅</button>
+    </div>
+  </div>
+
+  <div id="quizScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" onclick="goHome()">←</div>
+      <h2 id="quizTitle"></h2>
+    </div>
+    <div class="medal-box"><div id="medalSvg"></div></div>
+    <div class="progress-bar"><div class="fill" id="quizFill" style="width:0%"></div></div>
+    <div class="quiz-head">
+      <span id="quizCounter"></span>
+      <span id="quizScoreLabel"></span>
+    </div>
+    <div id="passageBox"></div>
+    <div class="q-card">
+      <h3 id="qText"></h3>
+      <div id="optionsBox"></div>
+      <div class="explain" id="explainBox" style="display:none;"></div>
+    </div>
+    <button class="btn full" id="nextBtn" style="display:none;" onclick="nextQuestion()">Next ▶</button>
+  </div>
+
+  <div id="resultsScreen" class="screen">
+    <div class="results-hero">
+      <div class="medal-box" style="max-width:180px;margin:0 auto 14px;"><div id="resultMedal"></div></div>
+      <div class="big-stars" id="resultStars"></div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultScore"></p>
+    </div>
+    <div class="result-actions">
+      <button class="btn full" onclick="retryQuiz()">Try Again 🔁</button>
+      <button class="btn ghost full" onclick="goHome()">Back to Home</button>
+    </div>
+  </div>
+
+  <div id="strategyScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" onclick="goHome()">←</div>
+      <h2>Exam Strategy 🎯</h2>
+    </div>
+    <div class="hero" style="background:linear-gradient(135deg,var(--coral),#C94B3A);">
+      <span class="badge">Before you take the real test</span>
+      <h1 style="font-size:1.35rem;">How to Ace a True/False & Situational Test</h1>
+      <p>These are the exact moves to use on your teacher's GMRC exam — not just for this app.</p>
+    </div>
+    <div class="strategy-list" id="strategyList"></div>
+  </div>
+
+</div>
+
+<script>
+const LESSONS = [
+  {
+    id:'myself',
+    icon:'🌱',
+    title:'Knowing & Understanding Myself',
+    subtitle:'Strengths, weaknesses, change & resilience',
+    cards:[
+      {front:'Knowing Yourself', back:'Understanding your personality, likes and dislikes, strengths, weaknesses, and feelings.'},
+      {front:'Strengths', back:'Things you do well — like drawing, singing, solving math problems, helping others, being kind, or being responsible.'},
+      {front:'Weaknesses', back:'Things you still need to improve — like being easily distracted, shy when speaking, poor time management, or afraid to try new things.'},
+      {front:'3 Kinds of Change', back:'Physical (becoming taller/stronger), Emotional (understanding and managing feelings), Personal (discovering new skills, talents, interests).'},
+      {front:'Resilience', back:'The ability to recover from difficulties and keep going. Challenges at home or school help build resilience.'},
+      {front:'5 Ways to Value Yourself', back:'1) Obey your parents, 2) Change undesirable attitudes, 3) Do something good for yourself and others, 4) Learn to appreciate, 5) Be aware of yourself.'},
+      {front:'Remember', back:'"Growth begins when we embrace change."'}
+    ],
+    quiz:[
+      {q:'True or False: Knowing yourself only means knowing your favorite color and food.', options:['True','False'], correct:1, explain:'Knowing yourself means understanding your personality, likes/dislikes, strengths, weaknesses, AND feelings — much more than favorites.'},
+      {q:'Ana always finishes her homework on time and helps classmates who don’t understand a lesson. Which STRENGTH does this show?', options:['Being disorganized','Being responsible and helpful','Being shy','Being easily distracted'], correct:1, explain:'Finishing tasks on time and helping others shows responsibility and helpfulness — both strengths.'},
+      {q:'True or False: A weakness is something you can never improve, no matter how hard you try.', options:['True','False'], correct:1, explain:'Weaknesses are things you still NEED to improve — they can get better with effort, unlike the statement claims.'},
+      {q:'Miguel gets nervous and forgets his words whenever he speaks in front of the class. Which weakness does this show?', options:['Poor time management','Shy when speaking','Easily distracted','Afraid of change'], correct:1, explain:'Getting nervous while speaking in front of others is the weakness "shy when speaking."'},
+      {q:'True or False: Becoming taller and stronger as you grow older is an example of physical change.', options:['True','False'], correct:0, explain:'Yes — becoming taller and stronger is exactly what physical change means.'},
+      {q:'Which of these shows an EMOTIONAL change?', options:['Growing three inches taller','Learning to stay calm instead of shouting when angry','Discovering you are good at chess','Wearing a bigger shoe size'], correct:1, explain:'Learning to understand and manage your feelings, like calming down instead of shouting, is emotional change.'},
+      {q:'True or False: Resilience means giving up immediately when something becomes difficult.', options:['True','False'], correct:1, explain:'Resilience is the OPPOSITE — it means recovering from difficulty and continuing on.'},
+      {q:'Liza’s parents told her to stop staying up late playing games because it affects her studies. What should Liza do to value herself, based on the lesson?', options:['Ignore her parents completely','Get angry at her parents','Listen and respect their advice','Play even later to prove a point'], correct:2, explain:'"Obey your parents — listen, learn from their experience, and respect their advice" is one of the 5 ways to value yourself.'},
+      {q:'True or False: One way to value yourself is to help other people and join school or community activities.', options:['True','False'], correct:0, explain:'Yes — "do something good for yourself and others" includes helping people and joining activities.'},
+      {q:'Every night before bed, Carlo thinks of three things he is thankful for. Which of the 5 Ways to Value Oneself is Carlo practicing?', options:['Obey your parents','Change undesirable attitudes','Learn to appreciate','Be aware of yourself'], correct:2, explain:'Being thankful and practicing gratitude every day is exactly "learn to appreciate."'}
+    ]
+  },
+  {
+    id:'saving',
+    icon:'🐷',
+    title:'Saving Early & Spending Wisely',
+    subtitle:'Needs vs wants, budgeting & good habits',
+    cards:[
+      {front:'Saving', back:'Keeping part of your money instead of spending it all, so you can use it for important things in the future.'},
+      {front:'Why We Save', back:'To prepare for emergencies, buy things we really need, reach our goals, and become responsible with money.'},
+      {front:'How to Save Money', back:'Do budget planning, shop only with a list, stay within your means, and learn to be thrifty.'},
+      {front:'Wise Spending', back:'Thinking before buying, buying what you need first, avoiding unnecessary expenses, and comparing prices.'},
+      {front:'Needs vs Wants', back:'Needs: food, water, school supplies, medicine. Wants: toys, expensive gadgets, fancy accessories, makeup.'},
+      {front:'Good Saving Habits', back:'Save part of your allowance, use a piggy bank, set a savings goal, avoid impulse buying, spend only within budget.'},
+      {front:'Remember', back:'"A penny saved is a penny earned." — Benjamin Franklin'}
+    ],
+    quiz:[
+      {q:'True or False: Saving means spending all your money right away so it doesn’t get lost.', options:['True','False'], correct:1, explain:'Saving means keeping PART of your money instead of spending it all.'},
+      {q:'Your parents give you ₱200. What is the WISEST thing to do?', options:['Buy toys immediately','Buy everything you want','Save some and spend only what you need','Give it all away'], correct:2, explain:'Saving some and spending only what you truly need is the wise choice from the lesson.'},
+      {q:'True or False: Food, water, medicine, and school supplies are examples of NEEDS.', options:['True','False'], correct:0, explain:'Correct — these are all things people need, not just want.'},
+      {q:'Which of these is a WANT, not a need?', options:['School supplies','Medicine','Expensive gadgets','Water'], correct:2, explain:'Expensive gadgets are a want — nice to have, but not necessary for survival or school.'},
+      {q:'True or False: Wise spending means buying anything you like as long as you have money in your pocket.', options:['True','False'], correct:1, explain:'Wise spending means thinking before buying, buying needs first, and comparing prices — not buying anything you like.'},
+      {q:'Maria receives ₱100 allowance. She spends ₱40 on snacks, ₱20 on school materials, and saves ₱40. Is Maria spending wisely?', options:['True','False'], correct:0, explain:'Yes — she covered her needs, allowed a small treat, and still saved part of her money.'},
+      {q:'True or False: Having personal savings can help you avoid unnecessary debts.', options:['True','False'], correct:0, explain:'Correct — when you have spare money saved, you don’t need to borrow as much.'},
+      {q:'Before buying a new toy, what should you ask yourself first, based on the lesson?', options:['"Will my friends be jealous?"','"Do I really need this, and can I save this money instead?"','"Is it the most expensive one?"','"Can I buy it without telling anyone?"'], correct:1, explain:'The lesson’s "Think Before You Buy" questions are: Do I need this? Can I save instead? Will it help me in the future?'},
+      {q:'True or False: Using a piggy bank and setting a savings goal are examples of good saving habits.', options:['True','False'], correct:0, explain:'Correct — both are listed as good saving habits in the lesson.'},
+      {q:'Jayson’s group has ₱2,000 for a weekend hangout. Which shows a responsible group?', options:['Spend all ₱2,000 on snacks and games','Plan a budget, buy what’s needed, and set aside money for savings','Borrow more money to spend more','Spend everything on the first item they see'], correct:1, explain:'Responsible people plan their budget and still set aside savings, even while having fun.'}
+    ]
+  },
+  {
+    id:'dignity',
+    icon:'🤝',
+    title:'Valuing Human Dignity',
+    subtitle:'Respect, worth & caring for others',
+    cards:[
+      {front:'Human Dignity', back:'Every person has value and worth simply because he or she is a human being.'},
+      {front:'Everyone Deserves', back:'Love, respect, kindness, and fair treatment — no exceptions.'},
+      {front:'Understanding Human Dignity', back:'Your worth as a person; human life is a gift; everyone is unique; everyone can dream; everyone has something to contribute.'},
+      {front:'What Destroys Human Dignity', back:'Forced or child labor, hate crimes, trespassing on human rights, lack of access to basic necessities, the refugee crisis, and fake news.'},
+      {front:'3 Ways to Respect Human Life', back:'1) Improve your life through education, 2) Practice values and virtues, 3) Accept corrections from parents and teachers with humility.'},
+      {front:'Remember', back:'"Every person is special. We may look different, think differently, or come from different backgrounds, but we all deserve respect because every human being has dignity."'}
+    ],
+    quiz:[
+      {q:'True or False: Human dignity means only smart or rich people deserve respect.', options:['True','False'], correct:1, explain:'Everyone deserves respect simply because they are human — dignity is not based on being smart or rich.'},
+      {q:'A classmate is being teased for wearing old shoes. What should you do to respect his human dignity?', options:['Join the teasing','Ignore it and walk away','Defend him and treat him with kindness','Laugh along quietly'], correct:2, explain:'Standing up for someone and showing kindness respects their dignity as a person.'},
+      {q:'True or False: Every person is unique, but only some people have something to contribute to the world.', options:['True','False'], correct:1, explain:'The lesson says EVERYONE has something to contribute, not just some people.'},
+      {q:'Which situation is an example of something that DESTROYS human dignity?', options:['A child being forced to work instead of going to school','A student studying hard for a test','A family sharing a meal','Friends helping each other with homework'], correct:0, explain:'Forced or child labor is listed as something that destroys and violates human dignity.'},
+      {q:'True or False: Accepting corrections from your parents and teachers is a sign of humility and respect for human life.', options:['True','False'], correct:0, explain:'Correct — accepting corrections with humility is one of the 3 ways to respect human life.'},
+      {q:'You see a younger student struggling to carry their bags. What is the BEST way to show you value human dignity?', options:['Walk past without helping','Offer to help carry the bags','Tell them it’s not your problem','Take a photo to post online'], correct:1, explain:'Offering help is a direct way of showing kindness and respect for another person’s worth.'},
+      {q:'True or False: Spreading fake news about someone is an example of respecting their human dignity.', options:['True','False'], correct:1, explain:'Fake news is listed as something that destroys human dignity, not respects it.'},
+      {q:'According to the lesson, which is one of the 3 ways to respect human life?', options:['Avoiding school','Practicing values and virtues','Ignoring corrections','Comparing yourself to others'], correct:1, explain:'Practicing values and virtues is one of the 3 ways to respect human life mentioned in the lesson.'},
+      {q:'True or False: Everyone deserves love, respect, kindness, and fair treatment, no matter who they are.', options:['True','False'], correct:0, explain:'Correct — this is exactly what human dignity means.'},
+      {q:'A new student joins your class and looks different from everyone else. What should you do?', options:['Avoid talking to them','Treat them the same way you’d want to be treated, with respect','Make fun of how they look','Tell others not to be friends with them'], correct:1, explain:'Treating everyone with respect, regardless of how they look, is the core of valuing human dignity.'}
+    ]
+  }
+];
+
+const FINAL_EXAM_PER_LESSON = 6;
+const STORAGE_KEY = 'riseshine_progress_v1';
+
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
+}
+let progress = loadProgress();
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function prepareQuestion(q){
+  const order = shuffle(q.options.map((_,i)=>i));
+  const options = order.map(i=>q.options[i]);
+  const correct = order.indexOf(q.correct);
+  return {q:q.q, options, correct, explain:q.explain};
+}
+function starsFor(pct){
+  if(pct >= 1) return 3;
+  if(pct >= 0.8) return 2;
+  if(pct >= 0.5) return 1;
+  return 0;
+}
+function starString(n){
+  let s='';
+  for(let i=0;i<3;i++) s += i<n ? '★' : '<span class="off">★</span>';
+  return s;
+}
+
+function medalMarkup(n){
+  const show = i => n>=i ? 1 : 0.06;
+  return `<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="82,88 58,214 100,182" fill="var(--coral)" opacity="${show(1)}"/>
+    <polygon points="118,88 142,214 100,182" fill="var(--accent)" opacity="${show(2)}"/>
+    <circle cx="100" cy="88" r="56" fill="#C9B79C" opacity="${show(3)}"/>
+    <circle cx="100" cy="88" r="48" fill="var(--gold)" opacity="${show(4)}"/>
+    <circle cx="100" cy="88" r="48" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="${show(5)}"/>
+    <polygon points="100,58 108,80 132,80 112,94 120,117 100,103 80,117 88,94 68,80 92,80" fill="var(--accent-dark)" opacity="${show(6)}"/>
+    <path d="M62,58 Q100,36 138,58" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round" opacity="${show(7)}"/>
+    <g opacity="${show(8)}">
+      <circle cx="34" cy="46" r="4" fill="var(--gold)"/>
+      <circle cx="166" cy="52" r="3" fill="var(--coral)"/>
+      <circle cx="152" cy="150" r="4" fill="var(--gold)"/>
+      <circle cx="46" cy="150" r="3" fill="var(--accent)"/>
+      <text x="100" y="205" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent-dark)" font-family="Baloo 2, cursive">CHAMPION</text>
+    </g>
+  </svg>`;
+}
+
+const STRATEGY = [
+  {kicker:'True or False Tip #1', title:'Watch for absolute words', body:'Words like "always," "never," "only," and "must" often make a statement FALSE — real life almost always has exceptions. If you see one of these words, read the sentence extra carefully.'},
+  {kicker:'True or False Tip #2', title:'One false part = the whole thing is False', body:'If any single part of a True/False sentence is wrong, mark the WHOLE sentence False — even if the rest of it sounds correct.'},
+  {kicker:'Situational Tip #1', title:'Name the value being tested first', body:'Before choosing an answer, ask: "Is this about respect? Honesty? Saving money? Self-control? Human dignity?" Naming the value points you straight to the correct choice.'},
+  {kicker:'Situational Tip #2', title:'Pick the BEST answer, not just a good one', body:'Teachers often include an option that is "good but not the best." Choose the most responsible, most caring, or most complete action — not just any nice-sounding one.'},
+  {kicker:'Situational Tip #3', title:'Connect it to a lesson example', body:'Ask yourself which lesson this reminds you of — Needs vs Wants? The 5 Ways to Value Yourself? The 3 Ways to Respect Human Life? Matching it to what you studied makes the answer obvious.'},
+  {kicker:'General Tip', title:'Reread before you finalize', body:'After choosing an answer, read the question one more time with your answer in mind. If it still makes sense and feels responsible and kind, you’ve got it right.'},
+  {kicker:'General Tip', title:'Eliminate the "unkind" options first', body:'In situational questions, cross out any choice that is unkind, disrespectful, dishonest, or wasteful right away — the real answer is almost never one of those.'},
+  {kicker:'Time Management', title:'Don’t stall on one item', body:'If a question is tricky, mark your best guess, keep moving, and come back later if there’s time. Finishing the whole test matters more than perfecting one question.'}
+];
+
+let currentLessonIdx = null;
+let flashIdx = 0;
+let currentQuizSet = [];
+let currentQuizMeta = null;
+let quizIdx = 0;
+let quizScore = 0;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){ renderHome(); showScreen('home'); }
+
+function renderHome(){
+  const list = document.getElementById('homeList');
+  const finalTotal = LESSONS.length * FINAL_EXAM_PER_LESSON;
+  const finalBest = progress['final'] || 0;
+  let html = '';
+
+  html += `<div class="item-card final-card" onclick="startFinalExam()">
+    <div class="icon">🏆</div>
+    <div class="info">
+      <span class="final-badge">Mock Exam</span>
+      <h3>Full Mock Exam</h3>
+      <p>${finalTotal} mixed questions from all 3 lessons</p>
+    </div>
+    <div class="stars">${starString(starsFor(finalBest/finalTotal))}</div>
+  </div>`;
+
+  html += `<div class="item-card strategy-card" onclick="showScreen('strategyScreen')">
+    <div class="icon">🎯</div>
+    <div class="info">
+      <h3>Exam Strategy</h3>
+      <p>How to ace True/False & situational questions</p>
+    </div>
+  </div>`;
+
+  LESSONS.forEach((l,i)=>{
+    const best = progress[l.id] || 0;
+    html += `<div class="item-card" onclick="openLesson(${i})">
+      <div class="icon">${l.icon}</div>
+      <div class="info">
+        <h3>${l.title}</h3>
+        <p>${l.subtitle}</p>
+      </div>
+      <div class="stars">${starString(starsFor(best/l.quiz.length))}</div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function openLesson(i){
+  currentLessonIdx = i;
+  flashIdx = 0;
+  document.getElementById('flashTitle').textContent = LESSONS[i].title;
+  renderFlash();
+  showScreen('flashScreen');
+}
+function renderFlash(){
+  const l = LESSONS[currentLessonIdx];
+  const c = l.cards[flashIdx];
+  document.getElementById('flashFront').textContent = c.front;
+  document.getElementById('flashBack').textContent = c.back;
+  document.getElementById('flashBack').style.display = 'none';
+  document.getElementById('flashFront').style.display = 'block';
+  document.getElementById('flashTag').textContent = 'Term';
+  document.getElementById('flashHint').textContent = 'Tap the card to flip';
+  document.getElementById('flashDots').textContent = `${flashIdx+1} / ${l.cards.length}`;
+}
+function flipCard(){
+  const front = document.getElementById('flashFront');
+  const back = document.getElementById('flashBack');
+  const flipped = back.style.display !== 'none';
+  front.style.display = flipped ? 'block' : 'none';
+  back.style.display = flipped ? 'none' : 'block';
+  document.getElementById('flashTag').textContent = flipped ? 'Term' : 'Meaning';
+}
+function nextCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx+1) % l.cards.length;
+  renderFlash();
+}
+function prevCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx-1+l.cards.length) % l.cards.length;
+  renderFlash();
+}
+
+function startQuiz(){
+  const l = LESSONS[currentLessonIdx];
+  currentQuizSet = shuffle(l.quiz).map(prepareQuestion);
+  currentQuizMeta = {id:l.id, title:l.title};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = l.title;
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function startFinalExam(){
+  let qs = [];
+  LESSONS.forEach(l=>{
+    qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON));
+  });
+  currentQuizSet = shuffle(qs).map(prepareQuestion);
+  currentQuizMeta = {id:'final', title:'Full Mock Exam'};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = 'Full Mock Exam';
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function renderQuestion(){
+  const total = currentQuizSet.length;
+  const q = currentQuizSet[quizIdx];
+  document.getElementById('quizCounter').textContent = `Question ${quizIdx+1} of ${total}`;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('quizFill').style.width = `${(quizIdx/total)*100}%`;
+  document.getElementById('medalSvg').innerHTML = medalMarkup(Math.round((quizScore/total)*8));
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('explainBox').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const box = document.getElementById('optionsBox');
+  box.innerHTML = '';
+  q.options.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = ()=>selectOption(i);
+    box.appendChild(btn);
+  });
+}
+
+function selectOption(i){
+  const q = currentQuizSet[quizIdx];
+  const buttons = document.querySelectorAll('#optionsBox .option');
+  buttons.forEach((b,idx)=>{
+    b.disabled = true;
+    if(idx === q.correct) b.classList.add('correct');
+    else if(idx === i) b.classList.add('wrong');
+  });
+  if(i === q.correct) quizScore++;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('medalSvg').innerHTML = medalMarkup(Math.round((quizScore/currentQuizSet.length)*8));
+  document.getElementById('explainBox').textContent = q.explain;
+  document.getElementById('explainBox').style.display = 'block';
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('nextBtn').textContent = quizIdx < currentQuizSet.length-1 ? 'Next ▶' : 'See Results 🏆';
+}
+
+function nextQuestion(){
+  if(quizIdx < currentQuizSet.length-1){
+    quizIdx++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function finishQuiz(){
+  const total = currentQuizSet.length;
+  const best = progress[currentQuizMeta.id] || 0;
+  if(quizScore > best) progress[currentQuizMeta.id] = quizScore;
+  saveProgress(progress);
+  renderResults(total);
+  showScreen('resultsScreen');
+}
+
+function renderResults(total){
+  const pct = quizScore/total;
+  const n = starsFor(pct);
+  document.getElementById('resultMedal').innerHTML = medalMarkup(Math.round(pct*8));
+  document.getElementById('resultStars').innerHTML = starString(n);
+  document.getElementById('resultTitle').textContent =
+    n===3 ? 'Champion! Perfect Score!' :
+    n===2 ? 'Great Job!' :
+    n===1 ? 'Good Start!' : 'Keep Practicing!';
+  document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
+}
+
+function retryQuiz(){
+  if(currentQuizMeta.id === 'final'){ startFinalExam(); }
+  else { startQuiz(); }
+}
+
+function renderStrategy(){
+  const box = document.getElementById('strategyList');
+  box.innerHTML = STRATEGY.map(t=>`
+    <div class="tip">
+      <div class="kicker">${t.kicker}</div>
+      <h4>${t.title}</h4>
+      <p>${t.body}</p>
+    </div>
+  `).join('');
+}
+
+renderHome();
+renderStrategy();
+</script>
