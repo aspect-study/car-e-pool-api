@@ -161,6 +161,8 @@
   .mini-stars{display:flex; gap:2px; margin-top:6px;}
   .mini-stars svg{width:15px; height:15px;}
   .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.95rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+  .final-card{border:2px solid var(--amber); background:linear-gradient(135deg, var(--amber-soft), var(--card));}
+  .final-badge{color:var(--amber-deep);}
 
   /* ---- Buttons ---- */
   .btn{
@@ -285,7 +287,7 @@
   <section id="screen-home" class="screen active">
     <div class="hero">
       <h1 class="hero-title">Byte Buddies</h1>
-      <p class="hero-sub">Pick a lesson and power up your PC!</p>
+      <p class="hero-sub">Pick a lesson and power up your PC! Question and answer order shuffle every time, so you really have to know each answer — not just remember the order. Try the Final Mock Exam once you've powered up every lesson!</p>
       <svg class="hero-scene" viewBox="0 0 140 100" role="img" aria-label="A friendly desktop computer">
         <rect x="6" y="84" width="128" height="4" fill="var(--case-dark)"/>
         <rect x="112" y="44" width="22" height="40" rx="3" fill="var(--case)"/>
@@ -370,17 +372,39 @@
   var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
 
   function shuffle(arr){
-    for (var i = arr.length - 1; i > 0; i--){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
       var j = Math.floor(Math.random() * (i + 1));
-      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      var t = a[i]; a[i] = a[j]; a[j] = t;
     }
-    return arr;
+    return a;
   }
   function mc(q, opts, good, bad){
-    return { type:'mc', q:q, options: shuffle(opts.map(function(o){ return {text:o[0], correct:o[1]}; })), good:good, bad:bad };
+    return { type:'mc', q:q, options: opts.map(function(o){ return {text:o[0], correct:o[1]}; }), good:good, bad:bad };
   }
   function tf(q, answer, good, bad){
     return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+  function prepareQuestion(item){
+    if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad };
+    return item;
+  }
+  function buildQuizSet(lesson){
+    return shuffle(lesson.quiz).map(prepareQuestion);
+  }
+
+  var STORAGE_KEY = 'bytebuddies_progress_v1';
+  function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+  function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+  var progress = loadProgress();
+
+  var FINAL_EXAM_PER_LESSON = 3;
+
+  function starsFor(pct){
+    if (pct >= 1) return 3;
+    if (pct >= 0.8) return 2;
+    if (pct >= 0.5) return 1;
+    return 0;
   }
 
   /* ================= LESSONS ================= */
@@ -406,7 +430,11 @@
         mc('What should you do before using the computer?', [['Make sure your hands are clean and dry',true],['Eat a snack',false],['Wet your hands',false]], 'Correct! Clean, dry hands protect the computer.', 'You should make sure your hands are clean and dry before using the computer.'),
         tf('It is okay to keep food and drinks next to your computer.', false, 'That’s right! Food and drinks should be kept away from the computer.', 'The answer should be False — keep food and drinks away from your computer.'),
         mc('How should you press the keys on the keyboard?', [['Softly',true],['As hard as you can',false],['With a pencil',false]], 'Yes! Pressing keys softly protects the keyboard.', 'You should press the keys Softly.'),
-        tf('You should cover your computer when it is not in use.', true, 'Correct! Covering it keeps it free from dust and dirt.', 'The answer should be True — cover your computer when it is not in use.')
+        tf('You should cover your computer when it is not in use.', true, 'Correct! Covering it keeps it free from dust and dirt.', 'The answer should be True — cover your computer when it is not in use.'),
+        mc('How should you sit in the chair while using the computer?', [['With your back against the backrest',true],['Leaning far forward',false],['Standing up',false]], 'That&rsquo;s right! Sitting with your back against the backrest is correct.', 'You should sit With your back against the backrest, knees at a right angle, feet flat on the floor.'),
+        tf('The monitor should be placed slightly below your eye level.', true, 'Correct! That is the proper monitor height.', 'The answer should be True &mdash; place the monitor slightly below your eye level.'),
+        mc('Why should you bring your chair close to the keyboard?', [['So your arms don&rsquo;t stretch too far',true],['So you can reach the door',false],['So you can see better',false]], 'Yes! This protects your arms and posture.', 'You bring your chair close so your arms don&rsquo;t stretch too far.'),
+        tf('Pressing the keys as hard as you can is the best way to type.', false, 'That&rsquo;s right! You should press keys softly instead.', 'The answer should be False &mdash; press keys softly, not hard.')
       ]
     },
     {
@@ -429,7 +457,11 @@
         mc('What should you remember to do with your work?', [['Save it and keep files organized',true],['Delete it',false],['Ignore it',false]], 'Correct! Saving and organizing your work matters.', 'You should Save your work and keep your files organized.'),
         tf('You should eat and drink while using the computer laboratory computers.', false, 'Correct! Food and drinks should stay away from the lab computers.', 'The answer should be False — do not eat or drink inside the computer laboratory.'),
         mc('When should you turn off the computer?', [['When your teacher instructs you to',true],['Whenever you want',false],['Right when you sit down',false]], 'That’s right! Only turn it off when told to.', 'You should turn off the computer only When your teacher instructs you to.'),
-        tf('Before leaving, you should push back your chair and pick up litter.', true, 'Yes! Leave your area the way you found it.', 'The answer should be True — push back your chair and pick up litter before leaving.')
+        tf('Before leaving, you should push back your chair and pick up litter.', true, 'Yes! Leave your area the way you found it.', 'The answer should be True — push back your chair and pick up litter before leaving.'),
+        mc('What should you do while lining up outside the computer laboratory?', [['Stay quiet and orderly',true],['Push your classmates',false],['Run inside',false]], 'That&rsquo;s right! Staying quiet and orderly is correct.', 'You should Stay quiet and orderly while lining up.'),
+        tf('You should wait for your teacher&rsquo;s instructions before touching the computer.', true, 'Correct! Always wait for instructions first.', 'The answer should be True &mdash; wait for your teacher&rsquo;s instructions first.'),
+        mc('What should you use during computer class?', [['Only the programs your teacher tells you to use',true],['Any game you like',false],['Any website you find',false]], 'Yes! Stick to what your teacher assigns.', 'You should use Only the programs your teacher tells you to use.'),
+        tf('It doesn&rsquo;t matter if you forget to save your work.', false, 'That&rsquo;s right! Saving your work is important.', 'The answer should be False &mdash; always remember to save your work.')
       ]
     },
     {
@@ -452,7 +484,11 @@
         mc('Who are considered "peopleware"?', [['The people using the computer',true],['The computer programs',false],['The computer parts',false]], 'That’s right! Peopleware are the people who use the computer.', 'Peopleware refers to The people using the computer.'),
         mc('Which of these is an example of software?', [['Microsoft Paint',true],['Mouse',false],['Monitor',false]], 'Correct! Microsoft Paint is a program, so it’s software.', 'Microsoft Paint is an example of Software.'),
         tf('Hardware, software, and peopleware all work together in a computer system.', true, 'Yes! All three work together to make the system useful.', 'The answer should be True — hardware, software, and peopleware all work together.'),
-        mc('What part of the computer do we use to see the screen?', [['Monitor',true],['Speaker',false],['Fan',false]], 'That’s right! We use the monitor to see the screen.', 'We use the Monitor to see the screen.')
+        mc('What part of the computer do we use to see the screen?', [['Monitor',true],['Speaker',false],['Fan',false]], 'That’s right! We use the monitor to see the screen.', 'We use the Monitor to see the screen.'),
+        mc('Which of these is an example of hardware?', [['Keyboard',true],['Microsoft Word',false],['A computer teacher',false]], 'That&rsquo;s right! The keyboard is a physical part, so it&rsquo;s hardware.', 'The Keyboard is an example of hardware.'),
+        tf('Peopleware refers to the programs installed in a computer.', false, 'Correct! Peopleware refers to the people who use the computer, not programs.', 'The answer should be False &mdash; peopleware refers to the people who use the computer.'),
+        mc('What do we call it when hardware, software, and peopleware all work together?', [['A computer system',true],['A computer virus',false],['A computer game',false]], 'Yes! Together they make a computer system.', 'When these three work together, it is called A computer system.'),
+        tf('The speakers and RAM are parts of a computer.', true, 'That&rsquo;s right! Both are parts of a computer.', 'The answer should be True &mdash; speakers and RAM are parts of a computer.')
       ]
     }
   ];
@@ -473,9 +509,6 @@
   document.getElementById('pc-mini').innerHTML = pcMarkup();
   document.getElementById('pc-final').innerHTML = pcMarkup();
 
-  function revealPiece(n){
-    document.querySelectorAll('[data-piece="'+n+'"]').forEach(function(el){ el.classList.add('revealed'); });
-  }
   function resetPc(){
     document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
   }
@@ -499,19 +532,43 @@
   /* ================= Home ================= */
   function renderHome(){
     var list = document.getElementById('home-list');
-    list.innerHTML = lessons.map(function(l, i){
+    var finalTotal = lessons.length * FINAL_EXAM_PER_LESSON;
+    var finalBest = progress['final'] || 0;
+    var finalStars = starsFor(finalBest / finalTotal);
+    var finalCard = '<div class="card lesson-card final-card">' +
+      '<div class="lesson-top">' +
+        '<svg class="lesson-icon" viewBox="0 0 76 76"><circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><polygon points="38,14 44,30 61,31 47,41 52,58 38,48 24,58 29,41 15,31 32,30" fill="var(--amber)"/></svg>' +
+        '<div class="lesson-info">' +
+          '<div class="lesson-tag-label final-badge">Final Mock Exam</div>' +
+          '<div class="lesson-title">Byte Buddies Review</div>' +
+          '<div class="mini-stars">' + starsMarkup(finalStars, 3) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn" id="btn-final-exam">' + (finalBest > 0 ? 'Retry Exam' : 'Start') + '</button>' +
+    '</div>';
+
+    var lessonCards = lessons.map(function(l, i){
+      var total = l.quiz.length;
+      var best = progress[i] || 0;
+      var stars = starsFor(best / total);
       return '<div class="card lesson-card">' +
         '<div class="lesson-top">' +
           '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
           '<div class="lesson-info">' +
             '<div class="lesson-tag-label">' + l.tag + '</div>' +
             '<div class="lesson-title">' + l.title + '</div>' +
-            '<div class="mini-stars">' + starsMarkup(l.stars, 3) + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(stars, 3) + '</div>' +
           '</div>' +
         '</div>' +
-        '<button class="btn" data-lesson="' + i + '">' + (l.stars > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
+        '<button class="btn" data-lesson="' + i + '">' + (best > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
       '</div>';
     }).join('');
+
+    list.innerHTML = finalCard + lessonCards;
+
+    document.getElementById('btn-final-exam').addEventListener('click', function(){
+      startFinalExam();
+    });
     list.querySelectorAll('button[data-lesson]').forEach(function(b){
       b.addEventListener('click', function(){
         currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
@@ -554,8 +611,34 @@
 
   /* ================= Quiz ================= */
   var qIdx = 0, score = 0, answered = false;
+  var currentQuizSet = [];
+  var currentQuizMeta = null;
+
+  function revealProgress(){
+    var n = Math.round((score / currentQuizSet.length) * 8);
+    for (var p = 1; p <= 8; p++){
+      document.querySelectorAll('[data-piece="' + p + '"]').forEach(function(el){
+        el.classList.toggle('revealed', p <= n);
+      });
+    }
+  }
 
   function startQuiz(){
+    var lesson = lessons[currentLesson];
+    currentQuizSet = buildQuizSet(lesson);
+    currentQuizMeta = { id: currentLesson, title: lesson.title };
+    qIdx = 0; score = 0; resetPc();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function startFinalExam(){
+    var qs = [];
+    lessons.forEach(function(l){
+      qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON).map(prepareQuestion));
+    });
+    currentQuizSet = shuffle(qs);
+    currentQuizMeta = { id: 'final', title: 'Byte Buddies Review' };
     qIdx = 0; score = 0; resetPc();
     showScreen('quiz');
     renderQuestion();
@@ -569,10 +652,9 @@
 
   function renderQuestion(){
     answered = false;
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
-    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + quizData.length;
-    document.getElementById('track-fill').style.width = Math.round((qIdx / quizData.length) * 100) + '%';
+    var item = currentQuizSet[qIdx];
+    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + currentQuizSet.length + (currentQuizMeta.id === 'final' ? ' — ' + decode(currentQuizMeta.title) : '');
+    document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
     document.getElementById('q-text').textContent = decode(item.q);
     var fb = document.getElementById('q-feedback');
@@ -609,22 +691,22 @@
   }
 
   function showFeedback(isCorrect){
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
+    var item = currentQuizSet[qIdx];
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
     document.getElementById('next-wrap').classList.add('show');
-    if (isCorrect){ score++; revealPiece(qIdx + 1); }
+    if (isCorrect) score++;
+    revealProgress();
   }
 
   function handleMC(opt, btnEl, optWrap){
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
+    var item = currentQuizSet[qIdx];
     optWrap.querySelectorAll('.opt').forEach(function(el, i){
-      var thisOpt = quizData[qIdx].options[i];
+      var thisOpt = item.options[i];
       if (thisOpt.correct) el.classList.add('correct');
       else if (el === btnEl) el.classList.add('wrong');
     });
@@ -635,8 +717,7 @@
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
-    var correct = quizData[qIdx].answer;
+    var correct = currentQuizSet[qIdx].answer;
     var isRight = (choice === correct);
     chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
     if (!isRight){
@@ -647,19 +728,19 @@
   }
 
   document.getElementById('btn-next').addEventListener('click', function(){
-    var quizData = lessons[currentLesson].quiz;
-    if (qIdx < quizData.length - 1){ qIdx++; renderQuestion(); }
+    if (qIdx < currentQuizSet.length - 1){ qIdx++; renderQuestion(); }
     else { finishQuiz(); }
   });
 
   function finishQuiz(){
     document.getElementById('track-fill').style.width = '100%';
-    var quizData = lessons[currentLesson].quiz;
-    var total = quizData.length;
-    var starCount = score === total ? 3 : (score >= Math.ceil(total * 0.6) ? 2 : 1);
-    lessons[currentLesson].stars = Math.max(lessons[currentLesson].stars, starCount);
+    var total = currentQuizSet.length;
+    var starCount = starsFor(score / total);
+    var best = Math.max(progress[currentQuizMeta.id] || 0, score);
+    progress[currentQuizMeta.id] = best;
+    saveProgress(progress);
     document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
-    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right!';
+    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
     var msg;
     if (starCount === 3) msg = 'Powered up! Your computer is fully built and glowing — great work!';
     else if (starCount === 2) msg = 'Nice work! Your computer is almost built — try again to finish the setup!';
@@ -669,8 +750,8 @@
   }
 
   document.getElementById('btn-retry').addEventListener('click', function(){
-    lessons[currentLesson].quiz.forEach(function(item){ if (item.options) shuffle(item.options); });
-    startQuiz();
+    if (currentQuizMeta.id === 'final') startFinalExam();
+    else startQuiz();
   });
 
   renderHome();

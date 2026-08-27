@@ -131,6 +131,27 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 /* bot pieces */
 .piece{opacity:0; transform:scale(0.6); transform-origin:center; transition:opacity .35s ease, transform .35s ease;}
 .piece.on{opacity:1; transform:scale(1);}
+
+/* NUMBER LINE */
+.nline-box{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow);}
+.mode-badge{display:inline-block; font-size:0.78rem; font-weight:800; padding:4px 12px; border-radius:999px; margin-bottom:12px;}
+.mode-badge.guided{background:var(--surface2); color:var(--accent);}
+.mode-badge.challenge{background:color-mix(in srgb, var(--coral) 18%, var(--surface)); color:var(--coral);}
+.nline-svg{width:100%; margin-bottom:14px;}
+.nline-svg svg{width:100%; height:auto; display:block;}
+.nline-input-row{display:flex; align-items:center; gap:10px; font-size:1.15rem; font-weight:800; flex-wrap:wrap;}
+.nline-input{width:64px; padding:10px; font-size:1.1rem; font-weight:800; text-align:center; border:2px solid var(--border); border-radius:10px; font-family:inherit; color:var(--ink); background:var(--bg);}
+.nline-input.correct{border-color:var(--good); background:color-mix(in srgb, var(--good) 14%, var(--bg));}
+.nline-input.incorrect{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--bg));}
+.check-btn{background:var(--accent); color:var(--accent-ink); border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-size:0.95rem;}
+.check-btn:disabled{opacity:0.5;}
+
+/* FINAL EXAM CARD */
+.final-card{border-color:var(--gold); background:linear-gradient(135deg, var(--surface2), var(--surface));}
+.final-badge{
+  display:inline-block; background:var(--gold); color:#3A2900; font-size:0.68rem; font-weight:800;
+  padding:2px 10px; border-radius:999px; margin-bottom:4px; letter-spacing:0.03em;
+}
 </style>
 
 <div class="app">
@@ -141,7 +162,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="hero-bot" viewBox="0 0 200 240" id="hero-bot-svg"></svg>
       <div>
         <h1>Block Bot</h1>
-        <p>Build your robot with base-ten blocks! Review each topic, then take the quiz — every correct answer snaps on a new part.</p>
+        <p>Build your robot with base-ten blocks! Questions and answer order shuffle every time, and numbers change every attempt, so you truly learn each skill. Try the Final Mock Exam once you've mastered every lesson!</p>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -178,6 +199,15 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     </div>
     <div class="q-text" id="q-text"></div>
     <div class="options" id="q-options"></div>
+    <div class="nline-box hidden" id="q-numberline">
+      <div class="mode-badge" id="nline-badge"></div>
+      <div class="nline-svg" id="nline-svg"></div>
+      <div class="nline-input-row">
+        <span id="nline-equation"></span>
+        <input type="number" inputmode="numeric" id="nline-input" class="nline-input" placeholder="?">
+        <button class="check-btn" id="nline-check" onclick="checkNumberline()">Check</button>
+      </div>
+    </div>
     <div id="q-feedback"></div>
     <button class="primary-btn hidden" id="q-next-btn" onclick="nextQuestion()">Next &rarr;</button>
   </section>
@@ -218,6 +248,10 @@ const LESSONS = [
       {q:'1109 is made of how many thousands, hundreds, tens, and ones?', options:['1 thousand, 0 hundreds, 1 ten, 9 ones','1 thousand, 1 hundred, 0 tens, 9 ones','0 thousands, 1 hundred, 1 ten, 9 ones','1 thousand, 1 hundred, 9 tens, 0 ones'], correct:1, explain:'1109 = 1 block + 1 flat + 0 rods + 9 units.'},
       {q:'True or False: A flat block is the same as 10 units.', options:['True','False'], correct:1, explain:'A flat equals 10 rods (100 units), not just 10 units — that would only be 1 rod.'},
       {q:'Which blocks show 3406 (3 thousands, 4 hundreds, 6 ones)?', options:['3 blocks, 4 flats, 6 units','3 flats, 4 blocks, 6 rods','6 blocks, 4 flats, 3 units','3 rods, 4 units, 6 blocks'], correct:0, explain:'3406 = 3 thousand blocks + 4 hundred flats + 0 tens + 6 unit ones.'},
+      {q:'How many ones make 1 hundred?', options:['10','100','1','1000'], correct:1, explain:'A flat (hundred) equals 100 units in total — 10 rods of 10 ones each.'},
+      {q:'What number is made of 2 thousands, 3 hundreds, 0 tens, 4 ones?', options:['2304','2034','2340','3204'], correct:0, explain:'2 thousands + 3 hundreds + 0 tens + 4 ones = 2304.'},
+      {q:'True or False: A thousand block is made of 10 hundred flats stacked together.', options:['True','False'], correct:0, explain:'Yes — 10 flats (hundreds) stacked make 1 thousand block.'},
+      {q:'Which is bigger: 1 flat (hundred) or 15 rods (tens)?', options:['1 flat','15 rods','They are equal'], correct:1, explain:'1 flat = 10 rods (100), but 15 rods = 150, which is more than 100.'},
     ]
   },
   {
@@ -238,6 +272,10 @@ const LESSONS = [
       {q:'How do you write 301 in words?', options:['three hundred and one','thirty-one','three hundred ten','three thousand one'], correct:0, explain:'301 = three hundred and one.'},
       {q:'How do you write 1705 in words?', options:['one thousand seven hundred and five','seventeen hundred and five only','one thousand seventy-five','seven thousand one hundred five'], correct:0, explain:'1705 = one thousand seven hundred and five.'},
       {q:'True or False: We write the period name first, then the digit, like "thousand-one".', options:['True','False'], correct:1, explain:'It is the other way around — we write the digit first, then the name of the period, like "one thousand".'},
+      {q:'How do you write 2087 in words?', options:['two thousand eighty-seven','twenty thousand eighty-seven','two thousand and eight seven','two hundred eighty-seven'], correct:0, explain:'2087 = two thousand eighty-seven.'},
+      {q:'What numeral is "six thousand forty"?', options:['6040','6400','640','6004'], correct:0, explain:'Six thousand, forty = 6040 — there are 0 hundreds, so a 0 sits in the hundreds place.'},
+      {q:'How do you write 830 in words?', options:['eight hundred thirty','eighty-three','eight hundred three','eight thousand thirty'], correct:0, explain:'830 = eight hundred thirty.'},
+      {q:'True or False: The numeral for "four thousand five" is 4500.', options:['True','False'], correct:1, explain:'"Four thousand five" means 4005 — there are 0 hundreds and 0 tens, so 4500 is incorrect.'},
     ]
   },
   {
@@ -259,6 +297,10 @@ const LESSONS = [
       {q:'True or False: Skip counting means adding a different number each time.', options:['True','False'], correct:1, explain:'Skip counting always adds the SAME number every time — like always +2, or always +50.'},
       {q:'Skip count by 10s: 70, 80, 90, __', options:['95','100','110','99'], correct:1, explain:'Adding 10 each time: 90 + 10 = 100.'},
       {q:'Skip count by 5s: 40, 45, __', options:['48','50','55','46'], correct:1, explain:'Adding 5 each time: 45 + 5 = 50.'},
+      {q:'Skip count by 2s: 12, 14, __, 18', options:['15','16','17','20'], correct:1, explain:'Adding 2 each time: 14 + 2 = 16.'},
+      {q:'Skip count by 100s: 200, 300, __, 500', options:['350','400','450','410'], correct:1, explain:'Adding 100 each time: 300 + 100 = 400.'},
+      {q:'Skip count by 50s: 50, __, 150, 200', options:['75','100','125','90'], correct:1, explain:'Adding 50 each time: 50 + 50 = 100.'},
+      {q:'True or False: Skip counting by 5s from 5 gives 5, 10, 15, 20, 25.', options:['True','False'], correct:0, explain:'Correct — each step adds 5.'},
     ]
   },
   {
@@ -279,6 +321,10 @@ const LESSONS = [
       {q:'Compare: 99 ___ 99', options:['>','<','='], correct:2, explain:'Same number on both sides means they are equal.'},
       {q:'Compare: 56 ___ 75', options:['>','<','='], correct:1, explain:'56 has fewer tens (5) than 75 (7), so 56 is less than 75.'},
       {q:'True or False: When comparing numbers, we look at the ones digit first.', options:['True','False'], correct:1, explain:'We always compare the biggest place value first — hundreds, then tens, then ones.'},
+      {q:'Compare: 308 ___ 380', options:['>','<','='], correct:1, explain:'Comparing tens: 0 is less than 8, so 308 < 380.'},
+      {q:'True or False: 712 is greater than 721.', options:['True','False'], correct:1, explain:'Comparing tens: 1 is less than 2, so 712 is actually less than 721.'},
+      {q:'Compare: 605 ___ 650', options:['>','<','='], correct:1, explain:'Comparing tens: 0 is less than 5, so 605 < 650.'},
+      {q:'Which symbol means "equal to"?', options:['>','<','='], correct:2, explain:'The = symbol means both numbers have the same value.'},
     ]
   },
   {
@@ -298,6 +344,10 @@ const LESSONS = [
       {q:'To order numbers, what should you do first?', options:['Compare their place values','Guess','Add them together','Multiply them'], correct:0, explain:'You must compare place values (hundreds, then tens, then ones) before you can put numbers in order.'},
       {q:'Which is the greatest: 529, 592, or 421?', options:['529','592','421'], correct:1, explain:'Comparing tens: 592 has 9 tens, more than 529 (2 tens) and 421 (2 tens).'},
       {q:'Arrange 873, 730, 625 from greatest to smallest:', options:['873, 730, 625','625, 730, 873','730, 873, 625','625, 873, 730'], correct:0, explain:'Comparing hundreds: 873 (8) is greatest, then 730 (7), then 625 (6).'},
+      {q:'Order 512, 125, 251 from smallest to greatest:', options:['125, 251, 512','512, 251, 125','251, 125, 512','125, 512, 251'], correct:0, explain:'Comparing hundreds: 125 (1) is smallest, then 251 (2), then 512 (5).'},
+      {q:'Which is the smallest: 348, 384, or 438?', options:['348','384','438'], correct:0, explain:'Comparing hundreds and tens: 348 has the fewest tens among these hundreds.'},
+      {q:'True or False: Arranging numbers from greatest to smallest is called ascending order.', options:['True','False'], correct:1, explain:'That is actually descending order — ascending means smallest to greatest.'},
+      {q:'Arrange 96, 69, 609 from smallest to greatest:', options:['69, 96, 609','96, 69, 609','609, 96, 69','69, 609, 96'], correct:0, explain:'609 has a hundreds digit, so it is largest; between 69 and 96, 69 is smaller.'},
     ]
   },
   {
@@ -317,6 +367,10 @@ const LESSONS = [
       {q:'What is 14 in ordinal form?', options:['14st','14th','14rd','14nd'], correct:1, explain:'14 becomes "14th," following the "th" rule.'},
       {q:'True or False: Ordinal numbers tell how many things there are.', options:['True','False'], correct:1, explain:'Ordinal numbers tell POSITION or order (1st, 2nd...), not how many — that is what cardinal numbers do.'},
       {q:'What is the ordinal word for 20th?', options:['twentyth','twentieth','twenth','twentith'], correct:1, explain:'20th is written as "twentieth" in words.'},
+      {q:'What is the ordinal number for 2?', options:['2th','2nd','2st','2rd'], correct:1, explain:'2 becomes "2nd" — one of the three special ordinal endings.'},
+      {q:'What is the ordinal word for 12th?', options:['twelveth','twelfth','twelth','twelfeth'], correct:1, explain:'12th is written as "twelfth" in words.'},
+      {q:'True or False: 11th is written as "eleventh."', options:['True','False'], correct:0, explain:'Correct — 11th = eleventh, even though it ends in "th" like the regular rule.'},
+      {q:'What is 18 in ordinal form?', options:['18st','18th','18nd','eighteenst'], correct:1, explain:'18 becomes "18th," following the "th" rule.'},
     ]
   },
   {
@@ -337,14 +391,67 @@ const LESSONS = [
       {q:'Write the number: 3 hundreds, 5 tens, 8 ones', options:['358','385','538','853'], correct:0, explain:'3 hundreds + 5 tens + 8 ones = 358.'},
       {q:'True or False: Place value tells us what a digit is worth based on its position.', options:['True','False'], correct:0, explain:'Exactly — the same digit means something different depending on where it sits.'},
       {q:'What number does 6 hundreds, 0 tens, 9 ones make?', options:['690','609','906','960'], correct:1, explain:'6 hundreds + 0 tens + 9 ones = 609.'},
+      {q:'In 782, what does the 8 represent?', options:['8 ones','8 tens','8 hundreds','8 thousands'], correct:1, explain:'The 8 sits in the tens place, so it means 8 tens (80).'},
+      {q:'Write the number: 7 hundreds, 0 tens, 4 ones', options:['704','740','407','470'], correct:0, explain:'7 hundreds + 0 tens + 4 ones = 704.'},
+      {q:'What is 200 + 60 + 1 in expanded form?', options:['261','216','621','126'], correct:0, explain:'2 hundreds + 6 tens + 1 one = 261.'},
+      {q:'True or False: In the number 555, all three digits have the same value.', options:['True','False'], correct:1, explain:'Even though the digits look the same, each 5 has a different value: 500, 50, and 5.'},
     ]
+  },
+  {
+    id:'numberline', emoji:'🐸', title:'Add Using a Number Line', subtitle:'Jump Strategy (Sums within 100)',
+    flashcards:[
+      {icon:'🐸', term:'What is the Jump Strategy?', def:'Start at the first number (the starting point) and take equal +1 jumps to add the second number. Where you land is the sum!'},
+      {icon:'📍', term:'Starting Point & Landing Point', def:'The starting point is where you begin (the first addend). The landing point is where you end up (the sum) — that is the answer you are solving for.'},
+      {icon:'👣', term:'Jump Size', def:'Each jump moves +1 forward. The NUMBER of jumps you take equals the second addend.'},
+      {icon:'🔢', term:'Example: 3 + 4 = 7', def:'Start at 3. Take 4 jumps of +1: 4, 5, 6, 7. You land on 7, so 3 + 4 = 7.'},
+      {icon:'✅', term:'Check Your Work', def:'Landing point − starting point should equal the number of jumps you took. If it matches, your answer is correct!'},
+      {icon:'🧠', term:'When the Numbers Are Hidden', def:'Sometimes the number line will only show the starting point — no numbers in between. That is normal! Count forward in your head, one number at a time, and keep track of how many jumps you take.'},
+    ],
+    generate: genNumberlineSet
   },
 ];
 
-const STORAGE_KEY = 'blockbot_progress_v1';
+const STORAGE_KEY = 'blockbot_progress_v2';
 function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
 function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
 let progress = loadProgress();
+
+const FINAL_EXAM_PER_LESSON = 3;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function prepareQuestion(q){
+  const order = shuffle(q.options.map((_,i)=>i));
+  const options = order.map(i=>q.options[i]);
+  const correct = order.indexOf(q.correct);
+  return {q:q.q, options, correct, explain:q.explain};
+}
+function buildQuizSet(lesson){
+  if(lesson.generate) return lesson.generate(8);
+  return shuffle(lesson.quiz).map(prepareQuestion);
+}
+
+function numberlineExplain(start, jumps){
+  const seq = [];
+  for(let k=1;k<=jumps;k++) seq.push(start+k);
+  return `Start at ${start} and take ${jumps} jumps of +1: ${seq.join(', ')}. You land on ${start+jumps}, so ${start} + ${jumps} = ${start+jumps}.`;
+}
+function genNumberlineSet(n){
+  const qs = [];
+  for(let i=0;i<n;i++){
+    const jumps = 3 + Math.floor(Math.random()*7);
+    const start = Math.floor(Math.random()*(100-jumps+1));
+    const mode = i < n/2 ? 'labeled' : 'blank';
+    qs.push({type:'numberline', start, jumps, mode, explain:numberlineExplain(start,jumps)});
+  }
+  return qs;
+}
 
 /* ---- Block Bot SVG ---- */
 function botMarkup(){
@@ -389,6 +496,69 @@ function botMarkup(){
     <circle cx="150" cy="40" r="3" fill="var(--accent)"/>
   </g>`;
 }
+/* ---- Number Line ---- */
+function numberLineSVG(start, jumps, mode, revealed){
+  const n = jumps;
+  const W = 640, padX = 36, baseY = revealed ? 92 : 60, H = revealed ? 132 : 92;
+  const x = i => padX + i * (W - 2*padX) / n;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  if(revealed){
+    for(let i=0;i<n;i++){
+      const x1=x(i), x2=x(i+1), midX=(x1+x2)/2, peakY=baseY-34;
+      svg += `<path d="M${x1},${baseY} Q${midX},${peakY} ${x2},${baseY}" fill="none" stroke="var(--coral)" stroke-width="2.5"/>`;
+      svg += `<text x="${midX}" y="${peakY-6}" text-anchor="middle" font-size="13" font-weight="800" fill="var(--coral)">+1</text>`;
+    }
+  }
+  svg += `<line x1="${x(0)}" y1="${baseY}" x2="${x(n)}" y2="${baseY}" stroke="var(--ink-soft)" stroke-width="2"/>`;
+  for(let i=0;i<=n;i++){
+    const isLast = i === n;
+    const showLabel = revealed || i===0 || (mode==='labeled' && !isLast);
+    svg += `<line x1="${x(i)}" y1="${baseY-6}" x2="${x(i)}" y2="${baseY+6}" stroke="var(--ink-soft)" stroke-width="2"/>`;
+    if(showLabel){
+      svg += `<text x="${x(i)}" y="${baseY+22}" text-anchor="middle" font-size="12" font-weight="700" fill="${isLast?'var(--accent)':'var(--ink)'}">${start+i}</text>`;
+    } else if(isLast){
+      svg += `<text x="${x(i)}" y="${baseY+22}" text-anchor="middle" font-size="16" font-weight="800" fill="var(--accent)">?</text>`;
+    }
+  }
+  svg += `</svg>`;
+  return svg;
+}
+
+function renderNumberlineQuestion(q){
+  const badge = document.getElementById('nline-badge');
+  badge.textContent = q.mode==='labeled' ? '🔍 Guided: watch the numbers grow as you count on' : '🧠 Challenge: figure out the next numbers in your head!';
+  badge.className = 'mode-badge ' + (q.mode==='labeled' ? 'guided' : 'challenge');
+  document.getElementById('nline-svg').innerHTML = numberLineSVG(q.start, q.jumps, q.mode, false);
+  document.getElementById('nline-equation').textContent = `${q.start} + ${q.jumps} =`;
+  const input = document.getElementById('nline-input');
+  input.value = '';
+  input.disabled = false;
+  input.className = 'nline-input';
+  input.onkeydown = (e)=>{ if(e.key==='Enter') checkNumberline(); };
+  document.getElementById('nline-check').disabled = false;
+  setTimeout(()=>input.focus(), 50);
+}
+
+function checkNumberline(){
+  if(answered) return;
+  const q = currentQuizSet[quizIdx];
+  const total = currentQuizSet.length;
+  const input = document.getElementById('nline-input');
+  const val = parseInt(input.value, 10);
+  const correctAns = q.start + q.jumps;
+  answered = true;
+  const correct = val === correctAns;
+  if(correct) quizScore++;
+  input.disabled = true;
+  input.classList.add(correct ? 'correct' : 'incorrect');
+  document.getElementById('nline-check').disabled = true;
+  document.getElementById('nline-svg').innerHTML = numberLineSVG(q.start, q.jumps, q.mode, true);
+  renderBot(document.getElementById('quiz-bot-svg'), Math.round((quizScore/total)*8));
+  const fb = document.getElementById('q-feedback');
+  fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite — the answer is '+correctAns+'.'}</strong>${q.explain}</div>`;
+  document.getElementById('q-next-btn').classList.remove('hidden');
+}
+
 function renderBot(svgEl, n){
   svgEl.innerHTML = botMarkup();
   svgEl.querySelectorAll('.piece').forEach(p=>{
@@ -402,6 +572,8 @@ let cardIdx = 0;
 let quizIdx = 0;
 let quizScore = 0;
 let answered = false;
+let currentQuizSet = [];
+let currentQuizMeta = null;
 
 const homeScreen = document.getElementById('screen-home');
 const cardsScreen = document.getElementById('screen-cards');
@@ -414,10 +586,10 @@ function showScreen(el){
   window.scrollTo(0,0);
 }
 
-function starsFor(score){
-  if(score >= 8) return 3;
-  if(score >= 6) return 2;
-  if(score >= 4) return 1;
+function starsFor(pct){
+  if(pct >= 1) return 3;
+  if(pct >= 0.8) return 2;
+  if(pct >= 0.5) return 1;
   return 0;
 }
 
@@ -425,9 +597,28 @@ function renderHome(){
   renderBot(document.getElementById('hero-bot-svg'), 8);
   const grid = document.getElementById('lesson-grid');
   grid.innerHTML = '';
+
+  const finalTotal = LESSONS.length * FINAL_EXAM_PER_LESSON;
+  const finalBest = progress['final'] || 0;
+  const finalCard = document.createElement('button');
+  finalCard.className = 'lesson-card final-card';
+  finalCard.onclick = ()=>startFinalExam();
+  finalCard.innerHTML = `
+    <div class="lesson-emoji">🏆</div>
+    <div class="lesson-info">
+      <span class="final-badge">Mock Exam</span>
+      <h3>Final Mock Exam</h3>
+      <p>${finalTotal} mixed questions from every lesson</p>
+      <div class="stars">${[1,2,3].map(s=>`<span class="${s<=starsFor(finalBest/finalTotal)?'star-on':'star-off'}">★</span>`).join('')}</div>
+    </div>
+    <div class="go-btn">${finalBest>0?'Retry':'Start'}</div>
+  `;
+  grid.appendChild(finalCard);
+
   LESSONS.forEach((lesson, i)=>{
+    const total = lesson.generate ? 8 : lesson.quiz.length;
     const best = progress[lesson.id] || 0;
-    const stars = starsFor(best);
+    const stars = starsFor(best/total);
     const card = document.createElement('button');
     card.className = 'lesson-card';
     card.onclick = ()=>openLesson(i);
@@ -479,6 +670,26 @@ function cardStep(dir){
 }
 
 function startQuiz(){
+  const lesson = LESSONS[currentLessonIdx];
+  currentQuizSet = buildQuizSet(lesson);
+  currentQuizMeta = {id: lesson.id, title: lesson.title};
+  quizIdx = 0;
+  quizScore = 0;
+  renderQuestion();
+  showScreen(quizScreen);
+}
+
+function startFinalExam(){
+  let qs = [];
+  LESSONS.forEach(l=>{
+    if(l.generate){
+      qs = qs.concat(l.generate(FINAL_EXAM_PER_LESSON));
+    } else {
+      qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON).map(prepareQuestion));
+    }
+  });
+  currentQuizSet = shuffle(qs);
+  currentQuizMeta = {id:'final', title:'Final Mock Exam'};
   quizIdx = 0;
   quizScore = 0;
   renderQuestion();
@@ -486,13 +697,25 @@ function startQuiz(){
 }
 
 function renderQuestion(){
-  const lesson = LESSONS[currentLessonIdx];
   answered = false;
-  document.getElementById('quiz-title').textContent = lesson.title;
-  const total = lesson.quiz.length;
+  document.getElementById('quiz-title').textContent = currentQuizMeta.title;
+  const total = currentQuizSet.length;
   document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
-  renderBot(document.getElementById('quiz-bot-svg'), quizScore);
-  const q = lesson.quiz[quizIdx];
+  renderBot(document.getElementById('quiz-bot-svg'), Math.round((quizScore/total)*8));
+  const q = currentQuizSet[quizIdx];
+  document.getElementById('q-feedback').innerHTML = '';
+  document.getElementById('q-next-btn').classList.add('hidden');
+
+  if(q.type === 'numberline'){
+    document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: Find the sum.`;
+    document.getElementById('q-options').classList.add('hidden');
+    document.getElementById('q-numberline').classList.remove('hidden');
+    renderNumberlineQuestion(q);
+    return;
+  }
+
+  document.getElementById('q-numberline').classList.add('hidden');
+  document.getElementById('q-options').classList.remove('hidden');
   document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: ${q.q}`;
   const opts = document.getElementById('q-options');
   opts.innerHTML = '';
@@ -503,15 +726,13 @@ function renderQuestion(){
     b.onclick = ()=>selectOption(idx);
     opts.appendChild(b);
   });
-  document.getElementById('q-feedback').innerHTML = '';
-  document.getElementById('q-next-btn').classList.add('hidden');
 }
 
 function selectOption(idx){
   if(answered) return;
   answered = true;
-  const lesson = LESSONS[currentLessonIdx];
-  const q = lesson.quiz[quizIdx];
+  const q = currentQuizSet[quizIdx];
+  const total = currentQuizSet.length;
   const buttons = document.querySelectorAll('#q-options .option');
   buttons.forEach((b, i)=>{
     b.disabled = true;
@@ -520,16 +741,15 @@ function selectOption(idx){
   });
   const correct = idx === q.correct;
   if(correct) quizScore++;
-  renderBot(document.getElementById('quiz-bot-svg'), quizScore);
+  renderBot(document.getElementById('quiz-bot-svg'), Math.round((quizScore/total)*8));
   const fb = document.getElementById('q-feedback');
   fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite.'}</strong>${q.explain}</div>`;
   document.getElementById('q-next-btn').classList.remove('hidden');
 }
 
 function nextQuestion(){
-  const lesson = LESSONS[currentLessonIdx];
   quizIdx++;
-  if(quizIdx >= lesson.quiz.length){
+  if(quizIdx >= currentQuizSet.length){
     finishQuiz();
   } else {
     renderQuestion();
@@ -537,26 +757,26 @@ function nextQuestion(){
 }
 
 function finishQuiz(){
-  const lesson = LESSONS[currentLessonIdx];
-  const best = Math.max(progress[lesson.id] || 0, quizScore);
-  progress[lesson.id] = best;
+  const total = currentQuizSet.length;
+  const best = Math.max(progress[currentQuizMeta.id] || 0, quizScore);
+  progress[currentQuizMeta.id] = best;
   saveProgress(progress);
-  renderResults();
+  renderResults(total);
   showScreen(resultsScreen);
 }
 
-function renderResults(){
-  const lesson = LESSONS[currentLessonIdx];
-  renderBot(document.getElementById('results-bot-svg'), quizScore);
-  const stars = starsFor(quizScore);
+function renderResults(total){
+  renderBot(document.getElementById('results-bot-svg'), Math.round((quizScore/total)*8));
+  const stars = starsFor(quizScore/total);
   document.getElementById('results-heading').textContent =
     stars === 3 ? 'Block Bot Complete!' : stars > 0 ? 'Great Progress!' : 'Keep Building!';
-  document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${lesson.quiz.length} on ${lesson.title}`;
+  document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
 }
 
 function retryLesson(){
-  startQuiz();
+  if(currentQuizMeta.id === 'final'){ startFinalExam(); }
+  else { startQuiz(); }
 }
 
 renderHome();

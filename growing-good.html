@@ -167,6 +167,8 @@
   .mini-stars{display:flex; gap:2px; margin-top:6px;}
   .mini-stars svg{width:15px; height:15px;}
   .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.98rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+  .final-card{border:2px solid var(--lav); background:linear-gradient(135deg, var(--lav-soft), var(--card));}
+  .final-badge{color:var(--lav-deep);}
 
   /* ---- Buttons ---- */
   .btn{
@@ -292,7 +294,7 @@
   <section id="screen-home" class="screen active">
     <div class="hero">
       <h1 class="hero-title">Growing Good</h1>
-      <p class="hero-sub">Pick a lesson and watch yourself grow!</p>
+      <p class="hero-sub">Pick a lesson and watch yourself grow! Question and answer order shuffle every time, so you really have to know each answer — not just remember the order. Try the Final Mock Exam once you've grown every lesson!</p>
       <svg class="hero-scene" viewBox="0 0 300 120" role="img" aria-label="A row of small growing plants">
         <circle cx="255" cy="26" r="16" fill="var(--accent)" opacity="0.85"/>
         <rect x="0" y="98" width="300" height="10" fill="var(--soil)"/>
@@ -378,17 +380,39 @@
   var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
 
   function shuffle(arr){
-    for (var i = arr.length - 1; i > 0; i--){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
       var j = Math.floor(Math.random() * (i + 1));
-      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      var t = a[i]; a[i] = a[j]; a[j] = t;
     }
-    return arr;
+    return a;
   }
   function mc(q, opts, good, bad){
-    return { type:'mc', q:q, options: shuffle(opts.map(function(o){ return {text:o[0], correct:o[1]}; })), good:good, bad:bad };
+    return { type:'mc', q:q, options: opts.map(function(o){ return {text:o[0], correct:o[1]}; }), good:good, bad:bad };
   }
   function tf(q, answer, good, bad){
     return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+  function prepareQuestion(item){
+    if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad };
+    return item;
+  }
+  function buildQuizSet(lesson){
+    return shuffle(lesson.quiz).map(prepareQuestion);
+  }
+
+  var STORAGE_KEY = 'growinggood_progress_v1';
+  function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+  function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+  var progress = loadProgress();
+
+  var FINAL_EXAM_PER_LESSON = 3;
+
+  function starsFor(pct){
+    if (pct >= 1) return 3;
+    if (pct >= 0.8) return 2;
+    if (pct >= 0.5) return 1;
+    return 0;
   }
 
   /* ================= LESSONS ================= */
@@ -414,7 +438,11 @@
         tf('Fear is a natural response to danger or threat.', true, 'That’s right! Fear helps us respond to danger.', 'The answer should be True &mdash; fear is a natural response to danger or threat.'),
         mc('What is disgust usually triggered by?', [['Something unpleasant, like a bad smell or taste',true],['Something fun',false],['Something exciting',false]], 'Yes! Disgust is triggered by something unpleasant.', 'Disgust is triggered by something unpleasant, like a bad smell or taste.'),
         mc('In the CATCH plan, what does the &ldquo;C&rdquo; stand for?', [['Be Calm',true],['Cry loudly',false],['Complain',false]], 'That’s right! C stands for Be Calm.', 'In CATCH, the &ldquo;C&rdquo; stands for Be Calm.'),
-        tf('The CATCH plan reminds us to call for help when we need it.', true, 'Correct! Calling for help is part of the CATCH plan.', 'The answer should be True &mdash; CATCH reminds us to call for help when we need it.')
+        tf('The CATCH plan reminds us to call for help when we need it.', true, 'Correct! Calling for help is part of the CATCH plan.', 'The answer should be True &mdash; CATCH reminds us to call for help when we need it.'),
+        mc('Which emotion is the opposite of happiness?', [['Sadness',true],['Excitement',false],['Joy',false]], 'That’s right! Sadness is the opposite of happiness.', 'Sadness is the emotion that is the opposite of happiness.'),
+        tf('Fear and disgust are the same emotion.', false, 'That’s right! Fear and disgust are two different emotions.', 'The answer should be False &mdash; fear is being scared of danger, while disgust is a strong dislike of something unpleasant.'),
+        mc('In the CATCH plan, what does the &ldquo;A&rdquo; stand for?', [['Accept your feelings',true],['Argue with others',false],['Avoid everyone',false]], 'Yes! A stands for Accept your feelings.', 'In CATCH, the &ldquo;A&rdquo; stands for Accept your feelings.'),
+        tf('Emotions help us understand how we feel and react to situations.', true, 'Correct! That is exactly what emotions do.', 'The answer should be True &mdash; emotions help us understand how we feel and react to situations.')
       ]
     },
     {
@@ -437,7 +465,11 @@
         tf('We only pray when we need to ask God for something.', false, 'That’s right! We also pray to give thanks, praise God, and say sorry.', 'The answer should be False &mdash; we also pray to give thanks, praise God, and say sorry.'),
         mc('When we say sorry to God and promise not to do it again, what are we doing?', [['Asking for forgiveness',true],['Showing off',false],['Complaining',false]], 'Correct! That is asking for forgiveness.', 'Saying sorry and promising not to do it again is asking for forgiveness.'),
         tf('We can talk to God anytime and anywhere through prayer.', true, 'That’s right! Prayer lets us talk to God anytime, anywhere.', 'The answer should be True &mdash; we can talk to God anytime and anywhere through prayer.'),
-        mc('What do we do when we &ldquo;praise and adore&rdquo; God in prayer?', [['Appreciate God’s goodness',true],['Ask for toys only',false],['Argue with Him',false]], 'Yes! We appreciate God’s goodness.', 'To praise and adore means we appreciate God’s goodness.')
+        mc('What do we do when we &ldquo;praise and adore&rdquo; God in prayer?', [['Appreciate God’s goodness',true],['Ask for toys only',false],['Argue with Him',false]], 'Yes! We appreciate God’s goodness.', 'To praise and adore means we appreciate God’s goodness.'),
+        mc('What does religion teach us to do?', [['Pray, be kind, and do what is right',true],['Ignore others',false],['Avoid praying',false]], 'That’s right! Religion teaches us to pray, be kind, and do what is right.', 'Religion teaches us to pray, be kind, and do what is right.'),
+        tf('We only pray inside a church.', false, 'Correct! We can pray anytime and anywhere.', 'The answer should be False &mdash; we can pray anytime and anywhere, not only inside a church.'),
+        mc('Which of these is a reason we pray, besides giving thanks?', [['To praise God’s goodness',true],['To avoid God',false],['To ignore our blessings',false]], 'Yes! We also pray to praise God’s goodness.', 'One reason we pray is To praise God’s goodness.'),
+        tf('Church is a special place where people worship God and learn about His love.', true, 'That’s right! Church is a place of worship and learning.', 'The answer should be True &mdash; church is where people worship God and learn about His love.')
       ]
     },
     {
@@ -461,7 +493,11 @@
         mc('How many hours of sleep do children need to stay healthy?', [['10 to 11 hours',true],['2 to 3 hours',false],['20 hours',false]], 'Yes! Children need 10 to 11 hours of sleep.', 'Children need 10 to 11 hours of sleep to stay healthy.'),
         tf('Exercise helps strengthen your heart and other body organs.', true, 'That’s right! Exercise strengthens your heart and organs.', 'The answer should be True &mdash; exercise strengthens your heart and other body organs.'),
         mc('What do we call taking care of yourself and your surroundings to stay clean?', [['Hygiene',true],['Homework',false],['Chores',false]], 'Correct! That is hygiene.', 'Hygiene means taking care of yourself and your surroundings to stay clean.'),
-        tf('Taking care of your feelings is also part of staying healthy.', true, 'That’s right! Mental health matters too.', 'The answer should be True &mdash; taking care of your feelings is also part of staying healthy.')
+        tf('Taking care of your feelings is also part of staying healthy.', true, 'That’s right! Mental health matters too.', 'The answer should be True &mdash; taking care of your feelings is also part of staying healthy.'),
+        mc('When should you wash your hands?', [['After playing and before you eat',true],['Only once a week',false],['Only before sleeping',false]], 'That’s right! Wash your hands after playing and before you eat.', 'You should wash your hands After playing and before you eat.'),
+        tf('Physical fitness only means playing sports competitively.', false, 'Correct! Physical fitness means being active, like exercise and play.', 'The answer should be False &mdash; physical fitness means being active for at least an hour a day, not just competitive sports.'),
+        mc('What do we call eating healthy, nutritious food instead of junk food?', [['Adequate Nutrition',true],['Physical Fitness',false],['Quality Sleep',false]], 'Yes! That is Adequate Nutrition.', 'Eating healthy food instead of junk food is called Adequate Nutrition.'),
+        tf('Taking care of your feelings has nothing to do with staying healthy.', false, 'That’s right! Taking care of your feelings is part of staying healthy too.', 'The answer should be False &mdash; taking care of your feelings (mental health) is also part of staying healthy.')
       ]
     }
   ];
@@ -482,9 +518,6 @@
   document.getElementById('plant-mini').innerHTML = plantMarkup();
   document.getElementById('plant-final').innerHTML = plantMarkup();
 
-  function revealPiece(n){
-    document.querySelectorAll('[data-piece="'+n+'"]').forEach(function(el){ el.classList.add('revealed'); });
-  }
   function resetPlant(){
     document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
   }
@@ -508,19 +541,43 @@
   /* ================= Home ================= */
   function renderHome(){
     var list = document.getElementById('home-list');
-    list.innerHTML = lessons.map(function(l, i){
+    var finalTotal = lessons.length * FINAL_EXAM_PER_LESSON;
+    var finalBest = progress['final'] || 0;
+    var finalStars = starsFor(finalBest / finalTotal);
+    var finalCard = '<div class="card lesson-card final-card">' +
+      '<div class="lesson-top">' +
+        '<svg class="lesson-icon" viewBox="0 0 76 76"><circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><polygon points="38,14 44,30 61,31 47,41 52,58 38,48 24,58 29,41 15,31 32,30" fill="var(--lav)"/></svg>' +
+        '<div class="lesson-info">' +
+          '<div class="lesson-tag-label final-badge">Final Mock Exam</div>' +
+          '<div class="lesson-title">Growing Good Review</div>' +
+          '<div class="mini-stars">' + starsMarkup(finalStars, 3) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn" id="btn-final-exam">' + (finalBest > 0 ? 'Retry Exam' : 'Start') + '</button>' +
+    '</div>';
+
+    var lessonCards = lessons.map(function(l, i){
+      var total = l.quiz.length;
+      var best = progress[i] || 0;
+      var stars = starsFor(best / total);
       return '<div class="card lesson-card">' +
         '<div class="lesson-top">' +
           '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
           '<div class="lesson-info">' +
             '<div class="lesson-tag-label">' + l.tag + '</div>' +
             '<div class="lesson-title">' + l.title + '</div>' +
-            '<div class="mini-stars">' + starsMarkup(l.stars, 3) + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(stars, 3) + '</div>' +
           '</div>' +
         '</div>' +
-        '<button class="btn" data-lesson="' + i + '">' + (l.stars > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
+        '<button class="btn" data-lesson="' + i + '">' + (best > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
       '</div>';
     }).join('');
+
+    list.innerHTML = finalCard + lessonCards;
+
+    document.getElementById('btn-final-exam').addEventListener('click', function(){
+      startFinalExam();
+    });
     list.querySelectorAll('button[data-lesson]').forEach(function(b){
       b.addEventListener('click', function(){
         currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
@@ -563,8 +620,34 @@
 
   /* ================= Quiz ================= */
   var qIdx = 0, score = 0, answered = false;
+  var currentQuizSet = [];
+  var currentQuizMeta = null;
+
+  function revealProgress(){
+    var n = Math.round((score / currentQuizSet.length) * 8);
+    for (var p = 1; p <= 8; p++){
+      document.querySelectorAll('[data-piece="' + p + '"]').forEach(function(el){
+        el.classList.toggle('revealed', p <= n);
+      });
+    }
+  }
 
   function startQuiz(){
+    var lesson = lessons[currentLesson];
+    currentQuizSet = buildQuizSet(lesson);
+    currentQuizMeta = { id: currentLesson, title: lesson.title };
+    qIdx = 0; score = 0; resetPlant();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function startFinalExam(){
+    var qs = [];
+    lessons.forEach(function(l){
+      qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON).map(prepareQuestion));
+    });
+    currentQuizSet = shuffle(qs);
+    currentQuizMeta = { id: 'final', title: 'Growing Good Review' };
     qIdx = 0; score = 0; resetPlant();
     showScreen('quiz');
     renderQuestion();
@@ -578,10 +661,9 @@
 
   function renderQuestion(){
     answered = false;
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
-    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + quizData.length;
-    document.getElementById('track-fill').style.width = Math.round((qIdx / quizData.length) * 100) + '%';
+    var item = currentQuizSet[qIdx];
+    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + currentQuizSet.length + (currentQuizMeta.id === 'final' ? ' — ' + decode(currentQuizMeta.title) : '');
+    document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
     document.getElementById('q-text').textContent = decode(item.q);
     var fb = document.getElementById('q-feedback');
@@ -618,22 +700,22 @@
   }
 
   function showFeedback(isCorrect){
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
+    var item = currentQuizSet[qIdx];
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
     document.getElementById('next-wrap').classList.add('show');
-    if (isCorrect){ score++; revealPiece(qIdx + 1); }
+    if (isCorrect) score++;
+    revealProgress();
   }
 
   function handleMC(opt, btnEl, optWrap){
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
+    var item = currentQuizSet[qIdx];
     optWrap.querySelectorAll('.opt').forEach(function(el, i){
-      var thisOpt = quizData[qIdx].options[i];
+      var thisOpt = item.options[i];
       if (thisOpt.correct) el.classList.add('correct');
       else if (el === btnEl) el.classList.add('wrong');
     });
@@ -644,8 +726,7 @@
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
-    var correct = quizData[qIdx].answer;
+    var correct = currentQuizSet[qIdx].answer;
     var isRight = (choice === correct);
     chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
     if (!isRight){
@@ -656,19 +737,19 @@
   }
 
   document.getElementById('btn-next').addEventListener('click', function(){
-    var quizData = lessons[currentLesson].quiz;
-    if (qIdx < quizData.length - 1){ qIdx++; renderQuestion(); }
+    if (qIdx < currentQuizSet.length - 1){ qIdx++; renderQuestion(); }
     else { finishQuiz(); }
   });
 
   function finishQuiz(){
     document.getElementById('track-fill').style.width = '100%';
-    var quizData = lessons[currentLesson].quiz;
-    var total = quizData.length;
-    var starCount = score === total ? 3 : (score >= Math.ceil(total * 0.6) ? 2 : 1);
-    lessons[currentLesson].stars = Math.max(lessons[currentLesson].stars, starCount);
+    var total = currentQuizSet.length;
+    var starCount = starsFor(score / total);
+    var best = Math.max(progress[currentQuizMeta.id] || 0, score);
+    progress[currentQuizMeta.id] = best;
+    saveProgress(progress);
     document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
-    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right!';
+    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
     var msg;
     if (starCount === 3) msg = 'Amazing! Your plant is in full bloom — you’re growing beautifully!';
     else if (starCount === 2) msg = 'Great job! Your plant is almost in bloom — try again to help it flower!';
@@ -678,8 +759,8 @@
   }
 
   document.getElementById('btn-retry').addEventListener('click', function(){
-    lessons[currentLesson].quiz.forEach(function(item){ if (item.options) shuffle(item.options); });
-    startQuiz();
+    if (currentQuizMeta.id === 'final') startFinalExam();
+    else startQuiz();
   });
 
   renderHome();

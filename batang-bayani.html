@@ -161,6 +161,8 @@
   .mini-stars{display:flex; gap:2px; margin-top:6px;}
   .mini-stars svg{width:15px; height:15px;}
   .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.98rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+  .final-card{border:2px solid var(--accent); background:linear-gradient(135deg, var(--accent-soft), var(--card));}
+  .final-badge{color:var(--accent-ink);}
 
   /* ---- Buttons ---- */
   .btn{
@@ -286,7 +288,7 @@
   <section id="screen-home" class="screen active">
     <div class="hero">
       <h1 class="hero-title">Batang Bayani</h1>
-      <p class="hero-sub">Piliin ang aralin at simulan ang pagsusulit!</p>
+      <p class="hero-sub">Piliin ang aralin at simulan ang pagsusulit! Nagbabago ang ayos ng tanong at sagot sa bawat pagsubok, kaya kailangan mong talagang alamin ang sagot &mdash; hindi lang tandaan ang pagkakasunod-sunod nito. Subukan ang Pangwakas na Pagsusulit kapag natapos mo na ang lahat ng aralin!</p>
       <svg class="hero-scene" viewBox="0 0 300 150" role="img" aria-label="Mga bahay-kubo sa isang komunidad">
         <circle cx="245" cy="35" r="18" fill="var(--accent)" opacity="0.9"/>
         <g>
@@ -371,17 +373,39 @@
   var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
 
   function shuffle(arr){
-    for (var i = arr.length - 1; i > 0; i--){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
       var j = Math.floor(Math.random() * (i + 1));
-      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      var t = a[i]; a[i] = a[j]; a[j] = t;
     }
-    return arr;
+    return a;
   }
   function mc(q, opts, good, bad){
-    return { type:'mc', q:q, options: shuffle(opts.map(function(o){ return {text:o[0], correct:o[1]}; })), good:good, bad:bad };
+    return { type:'mc', q:q, options: opts.map(function(o){ return {text:o[0], correct:o[1]}; }), good:good, bad:bad };
   }
   function tf(q, answer, good, bad){
     return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+  function prepareQuestion(item){
+    if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad };
+    return item;
+  }
+  function buildQuizSet(lesson){
+    return shuffle(lesson.quiz).map(prepareQuestion);
+  }
+
+  var STORAGE_KEY = 'batangbayani_progress_v1';
+  function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+  function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+  var progress = loadProgress();
+
+  var FINAL_EXAM_PER_LESSON = 3;
+
+  function starsFor(pct){
+    if (pct >= 1) return 3;
+    if (pct >= 0.8) return 2;
+    if (pct >= 0.5) return 1;
+    return 0;
   }
 
   /* ================= LESSONS ================= */
@@ -405,7 +429,11 @@
         tf('Sumusunod sa mga tuntunin ang mga taong naninirahan sa komunidad.', true, 'Tama! Ang tuntunin ay tumutulong para tahimik at ligtas ang komunidad.', 'Dapat TAMA ang sagot &mdash; sumusunod tayo sa tuntunin ng ating komunidad.'),
         mc('Ano ang ibig sabihin ng &ldquo;Bayanihan&rdquo;?', [['Pagtutulungan ng mga tao',true],['Paglalaro nang mag-isa',false],['Pagtulog buong araw',false]], 'Tama! Ang bayanihan ay pagtutulungan &mdash; diwa ito ng ating komunidad.', 'Ang BAYANIHAN ay pagtutulungan ng mga tao sa komunidad.'),
         tf('Magkakaiba ang interes ng bawat tao sa iisang komunidad.', false, 'Tama! Sama-sama silang may iisang interes.', 'Dapat MALI ang sagot &mdash; iisa, hindi magkakaiba, ang interes nila.'),
-        mc('Sino-sino ang bumubuo sa isang komunidad?', [['Mga pamilyang naninirahan doon',true],['Mga gusali lamang',false],['Mga sasakyan lamang',false]], 'Tama! Ang mga pamilya ang bumubuo sa komunidad.', 'Ang mga PAMILYA ang bumubuo sa isang komunidad, hindi mga bagay lamang.')
+        mc('Sino-sino ang bumubuo sa isang komunidad?', [['Mga pamilyang naninirahan doon',true],['Mga gusali lamang',false],['Mga sasakyan lamang',false]], 'Tama! Ang mga pamilya ang bumubuo sa komunidad.', 'Ang mga PAMILYA ang bumubuo sa isang komunidad, hindi mga bagay lamang.'),
+        mc('Sino-sino ang bumubuo sa isang pamayanan o komunidad?', [['Mga taong naninirahan sa iisang lugar',true],['Mga hayop sa gubat',false],['Mga bituin sa langit',false]], 'Tama! Ang mga taong naninirahan sa iisang lugar ang bumubuo ng komunidad.', 'Ang mga TAONG NANINIRAHAN SA IISANG LUGAR ang bumubuo ng komunidad.'),
+        tf('Ang bawat kasapi ng komunidad ay dapat gumalang sa isa\'t isa.', true, 'Tama! Mahalaga ang paggalang sa komunidad.', 'Dapat TAMA ang sagot &mdash; kailangan nating igalang ang bawat kasapi ng komunidad.'),
+        mc('Ano ang mangyayari kung hindi susunod ang mga tao sa tuntunin ng komunidad?', [['Magkakagulo',true],['Magiging mas maayos',false],['Wala itong epekto',false]], 'Tama! Nagkakagulo kapag hindi sinusunod ang mga tuntunin.', 'Kapag hindi sinunod ang tuntunin, MAGKAKAGULO sa komunidad.'),
+        tf('Ang diwa ng Bayanihan ay makikita lamang sa malalaking lungsod.', false, 'Tama! Makikita ang Bayanihan kahit saan mayroong tunay na pagtutulungan.', 'Dapat MALI ang sagot &mdash; makikita ang diwa ng Bayanihan kahit saan, hindi lamang sa lungsod.')
       ]
     },
     {
@@ -428,7 +456,11 @@
         mc('Saan karaniwang makikita ang pinuno ng komunidad?', [['Barangay Hall',true],['Sinehan',false],['Palengke',false]], 'Tama! Karaniwan siyang makikita sa Barangay Hall.', 'Kadalasan, makikita ang pinuno ng komunidad sa Barangay Hall.'),
         tf('Hindi mahalaga malaman ang lokasyon ng ating komunidad.', false, 'Tama! Mahalaga itong malaman.', 'Dapat MALI ang sagot &mdash; mahalagang malaman ang lokasyon ng ating komunidad.'),
         mc('Ano ang tawag sa pangunahing detalye na naglalarawan sa komunidad?', [['Batayang Impormasyon',true],['Larong Bayan',false],['Kanta',false]], 'Tama! Iyan ang batayang impormasyon ng komunidad.', 'Ang tawag dito ay Batayang Impormasyon ng Komunidad.'),
-        tf('Iba&rsquo;t ibang wika ang maaaring gamitin ng mga tao sa iisang komunidad depende sa kanilang lugar.', true, 'Tama! Iba&rsquo;t ibang wika ang ginagamit sa iba&rsquo;t ibang lugar.', 'Dapat TAMA ang sagot &mdash; nag-iiba ang wikang ginagamit depende sa lugar.')
+        tf('Iba&rsquo;t ibang wika ang maaaring gamitin ng mga tao sa iisang komunidad depende sa kanilang lugar.', true, 'Tama! Iba&rsquo;t ibang wika ang ginagamit sa iba&rsquo;t ibang lugar.', 'Dapat TAMA ang sagot &mdash; nag-iiba ang wikang ginagamit depende sa lugar.'),
+        mc('Alin sa mga sumusunod ang tumutukoy sa saan matatagpuan ang komunidad?', [['Lokasyon',true],['Wika',false],['Pinuno',false]], 'Tama! Ang lokasyon ang nagsasabi kung saan matatagpuan ang komunidad.', 'Ang LOKASYON ang tumutukoy kung saan matatagpuan ang komunidad.'),
+        tf('Ang bawat komunidad ay may sariling pangalan.', true, 'Tama! May sariling pangalan ang bawat komunidad tulad ng barangay o bayan.', 'Dapat TAMA ang sagot &mdash; may sariling pangalan ang bawat komunidad.'),
+        mc('Sino ang responsable sa pamumuno at pangangasiwa ng komunidad?', [['Pinuno ng Komunidad',true],['Sinumang bisita',false],['Walang namumuno',false]], 'Tama! Ang pinuno ang namamahala sa komunidad.', 'Ang PINUNO NG KOMUNIDAD ang namumuno at namamahala rito.'),
+        tf('Hindi mahalaga malaman ang pangalan ng ating komunidad.', false, 'Tama! Mahalaga itong malaman bilang bahagi ng ating pagkakakilanlan.', 'Dapat MALI ang sagot &mdash; mahalagang malaman ang pangalan ng ating komunidad.')
       ]
     },
     {
@@ -450,7 +482,11 @@
         tf('Natataguyod ang ating interes kapag tayo ay kabahagi ng komunidad.', true, 'Tama! Iyan ang isa sa kahalagahan nito.', 'Dapat TAMA ang sagot &mdash; natataguyod ang ating interes bilang kabahagi ng komunidad.'),
         mc('Alin ang halimbawa ng pook sa komunidad na pwede pagkatutuhan?', [['Silid-aklatan',true],['Kalan',false],['Bintana',false]], 'Tama! Ang silid-aklatan ay mabuting pook para sa pagkatuto.', 'Ang SILID-AKLATAN ay isang pook sa komunidad na pwedeng pagkatutuhan.'),
         tf('Ang komunidad ay hindi nakakatulong sa ating pagbuo ng ugnayan sa ibang tao.', false, 'Tama! Nakakatulong nga ito para makabuo ng ugnayan.', 'Dapat MALI ang sagot &mdash; nakakatulong ang komunidad para makabuo tayo ng ugnayan.'),
-        mc('Ano ang mararamdaman mo kung ikaw ay bahagi ng isang komunidad na nagtutulungan?', [['Ligtas at masaya',true],['Malungkot lagi',false],['Galit lagi',false]], 'Tama! Ligtas at masaya ang pakiramdam sa nagtutulungang komunidad.', 'Sa komunidad na nagtutulungan, ang madarama natin ay LIGTAS AT MASAYA.')
+        mc('Ano ang mararamdaman mo kung ikaw ay bahagi ng isang komunidad na nagtutulungan?', [['Ligtas at masaya',true],['Malungkot lagi',false],['Galit lagi',false]], 'Tama! Ligtas at masaya ang pakiramdam sa nagtutulungang komunidad.', 'Sa komunidad na nagtutulungan, ang madarama natin ay LIGTAS AT MASAYA.'),
+        mc('Ano ang isa sa mga dahilan kung bakit mahalaga ang komunidad sa ating buhay?', [['Nagbibigay ito ng suporta',true],['Wala itong silbi',false],['Nagdudulot lang ito ng gastos',false]], 'Tama! Nagbibigay ng suporta ang komunidad sa mga kasapi nito.', 'Mahalaga ang komunidad dahil NAGBIBIGAY ITO NG SUPORTA sa atin.'),
+        tf('Ang paaralan ay maaaring maging bahagi ng komunidad kung saan tayo natututo.', true, 'Tama! Ang paaralan ay isang pook na pwedeng pagkatutuhan sa komunidad.', 'Dapat TAMA ang sagot &mdash; ang paaralan ay isang pook ng pagkatuto sa komunidad.'),
+        mc('Ano ang tinatawag na koneksyon o relasyon na nabubuo sa pagitan ng mga kasapi ng komunidad?', [['Ugnayan',true],['Away',false],['Layo',false]], 'Tama! Ang ugnayan ang nabubuo sa pagitan ng mga kasapi.', 'Ang UGNAYAN ang tawag sa relasyong nabubuo sa pagitan ng mga kasapi ng komunidad.'),
+        tf('Hindi natutulungan ang isang tao na maging bahagi ng isang komunidad.', false, 'Tama! Natutulungan ang isang tao kapag siya ay kabahagi ng komunidad.', 'Dapat MALI ang sagot &mdash; natutulungan ang tao kapag siya ay kasapi ng komunidad.')
       ]
     },
     {
@@ -473,7 +509,11 @@
         mc('Sino ang tanggapan ng pamahalaan na nag-uulat ng pagtataya ng panahon?', [['PAGASA',true],['DepEd',false],['Barangay',false]], 'Tama! Ang PAGASA ang nag-uulat ng panahon.', 'Ang PAGASA ang tanggapan ng pamahalaan na nag-uulat ng pagtataya ng panahon.'),
         tf('Kapag tag-ulan, dapat kang magsuot ng shorts at tsinelas papasok sa paaralan.', false, 'Tama! Hindi iyan angkop sa tag-ulan.', 'Dapat MALI ang sagot &mdash; kailangan ng payong o kapote sa tag-ulan, hindi shorts lamang.'),
         mc('Ano ang angkop na dalhin kapag malakas ang ulan papasok sa paaralan?', [['Payong o kapote',true],['Salamin sa araw',false],['Bola',false]], 'Tama! Kailangan ng payong o kapote sa malakas na ulan.', 'Ang PAYONG O KAPOTE ang angkop dalhin kapag malakas ang ulan.'),
-        tf('Ang panahon ay palaging pareho araw-araw.', false, 'Tama! Nagbabago ang panahon araw-araw.', 'Dapat MALI ang sagot &mdash; nagbabago-bago ang panahon araw-araw.')
+        tf('Ang panahon ay palaging pareho araw-araw.', false, 'Tama! Nagbabago ang panahon araw-araw.', 'Dapat MALI ang sagot &mdash; nagbabago-bago ang panahon araw-araw.'),
+        mc('Ano ang dapat isuot kapag sobrang init ng panahon?', [['Manipis na damit',true],['Kapote',false],['Kumot',false]], 'Tama! Manipis na damit ang angkop sa mainit na panahon.', 'Ang MANIPIS NA DAMIT ang angkop isuot kapag sobrang init ng panahon.'),
+        tf('Dalawa lamang ang uri ng klima sa Pilipinas &mdash; tag-init at tag-ulan.', true, 'Tama! Iyan nga ang dalawang pangkalahatang uri ng klima sa Pilipinas.', 'Dapat TAMA ang sagot &mdash; tag-init at tag-ulan ang dalawang uri ng klima sa Pilipinas.'),
+        mc('Bakit mahalagang malaman ang uri ng panahon bago lumabas ng bahay?', [['Para makapili ng angkop na kasuotan',true],['Para hindi kumain',false],['Wala itong kabuluhan',false]], 'Tama! Nakakatulong ito para makapili ng angkop na kasuotan.', 'Mahalagang malaman ang panahon para MAKAPILI NG ANGKOP NA KASUOTAN.'),
+        tf('Ang PAGASA ay walang gawaing pag-uulat tungkol sa panahon.', false, 'Tama! Ang PAGASA ang naguulat ng pagtataya ng panahon.', 'Dapat MALI ang sagot &mdash; ang PAGASA ang tanggapang nag-uulat ng pagtataya ng panahon.')
       ]
     },
     {
@@ -495,7 +535,11 @@
         mc('Saan karaniwang matatagpuan ang tahimik na nayon?', [['Pook-rural',true],['Pook-urban',false],['Karagatan',false]], 'Tama! Ang tahimik na nayon ay nasa pook-rural.', 'Ang tahimik na nayon ay matatagpuan sa POOK-RURAL.'),
         tf('Magkatulad lang palagi ang pook-rural at pook-urban.', false, 'Tama! Magkaiba ang mga katangian nila.', 'Dapat MALI ang sagot &mdash; magkaiba ang katangian ng pook-rural at pook-urban.'),
         mc('Ano ang makikita sa pook-urban?', [['Mga establisimyento at pagawaan',true],['Palaisdaan lamang',false],['Bundok lamang',false]], 'Tama! Establisimyento at pagawaan ang makikita sa pook-urban.', 'Ang MGA ESTABLISIMYENTO AT PAGAWAAN ay makikita sa pook-urban.'),
-        tf('Ang lokasyon ng komunidad ay maaaring ilarawan bilang pook-rural o pook-urban.', true, 'Tama! Ganito nga inilalarawan ang lokasyon nito.', 'Dapat TAMA ang sagot &mdash; pook-rural o pook-urban ang paglalarawan sa lokasyon ng komunidad.')
+        tf('Ang lokasyon ng komunidad ay maaaring ilarawan bilang pook-rural o pook-urban.', true, 'Tama! Ganito nga inilalarawan ang lokasyon nito.', 'Dapat TAMA ang sagot &mdash; pook-rural o pook-urban ang paglalarawan sa lokasyon ng komunidad.'),
+        mc('Saang uri ng pook mo makikita ang malawak na palayan at tahimik na paligid?', [['Pook-rural',true],['Pook-urban',false],['Karagatan',false]], 'Tama! Ang pook-rural ay may malawak na palayan at tahimik na paligid.', 'Ang POOK-RURAL ay may malawak na palayan at tahimik na paligid.'),
+        tf('Sa pook-urban, karaniwang matatagpuan ang mga paaralan, ospital, at malalaking tindahan.', true, 'Tama! Marami itong establisimyento sa pook-urban.', 'Dapat TAMA ang sagot &mdash; maraming establisimyento tulad ng paaralan at ospital sa pook-urban.'),
+        mc('Ano ang dapat isaalang-alang sa pagpili ng tirahan?', [['Ang kapaligiran at pangangailangan ng pamilya',true],['Ang kulay ng bahay lamang',false],['Ang pangalan ng kalye lamang',false]], 'Tama! Mahalagang isaalang-alang ang kapaligiran at pangangailangan.', 'Dapat isaalang-alang ang KAPALIGIRAN AT PANGANGAILANGAN NG PAMILYA sa pagpili ng tirahan.'),
+        tf('Walang magandang katangian ang pook-rural kumpara sa pook-urban.', false, 'Tama! Magkaiba lang sila ngunit pareho silang may magandang katangian.', 'Dapat MALI ang sagot &mdash; parehong may magandang katangian ang pook-rural at pook-urban.')
       ]
     },
     {
@@ -517,7 +561,11 @@
         mc('Karaniwang saan makikita ang makapal na densidad ng populasyon?', [['Pook-urban',true],['Gitna ng gubat',false],['Ilalim ng dagat',false]], 'Tama! Makapal ang populasyon sa pook-urban.', 'Ang POOK-URBAN ang karaniwang may makapal na densidad ng populasyon.'),
         tf('Ang densidad ng populasyon ay sukat sa kapal o nipis ng populasyon sa isang lugar.', true, 'Tama! Iyan nga ang densidad ng populasyon.', 'Dapat TAMA ang sagot &mdash; ang densidad ay sukat sa kapal o nipis ng populasyon.'),
         mc('Ano ang epekto kung marami kang kapitbahay malapit sa inyo?', [['Makapal na populasyon',true],['Manipis na populasyon',false],['Walang populasyon',false]], 'Tama! Marami kapitbahay ay makapal na populasyon.', 'Kung marami ang kapitbahay, ito ay MAKAPAL NA POPULASYON.'),
-        tf('Pareho lang lagi ang populasyon ng lahat ng komunidad.', false, 'Tama! Nagkakaiba-iba ang populasyon ng bawat komunidad.', 'Dapat MALI ang sagot &mdash; nagkakaiba-iba ang populasyon ng iba&rsquo;t ibang komunidad.')
+        tf('Pareho lang lagi ang populasyon ng lahat ng komunidad.', false, 'Tama! Nagkakaiba-iba ang populasyon ng bawat komunidad.', 'Dapat MALI ang sagot &mdash; nagkakaiba-iba ang populasyon ng iba&rsquo;t ibang komunidad.'),
+        mc('Ano ang tawag sa dami ng tao na naninirahan kumpara sa lawak ng lugar?', [['Densidad ng Populasyon',true],['Klima',false],['Anyong-lupa',false]], 'Tama! Ang densidad ng populasyon ang paghahambing na iyan.', 'Ang DENSIDAD NG POPULASYON ang tawag sa paghahambing na iyan.'),
+        tf('Sa manipis na densidad, kaunti lang ang taong naninirahan sa isang lugar.', true, 'Tama! Kaunti ang naninirahan kapag manipis ang densidad.', 'Dapat TAMA ang sagot &mdash; kaunti ang naninirahan kapag manipis ang densidad ng populasyon.'),
+        mc('Alin sa mga sumusunod ang totoo tungkol sa lawak ng isang lugar?', [['Hindi ito nagbabago kahit dumami ang tao',true],['Ito ay nagdodoble tuwing may bagong sanggol',false],['Ito ay kumukonti kapag maraming tao',false]], 'Tama! Nananatiling pareho ang lawak kahit dumami o kumonti ang tao.', 'Ang LAWAK ng isang lugar ay hindi nagbabago kahit magbago ang populasyon.'),
+        tf('Ang populasyon ng bawat komunidad ay palaging magkakapareho.', false, 'Tama! Nagkakaiba-iba ang populasyon ng bawat komunidad.', 'Dapat MALI ang sagot &mdash; nagkakaiba-iba ang populasyon ng iba&rsquo;t ibang komunidad.')
       ]
     },
     {
@@ -540,7 +588,11 @@
         mc('Anong anyong-lupa ang mas maliit kaysa bundok?', [['Burol',true],['Karagatan',false],['Golpo',false]], 'Tama! Ang burol ay mas maliit sa bundok.', 'Ang BUROL ay hawig sa bundok ngunit mas maliit.'),
         tf('Ang lambak ay matatagpuan sa pagitan ng dalawang mataas na anyong-lupa.', true, 'Tama! Nasa pagitan nga ito ng dalawang bundok.', 'Dapat TAMA ang sagot &mdash; ang lambak ay nasa pagitan ng dalawang mataas na anyong-lupa.'),
         mc('Anong anyong-lupa ang napapaligiran ng katubigan?', [['Pulo o Isla',true],['Talampas',false],['Kapatagan',false]], 'Tama! Ang pulo o isla ay napapaligiran ng tubig.', 'Ang PULO O ISLA ang anyong-lupa na napapaligiran ng katubigan.'),
-        mc('Ano ang tawag sa patag na lupain na nasa ibabaw ng isang bundok?', [['Talampas',true],['Lambak',false],['Burol',false]], 'Tama! Iyan ang talampas.', 'Ang TALAMPAS ay patag na lupain na nasa ibabaw ng mataas na anyong-lupa.')
+        mc('Ano ang tawag sa patag na lupain na nasa ibabaw ng isang bundok?', [['Talampas',true],['Lambak',false],['Burol',false]], 'Tama! Iyan ang talampas.', 'Ang TALAMPAS ay patag na lupain na nasa ibabaw ng mataas na anyong-lupa.'),
+        mc('Alin sa mga sumusunod ang anyong-lupa na may mainit na lava?', [['Bulkan',true],['Kapatagan',false],['Lambak',false]], 'Tama! Ang bulkan ay may lava at bunganga.', 'Ang BULKAN ang anyong-lupa na maaaring may lumalabas na lava.'),
+        tf('Ang kapatagan ay karaniwang ginagamit para sa pagtatanim dahil sa patag na lupa.', true, 'Tama! Ang patag na lupa ng kapatagan ay mainam para sa pagsasaka.', 'Dapat TAMA ang sagot &mdash; ang kapatagan ay mainam para sa pagtatanim dahil patag ito.'),
+        mc('Anong anyong-lupa ang dapat pag-ingatan lalo na kapag ito ay sumasabog?', [['Bulkan',true],['Burol',false],['Talampas',false]], 'Tama! Dapat maging maingat sa bulkan lalo na kapag ito ay sumasabog.', 'Ang BULKAN ang dapat pag-ingatan lalo na kapag ito ay sumasabog.'),
+        tf('Ang pulo o isla ay hindi napapaligiran ng tubig.', false, 'Tama! Ang pulo o isla ay napapaligiran nga ng tubig.', 'Dapat MALI ang sagot &mdash; ang pulo o isla ay NAPAPALIGIRAN ng katubigan.')
       ]
     },
     {
@@ -563,7 +615,11 @@
         mc('Ano ang tawag sa maliit na bahagi ng dagat na napapaligiran ng lupa?', [['Look',true],['Talon',false],['Bundok',false]], 'Tama! Iyan ang look.', 'Ang LOOK ang tawag sa maliit na bahagi ng dagat na napapaligiran ng lupa.'),
         tf('Ang golpo ay maliit at mababaw na bahagi ng dagat.', false, 'Tama! Malawak at malalim ang golpo, hindi maliit.', 'Dapat MALI ang sagot &mdash; ang golpo ay malawak at malalim, hindi maliit.'),
         mc('Alin ang mahaba at makipot na anyong-tubig?', [['Ilog',true],['Dagat',false],['Golpo',false]], 'Tama! Ang ilog ay mahaba at makipot.', 'Ang ILOG ang mahaba at makipot na anyong-tubig.'),
-        tf('Ang dagat ay anyong-tubig-alat na karugtong ng karagatan.', true, 'Tama! Karugtong nga ito ng karagatan.', 'Dapat TAMA ang sagot &mdash; ang dagat ay anyong-tubig-alat na karugtong ng karagatan.')
+        tf('Ang dagat ay anyong-tubig-alat na karugtong ng karagatan.', true, 'Tama! Karugtong nga ito ng karagatan.', 'Dapat TAMA ang sagot &mdash; ang dagat ay anyong-tubig-alat na karugtong ng karagatan.'),
+        mc('Saan karaniwang ginagamit ang tubig mula sa ilog?', [['Pang-inom, paglaba, at patubig sa palayan',true],['Pampalipad ng saranggola',false],['Panluto ng bato',false]], 'Tama! Maraming gamit ang tubig ng ilog sa pang-araw-araw na buhay.', 'Ang tubig ng ilog ay ginagamit sa PANG-INOM, PAGLABA, AT PATUBIG SA PALAYAN.'),
+        tf('Ang talon ay bumabagsak mula sa mababang lugar patungong mataas na lugar.', false, 'Tama! Ang talon ay bumabagsak mula sa MATAAS patungong MABABANG lugar.', 'Dapat MALI ang sagot &mdash; ang talon ay bumabagsak mula sa mataas patungong mababang lugar.'),
+        mc('Alin ang pinakamaliit sa mga sumusunod na anyong-tubig?', [['Lawa',true],['Karagatan',false],['Dagat',false]], 'Tama! Mas maliit ang lawa kumpara sa dagat at karagatan.', 'Ang LAWA ang pinakamaliit sa mga anyong-tubig na binanggit.'),
+        tf('Lahat ng anyong-tubig ay mapapakinabangan ng tao.', true, 'Tama! Mapapakinabangan natin ang mga anyong-tubig sa maraming paraan.', 'Dapat TAMA ang sagot &mdash; mapapakinabangan natin ang mga anyong-tubig sa iba&rsquo;t ibang paraan.')
       ]
     }
   ];
@@ -584,9 +640,6 @@
   document.getElementById('house-mini').innerHTML = houseMarkup();
   document.getElementById('house-final').innerHTML = houseMarkup();
 
-  function revealPiece(n){
-    document.querySelectorAll('[data-piece="'+n+'"]').forEach(function(el){ el.classList.add('revealed'); });
-  }
   function resetHouse(){
     document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
   }
@@ -610,19 +663,43 @@
   /* ================= Home ================= */
   function renderHome(){
     var list = document.getElementById('home-list');
-    list.innerHTML = lessons.map(function(l, i){
+    var finalTotal = lessons.length * FINAL_EXAM_PER_LESSON;
+    var finalBest = progress['final'] || 0;
+    var finalStars = starsFor(finalBest / finalTotal);
+    var finalCard = '<div class="card lesson-card final-card">' +
+      '<div class="lesson-top">' +
+        '<svg class="lesson-icon" viewBox="0 0 76 76"><circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><polygon points="38,14 44,30 61,31 47,41 52,58 38,48 24,58 29,41 15,31 32,30" fill="var(--accent)"/></svg>' +
+        '<div class="lesson-info">' +
+          '<div class="lesson-tag-label final-badge">Pangwakas na Pagsusulit</div>' +
+          '<div class="lesson-title">Buong Balik-Aral</div>' +
+          '<div class="mini-stars">' + starsMarkup(finalStars, 3) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn" id="btn-final-exam">' + (finalBest > 0 ? 'Ulitin ang Pagsusulit' : 'Simulan') + '</button>' +
+    '</div>';
+
+    var lessonCards = lessons.map(function(l, i){
+      var total = l.quiz.length;
+      var best = progress[i] || 0;
+      var stars = starsFor(best / total);
       return '<div class="card lesson-card">' +
         '<div class="lesson-top">' +
           '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
           '<div class="lesson-info">' +
             '<div class="lesson-tag-label">' + l.tag + '</div>' +
             '<div class="lesson-title">' + l.title + '</div>' +
-            '<div class="mini-stars">' + starsMarkup(l.stars, 3) + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(stars, 3) + '</div>' +
           '</div>' +
         '</div>' +
-        '<button class="btn" data-lesson="' + i + '">' + (l.stars > 0 ? 'Ulitin ang Aralin' : 'Simulan') + '</button>' +
+        '<button class="btn" data-lesson="' + i + '">' + (best > 0 ? 'Ulitin ang Aralin' : 'Simulan') + '</button>' +
       '</div>';
     }).join('');
+
+    list.innerHTML = finalCard + lessonCards;
+
+    document.getElementById('btn-final-exam').addEventListener('click', function(){
+      startFinalExam();
+    });
     list.querySelectorAll('button[data-lesson]').forEach(function(b){
       b.addEventListener('click', function(){
         currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
@@ -665,8 +742,34 @@
 
   /* ================= Quiz ================= */
   var qIdx = 0, score = 0, answered = false;
+  var currentQuizSet = [];
+  var currentQuizMeta = null;
+
+  function revealProgress(){
+    var n = Math.round((score / currentQuizSet.length) * 8);
+    for (var p = 1; p <= 8; p++){
+      document.querySelectorAll('[data-piece="' + p + '"]').forEach(function(el){
+        el.classList.toggle('revealed', p <= n);
+      });
+    }
+  }
 
   function startQuiz(){
+    var lesson = lessons[currentLesson];
+    currentQuizSet = buildQuizSet(lesson);
+    currentQuizMeta = { id: currentLesson, title: lesson.title };
+    qIdx = 0; score = 0; resetHouse();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function startFinalExam(){
+    var qs = [];
+    lessons.forEach(function(l){
+      qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON).map(prepareQuestion));
+    });
+    currentQuizSet = shuffle(qs);
+    currentQuizMeta = { id: 'final', title: 'Pangwakas na Pagsusulit' };
     qIdx = 0; score = 0; resetHouse();
     showScreen('quiz');
     renderQuestion();
@@ -674,10 +777,9 @@
 
   function renderQuestion(){
     answered = false;
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
-    document.getElementById('q-count').textContent = 'Tanong ' + (qIdx + 1) + ' sa ' + quizData.length;
-    document.getElementById('track-fill').style.width = Math.round((qIdx / quizData.length) * 100) + '%';
+    var item = currentQuizSet[qIdx];
+    document.getElementById('q-count').textContent = 'Tanong ' + (qIdx + 1) + ' sa ' + currentQuizSet.length + (currentQuizMeta.id === 'final' ? ' — ' + currentQuizMeta.title : '');
+    document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'Tama o Mali?' : 'Piliin ang tamang sagot';
     var qText = item.q.replace(/&ldquo;/g,'“').replace(/&rdquo;/g,'”').replace(/&rsquo;/g,'’');
     document.getElementById('q-text').textContent = qText;
@@ -715,23 +817,23 @@
   }
 
   function showFeedback(isCorrect){
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
+    var item = currentQuizSet[qIdx];
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     var msg = (isCorrect ? item.good : item.bad).replace(/&mdash;/g,'—').replace(/&rsquo;/g,'’');
     fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + msg + '</span>';
     document.getElementById('next-wrap').classList.add('show');
-    if (isCorrect){ score++; revealPiece(qIdx + 1); }
+    if (isCorrect) score++;
+    revealProgress();
   }
 
   function handleMC(opt, btnEl, optWrap){
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
+    var item = currentQuizSet[qIdx];
     optWrap.querySelectorAll('.opt').forEach(function(el, i){
-      var thisOpt = quizData[qIdx].options[i];
+      var thisOpt = item.options[i];
       if (thisOpt.correct) el.classList.add('correct');
       else if (el === btnEl) el.classList.add('wrong');
     });
@@ -742,8 +844,7 @@
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
-    var correct = quizData[qIdx].answer;
+    var correct = currentQuizSet[qIdx].answer;
     var isRight = (choice === correct);
     chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
     if (!isRight){
@@ -754,19 +855,19 @@
   }
 
   document.getElementById('btn-next').addEventListener('click', function(){
-    var quizData = lessons[currentLesson].quiz;
-    if (qIdx < quizData.length - 1){ qIdx++; renderQuestion(); }
+    if (qIdx < currentQuizSet.length - 1){ qIdx++; renderQuestion(); }
     else { finishQuiz(); }
   });
 
   function finishQuiz(){
     document.getElementById('track-fill').style.width = '100%';
-    var quizData = lessons[currentLesson].quiz;
-    var total = quizData.length;
-    var starCount = score === total ? 3 : (score >= Math.ceil(total * 0.6) ? 2 : 1);
-    lessons[currentLesson].stars = Math.max(lessons[currentLesson].stars, starCount);
+    var total = currentQuizSet.length;
+    var starCount = starsFor(score / total);
+    var best = Math.max(progress[currentQuizMeta.id] || 0, score);
+    progress[currentQuizMeta.id] = best;
+    saveProgress(progress);
     document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
-    document.getElementById('result-score').textContent = 'Nakuha mo ang ' + score + ' sa ' + total + ' na tanong!';
+    document.getElementById('result-score').textContent = 'Nakuha mo ang ' + score + ' sa ' + total + ' na tanong sa ' + currentQuizMeta.title + '!';
     var msg;
     if (starCount === 3) msg = 'Ikaw ay isang tunay na Bayani ng Komunidad! Kumpleto ang iyong bahay!';
     else if (starCount === 2) msg = 'Magaling! Halos tapos na ang bahay ng aralin — subukan muli para makumpleto ito!';
@@ -776,8 +877,8 @@
   }
 
   document.getElementById('btn-retry').addEventListener('click', function(){
-    lessons[currentLesson].quiz.forEach(function(item){ if (item.options) shuffle(item.options); });
-    startQuiz();
+    if (currentQuizMeta.id === 'final') startFinalExam();
+    else startQuiz();
   });
 
   renderHome();

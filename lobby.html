@@ -1,0 +1,232 @@
+<title>Study Games Lobby</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F1E9;
+    --bg-alt:#EBE6D6;
+    --card:#FFFFFF;
+    --ink:#2B2A22;
+    --ink-soft:#6B6656;
+    --border:rgba(43,42,34,0.12);
+    --shadow:rgba(43,42,34,0.16);
+    --header-accent:#D9667B;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#181712;
+      --bg-alt:#201F19;
+      --card:#221F1A;
+      --ink:#F1EDE0;
+      --ink-soft:#B2AC97;
+      --border:rgba(241,237,224,0.14);
+      --shadow:rgba(0,0,0,0.5);
+      --header-accent:#F1A0B0;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#181712;
+    --bg-alt:#201F19;
+    --card:#221F1A;
+    --ink:#F1EDE0;
+    --ink-soft:#B2AC97;
+    --border:rgba(241,237,224,0.14);
+    --shadow:rgba(0,0,0,0.5);
+    --header-accent:#F1A0B0;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 8% 4%, rgba(217,102,123,0.08), transparent 42%),
+      radial-gradient(circle at 94% 90%, rgba(62,124,177,0.08), transparent 42%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Nunito', system-ui, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:clamp(20px,5vw,48px) 16px 60px;
+  }
+
+  .wrap{ width:100%; max-width:760px; }
+
+  .hero{ text-align:center; margin-bottom:clamp(24px,5vw,40px); }
+  .hero-emoji{ font-size:clamp(2.4rem,8vw,3.2rem); line-height:1; margin-bottom:6px; }
+  .hero h1{
+    font-family:'Baloo 2', system-ui, sans-serif;
+    font-weight:700;
+    font-size:clamp(1.9rem,6vw,2.6rem);
+    margin:0;
+    color:var(--header-accent);
+    text-wrap:balance;
+  }
+  .hero p{
+    margin:8px 0 0;
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+  @media (min-width:560px){
+    .grid{ grid-template-columns:1fr 1fr; }
+  }
+
+  .subject-card{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:18px 20px;
+    text-decoration:none;
+    color:var(--ink);
+    box-shadow:0 14px 32px -16px var(--shadow), 0 2px 0 var(--border);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    border-top:5px solid var(--card-accent);
+  }
+  .subject-card:hover{ transform:translateY(-3px); }
+  .subject-card:active{ transform:translateY(0px) scale(0.99); }
+  .subject-card:focus-visible{ outline:3px solid var(--card-accent); outline-offset:3px; }
+
+  .subject-emoji{
+    font-size:2.2rem;
+    flex:none;
+    width:60px;
+    height:60px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--card-accent-soft);
+  }
+
+  .subject-info{ flex:1; min-width:0; }
+  .subject-tag{
+    font-size:0.72rem;
+    font-weight:800;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--card-accent-ink);
+  }
+  .subject-title{
+    font-family:'Baloo 2', system-ui, sans-serif;
+    font-weight:700;
+    font-size:1.2rem;
+    margin-top:2px;
+    line-height:1.2;
+  }
+  .subject-desc{
+    font-size:0.88rem;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-top:4px;
+    line-height:1.4;
+  }
+
+  .go-arrow{
+    flex:none;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:var(--card-accent);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .go-arrow svg{ width:18px; height:18px; }
+
+  .footer-note{
+    text-align:center;
+    margin-top:clamp(24px,5vw,36px);
+    font-size:0.85rem;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .subject-card{ transition:none; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-emoji">🎒</div>
+    <h1>Study Games</h1>
+    <p>Piliin ang paksa at simulan ang laro!</p>
+  </div>
+
+  <div class="grid">
+    <a class="subject-card" href="block-bot.html" style="--card-accent:#7C3AED; --card-accent-soft:#EFE9FF; --card-accent-ink:#5B21B6;">
+      <div class="subject-emoji">🤖</div>
+      <div class="subject-info">
+        <div class="subject-tag">Math 2</div>
+        <div class="subject-title">Block Bot</div>
+        <div class="subject-desc">Numbers, place value, at number lines</div>
+      </div>
+      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
+    </a>
+
+    <a class="subject-card" href="kuwentista.html" style="--card-accent:#D6467E; --card-accent-soft:#FBEADF; --card-accent-ink:#9C2F5C;">
+      <div class="subject-emoji">📖</div>
+      <div class="subject-info">
+        <div class="subject-tag">Filipino 2</div>
+        <div class="subject-title">Kuwentista</div>
+        <div class="subject-desc">Alpabeto, pangngalan, at mga kwento</div>
+      </div>
+      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
+    </a>
+
+    <a class="subject-card" href="word-train.html" style="--card-accent:#D64545; --card-accent-soft:#F6D9D6; --card-accent-ink:#7A2020;">
+      <div class="subject-emoji">🚂</div>
+      <div class="subject-info">
+        <div class="subject-tag">English 2</div>
+        <div class="subject-title">Word Train</div>
+        <div class="subject-desc">Alphabet, CVC words, and parts of speech</div>
+      </div>
+      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
+    </a>
+
+    <a class="subject-card" href="batang-bayani.html" style="--card-accent:#C4552E; --card-accent-soft:#F3E9CE; --card-accent-ink:#8A3E1F;">
+      <div class="subject-emoji">🏘️</div>
+      <div class="subject-info">
+        <div class="subject-tag">Makabansa 2</div>
+        <div class="subject-title">Batang Bayani</div>
+        <div class="subject-desc">Komunidad, klima, at anyong-lupa</div>
+      </div>
+      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
+    </a>
+
+    <a class="subject-card" href="growing-good.html" style="--card-accent:#8E86C9; --card-accent-soft:#E7E4F5; --card-accent-ink:#5B54A0;">
+      <div class="subject-emoji">🌱</div>
+      <div class="subject-info">
+        <div class="subject-tag">GMRC 2</div>
+        <div class="subject-title">Growing Good</div>
+        <div class="subject-desc">Feelings, prayer, at pag-aalaga sa sarili</div>
+      </div>
+      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
+    </a>
+
+    <a class="subject-card" href="byte-buddies.html" style="--card-accent:#1FA9BB; --card-accent-soft:#D8F1F3; --card-accent-ink:#0E5C66;">
+      <div class="subject-emoji">💻</div>
+      <div class="subject-info">
+        <div class="subject-tag">Computer 2</div>
+        <div class="subject-title">Byte Buddies</div>
+        <div class="subject-desc">Computer care at mga bahagi nito</div>
+      </div>
+      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
+    </a>
+  </div>
+
+  <p class="footer-note">Tap a subject to review the lessons and take the quiz! 🌟</p>
+</div>

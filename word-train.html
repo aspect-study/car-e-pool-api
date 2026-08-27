@@ -155,6 +155,8 @@
   .mini-stars{display:flex; gap:2px; margin-top:6px;}
   .mini-stars svg{width:15px; height:15px;}
   .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.98rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+  .final-card{border:2px solid var(--yellow); background:linear-gradient(135deg, var(--yellow-soft), var(--card));}
+  .final-badge{color:var(--yellow-deep);}
 
   /* ---- Buttons ---- */
   .btn{
@@ -279,7 +281,7 @@
   <section id="screen-home" class="screen active">
     <div class="hero">
       <h1 class="hero-title">Word Train</h1>
-      <p class="hero-sub">Pick a lesson and keep the train rolling!</p>
+      <p class="hero-sub">Pick a lesson and keep the train rolling! Question and answer order shuffle every time, so you really have to know each answer — not just remember the order. Try the Final Mock Exam once you've finished every lesson!</p>
       <svg class="hero-scene" viewBox="0 0 300 110" role="img" aria-label="A little train on a track">
         <rect x="0" y="90" width="300" height="3" fill="var(--track)"/>
         <g>
@@ -370,17 +372,39 @@
   var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
 
   function shuffle(arr){
-    for (var i = arr.length - 1; i > 0; i--){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
       var j = Math.floor(Math.random() * (i + 1));
-      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      var t = a[i]; a[i] = a[j]; a[j] = t;
     }
-    return arr;
+    return a;
   }
   function mc(q, opts, good, bad){
-    return { type:'mc', q:q, options: shuffle(opts.map(function(o){ return {text:o[0], correct:o[1]}; })), good:good, bad:bad };
+    return { type:'mc', q:q, options: opts.map(function(o){ return {text:o[0], correct:o[1]}; }), good:good, bad:bad };
   }
   function tf(q, answer, good, bad){
     return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+  function prepareQuestion(item){
+    if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad };
+    return item;
+  }
+  function buildQuizSet(lesson){
+    return shuffle(lesson.quiz).map(prepareQuestion);
+  }
+
+  var STORAGE_KEY = 'wordtrain_progress_v1';
+  function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+  function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+  var progress = loadProgress();
+
+  var FINAL_EXAM_PER_LESSON = 3;
+
+  function starsFor(pct){
+    if (pct >= 1) return 3;
+    if (pct >= 0.8) return 2;
+    if (pct >= 0.5) return 1;
+    return 0;
   }
 
   /* ================= LESSONS ================= */
@@ -404,7 +428,11 @@
         mc('What letter comes right after D in the alphabet?', [['E',true],['C',false],['G',false]], 'Correct! E comes right after D.', 'The letter that comes right after D is E.'),
         tf('Small letters are also called lowercase letters.', true, 'Yes! Small letters and lowercase mean the same thing.', 'The answer should be True — small letters are also called lowercase letters.'),
         mc('What letter comes right before H?', [['G',true],['I',false],['F',false]], 'That’s right! G comes right before H.', 'The letter that comes right before H is G.'),
-        tf('The alphabet is not always in the same order.', false, 'Correct! The alphabet is always in the same order, A to Z.', 'The answer should be False — the alphabet is always in the same order.')
+        tf('The alphabet is not always in the same order.', false, 'Correct! The alphabet is always in the same order, A to Z.', 'The answer should be False — the alphabet is always in the same order.'),
+        mc('Which of these is a small (lowercase) letter?', [['g',true],['G',false],['B',false]], 'Yes! "g" is a small letter.', '"g" is the small letter — the others are capital letters.'),
+        tf('Most words are written using small letters.', true, 'Correct! Most words use small letters.', 'The answer should be True — most words are written with small letters.'),
+        mc('What letter comes right before B in the alphabet?', [['A',true],['C',false],['Z',false]], 'That’s right! A comes right before B.', 'The letter that comes right before B is A.'),
+        tf('We use capital letters to begin every word in a sentence.', false, 'Correct! Capital letters begin sentences and names, not every word.', 'The answer should be False — capital letters begin sentences and names, not every single word.')
       ]
     },
     {
@@ -426,7 +454,11 @@
         mc('If you put the onset /b/ with the rime /at/, what word do you get?', [['Bat',true],['Sit',false],['Dog',false]], 'Yes! /b/ + /at/ makes "bat".', 'Putting /b/ with /at/ makes the word "bat".'),
         tf('Onset always comes after the rime in a word.', false, 'Correct! The onset comes before the rime.', 'The answer should be False — the onset comes before the rime, not after.'),
         mc('What is the onset in the word "pin"?', [['/p/',true],['/in/',false],['/n/',false]], 'That’s right! /p/ is the onset in "pin".', 'The onset in "pin" is /p/, and /in/ is the rime.'),
-        tf('Onset and rime can help us build new words by mixing sounds.', true, 'Yes! Mixing onsets and rimes helps us build new words.', 'The answer should be True — mixing onsets and rimes helps us build new words.')
+        tf('Onset and rime can help us build new words by mixing sounds.', true, 'Yes! Mixing onsets and rimes helps us build new words.', 'The answer should be True — mixing onsets and rimes helps us build new words.'),
+        mc('In the word "dog", what is the onset?', [['/d/',true],['/og/',false],['/d-o/',false]], 'Yes! /d/ is the onset in "dog".', 'The onset in "dog" is /d/, and /og/ is the rime.'),
+        tf('The onset is the beginning consonant sound of a word.', true, 'Correct! That is exactly what the onset is.', 'The answer should be True — the onset is the beginning consonant sound of a word.'),
+        mc('If you put the onset /s/ with the rime /it/, what word do you get?', [['Sit',true],['Bat',false],['Dog',false]], 'That’s right! /s/ + /it/ makes "sit".', 'Putting /s/ with /it/ makes the word "sit".'),
+        tf('The rime comes before the onset in a word.', false, 'Correct! The onset comes before the rime, not after.', 'The answer should be False — the onset comes before the rime, not the other way around.')
       ]
     },
     {
@@ -448,7 +480,11 @@
         mc('Which word matches: Ben has a red ___?', [['Cap',true],['Elephant',false],['Umbrella',false]], 'Correct! "Cap" fits the CVC pattern and the sentence.', 'The word that fits is "cap" — a short, CVC word.'),
         mc('Which of these words has the short u sound?', [['Sun',true],['Pig',false],['Bed',false]], 'Yes! "Sun" has the short u sound.', '"Sun" is the word with the short u sound.'),
         tf('CVC words help us read and sound out simple words.', true, 'Correct! That’s exactly why CVC words matter.', 'The answer should be True — CVC words help us read and sound out simple words.'),
-        mc('Which word completes: "The ___ can hop."?', [['Dog',true],['Chair',false],['Book',false]], 'That’s right! "The dog can hop."', 'The word that completes the sentence is "dog".')
+        mc('Which word completes: "The ___ can hop."?', [['Dog',true],['Chair',false],['Book',false]], 'That’s right! "The dog can hop."', 'The word that completes the sentence is "dog".'),
+        mc('Which word below is a CVC word with the short o sound?', [['Pot',true],['Sun',false],['Map',false]], 'Yes! "Pot" has the short o sound.', '"Pot" is the CVC word with the short o sound.'),
+        tf('"Bit" follows the consonant-vowel-consonant pattern.', true, 'Correct! "Bit" is a CVC word.', 'The answer should be True — "bit" follows the consonant-vowel-consonant pattern.'),
+        mc('Which word matches: Tom sat on the ___?', [['Mat',true],['Elephant',false],['Umbrella',false]], 'That’s right! "Mat" fits the CVC pattern and the sentence.', 'The word that fits is "mat" — a short, CVC word.'),
+        tf('Reading CVC words does not help us read other simple words.', false, 'Correct! Reading CVC words actually helps us sound out many simple words.', 'The answer should be False — reading CVC words helps us sound out and read many simple words.')
       ]
     },
     {
@@ -470,7 +506,11 @@
         mc('What does "add" mean in math?', [['To put numbers together',true],['To take away',false],['To read a word',false]], 'Correct! Add means to put numbers together.', '"Add" means to put numbers together.'),
         mc('What does "subtract" mean in math?', [['To take away',true],['To put together',false],['To spell',false]], 'Yes! Subtract means to take away.', '"Subtract" means to take away.'),
         tf('"Sum" is the answer to a subtraction problem.', false, 'Correct! "Sum" is the answer to an addition problem.', 'The answer should be False — "Sum" is the answer to an addition problem, not subtraction.'),
-        mc('In "8 &minus; 3 = 5", what math word describes the answer 5?', [['Difference',true],['Sum',false],['Equal',false]], 'That’s right! The answer to subtraction is called the difference.', 'The answer to a subtraction problem is called the Difference.')
+        mc('In "8 &minus; 3 = 5", what math word describes the answer 5?', [['Difference',true],['Sum',false],['Equal',false]], 'That’s right! The answer to subtraction is called the difference.', 'The answer to a subtraction problem is called the Difference.'),
+        mc('Which of these is a high-frequency word?', [['You',true],['Dinosaur',false],['Umbrella',false]], 'Yes! "You" is a high-frequency word.', '"You" is a common high-frequency word.'),
+        tf('Math-specific words are only used outside of math class.', false, 'Correct! Math-specific words are used to help us solve math problems.', 'The answer should be False — math-specific words help us solve problems in math.'),
+        mc('In "5 + 3 = 8", what math word describes the answer 8?', [['Sum',true],['Difference',false],['Subtract',false]], 'That’s right! The answer to addition is called the sum.', 'The answer to an addition problem is called the Sum.'),
+        tf('High-frequency words are words we rarely use in reading and writing.', false, 'Correct! High-frequency words are used very often, not rarely.', 'The answer should be False — high-frequency words are used very often in reading and writing.')
       ]
     },
     {
@@ -492,7 +532,11 @@
         mc('Which of these is a common noun?', [['Book',true],['Blue Corner',false],['Fun Ranch',false]], 'Correct! "Book" is a common noun.', '"Book" is the common noun — the others name specific places.'),
         tf('Proper nouns always begin with a capital letter.', true, 'Yes! Proper nouns always begin with a capital letter.', 'The answer should be True — proper nouns always begin with a capital letter.'),
         mc('What kind of noun is "restaurant"?', [['Common noun',true],['Proper noun',false],['Not a noun',false]], 'That’s right! "Restaurant" is a common noun.', '"Restaurant" is a common noun — it names a general place.'),
-        tf('Common nouns name a specific person or place.', false, 'Correct! Proper nouns name specific things, not common nouns.', 'The answer should be False — proper nouns, not common nouns, name specific things.')
+        tf('Common nouns name a specific person or place.', false, 'Correct! Proper nouns name specific things, not common nouns.', 'The answer should be False — proper nouns, not common nouns, name specific things.'),
+        mc('Which of these is a common noun?', [['dog',true],['Rex',false],['Manila',false]], 'Yes! "dog" is a common noun.', '"dog" is the common noun — the others name specific things.'),
+        tf('Proper nouns name any general person, place, animal, or thing.', false, 'Correct! Proper nouns name specific things, common nouns name general things.', 'The answer should be False — proper nouns name specific things, while common nouns name general things.'),
+        mc('What kind of noun is "Philippines"?', [['Proper noun',true],['Common noun',false],['Not a noun',false]], 'That’s right! "Philippines" is a proper noun.', '"Philippines" is a proper noun — it names a specific country.'),
+        tf('A noun can name a person, place, animal, thing, or event.', true, 'Correct! That is exactly what a noun is.', 'The answer should be True — a noun names a person, place, animal, thing, or event.')
       ]
     },
     {
@@ -514,7 +558,11 @@
         mc('What is the feminine word for "actor"?', [['Actress',true],['Policewoman',false],['Sister',false]], 'That’s right! Actress is the feminine word for actor.', 'The feminine word for "actor" is Actress.'),
         mc('What is the masculine word for "grandmother"?', [['Grandfather',true],['Uncle',false],['Sir',false]], 'Correct! Grandfather is the masculine word for grandmother.', 'The masculine word for "grandmother" is Grandfather.'),
         tf('"Policewoman" is the feminine word for "policeman".', true, 'Yes! "Policewoman" is the feminine word for "policeman".', 'The answer should be True — "policewoman" is the feminine word for "policeman".'),
-        mc('What is the feminine word for "son"?', [['Daughter',true],['Niece',false],['Aunt',false]], 'That’s right! Daughter is the feminine word for son.', 'The feminine word for "son" is Daughter.')
+        mc('What is the feminine word for "son"?', [['Daughter',true],['Niece',false],['Aunt',false]], 'That’s right! Daughter is the feminine word for son.', 'The feminine word for "son" is Daughter.'),
+        mc('What is the feminine word for "prince"?', [['Princess',true],['Queen',false],['Aunt',false]], 'That’s right! Princess is the feminine word for prince.', 'The feminine word for "prince" is Princess.'),
+        tf('"Waiter" is a feminine noun.', false, 'Correct! "Waiter" is a masculine noun — "waitress" is feminine.', 'The answer should be False — "waiter" is a masculine noun, and "waitress" is the feminine form.'),
+        mc('What is the masculine word for "queen"?', [['King',true],['Prince',false],['Uncle',false]], 'Yes! King is the masculine word for queen.', 'The masculine word for "queen" is King.'),
+        tf('Nouns can only have one gender: masculine.', false, 'Correct! Nouns can be masculine or feminine.', 'The answer should be False — nouns can have gender: masculine or feminine.')
       ]
     },
     {
@@ -536,7 +584,11 @@
         mc('In "Teacher Gayle is talking," what is the action verb?', [['Talking',true],['Teacher',false],['Gayle',false]], 'Correct! "Talking" is the action verb.', 'The action verb in that sentence is "talking".'),
         mc('Which of these words describes something flying or swimming?', [['Action verb',true],['Common noun',false],['Proper noun',false]], 'That’s right! Flying and swimming are action verbs.', 'Words like flying and swimming are Action verbs.'),
         tf('"Table" is an action verb.', false, 'Correct! "Table" is a noun, not an action verb.', 'The answer should be False — "table" is a noun, not an action verb.'),
-        mc('Which action verb best completes: "The dog is ___ in the yard."?', [['Running',true],['Table',false],['Happy',false]], 'Yes! "Running" is the action verb that fits.', 'The action verb that fits is "running".')
+        mc('Which action verb best completes: "The dog is ___ in the yard."?', [['Running',true],['Table',false],['Happy',false]], 'Yes! "Running" is the action verb that fits.', 'The action verb that fits is "running".'),
+        mc('Which word is an action verb?', [['Swimming',true],['Chair',false],['Blue',false]], 'Yes! "Swimming" is an action verb.', '"Swimming" is the action verb — it tells us what someone is doing.'),
+        tf('"Scream" can be used as an action verb in a story.', true, 'Correct! "Scream" is an action verb often used in stories.', 'The answer should be True — "scream" is an action verb used in stories.'),
+        mc('In "The bird is flying," what is the action verb?', [['Flying',true],['Bird',false],['The',false]], 'That’s right! "Flying" is the action verb.', 'The action verb in that sentence is "flying".'),
+        tf('Action verbs tell us the color of something.', false, 'Correct! Action verbs tell us what someone or something is doing, not its color.', 'The answer should be False — action verbs tell us about action, not color.')
       ]
     },
     {
@@ -558,7 +610,11 @@
         mc('In "The lazy cat slept on the bed," which word is the adjective?', [['Lazy',true],['Cat',false],['Bed',false]], 'Correct! "Lazy" is the adjective.', 'The adjective in that sentence is "lazy" — it describes the cat.'),
         mc('Which adjective could describe jewels?', [['Sparkling',true],['Walk',false],['Teacher',false]], 'That’s right! "Sparkling" describes jewels.', '"Sparkling" is an adjective that could describe jewels.'),
         tf('Adjectives can only describe animals, not things or places.', false, 'Correct! Adjectives can describe people, places, animals, and things.', 'The answer should be False — adjectives describe people, places, animals, and things.'),
-        mc('In "I have a red ball," what does "red" describe?', [['The ball',true],['The action',false],['Nothing',false]], 'Yes! "Red" describes the ball.', '"Red" describes "the ball" in that sentence.')
+        mc('In "I have a red ball," what does "red" describe?', [['The ball',true],['The action',false],['Nothing',false]], 'Yes! "Red" describes the ball.', '"Red" describes "the ball" in that sentence.'),
+        mc('Which word is an adjective that describes an animal?', [['Elegant',true],['Run',false],['Book',false]], 'Yes! "Elegant" can describe an animal.', '"Elegant" is an adjective — it can describe an animal.'),
+        tf('Adjectives can describe how things look.', true, 'Correct! Adjectives like "red" or "new" describe how things look.', 'The answer should be True — adjectives can describe how things look.'),
+        mc('In "The peaceful garden was quiet," which word is the adjective?', [['Peaceful',true],['Garden',false],['Was',false]], 'That’s right! "Peaceful" is the adjective.', 'The adjective in that sentence is "peaceful" — it describes the garden.'),
+        tf('"Fast" is an adjective that can describe how a person moves.', true, 'Correct! "Fast" describes how a person moves.', 'The answer should be True — "fast" is an adjective that can describe a person.')
       ]
     },
     {
@@ -580,7 +636,11 @@
         mc('"This is my dog. ___ is brown." Which pronoun completes the sentence?', [['It',true],['She',false],['You',false]], 'That’s right! "It" refers to the dog.', 'The pronoun that fits is "It" — it refers to the dog.'),
         mc('"Ben and I are friends. ___ play together." Which pronoun fits?', [['We',true],['They',false],['He',false]], 'Correct! "We" refers to Ben and I.', 'The pronoun that fits is "We" — it refers to Ben and the speaker.'),
         tf('"We" refers to the speaker and other people.', true, 'Yes! "We" includes the speaker and others.', 'The answer should be True — "we" refers to the speaker and other people.'),
-        mc('Which pronoun would you use to talk about yourself?', [['I',true],['He',false],['They',false]], 'That’s right! "I" is used to talk about yourself.', 'The pronoun used to talk about yourself is "I".')
+        mc('Which pronoun would you use to talk about yourself?', [['I',true],['He',false],['They',false]], 'That’s right! "I" is used to talk about yourself.', 'The pronoun used to talk about yourself is "I".'),
+        mc('Which pronoun would you use to refer to a boy who was already mentioned?', [['He',true],['She',false],['They',false]], 'Yes! "He" refers to a male already mentioned.', '"He" is used to refer to a male person already mentioned.'),
+        tf('"It" is used for a thing or animal already mentioned.', true, 'Correct! "It" refers to a thing or animal already mentioned.', 'The answer should be True — "it" is used for a thing or animal already mentioned.'),
+        mc('"The girls are playing. ___ are having fun." Which pronoun completes the sentence?', [['They',true],['He',false],['I',false]], 'That’s right! "They" refers to the girls.', 'The pronoun that fits is "They" — it refers to the girls.'),
+        tf('Personal pronouns can only refer to people, never to things or animals.', false, 'Correct! Personal pronouns like "it" can refer to things and animals too.', 'The answer should be False — personal pronouns like "it" can refer to things and animals, not just people.')
       ]
     }
   ];
@@ -633,9 +693,6 @@
   document.getElementById('train-mini').innerHTML = trainMarkup();
   document.getElementById('train-final').innerHTML = trainMarkup();
 
-  function revealPiece(n){
-    document.querySelectorAll('[data-piece="'+n+'"]').forEach(function(el){ el.classList.add('revealed'); });
-  }
   function resetTrain(){
     document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
   }
@@ -659,19 +716,43 @@
   /* ================= Home ================= */
   function renderHome(){
     var list = document.getElementById('home-list');
-    list.innerHTML = lessons.map(function(l, i){
+    var finalTotal = lessons.length * FINAL_EXAM_PER_LESSON;
+    var finalBest = progress['final'] || 0;
+    var finalStars = starsFor(finalBest / finalTotal);
+    var finalCard = '<div class="card lesson-card final-card">' +
+      '<div class="lesson-top">' +
+        '<svg class="lesson-icon" viewBox="0 0 76 76"><circle cx="38" cy="38" r="34" fill="var(--yellow-soft)"/><polygon points="38,14 44,30 61,31 47,41 52,58 38,48 24,58 29,41 15,31 32,30" fill="var(--yellow)"/></svg>' +
+        '<div class="lesson-info">' +
+          '<div class="lesson-tag-label final-badge">Final Mock Exam</div>' +
+          '<div class="lesson-title">Word Train Review</div>' +
+          '<div class="mini-stars">' + starsMarkup(finalStars, 3) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn" id="btn-final-exam">' + (finalBest > 0 ? 'Retry Exam' : 'Start') + '</button>' +
+    '</div>';
+
+    var lessonCards = lessons.map(function(l, i){
+      var total = l.quiz.length;
+      var best = progress[i] || 0;
+      var stars = starsFor(best / total);
       return '<div class="card lesson-card">' +
         '<div class="lesson-top">' +
           '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
           '<div class="lesson-info">' +
             '<div class="lesson-tag-label">' + l.tag + '</div>' +
             '<div class="lesson-title">' + l.title + '</div>' +
-            '<div class="mini-stars">' + starsMarkup(l.stars, 3) + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(stars, 3) + '</div>' +
           '</div>' +
         '</div>' +
-        '<button class="btn" data-lesson="' + i + '">' + (l.stars > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
+        '<button class="btn" data-lesson="' + i + '">' + (best > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
       '</div>';
     }).join('');
+
+    list.innerHTML = finalCard + lessonCards;
+
+    document.getElementById('btn-final-exam').addEventListener('click', function(){
+      startFinalExam();
+    });
     list.querySelectorAll('button[data-lesson]').forEach(function(b){
       b.addEventListener('click', function(){
         currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
@@ -714,8 +795,34 @@
 
   /* ================= Quiz ================= */
   var qIdx = 0, score = 0, answered = false;
+  var currentQuizSet = [];
+  var currentQuizMeta = null;
+
+  function revealProgress(){
+    var n = Math.round((score / currentQuizSet.length) * 8);
+    for (var p = 1; p <= 8; p++){
+      document.querySelectorAll('[data-piece="' + p + '"]').forEach(function(el){
+        el.classList.toggle('revealed', p <= n);
+      });
+    }
+  }
 
   function startQuiz(){
+    var lesson = lessons[currentLesson];
+    currentQuizSet = buildQuizSet(lesson);
+    currentQuizMeta = { id: currentLesson, title: lesson.title };
+    qIdx = 0; score = 0; resetTrain();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function startFinalExam(){
+    var qs = [];
+    lessons.forEach(function(l){
+      qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON).map(prepareQuestion));
+    });
+    currentQuizSet = shuffle(qs);
+    currentQuizMeta = { id: 'final', title: 'Word Train Review' };
     qIdx = 0; score = 0; resetTrain();
     showScreen('quiz');
     renderQuestion();
@@ -729,10 +836,9 @@
 
   function renderQuestion(){
     answered = false;
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
-    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + quizData.length;
-    document.getElementById('track-fill').style.width = Math.round((qIdx / quizData.length) * 100) + '%';
+    var item = currentQuizSet[qIdx];
+    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + currentQuizSet.length + (currentQuizMeta.id === 'final' ? ' — ' + decode(currentQuizMeta.title) : '');
+    document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
     document.getElementById('q-text').textContent = decode(item.q);
     var fb = document.getElementById('q-feedback');
@@ -769,22 +875,22 @@
   }
 
   function showFeedback(isCorrect){
-    var quizData = lessons[currentLesson].quiz;
-    var item = quizData[qIdx];
+    var item = currentQuizSet[qIdx];
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
     document.getElementById('next-wrap').classList.add('show');
-    if (isCorrect){ score++; revealPiece(qIdx + 1); }
+    if (isCorrect) score++;
+    revealProgress();
   }
 
   function handleMC(opt, btnEl, optWrap){
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
+    var item = currentQuizSet[qIdx];
     optWrap.querySelectorAll('.opt').forEach(function(el, i){
-      var thisOpt = quizData[qIdx].options[i];
+      var thisOpt = item.options[i];
       if (thisOpt.correct) el.classList.add('correct');
       else if (el === btnEl) el.classList.add('wrong');
     });
@@ -795,8 +901,7 @@
     if (answered) return;
     answered = true;
     lockOptions();
-    var quizData = lessons[currentLesson].quiz;
-    var correct = quizData[qIdx].answer;
+    var correct = currentQuizSet[qIdx].answer;
     var isRight = (choice === correct);
     chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
     if (!isRight){
@@ -807,19 +912,19 @@
   }
 
   document.getElementById('btn-next').addEventListener('click', function(){
-    var quizData = lessons[currentLesson].quiz;
-    if (qIdx < quizData.length - 1){ qIdx++; renderQuestion(); }
+    if (qIdx < currentQuizSet.length - 1){ qIdx++; renderQuestion(); }
     else { finishQuiz(); }
   });
 
   function finishQuiz(){
     document.getElementById('track-fill').style.width = '100%';
-    var quizData = lessons[currentLesson].quiz;
-    var total = quizData.length;
-    var starCount = score === total ? 3 : (score >= Math.ceil(total * 0.6) ? 2 : 1);
-    lessons[currentLesson].stars = Math.max(lessons[currentLesson].stars, starCount);
+    var total = currentQuizSet.length;
+    var starCount = starsFor(score / total);
+    var best = Math.max(progress[currentQuizMeta.id] || 0, score);
+    progress[currentQuizMeta.id] = best;
+    saveProgress(progress);
     document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
-    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right!';
+    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
     var msg;
     if (starCount === 3) msg = 'Choo choo! Your train is complete — you’re a Word Train champion!';
     else if (starCount === 2) msg = 'Great job! Your train is almost finished — try again to add the last cars!';
@@ -829,8 +934,8 @@
   }
 
   document.getElementById('btn-retry').addEventListener('click', function(){
-    lessons[currentLesson].quiz.forEach(function(item){ if (item.options) shuffle(item.options); });
-    startQuiz();
+    if (currentQuizMeta.id === 'final') startFinalExam();
+    else startQuiz();
   });
 
   renderHome();
