@@ -1,0 +1,765 @@
+<title>Math Mastery</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF7EC; --surface:#FFFFFF; --surface2:#FFEFD9;
+  --ink:#2B2320; --ink-soft:#8A7F73;
+  --accent:#1B7A79; --accent-ink:#FFFFFF;
+  --gold:#FFB627; --coral:#FF6F59;
+  --good:#2E9E5B; --bad:#E15555;
+  --border:#F0E4D2;
+  --shadow: 0 8px 24px rgba(43,35,32,0.14);
+  --radius:20px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15201F; --surface:#1E2C2A; --surface2:#243836;
+    --ink:#F5EFE3; --ink-soft:#B9AE9E;
+    --accent:#3FBDBA; --accent-ink:#0E1B1A;
+    --gold:#FFC65C; --coral:#FF8A73;
+    --good:#4FCB82; --bad:#FF7A7A;
+    --border:#2C3B39;
+    --shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15201F; --surface:#1E2C2A; --surface2:#243836;
+  --ink:#F5EFE3; --ink-soft:#B9AE9E;
+  --accent:#3FBDBA; --accent-ink:#0E1B1A;
+  --gold:#FFC65C; --coral:#FF8A73;
+  --good:#4FCB82; --bad:#FF7A7A;
+  --border:#2C3B39;
+  --shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Nunito',system-ui,sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Baloo 2',cursive; font-weight:700;}
+.app{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
+.hidden{display:none !important;}
+button{font-family:inherit; cursor:pointer;}
+button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+/* HOME */
+.hero{display:flex; align-items:center; gap:14px; margin:10px 0 20px;}
+.hero-scene{width:84px; height:84px; flex:none;}
+.hero h1{font-size:2.1rem; margin:0; color:var(--accent);}
+.hero p{margin:4px 0 0; color:var(--ink-soft); font-size:0.95rem;}
+.lesson-grid{display:grid; gap:14px;}
+.lesson-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
+  text-align:left; width:100%;
+}
+.lesson-emoji{font-size:2rem; flex:none; width:52px; height:52px; border-radius:14px;
+  background:var(--surface2); display:flex; align-items:center; justify-content:center;}
+.lesson-info{flex:1; min-width:0;}
+.lesson-info h3{margin:0 0 2px; font-size:1.15rem;}
+.lesson-info p{margin:0; color:var(--ink-soft); font-size:0.85rem;}
+.stars{margin-top:6px; font-size:0.95rem; letter-spacing:2px;}
+.star-on{color:var(--gold);}
+.star-off{color:var(--border);}
+.go-btn{
+  flex:none; background:var(--accent); color:var(--accent-ink); border:none; border-radius:12px;
+  padding:10px 16px; font-weight:800; font-size:0.9rem;
+}
+.final-card{border-color:var(--gold); background:linear-gradient(135deg, var(--surface2), var(--surface));}
+.final-badge{
+  display:inline-block; background:var(--gold); color:#3A2900; font-size:0.68rem; font-weight:800;
+  padding:2px 10px; border-radius:999px; margin-bottom:4px; letter-spacing:0.03em;
+}
+
+/* FLASHCARDS */
+.screen-head{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+.back-btn{background:none; border:none; color:var(--accent); font-weight:800; font-size:0.95rem; padding:6px 4px;}
+.screen-head h2{margin:0; font-size:1.4rem; flex:1;}
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:32px 24px; box-shadow:var(--shadow); gap:14px;
+}
+.card-icon{font-size:2.6rem;}
+.card-term{font-family:'Baloo 2',cursive; font-size:1.5rem; color:var(--accent);}
+.card-def{font-size:1.05rem; color:var(--ink-soft); line-height:1.5;}
+.card-nav{display:flex; justify-content:space-between; align-items:center; margin-top:16px; gap:10px;}
+.nav-btn{
+  background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:12px;
+  padding:12px 18px; font-weight:700;
+}
+.nav-btn:disabled{opacity:0.4; cursor:default;}
+.dots{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:140px;}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--border);}
+.dot.active{background:var(--accent);}
+.primary-btn{
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:14px;
+  padding:14px 22px; font-weight:800; font-size:1rem; width:100%; margin-top:18px;
+}
+
+/* QUIZ */
+.quiz-top{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+.progress-bar{flex:1; height:10px; background:var(--surface2); border-radius:6px; overflow:hidden;}
+.progress-fill{height:100%; background:var(--accent); transition:width .3s;}
+.quiz-scene{width:46px; height:46px; flex:none;}
+.q-text{font-size:1.15rem; font-weight:800; margin:6px 0 16px; line-height:1.4;}
+.options{display:grid; gap:10px;}
+.option{
+  background:var(--surface); border:2px solid var(--border); border-radius:14px; padding:14px 16px;
+  text-align:left; font-size:1rem; font-weight:700; color:var(--ink);
+}
+.option.correct{border-color:var(--good); background:color-mix(in srgb, var(--good) 14%, var(--surface));}
+.option.incorrect{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--surface));}
+.option:disabled{cursor:default;}
+.feedback{margin-top:14px; padding:14px 16px; border-radius:14px; font-size:0.95rem; line-height:1.5;}
+.feedback.good{background:color-mix(in srgb, var(--good) 16%, var(--surface)); color:var(--ink);}
+.feedback.bad{background:color-mix(in srgb, var(--bad) 16%, var(--surface)); color:var(--ink);}
+.feedback strong{display:block; margin-bottom:4px; font-family:'Baloo 2',cursive; font-size:1.05rem;}
+
+/* RESULTS */
+.results{text-align:center; padding:20px 10px;}
+.results-scene{width:170px; height:170px; margin:0 auto 14px;}
+.results h2{font-size:1.7rem; color:var(--accent); margin:0 0 4px;}
+.score-line{font-size:1.05rem; color:var(--ink-soft); margin-bottom:10px;}
+.results-stars{font-size:2rem; letter-spacing:8px; margin-bottom:18px;}
+.results-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+.secondary-btn{
+  background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:14px;
+  padding:12px 20px; font-weight:700;
+}
+
+/* scene pieces */
+.piece{opacity:0; transform:scale(0.6); transform-origin:center; transition:opacity .35s ease, transform .35s ease;}
+.piece.on{opacity:1; transform:scale(1);}
+</style>
+
+<div class="app">
+
+  <!-- HOME -->
+  <section id="screen-home">
+    <div class="hero">
+      <svg class="hero-scene" viewBox="0 0 200 200" id="hero-scene-svg"></svg>
+      <div>
+        <h1>Math Mastery</h1>
+        <p>Divisibility, GEMDAS, and Multiplying Fractions! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the Practice Test once every lesson is glowing!</p>
+      </div>
+    </div>
+    <div class="lesson-grid" id="lesson-grid"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="screen-cards" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="goHome()">&larr; Back</button>
+      <h2 id="cards-title"></h2>
+    </div>
+    <div class="card">
+      <div class="card-icon" id="card-icon"></div>
+      <div class="card-term" id="card-term"></div>
+      <div class="card-def" id="card-def"></div>
+    </div>
+    <div class="card-nav">
+      <button class="nav-btn" id="card-prev" onclick="cardStep(-1)">&larr; Prev</button>
+      <div class="dots" id="card-dots"></div>
+      <button class="nav-btn" id="card-next" onclick="cardStep(1)">Next &rarr;</button>
+    </div>
+    <button class="primary-btn" onclick="startQuiz()">Start the Quiz!</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="goHome()">&larr; Back</button>
+      <h2 id="quiz-title"></h2>
+    </div>
+    <div class="quiz-top">
+      <div class="progress-bar"><div class="progress-fill" id="quiz-progress"></div></div>
+      <svg class="quiz-scene" viewBox="0 0 200 200" id="quiz-scene-svg"></svg>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="q-options"></div>
+    <div id="q-feedback"></div>
+    <button class="primary-btn hidden" id="q-next-btn" onclick="nextQuestion()">Next &rarr;</button>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="hidden">
+    <div class="results">
+      <svg class="results-scene" viewBox="0 0 200 200" id="results-scene-svg"></svg>
+      <h2 id="results-heading"></h2>
+      <div class="score-line" id="results-score"></div>
+      <div class="results-stars" id="results-stars"></div>
+      <div class="results-actions">
+        <button class="primary-btn" style="width:auto" onclick="retryLesson()">Try Again</button>
+        <button class="secondary-btn" onclick="goHome()">Lesson Map</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ---- Helpers: randomness ---- */
+function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function pick(arr){ return arr[randInt(0, arr.length-1)]; }
+
+/* ---- Helpers: fractions ---- */
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b, a%b]; } return a || 1; }
+function reduceFrac(num, den){ const g = gcd(num, den); return { num: num/g, den: den/g }; }
+function fracToString(num, den){
+  if(den === 1) return String(num);
+  if(num === 0) return '0';
+  if(num < den) return `${num}/${den}`;
+  const whole = Math.floor(num/den), rem = num % den;
+  return rem === 0 ? String(whole) : `${whole} ${rem}/${den}`;
+}
+
+/* ---- Helper: build a shuffled multiple-choice question ---- */
+function mcQuestion(qText, correctText, wrongTexts, explain){
+  const uniqueWrong = [];
+  wrongTexts.forEach(t=>{ if(t !== correctText && !uniqueWrong.includes(t)) uniqueWrong.push(t); });
+  const opts = [{text:correctText, correct:true}, ...uniqueWrong.map(t=>({text:t, correct:false}))];
+  const order = shuffle(opts.map((_,i)=>i));
+  const options = order.map(i=>opts[i].text);
+  const correct = order.findIndex(i=>opts[i].correct);
+  return { q:qText, options, correct, explain };
+}
+
+/* ================= GENERATOR: Divisibility Rules ================= */
+const DIVISORS = [2,3,4,5,6,8,9,10];
+function divisibilityExplain(n, d, isTrue){
+  const digits = String(n).split('').map(Number);
+  const sum = digits.reduce((a,b)=>a+b, 0);
+  const lastDigit = n % 10;
+  const lastTwo = n % 100;
+  const lastThree = n % 1000;
+  switch(d){
+    case 2: return `${n} ends in ${lastDigit}, which is ${lastDigit % 2 === 0 ? 'even' : 'odd'} &mdash; so it ${isTrue ? 'IS' : 'is NOT'} divisible by 2.`;
+    case 5: return `${n} ends in ${lastDigit}. Only numbers ending in 0 or 5 are divisible by 5 &mdash; so ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 5.`;
+    case 10: return `${n} ends in ${lastDigit}. Only numbers ending in 0 are divisible by 10 &mdash; so ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 10.`;
+    case 3: return `Add the digits: ${digits.join('+')} = ${sum}. Since ${sum} ${isTrue ? 'is' : 'is NOT'} divisible by 3, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 3.`;
+    case 9: return `Add the digits: ${digits.join('+')} = ${sum}. Since ${sum} ${isTrue ? 'is' : 'is NOT'} divisible by 9, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 9.`;
+    case 4: return `Look at the last two digits: ${lastTwo}. Since ${lastTwo} ${isTrue ? 'is' : 'is NOT'} divisible by 4, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 4.`;
+    case 8: return `Look at the last three digits: ${lastThree}. Since ${lastThree} ${isTrue ? 'is' : 'is NOT'} divisible by 8, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 8.`;
+    case 6: {
+      const by2 = n % 2 === 0, by3 = sum % 3 === 0;
+      return `${n} must pass BOTH the rule for 2 AND the rule for 3. It ${by2?'IS':'is NOT'} even, and its digit sum (${sum}) ${by3?'IS':'is NOT'} divisible by 3 &mdash; so ${n} ${isTrue?'IS':'is NOT'} divisible by 6.`;
+    }
+  }
+}
+function genDivisibilityTF(){
+  const d = pick(DIVISORS);
+  const wantTrue = Math.random() < 0.5;
+  let n;
+  if(wantTrue){
+    n = d * randInt(15, 400);
+  } else {
+    const base = d * randInt(15, 400);
+    const r = randInt(1, d-1);
+    n = base + r;
+  }
+  const actual = n % d === 0;
+  return mcQuestion(
+    `True or False: ${n.toLocaleString()} is divisible by ${d}.`,
+    actual ? 'True' : 'False',
+    [actual ? 'False' : 'True'],
+    divisibilityExplain(n, d, actual)
+  );
+}
+function genDivisibilityMC(){
+  const d = pick(DIVISORS);
+  const correctN = d * randInt(15, 300);
+  const wrongs = [];
+  while(wrongs.length < 3){
+    const base = d * randInt(15, 300);
+    const r = randInt(1, d-1);
+    const candidate = base + r;
+    if(!wrongs.includes(candidate)) wrongs.push(candidate);
+  }
+  const allNums = shuffle([correctN, ...wrongs]);
+  const correctIdx = allNums.indexOf(correctN);
+  return {
+    q: `Which of these numbers IS divisible by ${d}?`,
+    options: allNums.map(x=>x.toLocaleString()),
+    correct: correctIdx,
+    explain: divisibilityExplain(correctN, d, true) + ` The other numbers leave a remainder when divided by ${d}.`
+  };
+}
+function genDivisibilitySet(n){
+  return Array.from({length:n}, ()=> Math.random() < 0.7 ? genDivisibilityTF() : genDivisibilityMC());
+}
+
+/* ================= GENERATOR: Order of Operations (GEMDAS) ================= */
+function genGemdasQuestion(){
+  const template = pick(['A','B','C','D']);
+  let q, correct, mistake, explain;
+  if(template === 'A'){
+    const a = randInt(10, 20), b = randInt(2, a-1), c = randInt(2, 9);
+    correct = (a-b)*c;
+    mistake = a - b;
+    q = `What is the value of (${a} &minus; ${b}) &times; ${c}?`;
+    explain = `Parentheses first: ${a} &minus; ${b} = ${a-b}. Then multiply: ${a-b} &times; ${c} = ${correct}.`;
+  } else if(template === 'B'){
+    const a = randInt(2, 15), b = randInt(2, 9), c = randInt(2, 9);
+    correct = a + b*c;
+    mistake = (a+b)*c;
+    q = `What is the value of ${a} + ${b} &times; ${c}?`;
+    explain = `Multiply first: ${b} &times; ${c} = ${b*c}. Then add: ${a} + ${b*c} = ${correct}.`;
+  } else if(template === 'C'){
+    const a = randInt(2, 9), b = randInt(2, 9), dd = randInt(2, 5), k = randInt(2, 9), c = dd*k;
+    correct = a*b + k;
+    mistake = a*b + c;
+    q = `What is the value of ${a} &times; ${b} + ${c} &divide; ${dd}?`;
+    explain = `Divide first: ${c} &divide; ${dd} = ${k}. Multiply: ${a} &times; ${b} = ${a*b}. Then add: ${a*b} + ${k} = ${correct}.`;
+  } else {
+    const dd = randInt(2, 5), k = randInt(2, 9), b = dd*k, a = randInt(b+5, b+40);
+    correct = a - k;
+    mistake = a - b;
+    q = `What is the value of ${a} &minus; ${b} &divide; ${dd}?`;
+    explain = `Divide first: ${b} &divide; ${dd} = ${k}. Then subtract: ${a} &minus; ${k} = ${correct}.`;
+  }
+  const extraOffsets = shuffle([-4,-3,-2,-1,1,2,3,4,5]);
+  let extra = null;
+  for(const off of extraOffsets){
+    const candidate = correct + off;
+    if(candidate !== correct && candidate !== mistake && candidate >= 0){ extra = candidate; break; }
+  }
+  const wrongs = extra !== null ? [mistake, extra] : [mistake];
+  return mcQuestion(q, String(correct), wrongs.map(String), explain);
+}
+function genGemdasSet(n){
+  return Array.from({length:n}, ()=> genGemdasQuestion());
+}
+
+/* ================= GENERATOR: Fraction Basics ================= */
+function genFractionBasicsQuestion(){
+  const shape = pick(['numerator','denominator','concept']);
+  const b = randInt(4, 12);
+  const a = randInt(1, b-1);
+  if(shape === 'numerator'){
+    return mcQuestion(
+      `In the fraction ${a}/${b}, what is the numerator?`,
+      String(a),
+      [String(b), String(a===1?a+2:a-1), String(b-1)],
+      `The numerator is the TOP number of a fraction. In ${a}/${b}, the top number is ${a}.`
+    );
+  }
+  if(shape === 'denominator'){
+    return mcQuestion(
+      `In the fraction ${a}/${b}, what is the denominator?`,
+      String(b),
+      [String(a), String(b+1), String(b-1===0?b+2:b-1)],
+      `The denominator is the BOTTOM number of a fraction. In ${a}/${b}, the bottom number is ${b}.`
+    );
+  }
+  const concepts = [
+    { text:`True or False: In a fraction, the denominator tells you how many equal parts make up the whole.`, answer:true,
+      explain:`True &mdash; the denominator (bottom number) always tells you how many equal parts the whole is divided into.` },
+    { text:`True or False: In a fraction, the numerator tells you how many equal parts make up the whole.`, answer:false,
+      explain:`False &mdash; that's the denominator's job. The numerator (top number) tells you how many of those parts you HAVE.` },
+    { text:`True or False: The number on TOP of a fraction is called the denominator.`, answer:false,
+      explain:`False &mdash; the top number is called the numerator. The bottom number is the denominator.` },
+    { text:`True or False: In the fraction ${a}/${b}, the ${b} tells you the whole has been divided into ${b} equal parts.`, answer:true,
+      explain:`True &mdash; the bottom number (${b}) is the denominator, which always tells you how many equal parts make the whole.` },
+    { text:`True or False: In the fraction ${a}/${b}, the ${a} tells you how many of the ${b} equal parts you have.`, answer:true,
+      explain:`True &mdash; the top number (${a}) is the numerator, which tells you how many parts you have out of the whole.` },
+  ];
+  const c = pick(concepts);
+  return mcQuestion(c.text, c.answer ? 'True' : 'False', [c.answer ? 'False' : 'True'], c.explain);
+}
+function genFractionBasicsSet(n){
+  return Array.from({length:n}, ()=> genFractionBasicsQuestion());
+}
+
+/* ================= GENERATOR: Multiplying Fractions ================= */
+const WORD_TEMPLATES = [
+  (w,n1,d1)=>`A recipe needs ${n1}/${d1} cup of sugar for one batch. How much sugar is needed for ${w} batches?`,
+  (w,n1,d1)=>`Each ribbon is ${n1}/${d1} of a meter long. How many meters of ribbon are there in ${w} ribbons?`,
+  (w,n1,d1)=>`A puppy eats ${n1}/${d1} of a cup of food each day. How much food does it eat in ${w} days?`,
+];
+function genMultiplyFractionsQuestion(){
+  const type = pick(['whole','fracfrac','mixed']);
+  if(type === 'whole'){
+    const w = randInt(2, 9);
+    const d1 = randInt(3, 10);
+    const n1 = randInt(1, d1-1);
+    const productNum = w*n1, productDen = d1;
+    const reduced = reduceFrac(productNum, productDen);
+    const correctStr = fracToString(reduced.num, reduced.den);
+    const unsimplifiedStr = fracToString(productNum, productDen);
+    const addMistakeStr = fracToString(w+n1, d1);
+    const wrongDenMistakeStr = fracToString(productNum, d1*w);
+    const useWordProblem = Math.random() < 0.4;
+    const q = useWordProblem
+      ? pick(WORD_TEMPLATES)(w, n1, d1) + ` Give your answer in simplest form.`
+      : `Multiply: ${w} &times; ${n1}/${d1} (simplify your answer)`;
+    return mcQuestion(
+      q, correctStr,
+      [unsimplifiedStr, addMistakeStr, wrongDenMistakeStr],
+      `${w} &times; ${n1}/${d1} = ${productNum}/${productDen}. Simplified: ${correctStr}.`
+    );
+  }
+  if(type === 'fracfrac'){
+    const d1 = randInt(3, 10), n1 = randInt(1, d1-1);
+    const d2 = randInt(3, 10), n2 = randInt(1, d2-1);
+    const productNum = n1*n2, productDen = d1*d2;
+    const reduced = reduceFrac(productNum, productDen);
+    const correctStr = fracToString(reduced.num, reduced.den);
+    const unsimplifiedStr = fracToString(productNum, productDen);
+    const addAcrossStr = fracToString(n1+n2, d1+d2);
+    return mcQuestion(
+      `Multiply: ${n1}/${d1} &times; ${n2}/${d2} (simplify your answer)`,
+      correctStr,
+      [unsimplifiedStr, addAcrossStr],
+      `Multiply straight across: ${n1}&times;${n2} = ${productNum}, and ${d1}&times;${d2} = ${productDen}, giving ${productNum}/${productDen}. Simplified: ${correctStr}.`
+    );
+  }
+  // mixed number x fraction
+  const d1 = randInt(2, 8);
+  const n1 = randInt(1, d1-1);
+  const w = randInt(1, 4);
+  const improperNum = w*d1 + n1;
+  const d2 = randInt(3, 10), n2 = randInt(1, d2-1);
+  const productNum = improperNum*n2, productDen = d1*d2;
+  const reduced = reduceFrac(productNum, productDen);
+  const correctStr = fracToString(reduced.num, reduced.den);
+  const unsimplifiedStr = fracToString(productNum, productDen);
+  const forgotNumeratorNum = (w*d1)*n2;
+  const forgotNumeratorStr = fracToString(forgotNumeratorNum, productDen);
+  return mcQuestion(
+    `Multiply: ${w} ${n1}/${d1} &times; ${n2}/${d2} (convert the mixed number first, then simplify)`,
+    correctStr,
+    [unsimplifiedStr, forgotNumeratorStr],
+    `Convert the mixed number: (${w}&times;${d1})+${n1} = ${improperNum}, so ${w} ${n1}/${d1} = ${improperNum}/${d1}. Multiply: ${improperNum}/${d1} &times; ${n2}/${d2} = ${productNum}/${productDen}. Simplified: ${correctStr}.`
+  );
+}
+function genMultiplyFractionsSet(n){
+  return Array.from({length:n}, ()=> genMultiplyFractionsQuestion());
+}
+
+/* ================= LESSONS ================= */
+const LESSON_QUIZ_LEN = 10;
+const LESSONS = [
+  {
+    id:'divisibility', emoji:'🔍', title:'Divisibility Rules', subtitle:'2, 3, 4, 5, 6, 8, 9, 10',
+    flashcards:[
+      {icon:'2️⃣', term:'Divisible by 2', def:'The last digit is even (0, 2, 4, 6, or 8).'},
+      {icon:'3️⃣', term:'Divisible by 3', def:'Add up ALL the digits. If that total is divisible by 3, so is the number!'},
+      {icon:'4️⃣', term:'Divisible by 4', def:'Look at just the last TWO digits. If that little number divides evenly by 4, you\'re set.'},
+      {icon:'5️⃣', term:'Divisible by 5', def:'The last digit is 0 or 5.'},
+      {icon:'6️⃣', term:'Divisible by 6', def:'It must pass BOTH the rule for 2 AND the rule for 3.'},
+      {icon:'8️⃣', term:'Divisible by 8', def:'Look at the last THREE digits. If that number divides evenly by 8, so does the whole number.'},
+      {icon:'9️⃣', term:'Divisible by 9', def:'Add up all the digits. If that total is divisible by 9, so is the number.'},
+      {icon:'🔟', term:'Divisible by 10', def:'The last digit is 0.'},
+    ],
+    generate: genDivisibilitySet
+  },
+  {
+    id:'gemdas', emoji:'🧮', title:'Order of Operations', subtitle:'GEMDAS / PEMDAS',
+    flashcards:[
+      {icon:'🧮', term:'GEMDAS', def:'Grouping (parentheses) &rarr; Exponents &rarr; Multiplication/Division &rarr; Addition/Subtraction.'},
+      {icon:'(  )', term:'Grouping First', def:'Anything inside parentheses always gets solved FIRST, before anything else.'},
+      {icon:'⚡', term:'Best Friends: M & D', def:'Multiplication and Division are equal partners. Do whichever one appears FIRST, reading left to right.'},
+      {icon:'➕', term:'Best Friends: A & S', def:'Addition and Subtraction are also equal partners. Do whichever one appears FIRST, reading left to right.'},
+      {icon:'🔎', term:'Example', def:'For 4 + 2 &times; 3: multiply first (2&times;3=6), then add (4+6=10). The answer is 10, not 18!'},
+    ],
+    generate: genGemdasSet
+  },
+  {
+    id:'fractionbasics', emoji:'🍕', title:'Fraction Basics', subtitle:'Numerator & Denominator',
+    flashcards:[
+      {icon:'🍕', term:'What is a Fraction?', def:'A fraction shows a part of a whole, written as two numbers with a line between them.'},
+      {icon:'⬆️', term:'Numerator', def:'The TOP number. It tells you how many equal parts you HAVE.'},
+      {icon:'⬇️', term:'Denominator', def:'The BOTTOM number. It tells you how many equal parts make up the WHOLE.'},
+      {icon:'🔢', term:'Example: 3/8', def:'In 3/8, the whole is cut into 8 equal parts (denominator), and you have 3 of them (numerator).'},
+      {icon:'📏', term:'Proper vs. Improper', def:'A proper fraction has a numerator smaller than the denominator (like 3/4). An improper fraction has a numerator bigger than or equal to the denominator (like 7/4).'},
+    ],
+    generate: genFractionBasicsSet
+  },
+  {
+    id:'multiplyfractions', emoji:'✖️', title:'Multiplying Fractions', subtitle:'Whole × Fraction, Fraction × Fraction, Mixed Numbers',
+    flashcards:[
+      {icon:'✖️', term:'Whole Number &times; Fraction', def:'Multiply the whole number by the numerator, and keep the same denominator. Then simplify!'},
+      {icon:'🍕', term:'Fraction &times; Fraction', def:'Multiply straight across: numerator &times; numerator, denominator &times; denominator. Then simplify!'},
+      {icon:'🔄', term:'Mixed Number? Convert First!', def:'Multiply the whole number by the denominator, then ADD the numerator. Keep the same denominator. Example: 2 3/4 &rarr; (2&times;4)+3 = 11, so 2 3/4 = 11/4.'},
+      {icon:'✅', term:'Always Simplify', def:'Reduce your final answer to lowest terms. If the numerator is bigger than the denominator, change it into a mixed number.'},
+      {icon:'💡', term:'Shortcut: Cross-Cancel', def:'Before multiplying, see if a numerator and a denominator share a common factor &mdash; you can cancel them first to make the math easier!'},
+    ],
+    generate: genMultiplyFractionsSet
+  },
+];
+
+const STORAGE_KEY = 'mathmastery_progress_v1';
+function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+let progress = loadProgress();
+
+const FINAL_EXAM_PER_LESSON = 3;
+
+function buildQuizSet(lesson){
+  return lesson.generate(LESSON_QUIZ_LEN);
+}
+
+/* ---- Sunrise SVG mascot ---- */
+function sunriseMarkup(){
+  return `
+  <g class="piece" data-n="1">
+    <polygon points="0,150 60,95 110,150" fill="var(--surface2)"/>
+    <polygon points="90,150 140,110 200,150" fill="var(--surface2)"/>
+  </g>
+  <g class="piece" data-n="2">
+    <rect x="0" y="150" width="200" height="4" fill="var(--ink-soft)" opacity="0.4"/>
+  </g>
+  <g class="piece" data-n="3">
+    <path d="M60 130 A40 40 0 0 1 140 130 Z" fill="var(--gold)"/>
+  </g>
+  <g class="piece" data-n="4">
+    <circle cx="100" cy="120" r="34" fill="var(--gold)"/>
+  </g>
+  <g class="piece" data-n="5">
+    <g stroke="var(--gold)" stroke-width="4" stroke-linecap="round">
+      <line x1="100" y1="60" x2="100" y2="46"/>
+      <line x1="146" y1="80" x2="156" y2="70"/>
+      <line x1="54" y1="80" x2="44" y2="70"/>
+      <line x1="160" y1="120" x2="174" y2="120"/>
+      <line x1="40" y1="120" x2="26" y2="120"/>
+    </g>
+  </g>
+  <g class="piece" data-n="6">
+    <path d="M20 70q8-10 18-2q6-10 16 0" fill="none" stroke="var(--coral)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M150 55q8-10 18-2q6-10 16 0" fill="none" stroke="var(--coral)" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g class="piece" data-n="7">
+    <ellipse cx="45" cy="45" rx="16" ry="8" fill="var(--surface)" opacity="0.9"/>
+    <ellipse cx="60" cy="40" rx="12" ry="7" fill="var(--surface)" opacity="0.9"/>
+    <ellipse cx="150" cy="35" rx="18" ry="9" fill="var(--surface)" opacity="0.9"/>
+  </g>
+  <g class="piece" data-n="8">
+    <circle cx="30" cy="30" r="2.4" fill="var(--gold)"/>
+    <circle cx="170" cy="20" r="2" fill="var(--coral)"/>
+    <circle cx="185" cy="60" r="2.4" fill="var(--gold)"/>
+    <circle cx="15" cy="90" r="2" fill="var(--coral)"/>
+    <path d="M100 120 m-2,-46 l4,0 l0,10 l-4,0 z" fill="var(--surface)" opacity="0.5"/>
+  </g>`;
+}
+function renderScene(svgEl, n){
+  svgEl.innerHTML = sunriseMarkup();
+  svgEl.querySelectorAll('.piece').forEach(p=>{
+    if(parseInt(p.dataset.n) <= n) p.classList.add('on');
+  });
+}
+
+/* ---- State ---- */
+let currentLessonIdx = 0;
+let cardIdx = 0;
+let quizIdx = 0;
+let quizScore = 0;
+let answered = false;
+let currentQuizSet = [];
+let currentQuizMeta = null;
+
+const homeScreen = document.getElementById('screen-home');
+const cardsScreen = document.getElementById('screen-cards');
+const quizScreen = document.getElementById('screen-quiz');
+const resultsScreen = document.getElementById('screen-results');
+
+function showScreen(el){
+  [homeScreen, cardsScreen, quizScreen, resultsScreen].forEach(s=>s.classList.add('hidden'));
+  el.classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function starsFor(pct){
+  if(pct >= 1) return 3;
+  if(pct >= 0.8) return 2;
+  if(pct >= 0.5) return 1;
+  return 0;
+}
+
+function renderHome(){
+  renderScene(document.getElementById('hero-scene-svg'), 8);
+  const grid = document.getElementById('lesson-grid');
+  grid.innerHTML = '';
+
+  const finalTotal = LESSONS.length * FINAL_EXAM_PER_LESSON;
+  const finalBest = progress['final'] || 0;
+  const finalCard = document.createElement('button');
+  finalCard.className = 'lesson-card final-card';
+  finalCard.onclick = ()=>startFinalExam();
+  finalCard.innerHTML = `
+    <div class="lesson-emoji">🏆</div>
+    <div class="lesson-info">
+      <span class="final-badge">Practice Test</span>
+      <h3>Full Practice Test</h3>
+      <p>${finalTotal} mixed questions from every lesson</p>
+      <div class="stars">${[1,2,3].map(s=>`<span class="${s<=starsFor(finalBest/finalTotal)?'star-on':'star-off'}">★</span>`).join('')}</div>
+    </div>
+    <div class="go-btn">${finalBest>0?'Retry':'Start'}</div>
+  `;
+  grid.appendChild(finalCard);
+
+  LESSONS.forEach((lesson, i)=>{
+    const total = LESSON_QUIZ_LEN;
+    const best = progress[lesson.id] || 0;
+    const stars = starsFor(best/total);
+    const card = document.createElement('button');
+    card.className = 'lesson-card';
+    card.onclick = ()=>openLesson(i);
+    card.innerHTML = `
+      <div class="lesson-emoji">${lesson.emoji}</div>
+      <div class="lesson-info">
+        <h3>${lesson.title}</h3>
+        <p>${lesson.subtitle}</p>
+        <div class="stars">${[1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('')}</div>
+      </div>
+      <div class="go-btn">${best>0?'Review':'Start'}</div>
+    `;
+    grid.appendChild(card);
+  });
+  showScreen(homeScreen);
+}
+
+function goHome(){ renderHome(); }
+
+function openLesson(i){
+  currentLessonIdx = i;
+  cardIdx = 0;
+  renderCard();
+  showScreen(cardsScreen);
+}
+
+function renderCard(){
+  const lesson = LESSONS[currentLessonIdx];
+  document.getElementById('cards-title').textContent = lesson.title;
+  const fc = lesson.flashcards[cardIdx];
+  document.getElementById('card-icon').textContent = fc.icon;
+  document.getElementById('card-term').innerHTML = fc.term;
+  document.getElementById('card-def').innerHTML = fc.def;
+  document.getElementById('card-prev').disabled = cardIdx === 0;
+  document.getElementById('card-next').disabled = cardIdx === lesson.flashcards.length - 1;
+  const dots = document.getElementById('card-dots');
+  dots.innerHTML = '';
+  lesson.flashcards.forEach((_, idx)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (idx === cardIdx ? ' active' : '');
+    dots.appendChild(d);
+  });
+}
+
+function cardStep(dir){
+  const lesson = LESSONS[currentLessonIdx];
+  cardIdx = Math.max(0, Math.min(lesson.flashcards.length - 1, cardIdx + dir));
+  renderCard();
+}
+
+function startQuiz(){
+  const lesson = LESSONS[currentLessonIdx];
+  currentQuizSet = buildQuizSet(lesson);
+  currentQuizMeta = {id: lesson.id, title: lesson.title};
+  quizIdx = 0;
+  quizScore = 0;
+  renderQuestion();
+  showScreen(quizScreen);
+}
+
+function startFinalExam(){
+  let qs = [];
+  LESSONS.forEach(l=>{
+    qs = qs.concat(l.generate(FINAL_EXAM_PER_LESSON));
+  });
+  currentQuizSet = shuffle(qs);
+  currentQuizMeta = {id:'final', title:'Full Practice Test'};
+  quizIdx = 0;
+  quizScore = 0;
+  renderQuestion();
+  showScreen(quizScreen);
+}
+
+function renderQuestion(){
+  answered = false;
+  document.getElementById('quiz-title').textContent = currentQuizMeta.title;
+  const total = currentQuizSet.length;
+  document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
+  renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
+  const q = currentQuizSet[quizIdx];
+  document.getElementById('q-feedback').innerHTML = '';
+  document.getElementById('q-next-btn').classList.add('hidden');
+
+  document.getElementById('q-text').innerHTML = `Question ${quizIdx+1} of ${total}: ${q.q}`;
+  const opts = document.getElementById('q-options');
+  opts.innerHTML = '';
+  q.options.forEach((opt, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.innerHTML = opt;
+    b.onclick = ()=>selectOption(idx);
+    opts.appendChild(b);
+  });
+}
+
+function selectOption(idx){
+  if(answered) return;
+  answered = true;
+  const q = currentQuizSet[quizIdx];
+  const total = currentQuizSet.length;
+  const buttons = document.querySelectorAll('#q-options .option');
+  buttons.forEach((b, i)=>{
+    b.disabled = true;
+    if(i === q.correct) b.classList.add('correct');
+    else if(i === idx) b.classList.add('incorrect');
+  });
+  const correct = idx === q.correct;
+  if(correct) quizScore++;
+  renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
+  const fb = document.getElementById('q-feedback');
+  fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite.'}</strong>${q.explain}</div>`;
+  document.getElementById('q-next-btn').classList.remove('hidden');
+}
+
+function nextQuestion(){
+  quizIdx++;
+  if(quizIdx >= currentQuizSet.length){
+    finishQuiz();
+  } else {
+    renderQuestion();
+  }
+}
+
+function finishQuiz(){
+  const total = currentQuizSet.length;
+  const best = Math.max(progress[currentQuizMeta.id] || 0, quizScore);
+  progress[currentQuizMeta.id] = best;
+  saveProgress(progress);
+  renderResults(total);
+  showScreen(resultsScreen);
+}
+
+function renderResults(total){
+  renderScene(document.getElementById('results-scene-svg'), Math.round((quizScore/total)*8));
+  const stars = starsFor(quizScore/total);
+  document.getElementById('results-heading').textContent =
+    stars === 3 ? 'Sunrise Complete!' : stars > 0 ? 'Great Progress!' : 'Keep Practicing!';
+  document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
+  document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
+}
+
+function retryLesson(){
+  if(currentQuizMeta.id === 'final'){ startFinalExam(); }
+  else { startQuiz(); }
+}
+
+renderHome();
+</script>
