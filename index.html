@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: 2026-07-22 -->
+<!-- build: 2026-09-02 -->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -161,7 +161,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
     <h1>Car-E-Pool</h1>
-    <p>User Manual — Version 1.9</p>
+    <p>User Manual — Version 1.10</p>
     <p style="margin-top:.2rem;font-size:.68rem;color:var(--muted)">© aspect;</p>
   </div>
   <nav class="sb-nav">
@@ -383,7 +383,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
   </div></div>
 
   <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Number of Seats</h4>
-    <p>Enter how many passenger seats you are offering. <strong>Minimum: 1 &nbsp;|&nbsp; Maximum: 7</strong></p>
+    <p>Enter how many passenger seats you are offering. <strong>Minimum: 1 &nbsp;|&nbsp; Maximum: 8</strong></p>
   </div></div>
 
   <div class="step"><div class="step-num">6</div><div class="step-body"><h4>Gas Contribution Amount</h4>
@@ -541,6 +541,18 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
       <li>Maximum <strong>9 re-announces</strong> after the initial post (10 group posts total). Button disappears once the limit is reached.</li>
       <li>Follower alerts are <strong>not</strong> re-sent on re-announces.</li>
     </ul>
+  </div>
+
+  <div class="stitle">🚘 Correct Total Seat Capacity</div>
+  <div class="card">
+    <p><strong>Edit Seats</strong> and <strong>Re-announce</strong> only redistribute seats <em>within</em> your ride's existing total — they can't raise it. <strong>🚘 Update Total Seats</strong>, on the same screen as Re-announce, lets you correct the total itself.</p>
+    <ul style="margin-top:.6rem">
+      <li>Works <strong>both ways</strong> — raise or lower the total, not just increase it</li>
+      <li>Can't go below the number of seats already reserved by in-app bookings — the bot shows that floor if your entry is rejected</li>
+      <li><strong>Maximum: 8 total seats</strong>, same limit as posting a new ride</li>
+      <li>Applying the change reposts your ride to the group and <strong>consumes a re-announcement slot</strong>, same as Edit Seats</li>
+    </ul>
+    <div class="callout tip" style="margin-top:.75rem"><span class="callout-icon">💡</span><div class="cb"><h4>When to use this</h4><p>If you under-listed your total to informally hold a seat for someone outside the app, and that arrangement falls through after your in-app seats fill up, this is how you reclaim it — Edit Seats alone can't, since it's capped by your existing total.</p></div></div>
   </div>
 
   <div class="stitle">🗑️ Remove a Confirmed Passenger</div>
@@ -851,7 +863,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
           <tr><td>Car Color</td><td>❌ Optional</td><td>Silver</td></tr>
           <tr><td>Car Model</td><td>✅ Yes</td><td>Toyota Vios</td></tr>
           <tr><td>Plate Number</td><td>✅ Yes</td><td>ABC1234</td></tr>
-          <tr><td>Seat Capacity</td><td>✅ Yes (1–7)</td><td>4</td></tr>
+          <tr><td>Seat Capacity</td><td>✅ Yes (1–8)</td><td>4</td></tr>
         </tbody>
       </table>
     </div>
@@ -899,7 +911,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
         <tr><td>Direction-scoped conflict</td><td>Cannot post a ride in a direction while holding a PENDING or CONFIRMED passenger booking in the same direction. The two directions are independent.</td></tr>
         <tr><td>Future departure only</td><td>Departure time must be in the future (Manila time)</td></tr>
         <tr><td>Origin ≠ Destination</td><td>Cannot select the same hub for both pickup and drop-off</td></tr>
-        <tr><td>Seat range</td><td>Minimum 1, maximum 7 per ride</td></tr>
+        <tr><td>Seat range</td><td>Minimum 1, maximum 8 per ride</td></tr>
         <tr><td>Contribution amount</td><td>Minimum ₱0.00 (free); no maximum</td></tr>
         <tr><td>Notes length</td><td>Maximum 300 characters</td></tr>
         <tr><td>Departure time edit</td><td>ACTIVE or FULL rides only; new time ≥ 15 min from now, must differ from current time</td></tr>
@@ -978,7 +990,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
     <table>
       <thead><tr><th>Field</th><th>Min</th><th>Max</th><th>Required</th></tr></thead>
       <tbody>
-        <tr><td>Ride — Total Seats</td><td>1</td><td>7</td><td>✅</td></tr>
+        <tr><td>Ride — Total Seats</td><td>1</td><td>8</td><td>✅</td></tr>
         <tr><td>Ride — Contribution Amount</td><td>₱0.00</td><td>—</td><td>✅</td></tr>
         <tr><td>Ride — Notes</td><td>—</td><td>300 chars</td><td>❌</td></tr>
         <tr><td>Booking — Passenger Message</td><td>—</td><td>300 chars</td><td>❌</td></tr>
@@ -987,7 +999,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
         <tr><td>Vehicle — Car Model</td><td>—</td><td>100 chars</td><td>✅ (driver)</td></tr>
         <tr><td>Vehicle — Plate Number</td><td>—</td><td>20 chars</td><td>✅ (driver) — unique across all users</td></tr>
         <tr><td>Vehicle — Car Color</td><td>—</td><td>50 chars</td><td>❌</td></tr>
-        <tr><td>Vehicle — Seat Capacity</td><td>1</td><td>7</td><td>✅ (driver) — max 3 vehicles per user</td></tr>
+        <tr><td>Vehicle — Seat Capacity</td><td>1</td><td>8</td><td>✅ (driver) — max 3 vehicles per user</td></tr>
         <tr><td>Hub — Name</td><td>—</td><td>150 chars</td><td>✅</td></tr>
         <tr><td>Hub — Area</td><td>—</td><td>100 chars</td><td>✅</td></tr>
       </tbody>
@@ -1113,7 +1125,9 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
 
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>I tapped "Start Ride" but the bot showed a countdown instead. Why?</span><span class="chev">▼</span></div><div class="acc-body"><p>You can only start a ride within <strong>60 minutes</strong> of the scheduled departure time. If you tap too early, the bot shows a countdown ("You can start the ride in X hours Y minutes"). Tap again once the countdown has elapsed.</p></div></div>
 
-  <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>My ride is FULL. Can passengers still book?</span><span class="chev">▼</span></div><div class="acc-body"><p>No. FULL rides do not appear in search results and new requests are blocked. Seats become available again if: (a) you remove a confirmed passenger, (b) a passenger cancels their own booking, or (c) you use <strong>📢 Re-announce</strong> and enter a higher seat count. In all cases the ride automatically returns to ACTIVE and the group announcement refreshes.</p></div></div>
+  <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>My ride is FULL. Can passengers still book?</span><span class="chev">▼</span></div><div class="acc-body"><p>No. FULL rides do not appear in search results and new requests are blocked. Seats become available again if: (a) you remove a confirmed passenger, (b) a passenger cancels their own booking, or (c) you use <strong>📢 Re-announce</strong> and enter a higher seat count. Option (c) only works if your ride's total seat count still has room — if all your seats are already reserved by in-app bookings, use <strong>🚘 Update Total Seats</strong> instead. In all cases the ride automatically returns to ACTIVE and the group announcement refreshes.</p></div></div>
+
+  <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>Someone who reserved a seat outside the app cancelled. Can I bring my seat count back from 0 to 1?</span><span class="chev">▼</span></div><div class="acc-body"><p>Now yes — tap <strong>🚘 Update Total Seats</strong> (same screen as 📢 Re-announce). A seat held informally outside the app was never tracked by the system, only reflected as a lower total on your ride. <strong>Edit Seats</strong> and <strong>Re-announce</strong> can only redistribute seats within that existing total, not raise it — so once your in-app seats filled up, there was no way back. <strong>🚘 Update Total Seats</strong> corrects the total itself, up or down.</p></div></div>
 
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>I removed a confirmed passenger. Will the group announcement update?</span><span class="chev">▼</span></div><div class="acc-body"><p>Yes. Removing a passenger triggers an automatic group post refresh — the old announcement is deleted and a new one is posted showing the updated seat count. No manual re-announce is needed.</p></div></div>
 
@@ -1148,7 +1162,7 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padd
   <div class="acc"><div class="acc-hdr" onclick="toggleAcc(this)"><span>I did not receive the 30-minute departure reminder.</span><span class="chev">▼</span></div><div class="acc-body"><p>Departure reminders are sent once per ride approximately 30 minutes before the scheduled departure. If the scheduler ran slightly late or the ride was modified close to that window, the reminder may have been skipped. This is a best-effort notification — always verify departure time from your booking confirmation.</p></div></div>
 
   <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border);text-align:center;font-size:.78rem;color:var(--muted)">
-    Car-E-Pool User Manual — Version 1.9 &nbsp;|&nbsp; July 2026 &nbsp;|&nbsp; © aspect;
+    Car-E-Pool User Manual — Version 1.10 &nbsp;|&nbsp; September 2026 &nbsp;|&nbsp; © aspect;
   </div>
 </section>
 

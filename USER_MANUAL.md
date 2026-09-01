@@ -1,5 +1,5 @@
 # Car-E-Pool — User Manual
-**Version 1.8 | June 2026**
+**Version 1.9 | September 2026**
 
 ---
 
@@ -10,7 +10,7 @@
 3. [Core Functionalities](#3-core-functionalities)
    - 3.1 Posting a Ride (Driver)
    - 3.2 Finding & Booking a Ride (Passenger)
-   - 3.3 Managing Your Ride (Driver) — incl. Editing Departure Time
+   - 3.3 Managing Your Ride (Driver) — incl. Editing Departure Time & Route
    - 3.4 Managing Your Bookings (Passenger)
    - 3.5 Ratings & Favorites (incl. Ratings Wall)
    - 3.6 Hubs
@@ -209,7 +209,7 @@ Same as Step 3. The origin hub is excluded from suggestions automatically.
 Enter how many passenger seats you are offering.
 
 - **Minimum:** 1 seat
-- **Maximum:** 7 seats
+- **Maximum:** 8 seats
 
 #### Step 6 — Gas Contribution Amount
 Enter the amount each passenger should contribute for fuel (in ₱).
@@ -466,6 +466,19 @@ When you tap **📢 Re-announce**, the bot asks: *"How many available seats do y
 
 > **Tip:** Use the 0-seats option to close bookings without cancelling the ride entirely.
 
+#### Correcting Total Seat Capacity
+
+**Edit Seats** and **Re-announce** only redistribute seats *within* your ride's existing total — they cannot raise it. If you originally listed fewer total seats than your car actually has (for example, to informally hold one seat for someone arranging a ride with you outside the app), and that arrangement later falls through after your in-app seats have already filled up, there was previously no way to reclaim that seat. **🚘 Update Total Seats** fixes this.
+
+From the same screen shown when you tap **📢 Re-announce**, tap **🚘 Update Total Seats**. The bot shows your current total, reserved, and available seat counts, then asks for a new total seat count.
+
+- You can both **raise and lower** the total — not just increase it.
+- The new total cannot go below the number of seats already reserved by in-app bookings (PENDING or CONFIRMED). If your entry is rejected, the bot tells you that floor.
+- **Maximum:** 8 total seats — the same limit as posting a new ride.
+- Applying the change immediately reposts your ride to the group — like Edit Seats, this **consumes one of your 10 re-announcement slots**.
+
+> **Example:** Your ride shows 1 total seat, fully booked via Telegram (0 available). A second seat you had informally promised to someone outside the app falls through. Tap **🚘 Update Total Seats**, enter **2**, and your ride reopens with 1 available seat and reposts to the group.
+
 #### Removing a Confirmed Passenger
 
 In your **My Passengers** list, each confirmed passenger has a **🗑️ Remove** button. Tapping it removes that passenger from your ride.
@@ -529,6 +542,30 @@ The bot opens the same calendar → time picker flow used when posting a ride. A
 3. The **community group announcement** is deleted and reposted immediately with the updated time — no re-announce slot is consumed.
 
 > **Tip:** Passengers who tap ❌ Cancel Booking from this notification are cancelled automatically — no driver action required. Their seat is freed back to the ride.
+
+#### Changing Your Route
+
+If your ride is **ACTIVE** or **FULL**, you can change its pickup or drop-off point by tapping **🔀 Change Route** from the main menu — added so you don't have to cancel and repost your ride just to fix a pickup or drop-off point.
+
+**Step-by-step:**
+
+1. Tap **🔀 Change Route**. Choose **📍 Change Start** or **🏁 Change End** — one side is changed per pass; there is no combined "edit both at once" screen.
+2. Type at least 3 characters of the new landmark name. The bot suggests matching hubs, same as during posting.
+   - If your landmark is not in the list, tap **"Use '[your text]'"** to save it as a pending hub and use it immediately, same as the post-ride flow.
+3. Tap the hub to confirm the change.
+
+**Rules:**
+- Only available for ACTIVE or FULL rides (not DRAFT, DEPARTED, COMPLETED, or CANCELLED)
+- The new hub must differ from the ride's **current origin and destination** — you cannot set both ends to the same location
+- Your ride's **direction** (Home→Work / Work→Home) is never recomputed by this action — if you actually need to flip direction, cancel the ride and post a new one instead
+
+**What happens after confirming:**
+
+1. The route is updated immediately — this is **not** a cancellation, so passengers are never sent a "ride cancelled" notice.
+2. All **confirmed passengers** receive a private notification showing the old and new route with **✅ Keep Booking** / **❌ Cancel Booking** buttons — the same pattern used for departure time changes.
+3. The **community group announcement** is deleted and reposted immediately with the updated route — no re-announce slot is consumed.
+
+> **Tip:** Passengers who tap ❌ Cancel Booking from this notification are cancelled automatically, just like on a departure time change — no driver action required. Their seat is freed back to the ride.
 
 ---
 
@@ -756,7 +793,7 @@ If you already have 3 vehicles saved and add a new one (e.g., during the ride-po
 | Car Color | ❌ Optional | Silver |
 | Car Model | ✅ Yes | Toyota Vios |
 | Plate Number | ✅ Yes | ABC1234 |
-| Seat Capacity | ✅ Yes (1–7) | 4 |
+| Seat Capacity | ✅ Yes (1–8) | 4 |
 
 **Rules:**
 - Plate numbers must be unique across all users. If the plate is already registered by another user, the registration will be rejected.
@@ -777,11 +814,12 @@ This section lists all system-enforced rules. These cannot be bypassed.
 | Direction-scoped conflict | A driver cannot post a ride in a given direction while they have a PENDING or CONFIRMED booking as a passenger in the **same direction**. The two directions (HOME→WORK and WORK→HOME) are independent: driving home-to-work and holding a work-to-home passenger booking at the same time is allowed. |
 | Future departure only | Departure time must be in the future (Manila time). Past times are rejected |
 | Origin ≠ Destination | You cannot select the same hub for both pickup and drop-off |
-| Seat range | Minimum 1, maximum 7 seats per ride |
+| Seat range | Minimum 1, maximum 8 seats per ride |
 | Contribution amount | Minimum ₱0.00 (free); no maximum |
 | Notes length | Maximum 300 characters |
 | Vehicle required | Driver must select a vehicle during posting. If no vehicle is saved, the bot prompts to add one before the confirmation step. |
 | Departure time edit | Only allowed on ACTIVE or FULL rides; new time must be ≥ 15 minutes from now and must differ from the current scheduled time. Triggers passenger notifications and group post refresh. |
+| Route edit | Only allowed on ACTIVE or FULL rides; new origin/destination must differ from the ride's current route, and origin still cannot equal destination. Direction is never recomputed. Triggers passenger notifications and group post refresh — not a cancellation. |
 
 ### 4.2 Ride Status Flow
 
@@ -894,7 +932,7 @@ These happen without any user action:
 
 | Field | Min | Max | Required | Notes |
 |-------|-----|-----|----------|-------|
-| Ride — Total Seats | 1 | 7 | ✅ | |
+| Ride — Total Seats | 1 | 8 | ✅ | |
 | Ride — Contribution Amount | ₱0.00 | — | ✅ | |
 | Ride — Notes | — | 300 chars | ❌ | |
 | Booking — Passenger Message | — | 300 chars | ❌ | |
@@ -903,7 +941,7 @@ These happen without any user action:
 | Vehicle — Car Model | — | 100 chars | ✅ (driver) | |
 | Vehicle — Plate Number | — | 20 chars | ✅ (driver) | Unique across all users |
 | Vehicle — Car Color | — | 50 chars | ❌ | |
-| Vehicle — Seat Capacity | 1 | 7 | ✅ (driver) | Max 3 vehicles per user |
+| Vehicle — Seat Capacity | 1 | 8 | ✅ (driver) | Max 3 vehicles per user |
 | Hub — Name | — | 150 chars | ✅ | |
 | Hub — Area | — | 100 chars | ✅ | |
 
@@ -1016,7 +1054,7 @@ A: The group announcement is sent asynchronously — allow up to 30 seconds afte
 ---
 
 **Q: Can I edit my ride after posting — departure time, route, or number of seats?**
-A: **Departure time** can be changed on any ACTIVE or FULL ride using **✏️ Edit Time** from the main menu. The new time must be at least 15 minutes in the future. All confirmed passengers are notified automatically and can choose to keep or cancel their booking. **Route** cannot be changed after posting — to correct it, cancel the ride and repost using the **🔄 Repost** shortcut (which pre-fills all original details for editing). To adjust only the **available seat count**, use **📢 Re-announce** — it lets you enter a new seat count before reposting to the group.
+A: Yes, on any ACTIVE or FULL ride. **Departure time** — tap **✏️ Edit Time** from the main menu; the new time must be at least 15 minutes in the future. **Route** — tap **🔀 Change Route** to fix a pickup or drop-off point one side at a time; this does not cancel the ride, so passengers only see a "keep or cancel" prompt, not a cancellation notice. **Available seat count** — use **📢 Re-announce** to enter a new count before reposting. **Total seat capacity** (the ceiling itself, not just what's currently available) — use **🚘 Update Total Seats** if you need to raise or lower it. Departure time and route changes notify all confirmed passengers automatically with Keep/Cancel buttons; all four actions refresh the group announcement.
 
 ---
 
@@ -1179,13 +1217,23 @@ A: No action is needed. When a passenger taps **❌ Cancel Booking** on the time
 
 ---
 
+**Q: I need to fix my pickup or drop-off point after posting. Do I have to cancel and repost?**
+A: No. Tap **🔀 Change Route** from the main menu (available on ACTIVE or FULL rides) and change the start or end point directly — no cancellation involved, so confirmed passengers only see a "keep or cancel" prompt with the old and new route, not a "ride cancelled" notice. The group announcement is refreshed automatically. Note that this only changes the pickup/drop-off point — it never changes your ride's direction (Home→Work / Work→Home); to flip direction, cancel and post a new ride.
+
+---
+
 **Q: I tapped "Start Ride" but the bot showed a countdown instead of departing. Why?**
 A: You can only start a ride within **60 minutes** of the scheduled departure time. If you tap too early, the bot shows a message like "You can start the ride in X hours Y minutes." This guard prevents accidental early departures. Tap again once the countdown has elapsed.
 
 ---
 
 **Q: My ride is FULL. Can passengers still book?**
-A: No. FULL rides do not appear in passenger search results and new booking requests are blocked. Seats become available again if: (a) you remove a confirmed passenger with the **🗑️ Remove** button, (b) a confirmed passenger cancels their own booking, or (c) you use **📢 Re-announce** and enter a higher seat count. In all cases the ride automatically returns to ACTIVE and the group announcement refreshes.
+A: No. FULL rides do not appear in passenger search results and new booking requests are blocked. Seats become available again if: (a) you remove a confirmed passenger with the **🗑️ Remove** button, (b) a confirmed passenger cancels their own booking, or (c) you use **📢 Re-announce** and enter a higher seat count. Option (c) only works if your ride's total seat count still has room — if your ride is FULL because the total itself is used up (e.g., all seats are already reserved by in-app bookings), use **🚘 Update Total Seats** instead (see below). In all cases the ride automatically returns to ACTIVE and the group announcement refreshes.
+
+---
+
+**Q: Ndi na po pwede ibalik from 0 to 1 kapag may nagcancel outside the app? (Can I bring my seat count back from 0 to 1 if someone who reserved with me outside the app cancels?)**
+A: Now yes — tap **🚘 Update Total Seats**, found on the same screen as **📢 Re-announce**. A seat held informally for someone outside the app was never tracked by the system; it only showed up as a lower total seat count on your ride. **Edit Seats** and **Re-announce** can only redistribute seats *within* that existing total, not raise it — so once your in-app seats filled up and the outside arrangement fell through, there was no way to reopen that seat. **🚘 Update Total Seats** corrects the total itself, up or down, bounded only by seats already reserved through the app. See §3.3 "Correcting Total Seat Capacity" for the full walkthrough.
 
 ---
 
@@ -1260,4 +1308,4 @@ A: No. Seat count is fixed at the time of booking and cannot be modified afterwa
 
 ---
 
-*End of Car-E-Pool User Manual — Version 1.8*
+*End of Car-E-Pool User Manual — Version 1.9*
