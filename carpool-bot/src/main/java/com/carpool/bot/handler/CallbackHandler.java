@@ -165,6 +165,7 @@ public class CallbackHandler {
         commands.put("REANNOUNCE_RIDE", profileHandler::handleReannounceRide);
         commands.put("CONFIRM_REANNOUNCE", profileHandler::handleConfirmReannounce);
         commands.put("REANNOUNCE_EDIT_SEATS", profileHandler::handleReannounceEditSeatsStart);
+        commands.put("REANNOUNCE_UPDATE_TOTAL_SEATS", profileHandler::handleReannounceUpdateTotalSeatsStart);
         commands.put("PENDING_HUBS", profileHandler::handlePendingHubs);
         commands.put("APPROVE_HUB", profileHandler::handleApproveHub);
         commands.put("REJECT_HUB", profileHandler::handleRejectHub);

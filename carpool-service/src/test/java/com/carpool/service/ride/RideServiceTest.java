@@ -598,6 +598,112 @@ class RideServiceTest {
         }
     }
 
+// ── updateTotalSeats ────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("updateTotalSeats()")
+    class UpdateTotalSeats {
+
+        @Test
+        @DisplayName("should throw NotRideOwnerException when caller is not the driver")
+        void updateTotalSeats_throwsWhenNotOwner() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateTotalSeats(100L, 4, 99L))
+                    .isInstanceOf(NotRideOwnerException.class);
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = RideStatus.class, names = {"COMPLETED", "CANCELLED", "DEPARTED", "DRAFT"})
+        @DisplayName("should throw InvalidRideStateException when ride is not ACTIVE or FULL")
+        void updateTotalSeats_throwsWhenRideNotActiveOrFull(RideStatus status) {
+            activeRide.setStatus(status);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateTotalSeats(100L, 4, 1L))
+                    .isInstanceOf(InvalidRideStateException.class);
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when new total equals current total")
+        void updateTotalSeats_throwsWhenSameValue() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateTotalSeats(100L, 3, 1L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("No changes");
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when new total is below reserved seats")
+        void updateTotalSeats_throwsWhenBelowReserved() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(3);
+
+            assertThatThrownBy(() -> rideService.updateTotalSeats(100L, 2, 1L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("3");
+        }
+
+        @Test
+        @DisplayName("should throw InvalidRideStateException when new total is out of the 1-8 range")
+        void updateTotalSeats_throwsWhenOutOfRange() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(0);
+
+            assertThatThrownBy(() -> rideService.updateTotalSeats(100L, 9, 1L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("between 1 and 8");
+        }
+
+        @Test
+        @DisplayName("should increase total and available seats, flipping FULL back to ACTIVE")
+        void updateTotalSeats_increasesAndReopensFullRide() {
+            activeRide.setStatus(RideStatus.FULL);
+            activeRide.setTotalSeats(1);
+            activeRide.setAvailableSeats(0);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(1);
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(mapper.toRideResponse(any())).thenReturn(mock(RideResponse.class));
+
+            rideService.updateTotalSeats(100L, 2, 1L);
+
+            assertThat(activeRide.getTotalSeats()).isEqualTo(2);
+            assertThat(activeRide.getAvailableSeats()).isEqualTo(1);
+            assertThat(activeRide.getStatus()).isEqualTo(RideStatus.ACTIVE);
+        }
+
+        @Test
+        @DisplayName("should decrease total down to reserved seats, flipping ACTIVE to FULL")
+        void updateTotalSeats_decreasesToFull() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(2);
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(mapper.toRideResponse(any())).thenReturn(mock(RideResponse.class));
+
+            rideService.updateTotalSeats(100L, 2, 1L);
+
+            assertThat(activeRide.getTotalSeats()).isEqualTo(2);
+            assertThat(activeRide.getAvailableSeats()).isEqualTo(0);
+            assertThat(activeRide.getStatus()).isEqualTo(RideStatus.FULL);
+        }
+
+        @Test
+        @DisplayName("should return updated RideResponse after save")
+        void updateTotalSeats_returnsUpdatedRideResponse() {
+            RideResponse expected = mock(RideResponse.class);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(0);
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(mapper.toRideResponse(any())).thenReturn(expected);
+
+            RideResponse result = rideService.updateTotalSeats(100L, 5, 1L);
+
+            assertThat(result).isSameAs(expected);
+        }
+    }
+
 // ── getRidesByDirection ───────────────────────────────────────────────────
 
     @Nested

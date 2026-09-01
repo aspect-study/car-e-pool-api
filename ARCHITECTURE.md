@@ -49,7 +49,8 @@ All business logic lives here. Key services:
 - `createRide()` — creates ride as DRAFT; validates driver has no active same-direction ride or passenger booking conflict (direction-scoped)
 - `updateRideStatus()` — handles all status transitions; publishes `RidePostedEvent` on DRAFT→ACTIVE
 - `reannounceRide()` — increments `announceCount` (max 10) and re-fires `RidePostedEvent`
-- `updateAvailableSeats()` — updates seat count and transitions ride status (0 → FULL, ≥1 → ACTIVE)
+- `updateAvailableSeats()` — updates seat count *within* the existing total and transitions ride status (0 → FULL, ≥1 → ACTIVE)
+- `updateTotalSeats(rideId, newTotalSeats, driverId)` — corrects the total seat ceiling itself (up or down), bounded below by reserved (in-app) seats; also flips FULL↔ACTIVE
 - `updateDepartureTime(rideId, newTime, driverId)` — validates ownership, ACTIVE/FULL status, ≥15 min from now; publishes `RideTimeChangedEvent`
 
 ### `BookingService`

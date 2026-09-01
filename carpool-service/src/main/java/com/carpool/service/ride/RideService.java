@@ -605,6 +605,56 @@ public class RideService {
         return mapper.toRideResponse(rideRepository.save(ride));
     }
 
+    /**
+     * Corrects the ride's total seat capacity (up or down) on an active ride.
+     * Unlike updateAvailableSeats, this moves the ceiling itself — needed when
+     * the driver's real-world capacity changes for reasons the app never tracked
+     * (e.g. an out-of-band arrangement falls through after the in-app seats fill up).
+     */
+    @Transactional
+    public RideResponse updateTotalSeats(Long rideId, int newTotalSeats, Long driverUserId) {
+        Ride ride = rideRepository.findByIdWithLock(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(driverUserId)) {
+            throw new NotRideOwnerException();
+        }
+
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
+            throw new InvalidRideStateException("Only ACTIVE or FULL rides can be updated.");
+        }
+
+        if (newTotalSeats == ride.getTotalSeats()) {
+            throw new InvalidRideStateException(
+                    "No changes made — total seats is already " + newTotalSeats + ".");
+        }
+
+        int reservedSeats = bookingRepository.sumReservedSeats(rideId);
+        if (newTotalSeats < reservedSeats) {
+            throw new InvalidRideStateException(
+                    "Total seats cannot be less than " + reservedSeats +
+                    " (" + reservedSeats + " seat(s) already reserved).");
+        }
+        if (newTotalSeats < 1 || newTotalSeats > 8) {
+            throw new InvalidRideStateException("Total seats must be between 1 and 8.");
+        }
+
+        int newAvailable = newTotalSeats - reservedSeats;
+        ride.setTotalSeats(newTotalSeats);
+        ride.setAvailableSeats(newAvailable);
+
+        if (newAvailable == 0) {
+            ride.setStatus(RideStatus.FULL);
+        } else if (ride.getStatus() == RideStatus.FULL) {
+            ride.setStatus(RideStatus.ACTIVE);
+        }
+
+        log.info("Total seats updated: rideId={} newTotalSeats={} newAvailable={} driverId={}",
+                rideId, newTotalSeats, newAvailable, driverUserId);
+
+        return mapper.toRideResponse(rideRepository.save(ride));
+    }
+
     @Transactional
     public RideResponse reannounceRide(Long rideId, Long requestingUserId) {
         Ride ride = rideRepository.findByIdWithLock(rideId)

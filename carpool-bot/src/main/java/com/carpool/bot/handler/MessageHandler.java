@@ -236,6 +236,9 @@ public class MessageHandler {
             case REANNOUNCE_EDIT_SEATS ->
                     profileHandler.handleReannounceEditSeatsText(
                             chatId, text, state, carpoolUserId, bot);
+            case REANNOUNCE_UPDATE_TOTAL_SEATS ->
+                    profileHandler.handleReannounceUpdateTotalSeatsText(
+                            chatId, text, state, carpoolUserId, bot);
             case SEARCH_SELECT_TIME ->
                     handleCustomTimeInput(chatId, text, state, carpoolUserId, bot);
             case BOOKING_MESSAGE ->

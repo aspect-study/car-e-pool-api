@@ -211,6 +211,16 @@ When a driver taps **📢 Re-announce** from the main menu, the flow enters `Bot
 
 The remaining count shown in the confirmation message and the `📢 Re-announce (N left)` button label both use `Math.max(0, 10 - ride.announceCount())`.
 
+## Update Total Seats
+
+A third button, **🚘 Update Total Seats**, sits alongside Re-announce and Edit Seats on the `handleReannounceRide` menu (`REANNOUNCE_UPDATE_TOTAL_SEATS:{rideId}`). Unlike Edit Seats — which only redistributes *available* seats within the ride's existing total — this changes the total itself, both up and down. Added for the case where a driver informally reserved a seat for someone outside the app, that arrangement falls through, and the app's own seat count has no record of it to release.
+
+**BotFlow:** `REANNOUNCE_UPDATE_TOTAL_SEATS`, alongside `REANNOUNCE_EDIT_SEATS`.
+
+- `REANNOUNCE_UPDATE_TOTAL_SEATS` (start) → `ProfileHandler.handleReannounceUpdateTotalSeatsStart` — ownership check, shows current total/reserved/available (`reserved = totalSeats - availableSeats`, no extra query needed), prompts for a new total seat count, stores `selectedRideId` + flow in `UserState`. Not flow-sensitive in `SessionRecoveryHandler` — same as `REANNOUNCE_EDIT_SEATS`'s entry point, it reads `rideId` from the callback payload, not from state.
+- Text input routed by `MessageHandler` to `ProfileHandler.handleReannounceUpdateTotalSeatsText` — calls `rideService.updateTotalSeats(rideId, newTotalSeats, carpoolUserId)`, then `rideService.reannounceRide(rideId, ...)` to repost the group announcement, mirroring the Edit Seats flow. This means updating total seats **consumes a re-announcement slot**, same as editing available seats does today — it was not made a free/exempt action.
+- All of `updateTotalSeats`'s validation errors (`InvalidRideStateException`) surface verbatim to the driver, same pattern as `handleReannounceEditSeatsText`.
+
 ## Passenger Mini-Profile Badge — Bot Side
 
 `BotMessageBuilder` exposes a static delegate method `buildPassengerBadge()` that carpool-bot callers use — it delegates to `ProfileBadgeBuilder` in `carpool-service`. This is the single source of truth; do not duplicate badge-building logic in carpool-bot.

@@ -10,6 +10,7 @@ import com.carpool.bot.state.StateManager;
 import com.carpool.bot.state.UserState;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.ButtonStyle;
+import com.carpool.common.exception.InvalidRideStateException;
 import com.carpool.common.util.HtmlEscapeUtil;
 import com.carpool.domain.entity.User;
 import com.carpool.repository.UserRepository;
@@ -778,6 +779,10 @@ public class ProfileHandler {
                             BotMessageBuilder.button("✏️ Edit Seats",
                                     "REANNOUNCE_EDIT_SEATS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString())
                     ),
+                    List.of(
+                            BotMessageBuilder.button("🚘 Update Total Seats",
+                                    "REANNOUNCE_UPDATE_TOTAL_SEATS:" + ctx.entityId(), ButtonStyle.PRIMARY.toString())
+                    ),
                     List.of(BotMessageBuilder.button("◀️ Cancel", "MAIN_MENU", ButtonStyle.DANGER.toString()))
             );
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), prompt, rows));
@@ -864,12 +869,73 @@ public class ProfileHandler {
             }
         } catch (NumberFormatException e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ Please enter a valid number."));
-        } catch (com.carpool.common.exception.InvalidRideStateException e) {
+        } catch (InvalidRideStateException e) {
             bot.send(BotMessageBuilder.text(chatId, "⚠️ " + e.getMessage()));
         } catch (Exception e) {
             log.warn("Reannounce seat edit failed for rideId={}: {}", rideId, e.getMessage());
             bot.send(BotMessageBuilder.text(chatId,
                     "⚠️ Could not update seat count. Please try again."));
+        }
+    }
+
+    public void handleReannounceUpdateTotalSeatsStart(BotContext ctx) {
+        try {
+            RideResponse ride = rideService.getRideById(ctx.entityId());
+            if (!ride.driver().id().equals(ctx.carpoolUserId())) {
+                ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
+                return;
+            }
+            int reservedSeats = ride.totalSeats() - ride.availableSeats();
+            stateManager.save(ctx.chatId(), ctx.state()
+                    .withSelectedRideId(ctx.entityId())
+                    .withFlow(BotFlow.REANNOUNCE_UPDATE_TOTAL_SEATS));
+            ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
+                    String.format(
+                            "🚘 <b>Update Total Seats</b>\n\n" +
+                            "Current: <b>%d total</b> (%d reserved, %d available)\n\n" +
+                            "Enter the new total seat count (min %d, max 8):",
+                            ride.totalSeats(), reservedSeats, ride.availableSeats(), reservedSeats),
+                    List.of(List.of(
+                            BotMessageBuilder.button("◀️ Cancel", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
+                    ))));
+        } catch (Exception e) {
+            ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
+                    "⚠️ Could not load ride. Please try again."));
+        }
+    }
+
+    public void handleReannounceUpdateTotalSeatsText(Long chatId, String text,
+                                                      UserState state, Long carpoolUserId,
+                                                      CarpoolBot bot) {
+        Long rideId = state.getSelectedRideId();
+        if (rideId == null) {
+            stateManager.reset(chatId);
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Session expired. Please try again."));
+            return;
+        }
+        try {
+            int newTotalSeats = Integer.parseInt(text.trim());
+            rideService.updateTotalSeats(rideId, newTotalSeats, carpoolUserId);
+            RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
+            stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
+
+            int remaining = Math.max(0, 10 - ride.announceCount());
+            String remainingText = remaining == 0
+                    ? "No more re-announcements available."
+                    : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+            bot.send(BotMessageBuilder.text(chatId,
+                    "🚘 <b>Total Seats Updated!</b>\n\n" +
+                            "Ride now has <b>" + newTotalSeats + " total</b> seat(s), <b>" +
+                            ride.availableSeats() + " available</b>, and has been posted to group.\n" +
+                            "<i>" + remainingText + "</i>"));
+        } catch (NumberFormatException e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ Please enter a valid number."));
+        } catch (InvalidRideStateException e) {
+            bot.send(BotMessageBuilder.text(chatId, "⚠️ " + e.getMessage()));
+        } catch (Exception e) {
+            log.warn("Reannounce total seats update failed for rideId={}: {}", rideId, e.getMessage());
+            bot.send(BotMessageBuilder.text(chatId,
+                    "⚠️ Could not update total seats. Please try again."));
         }
     }
 

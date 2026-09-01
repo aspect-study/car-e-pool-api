@@ -102,6 +102,17 @@ The bot-side checks in `PostRideHandler`, `RideSearchHandler`, and `MessageHandl
 - `NotificationTypes.RIDE_ROUTE_CHANGED` constant used for the notification type field.
 - Exposed via `PATCH /api/v1/rides/{id}/route` with `UpdateRouteRequest(originHubId, destinationHubId)` — both nullable, class-level `@AssertTrue` requires at least one non-null.
 
+## Update Total Seat Capacity
+
+`RideService.updateTotalSeats(rideId, newTotalSeats, driverUserId)` corrects the ride's total seat *ceiling* itself — unlike `updateAvailableSeats`, which only redistributes seats within the existing total. Closes a real gap: a driver who under-lists `totalSeats` to informally hold a seat for an out-of-band (outside-the-app) passenger had no way to reclaim that seat once the in-app seats filled up and the outside arrangement fell through — `updateAvailableSeats` clamps to `totalSeats - reservedSeats`, and `totalSeats` was write-once (set at `createRide()`, never mutated again) before this method existed.
+
+- Acquires `SELECT FOR UPDATE` via `rideRepository.findByIdWithLock(rideId)` — same lock pattern as `updateAvailableSeats`/`updateDepartureTime`, preventing a concurrent booking from grabbing a seat mid-edit.
+- Validates: caller is ride owner (`NotRideOwnerException`); ride status is ACTIVE or FULL (`InvalidRideStateException`); `newTotalSeats` differs from the current value (`InvalidRideStateException`, "No changes made"); `newTotalSeats ≥ reservedSeats` — `reservedSeats` comes from `bookingRepository.sumReservedSeats(rideId)` (in-app PENDING/CONFIRMED bookings only) — rejecting a shrink below what's already booked; `1 ≤ newTotalSeats ≤ 8`, mirroring `CreateRideRequest`'s bounds.
+- Sets both `totalSeats` and `availableSeats` (`newTotalSeats - reservedSeats`) together, then applies the same FULL↔ACTIVE status flip as `updateAvailableSeats`.
+- Bidirectional — supports increasing and decreasing total capacity, not just the increase case that motivated it.
+- Does **not** itself repost the group announcement or touch `announceCount` — the bot flow calls `reannounceRide()` immediately after, same as the seat-edit flow, so this action consumes a re-announcement slot.
+- **Known pre-existing gap, not addressed here:** neither `createRide()` nor `updateTotalSeats()` validates `totalSeats` against `vehicle.seatCapacity` — a driver can list more seats than their car physically has.
+
 ## Booking: Pessimistic Locking
 
 `BookingService.createBooking()` acquires `SELECT FOR UPDATE` on the ride row (`RideRepository.findByIdWithLock()`) to prevent double-booking the last seat. The lock is held for the full transaction duration.

@@ -36,6 +36,7 @@ public enum BotFlow {
 
     // ── Re-announce seat edit ─────────────────────────────────────────────
     REANNOUNCE_EDIT_SEATS,
+    REANNOUNCE_UPDATE_TOTAL_SEATS,
 
     // ── Driver: Manage active ride ────────────────────────────────────────
     MANAGE_RIDE,
