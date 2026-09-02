@@ -754,6 +754,17 @@ public class ProfileHandler {
                 )));
     }
 
+    private int remainingAnnouncements(Integer announceCount) {
+        return Math.max(0, 10 - announceCount);
+    }
+
+    private String remainingAnnouncementsText(Integer announceCount) {
+        int remaining = remainingAnnouncements(announceCount);
+        return remaining == 0
+                ? "No more re-announcements available."
+                : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+    }
+
     public void handleReannounceRide(BotContext ctx) {
         try {
             RideResponse ride = rideService.getRideById(ctx.entityId());
@@ -761,7 +772,7 @@ public class ProfileHandler {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
                 return;
             }
-            int remaining = Math.max(0, 10 - ride.announceCount());
+            int remaining = remainingAnnouncements(ride.announceCount());
             String prompt = String.format(
                     """
                             📢 <b>Re-announce Ride</b>
@@ -795,10 +806,7 @@ public class ProfileHandler {
     public void handleConfirmReannounce(BotContext ctx) {
         try {
             RideResponse ride = rideService.reannounceRide(ctx.entityId(), ctx.carpoolUserId());
-            int remaining = Math.max(0, 10 - ride.announceCount());
-            String remainingText = remaining == 0
-                    ? "No more re-announcements available."
-                    : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+            String remainingText = remainingAnnouncementsText(ride.announceCount());
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),
                     "📢 <b>Ride Re-announced!</b>\n\n" +
                             "Your ride has been posted to the group again.\n" +
@@ -858,10 +866,7 @@ public class ProfileHandler {
             } else {
                 RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
                 stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
-                int remaining = Math.max(0, 10 - ride.announceCount());
-                String remainingText = remaining == 0
-                        ? "No more re-announcements available."
-                        : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+                String remainingText = remainingAnnouncementsText(ride.announceCount());
                 bot.send(BotMessageBuilder.text(chatId,
                         "📢 <b>Ride Re-announced!</b>\n\n" +
                                 "Seat count updated to <b>" + newSeats + "</b> and ride posted to group.\n" +
@@ -919,10 +924,7 @@ public class ProfileHandler {
             RideResponse ride = rideService.updateTotalSeatsAndReannounce(rideId, newTotalSeats, carpoolUserId);
             stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
 
-            int remaining = Math.max(0, 10 - ride.announceCount());
-            String remainingText = remaining == 0
-                    ? "No more re-announcements available."
-                    : remaining + " re-announcement" + (remaining == 1 ? "" : "s") + " remaining.";
+            String remainingText = remainingAnnouncementsText(ride.announceCount());
             bot.send(BotMessageBuilder.text(chatId,
                     "🚘 <b>Total Seats Updated!</b>\n\n" +
                             "Ride now has <b>" + newTotalSeats + " total</b> seat(s), <b>" +

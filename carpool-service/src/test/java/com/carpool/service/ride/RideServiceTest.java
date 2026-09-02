@@ -649,7 +649,6 @@ class RideServiceTest {
         @DisplayName("should throw InvalidRideStateException when new total is out of the 1-8 range")
         void updateTotalSeats_throwsWhenOutOfRange() {
             when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
-            when(bookingRepository.sumReservedSeats(100L)).thenReturn(0);
 
             assertThatThrownBy(() -> rideService.updateTotalSeats(100L, 9, 1L))
                     .isInstanceOf(InvalidRideStateException.class)

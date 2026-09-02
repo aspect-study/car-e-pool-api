@@ -209,7 +209,7 @@ When a driver taps **📢 Re-announce** from the main menu, the flow enters `Bot
 - **`newSeats == 0`:** Calls `rideService.reannounceRide(rideId, ...)` which fires `RidePostedEvent`. `onRidePosted` detects 0 available seats, deletes the old group post, clears `groupMessageId`, and returns without posting a new announcement. Bot confirms: "🚫 Ride Marked as Full — group announcement has been removed."
 - **`newSeats > 0`:** Calls `rideService.reannounceRide(rideId, ...)` which fires `RidePostedEvent`. `onRidePosted` deletes old post and reposts with updated seat count. Bot confirms: "📢 Ride Re-announced! Seat count updated to N and ride posted to group. X re-announcements remaining."
 
-The remaining count shown in the confirmation message and the `📢 Re-announce (N left)` button label both use `Math.max(0, 10 - ride.announceCount())`.
+The remaining count shown in the confirmation message and the `📢 Re-announce (N left)` button label both use `ProfileHandler.remainingAnnouncements(Integer)` / `remainingAnnouncementsText(Integer)` — two small private helpers (`Math.max(0, 10 - announceCount)` and its pluralized message form) shared by `handleReannounceRide`, `handleConfirmReannounce`, `handleReannounceEditSeatsText`, and `handleReannounceUpdateTotalSeatsText`. This block used to be copy-pasted separately in each of those four methods; add any new re-announcement-consuming flow through these helpers instead of re-inlining the formatting.
 
 ## Update Total Seats
 

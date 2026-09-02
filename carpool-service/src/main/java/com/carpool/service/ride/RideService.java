@@ -464,22 +464,45 @@ public class RideService {
     }
 
     /**
+     * Loads the ride with a pessimistic lock and verifies the caller owns it and it is
+     * ACTIVE or FULL. Shared by every mutation that edits an already-active ride
+     * (departure time, route, available seats, total seats).
+     */
+    private Ride requireOwnedActiveOrFullRide(Long rideId, Long callerId, String statusErrorMessage) {
+        Ride ride = rideRepository.findByIdWithLock(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (!ride.getDriver().getId().equals(callerId)) {
+            throw new NotRideOwnerException();
+        }
+
+        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
+            throw new InvalidRideStateException(statusErrorMessage);
+        }
+
+        return ride;
+    }
+
+    /**
+     * Applies the shared FULL/ACTIVE flip after an available-seat count changes:
+     * 0 available always means FULL; otherwise a previously-FULL ride reopens to ACTIVE.
+     */
+    private void applySeatStatusFlip(Ride ride, int newAvailable) {
+        if (newAvailable == 0) {
+            ride.setStatus(RideStatus.FULL);
+        } else if (ride.getStatus() == RideStatus.FULL) {
+            ride.setStatus(RideStatus.ACTIVE);
+        }
+    }
+
+    /**
      * Updates the departure time of an active or full ride.
      * Publishes RideTimeChangedEvent to notify confirmed passengers.
      */
     @Transactional
     public RideResponse updateDepartureTime(Long rideId, LocalDateTime newTime, Long driverUserId) {
-        Ride ride = rideRepository.findByIdWithLock(rideId)
-                .orElseThrow(() -> new RideNotFoundException(rideId));
-
-        if (!ride.getDriver().getId().equals(driverUserId)) {
-            throw new NotRideOwnerException();
-        }
-
-        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
-            throw new InvalidRideStateException(
-                    "Only ACTIVE or FULL rides can have their departure time updated.");
-        }
+        Ride ride = requireOwnedActiveOrFullRide(rideId, driverUserId,
+                "Only ACTIVE or FULL rides can have their departure time updated.");
 
         if (newTime.equals(ride.getDepartureTime())) {
             throw new InvalidRideStateException(
@@ -511,17 +534,8 @@ public class RideService {
     @Transactional
     public RideResponse updateRoute(Long rideId, Long newOriginHubId,
                                     Long newDestinationHubId, Long driverUserId) {
-        Ride ride = rideRepository.findByIdWithLock(rideId)
-                .orElseThrow(() -> new RideNotFoundException(rideId));
-
-        if (!ride.getDriver().getId().equals(driverUserId)) {
-            throw new NotRideOwnerException();
-        }
-
-        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
-            throw new InvalidRideStateException(
-                    "Only ACTIVE or FULL rides can have their route updated.");
-        }
+        Ride ride = requireOwnedActiveOrFullRide(rideId, driverUserId,
+                "Only ACTIVE or FULL rides can have their route updated.");
 
         if (newOriginHubId == null && newDestinationHubId == null) {
             throw new InvalidRideStateException(
@@ -572,16 +586,8 @@ public class RideService {
      */
     @Transactional
     public RideResponse updateAvailableSeats(Long rideId, int newSeats, Long driverUserId) {
-        Ride ride = rideRepository.findByIdWithLock(rideId)
-                .orElseThrow(() -> new RideNotFoundException(rideId));
-
-        if (!ride.getDriver().getId().equals(driverUserId)) {
-            throw new NotRideOwnerException();
-        }
-
-        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
-            throw new InvalidRideStateException("Only ACTIVE or FULL rides can be updated.");
-        }
+        Ride ride = requireOwnedActiveOrFullRide(rideId, driverUserId,
+                "Only ACTIVE or FULL rides can be updated.");
 
         int reservedSeats = bookingRepository.sumReservedSeats(rideId);
         int maxAllowed    = ride.getTotalSeats() - reservedSeats;
@@ -592,12 +598,7 @@ public class RideService {
         }
 
         ride.setAvailableSeats(newSeats);
-
-        if (newSeats == 0) {
-            ride.setStatus(RideStatus.FULL);
-        } else if (ride.getStatus() == RideStatus.FULL) {
-            ride.setStatus(RideStatus.ACTIVE);
-        }
+        applySeatStatusFlip(ride, newSeats);
 
         log.info("Available seats updated: rideId={} newSeats={} driverId={}",
                 rideId, newSeats, driverUserId);
@@ -613,20 +614,17 @@ public class RideService {
      */
     @Transactional
     public RideResponse updateTotalSeats(Long rideId, int newTotalSeats, Long driverUserId) {
-        Ride ride = rideRepository.findByIdWithLock(rideId)
-                .orElseThrow(() -> new RideNotFoundException(rideId));
-
-        if (!ride.getDriver().getId().equals(driverUserId)) {
-            throw new NotRideOwnerException();
-        }
-
-        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
-            throw new InvalidRideStateException("Only ACTIVE or FULL rides can be updated.");
-        }
+        Ride ride = requireOwnedActiveOrFullRide(rideId, driverUserId,
+                "Only ACTIVE or FULL rides can be updated.");
 
         if (newTotalSeats == ride.getTotalSeats()) {
             throw new InvalidRideStateException(
                     "No changes made — total seats is already " + newTotalSeats + ".");
+        }
+        if (newTotalSeats < RideSeatLimits.MIN_TOTAL_SEATS || newTotalSeats > RideSeatLimits.MAX_TOTAL_SEATS) {
+            throw new InvalidRideStateException(
+                    "Total seats must be between " + RideSeatLimits.MIN_TOTAL_SEATS +
+                    " and " + RideSeatLimits.MAX_TOTAL_SEATS + ".");
         }
 
         int reservedSeats = bookingRepository.sumReservedSeats(rideId);
@@ -635,19 +633,11 @@ public class RideService {
                     "Total seats cannot be less than " + reservedSeats +
                     " (" + reservedSeats + " seat(s) already reserved).");
         }
-        if (newTotalSeats < 1 || newTotalSeats > 8) {
-            throw new InvalidRideStateException("Total seats must be between 1 and 8.");
-        }
 
         int newAvailable = newTotalSeats - reservedSeats;
         ride.setTotalSeats(newTotalSeats);
         ride.setAvailableSeats(newAvailable);
-
-        if (newAvailable == 0) {
-            ride.setStatus(RideStatus.FULL);
-        } else if (ride.getStatus() == RideStatus.FULL) {
-            ride.setStatus(RideStatus.ACTIVE);
-        }
+        applySeatStatusFlip(ride, newAvailable);
 
         log.info("Total seats updated: rideId={} newTotalSeats={} newAvailable={} driverId={}",
                 rideId, newTotalSeats, newAvailable, driverUserId);
@@ -657,17 +647,8 @@ public class RideService {
 
     @Transactional
     public RideResponse reannounceRide(Long rideId, Long requestingUserId) {
-        Ride ride = rideRepository.findByIdWithLock(rideId)
-                .orElseThrow(() -> new RideNotFoundException(rideId));
-
-        if (!ride.getDriver().getId().equals(requestingUserId)) {
-            throw new NotRideOwnerException();
-        }
-
-        if (ride.getStatus() != RideStatus.ACTIVE && ride.getStatus() != RideStatus.FULL) {
-            throw new InvalidRideStateException(
-                    "Only ACTIVE or FULL rides can be re-announced.");
-        }
+        Ride ride = requireOwnedActiveOrFullRide(rideId, requestingUserId,
+                "Only ACTIVE or FULL rides can be re-announced.");
 
         if (ride.getAnnounceCount() == null || ride.getAnnounceCount() >= 10) {
             throw new InvalidRideStateException(

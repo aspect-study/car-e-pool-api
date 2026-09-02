@@ -1,6 +1,7 @@
 package com.carpool.service.dto.request;
 
 import com.carpool.domain.enums.RideDirection;
+import com.carpool.service.ride.RideSeatLimits;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
@@ -24,8 +25,8 @@ public record CreateRideRequest(
         LocalDateTime departureTime,
 
         @NotNull(message = "totalSeats is required")
-        @Min(value = 1, message = "totalSeats must be at least 1")
-        @Max(value = 8, message = "totalSeats cannot exceed 8")
+        @Min(value = RideSeatLimits.MIN_TOTAL_SEATS, message = "totalSeats must be at least 1")
+        @Max(value = RideSeatLimits.MAX_TOTAL_SEATS, message = "totalSeats cannot exceed 8")
         Integer totalSeats,
 
         @NotNull(message = "contributionAmount is required")
