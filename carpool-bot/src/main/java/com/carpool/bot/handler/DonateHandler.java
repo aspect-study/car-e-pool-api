@@ -61,8 +61,8 @@ public class DonateHandler {
                     .caption("""
                             💙 <b>GCash</b>
 
-                            Scan this QR code in your GCash app, or send to the \
-                            account shown.
+                            Scan this QR code in your GCash app, or send to:
+                            📱 <code>0977 806 6342</code>
 
                             <i>Any amount is appreciated — it helps cover server \
                             and hosting costs for the bot. Voluntary support only, \
