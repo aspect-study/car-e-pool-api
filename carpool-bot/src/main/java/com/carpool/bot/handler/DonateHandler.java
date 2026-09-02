@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +28,20 @@ import java.util.List;
 public class DonateHandler {
 
     private static final String GCASH_QR_RESOURCE = "/images/gcash-qr.png";
+
+    /**
+     * Gates the donate button on post-ride screens so it doesn't nag on
+     * every single completion. rideId is a platform-wide auto-increment
+     * id, so this lands roughly 1-in-3 completions without needing any
+     * per-user tracking state.
+     */
+    public static boolean shouldPromptOnRideEnd(Long rideId) {
+        return rideId != null && rideId % 3 == 0;
+    }
+
+    public static InlineKeyboardButton donateButton() {
+        return BotMessageBuilder.button("💙 Donate", "DONATE", ButtonStyle.PRIMARY.toString());
+    }
 
     public void showDonate(Long chatId, CarpoolBot bot) {
         bot.send(SendMessage.builder()

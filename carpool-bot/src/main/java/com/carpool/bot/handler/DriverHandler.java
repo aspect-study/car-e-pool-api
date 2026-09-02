@@ -1015,6 +1015,15 @@ public class DriverHandler {
                     ctx.carpoolUserId());
             stateManager.reset(ctx.chatId());
 
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            rows.add(List.of(
+                    BotMessageBuilder.button("🚗 Yes, Post New Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString()),
+                    BotMessageBuilder.button("❌ No, Thanks",          "MAIN_MENU", ButtonStyle.DANGER.toString())
+            ));
+            if (DonateHandler.shouldPromptOnRideEnd(ctx.entityId())) {
+                rows.add(List.of(DonateHandler.donateButton()));
+            }
+
             ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(),
                     """
                             ✅ <b>Ride Completed!</b>
@@ -1024,10 +1033,7 @@ public class DriverHandler {
                             Please collect gas share contributions from your passengers.
 
                             Would you like to post another ride?""",
-                    List.of(List.of(
-                            BotMessageBuilder.button("🚗 Yes, Post New Ride", "POST_RIDE", ButtonStyle.SUCCESS.toString()),
-                            BotMessageBuilder.button("❌ No, Thanks",          "MAIN_MENU", ButtonStyle.DANGER.toString())
-                    ))));
+                    rows));
 
         } catch (NotRideOwnerException e) {
             ctx.bot().send(BotMessageBuilder.text(ctx.chatId(),

@@ -183,8 +183,9 @@ public class RatingHandler {
                               UserState state, String comment,
                               com.carpool.bot.CarpoolBot bot) {
         try {
+            Long rideId = state.getPendingRatingRideId();
             RideRating saved = ratingService.submitRating(
-                    state.getPendingRatingRideId(),
+                    rideId,
                     carpoolUserId,
                     state.getPendingRateeId(),
                     state.getPendingStars(),
@@ -192,6 +193,7 @@ public class RatingHandler {
 
             String starDisplay = "⭐".repeat(saved.getStars());
             String rateeName   = saved.getRatee().getFullName();
+            boolean promptDonate = DonateHandler.shouldPromptOnRideEnd(rideId);
 
             // Clear rating state
             UserState updated = state
@@ -211,18 +213,31 @@ public class RatingHandler {
 
                 if (alreadyFavorite) {
                     stateManager.reset(chatId);
+                    List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+                    rows.add(List.of(BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())));
+                    if (promptDonate) {
+                        rows.add(List.of(DonateHandler.donateButton()));
+                    }
                     bot.send(flowHelper.sendWithInline(chatId,
                             starDisplay + " <b>Rating submitted!</b>\n\n" +
                                     "Thanks for rating <b>" +
                                     HtmlEscapeUtil.escape(rateeName) + "</b>.\n" +
                                     HtmlEscapeUtil.escape(rateeName) +
                                     " is already in your favorites. ⭐",
-                            List.of(List.of(
-                                    BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
-                            ))));
+                            rows));
                     return;
                 }
 
+                List<List<InlineKeyboardButton>> favoriteRows = new ArrayList<>();
+                favoriteRows.add(List.of(
+                        BotMessageBuilder.button(
+                                "⭐ Save as Favorite",
+                                "SAVE_FAVORITE:" + saved.getRatee().getId(), ButtonStyle.SUCCESS.toString()),
+                        BotMessageBuilder.button("Skip", "SKIP_FAVORITE", ButtonStyle.PRIMARY.toString())
+                ));
+                if (promptDonate) {
+                    favoriteRows.add(List.of(DonateHandler.donateButton()));
+                }
                 bot.send(flowHelper.sendWithInline(chatId,
                         starDisplay + " <b>Rating submitted!</b>\n\n" +
                                 "Thanks for rating <b>" +
@@ -231,22 +246,20 @@ public class RatingHandler {
                                 HtmlEscapeUtil.escape(rateeName) +
                                 "</b> as a favorite?\n" +
                                 "<i>You'll be notified when they post a new ride.</i>",
-                        List.of(List.of(
-                                BotMessageBuilder.button(
-                                        "⭐ Save as Favorite",
-                                        "SAVE_FAVORITE:" + saved.getRatee().getId(), ButtonStyle.SUCCESS.toString()),
-                                BotMessageBuilder.button("Skip", "SKIP_FAVORITE", ButtonStyle.PRIMARY.toString())
-                        ))));
+                        favoriteRows));
             } else {
                 // Driver rated passenger — just confirm and go to menu
                 stateManager.reset(chatId);
+                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+                rows.add(List.of(BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())));
+                if (promptDonate) {
+                    rows.add(List.of(DonateHandler.donateButton()));
+                }
                 bot.send(flowHelper.sendWithInline(chatId,
                         starDisplay + " <b>Rating submitted!</b>\n\n" +
                                 "Thanks for rating <b>" +
                                 HtmlEscapeUtil.escape(rateeName) + "</b>. 🙏",
-                        List.of(List.of(
-                                BotMessageBuilder.button("🏠 Menu", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
-                        ))));
+                        rows));
             }
 
         } catch (Exception e) {

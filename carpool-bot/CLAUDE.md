@@ -290,6 +290,11 @@ Both callbacks are non-flow-sensitive, same as `PENDING_HUBS`/`APPROVE_HUB`/`REJ
 - Both `DONATE` and `DONATE_GCASH` are non-flow-sensitive — they read nothing from `UserState`, so no `SessionRecoveryHandler` change needed (same default-handling as `MY_PROFILE`).
 - QR image lives at `carpool-bot/src/main/resources/images/gcash-qr.png` — this is the module's first `src/main/resources` directory. Additional donation channels (GoTyme, Maribank) should follow the same pattern: one QR resource + one button + one callback per channel.
 
+**End-of-ride prompt:** `DonateHandler.shouldPromptOnRideEnd(rideId)` gates a `💙 Donate` row onto the ride-completion screens so the button doesn't nag on every single ride — it's platform-wide 1-in-3 (`rideId % 3 == 0`), a deliberately simple gate that needs no new DB column or per-user tracking state. Wired into:
+- `DriverHandler.handleCompleteRide()` — the "Would you like to post another ride?" screen (driver side).
+- `RatingHandler.submitRating()` — all three outcome branches (passenger-already-favorited, passenger-favorite-prompt, driver-rated-passenger), since the rating screen is the terminal step both driver and passenger see after a ride completes.
+`DonateHandler.donateButton()` is a static helper returning the shared `InlineKeyboardButton` so the row doesn't get re-typed at each call site.
+
 ## Schedulers
 
 One scheduler in `carpool-bot/scheduler/`:
