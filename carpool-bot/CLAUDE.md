@@ -281,6 +281,15 @@ Paginated view of received ratings (stars + optional comment) for any user. Stat
 
 Both callbacks are non-flow-sensitive, same as `PENDING_HUBS`/`APPROVE_HUB`/`REJECT_HUB` — no `SessionRecoveryHandler` change needed.
 
+## Donate
+
+`/donate` and the `DONATE_GCASH` callback let a member voluntarily support the community — deliberately kept separate from any ride, booking, or fare to stay outside the [PH LTFRB carpooling monetization constraint](project_monetization_constraint.md) (no per-trip/per-passenger fare collection).
+
+- `DonateHandler.showDonate(chatId, bot)` — registered as `/donate` in `MessageHandler.handleCommand()` **and** as the `DONATE` callback in `CallbackHandler` (a `💙 Donate` button on every branch of `BotFlowHelper.showMainMenu()` and every status sub-branch of `showRideManagementCard()`, since a driver with exactly one active ride lands there instead of the generic menu). Sends a text message with the disclaimer ("optional, not tied to any ride or booking") and a single `💙 GCash` button (`DONATE_GCASH`).
+- `DonateHandler.showGcash(chatId, bot)` — registered as `DONATE_GCASH` in `CallbackHandler`. Loads `/images/gcash-qr.png` from the classpath and sends it via the new `CarpoolBot.sendPhoto(SendPhoto)` helper (the first use of `SendPhoto` in the bot — mirrors the `send(SendMessage)` pattern but takes a `String` chatId, per the Telegram Bots API `SendPhoto` type). Caption repeats the voluntary/not-a-fare disclaimer.
+- Both `DONATE` and `DONATE_GCASH` are non-flow-sensitive — they read nothing from `UserState`, so no `SessionRecoveryHandler` change needed (same default-handling as `MY_PROFILE`).
+- QR image lives at `carpool-bot/src/main/resources/images/gcash-qr.png` — this is the module's first `src/main/resources` directory. Additional donation channels (GoTyme, Maribank) should follow the same pattern: one QR resource + one button + one callback per channel.
+
 ## Schedulers
 
 One scheduler in `carpool-bot/scheduler/`:

@@ -163,7 +163,8 @@ public class HelpHandler {
                         /profile — View your profile and stats
                         /vehicle — Manage your vehicle info
                         /cancel — Cancel current action
-                        /help — Open the Help Center""",
+                        /help — Open the Help Center
+                        /donate — Support the community""",
                 List.of(
                         List.of(
                                 BotMessageBuilder.button("◀️ Back", "HELP:BACK",ButtonStyle.PRIMARY.toString()),

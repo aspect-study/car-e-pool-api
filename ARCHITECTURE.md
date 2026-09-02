@@ -173,6 +173,7 @@ Telegram messages stay interactive forever. A user can tap a button from an old 
 | `RatingHandler` | Rating flow, save/skip favorite, unfollow |
 | `SessionRecoveryHandler` | Guards stale buttons after bot restart |
 | `HelpHandler` | `/help` command |
+| `DonateHandler` | `/donate` command — voluntary community donations (GCash QR), decoupled from rides/fares |
 
 ### Helpers
 

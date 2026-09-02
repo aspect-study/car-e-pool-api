@@ -89,6 +89,7 @@ public class BotFlowHelper {
                         "📜 My Bookings (" + myBookings.size() + ")", "MY_BOOKINGS", ButtonStyle.SUCCESS.toString())));
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+            rows.add(List.of(BotMessageBuilder.button("💙 Donate", "DONATE", ButtonStyle.PRIMARY.toString())));
             bot.send(sendWithInline(chatId,
                     "🚗 You have " + activeRides.size() + " active rides. Which one would you like to manage?", rows));
 
@@ -120,6 +121,7 @@ public class BotFlowHelper {
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE",  ButtonStyle.PRIMARY.toString())));
             rows.add(List.of(BotMessageBuilder.button("⭐ My Ratings", "VIEW_RATINGS:" + carpoolUserId, null)));
+            rows.add(List.of(BotMessageBuilder.button("💙 Donate", "DONATE", ButtonStyle.PRIMARY.toString())));
 
             bot.send(sendWithInline(chatId, prompt, rows));
         }
@@ -184,6 +186,7 @@ public class BotFlowHelper {
                 rows.add(repostRow);
             }
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile", "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+            rows.add(List.of(BotMessageBuilder.button("💙 Donate", "DONATE", ButtonStyle.PRIMARY.toString())));
 
         } else if (pendingCount > 0) {
             rows.add(List.of(
@@ -211,6 +214,7 @@ public class BotFlowHelper {
             }
             rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+            rows.add(List.of(BotMessageBuilder.button("💙 Donate", "DONATE", ButtonStyle.PRIMARY.toString())));
 
         } else {
             rows.add(List.of(
@@ -235,6 +239,7 @@ public class BotFlowHelper {
             }
             rows.add(List.of(BotMessageBuilder.button("🔍 Find a Ride", "FIND_RIDE",  ButtonStyle.SUCCESS.toString())));
             rows.add(List.of(BotMessageBuilder.button("👤 My Profile",  "MY_PROFILE", ButtonStyle.PRIMARY.toString())));
+            rows.add(List.of(BotMessageBuilder.button("💙 Donate", "DONATE", ButtonStyle.PRIMARY.toString())));
         }
 
         bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId, msg));

@@ -36,6 +36,7 @@ public class CallbackHandler {
     private final UserRepository         userRepository;
     private final SessionRecoveryHandler sessionRecoveryHandler;
     private final HelpHandler            helpHandler;
+    private final DonateHandler          donateHandler;
 
     // ── Sub-handlers ──────────────────────────────────────────────────────
     private final BotFlowHelper flowHelper;
@@ -198,6 +199,10 @@ public class CallbackHandler {
         // ── Help ──────────────────────────────────────────────────────────
         commands.put("HELP", ctx -> helpHandler.handleTopic(
                 ctx.chatId(), ctx.payload(), ctx.bot()));
+
+        // ── Donate ────────────────────────────────────────────────────────
+        commands.put("DONATE", ctx -> donateHandler.showDonate(ctx.chatId(), ctx.bot()));
+        commands.put("DONATE_GCASH", ctx -> donateHandler.showGcash(ctx.chatId(), ctx.bot()));
     }
 
     // ── Router ────────────────────────────────────────────────────────────

@@ -18,6 +18,7 @@ import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsume
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -272,6 +273,14 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
         } catch (TelegramApiException e) {
             log.error("Failed to send message to chatId={}: {}",
                     message.getChatId(), e.getMessage());
+        }
+    }
+
+    public void sendPhoto(SendPhoto photo) {
+        try {
+            telegramClient.execute(photo);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send photo to chatId={}: {}", photo.getChatId(), e.getMessage(), e);
         }
     }
 

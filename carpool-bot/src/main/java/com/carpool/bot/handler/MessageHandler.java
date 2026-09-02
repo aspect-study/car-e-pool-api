@@ -58,6 +58,7 @@ public class MessageHandler {
     private final ProfileService  profileService;
     private final FavoriteService favoriteService;
     private final HelpHandler     helpHandler;
+    private final DonateHandler   donateHandler;
 
     // ── Sub-handlers ──────────────────────────────────────────────────────
     private final BotFlowHelper flowHelper;
@@ -279,6 +280,7 @@ public class MessageHandler {
             case "/vehicle"    -> profileHandler.handleVehicleCommand(
                     chatId, carpoolUserId, state, bot);
             case "/help"       -> helpHandler.showHelpMenu(chatId, bot);
+            case "/donate"     -> donateHandler.showDonate(chatId, bot);
             default -> bot.send(BotMessageBuilder.text(chatId,
                     "Unknown command. Type /help to see available commands."));
         }
