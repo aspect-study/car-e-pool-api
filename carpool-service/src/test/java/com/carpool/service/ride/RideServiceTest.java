@@ -704,6 +704,71 @@ class RideServiceTest {
         }
     }
 
+// ── getReservedSeatsCount ────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("getReservedSeatsCount()")
+    class GetReservedSeatsCount {
+
+        @Test
+        @DisplayName("should delegate to bookingRepository.sumReservedSeats")
+        void getReservedSeatsCount_delegatesToRepository() {
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(2);
+
+            int result = rideService.getReservedSeatsCount(100L);
+
+            assertThat(result).isEqualTo(2);
+        }
+    }
+
+// ── updateTotalSeatsAndReannounce ────────────────────────────────────────
+
+    @Nested
+    @DisplayName("updateTotalSeatsAndReannounce()")
+    class UpdateTotalSeatsAndReannounce {
+
+        @Test
+        @DisplayName("should update seats then reannounce, returning the reannounce result")
+        void updateTotalSeatsAndReannounce_appliesBothInOrder() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(0);
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            RideResponse expected = mock(RideResponse.class);
+            when(mapper.toRideResponse(any())).thenReturn(expected);
+
+            RideResponse result = rideService.updateTotalSeatsAndReannounce(100L, 5, 1L);
+
+            assertThat(activeRide.getTotalSeats()).isEqualTo(5);
+            assertThat(activeRide.getAnnounceCount()).isEqualTo(2);
+            assertThat(result).isSameAs(expected);
+            verify(eventPublisher).publishEvent(any(RideEvents.RidePostedEvent.class));
+        }
+
+        @Test
+        @DisplayName("should not reannounce when the seat update itself is rejected")
+        void updateTotalSeatsAndReannounce_skipsReannounceWhenSeatUpdateFails() {
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+
+            assertThatThrownBy(() -> rideService.updateTotalSeatsAndReannounce(100L, 3, 1L))
+                    .isInstanceOf(InvalidRideStateException.class);
+
+            verify(eventPublisher, never()).publishEvent(any());
+        }
+
+        @Test
+        @DisplayName("should propagate the exception when the announce cap is reached")
+        void updateTotalSeatsAndReannounce_propagatesReannounceCapFailure() {
+            activeRide.setAnnounceCount(10);
+            when(rideRepository.findByIdWithLock(100L)).thenReturn(Optional.of(activeRide));
+            when(bookingRepository.sumReservedSeats(100L)).thenReturn(0);
+            when(rideRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            assertThatThrownBy(() -> rideService.updateTotalSeatsAndReannounce(100L, 5, 1L))
+                    .isInstanceOf(InvalidRideStateException.class)
+                    .hasMessageContaining("announced 10 times");
+        }
+    }
+
 // ── getRidesByDirection ───────────────────────────────────────────────────
 
     @Nested

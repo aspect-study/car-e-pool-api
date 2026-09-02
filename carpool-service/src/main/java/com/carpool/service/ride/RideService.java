@@ -687,6 +687,29 @@ public class RideService {
     }
 
     /**
+     * Returns the number of seats currently reserved by in-app bookings (PENDING or
+     * CONFIRMED). This is the true floor for updateTotalSeats — availableSeats alone is
+     * not reliable, since a driver may have manually shown fewer available seats than the
+     * total actually allows (see updateAvailableSeats).
+     */
+    @Transactional(readOnly = true)
+    public int getReservedSeatsCount(Long rideId) {
+        return bookingRepository.sumReservedSeats(rideId);
+    }
+
+    /**
+     * Corrects total seat capacity and reposts to the group in one transaction.
+     * Keeping both steps in a single transaction prevents the seat-count change from
+     * persisting silently when the re-announcement itself is rejected (e.g. the
+     * 10-announcement cap) — either both happen or neither does.
+     */
+    @Transactional
+    public RideResponse updateTotalSeatsAndReannounce(Long rideId, int newTotalSeats, Long driverUserId) {
+        updateTotalSeats(rideId, newTotalSeats, driverUserId);
+        return reannounceRide(rideId, driverUserId);
+    }
+
+    /**
      * Returns the driver's current active ride (ACTIVE, FULL, or DEPARTED).
      * Returns null if no active ride exists — does not throw.
      * Used by REST clients as a lightweight check before loading full ride list.

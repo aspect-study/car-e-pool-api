@@ -885,7 +885,8 @@ public class ProfileHandler {
                 ctx.bot().send(BotMessageBuilder.text(ctx.chatId(), "⚠️ This is not your ride."));
                 return;
             }
-            int reservedSeats = ride.totalSeats() - ride.availableSeats();
+            int reservedSeats = rideService.getReservedSeatsCount(ctx.entityId());
+            int minSeats = Math.max(1, reservedSeats);
             stateManager.save(ctx.chatId(), ctx.state()
                     .withSelectedRideId(ctx.entityId())
                     .withFlow(BotFlow.REANNOUNCE_UPDATE_TOTAL_SEATS));
@@ -894,7 +895,7 @@ public class ProfileHandler {
                             "🚘 <b>Update Total Seats</b>\n\n" +
                             "Current: <b>%d total</b> (%d reserved, %d available)\n\n" +
                             "Enter the new total seat count (min %d, max 8):",
-                            ride.totalSeats(), reservedSeats, ride.availableSeats(), reservedSeats),
+                            ride.totalSeats(), reservedSeats, ride.availableSeats(), minSeats),
                     List.of(List.of(
                             BotMessageBuilder.button("◀️ Cancel", "MAIN_MENU", ButtonStyle.PRIMARY.toString())
                     ))));
@@ -915,8 +916,7 @@ public class ProfileHandler {
         }
         try {
             int newTotalSeats = Integer.parseInt(text.trim());
-            rideService.updateTotalSeats(rideId, newTotalSeats, carpoolUserId);
-            RideResponse ride = rideService.reannounceRide(rideId, carpoolUserId);
+            RideResponse ride = rideService.updateTotalSeatsAndReannounce(rideId, newTotalSeats, carpoolUserId);
             stateManager.save(chatId, state.withFlow(BotFlow.IDLE).withSelectedRideId(null));
 
             int remaining = Math.max(0, 10 - ride.announceCount());
