@@ -295,6 +295,16 @@ Both callbacks are non-flow-sensitive, same as `PENDING_HUBS`/`APPROVE_HUB`/`REJ
 - `RatingHandler.submitRating()` — all three outcome branches (passenger-already-favorited, passenger-favorite-prompt, driver-rated-passenger), since the rating screen is the terminal step both driver and passenger see after a ride completes.
 `DonateHandler.donateButton()` is a static helper returning the shared `InlineKeyboardButton` so the row doesn't get re-typed at each call site.
 
+## Dead-End Message Prevention
+
+Every terminal bot message (errors, confirmations, cancellations) must leave the user with at least a "🏠 Menu" button — `BotMessageBuilder.text(chatId, ...)` auto-attaches one via `menuButtonRow()` and is the default choice for any message that isn't immediately followed by another message with real inline buttons. `textNoMenu`/`textWithRemoveKeyboard` have no reply markup at all and should only be used as the *first* message of a two-message pair (e.g. `BotFlowHelper.showRideManagementCard` sends `textWithRemoveKeyboard` then immediately `sendWithInline` with the real menu).
+
+Two dead ends were found and fixed by a full-module audit (2026-09-02):
+- `MessageHandler.handleCancel()` (`/cancel`) previously used `textWithRemoveKeyboard` with no button, telling the user to type `/start` with nothing to tap. Now sends `BotMessageBuilder.text(chatId, "❌ Cancelled.")`, which has the Menu button.
+- `CarpoolBot.handleParallelUpdate()`'s top-level `catch (Exception e)` previously only logged — any uncaught exception left the user with total silence (no response to their tap/message at all). Now also resolves `chatId` via the existing `resolveChatId(update)` helper and sends a generic "⚠️ Something went wrong. Please try again." (with Menu button) when resolvable.
+
+The Telegram-username-required gate screens (`CarpoolBot.handleParallelUpdate`, both the message and callback paths) remain intentionally button-less — a Menu tap there would just re-trigger the same gate check before routing, since the gate runs ahead of `callbackHandler.handle()`/`messageHandler.handle()`.
+
 ## Schedulers
 
 One scheduler in `carpool-bot/scheduler/`:

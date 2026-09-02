@@ -238,6 +238,10 @@ public class CarpoolBot implements SpringLongPollingBot, LongPollingUpdateConsum
             }
         } catch (Exception e) {
             log.error("Unhandled exception processing update: {}", e.getMessage(), e);
+            Long chatId = resolveChatId(update);
+            if (chatId != null) {
+                send(BotMessageBuilder.text(chatId, "⚠️ Something went wrong. Please try again."));
+            }
         }
     }
 

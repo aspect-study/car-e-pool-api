@@ -426,8 +426,7 @@ public class MessageHandler {
 
     private void handleCancel(Long chatId, CarpoolBot bot) {
         stateManager.reset(chatId);
-        bot.send(BotMessageBuilder.textWithRemoveKeyboard(chatId,
-                "❌ Cancelled. Use /start to go back to the main menu."));
+        bot.send(BotMessageBuilder.text(chatId, "❌ Cancelled."));
     }
 
     // ── Custom time input ─────────────────────────────────────────────────
