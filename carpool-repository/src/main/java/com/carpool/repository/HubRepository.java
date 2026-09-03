@@ -2,7 +2,9 @@ package com.carpool.repository;
 
 import com.carpool.domain.entity.Hub;
 import com.carpool.domain.enums.HubStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,8 +22,6 @@ public interface HubRepository extends JpaRepository<Hub, Long> {
 
     Optional<Hub> findByCode(String code);
 
-    boolean existsByNameIgnoreCaseAndArea(String name, String area);
-
     Optional<Hub> findFirstByNameIgnoreCaseAndArea(String name, String area);
 
     /**
@@ -34,6 +34,17 @@ public interface HubRepository extends JpaRepository<Hub, Long> {
      */
     @Query("SELECT h FROM Hub h WHERE h.status = 'PENDING' ORDER BY h.createdAt ASC")
     List<Hub> findAllPending();
+
+    /**
+     * PESSIMISTIC WRITE lock — used exclusively by HubService.bulkApprovePending()
+     * so concurrent bulk-approval attempts (e.g. two suggestHub() calls both
+     * observing the pending queue at threshold) serialize instead of racing on
+     * generateUniqueCode()/the unique hubs.code constraint.
+     * Maps to: SELECT * FROM hubs WHERE status = 'PENDING' ORDER BY created_at ASC FOR UPDATE
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT h FROM Hub h WHERE h.status = 'PENDING' ORDER BY h.createdAt ASC")
+    List<Hub> findAllPendingForUpdate();
 
     /**
      * Search active hubs by name or area — used for autocomplete in clients.

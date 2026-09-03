@@ -34,6 +34,12 @@ public class HubService {
     private final EntityMapper   mapper;
 
     /**
+     * Once the PENDING queue reaches this size, every pending hub is
+     * auto-approved, skipping manual review.
+     */
+    private static final int AUTO_APPROVE_QUEUE_SIZE = 10;
+
+    /**
      * All active hubs — cached 60 minutes. This is the primary hub list
      * shown to drivers when creating a ride.
      */
@@ -62,27 +68,62 @@ public class HubService {
      * Driver suggests a new hub not yet in the system.
      * Hub is saved as PENDING and immediately returned to the driver
      * so they can use it on their current ride creation.
-     * Admin approves it separately via admin API.
+     * Admin approves it separately via admin API — unless this suggestion
+     * pushes the PENDING queue to {@link #AUTO_APPROVE_QUEUE_SIZE}, in which
+     * case every pending hub (this one included) is auto-approved here.
      */
+    @Caching(evict = {
+            @CacheEvict(value = "hubs",       allEntries = true, condition = "#result.status().name() == 'ACTIVE'"),
+            @CacheEvict(value = "hub-search", allEntries = true, condition = "#result.status().name() == 'ACTIVE'")
+    })
     @Transactional
     public HubResponse suggestHub(SuggestHubRequest request, Long requestingUserId) {
-        // Prevent duplicate suggestions for the same location
-        if (hubRepository.existsByNameIgnoreCaseAndArea(request.name(), request.area())) {
-            log.info("Hub already exists or pending: name={} area={}", request.name(), request.area());
-            // Return whatever exists — ACTIVE, PENDING, or REJECTED — rather than creating a duplicate.
-            // If REJECTED, bump it back to PENDING so the admin can reconsider.
-            return hubRepository.findFirstByNameIgnoreCaseAndArea(request.name(), request.area())
-                    .map(existing -> {
-                        if (existing.getStatus() == HubStatus.REJECTED) {
-                            existing.setStatus(HubStatus.PENDING);
-                            log.info("Re-suggesting rejected hub: id={} name={}", existing.getId(), existing.getName());
-                            return mapper.toHubResponse(hubRepository.save(existing));
-                        }
-                        return mapper.toHubResponse(existing);
-                    })
-                    .orElseGet(() -> createPendingHub(request, requestingUserId));
+        Optional<Hub> existing = hubRepository.findFirstByNameIgnoreCaseAndArea(request.name(), request.area());
+
+        Hub hub;
+        if (existing.isEmpty()) {
+            hub = createPendingHub(request, requestingUserId);
+        } else {
+            hub = existing.get();
+            if (hub.getStatus() == HubStatus.ACTIVE) {
+                return mapper.toHubResponse(hub);
+            }
+            if (hub.getStatus() == HubStatus.REJECTED) {
+                hub.setStatus(HubStatus.PENDING);
+                hub = hubRepository.save(hub);
+                log.info("Re-suggesting rejected hub: id={} name={}", hub.getId(), hub.getName());
+            }
+            // Already PENDING — nothing to change, dedupe returns it as-is.
         }
-        return createPendingHub(request, requestingUserId);
+
+        if (hubRepository.countByStatus(HubStatus.PENDING) >= AUTO_APPROVE_QUEUE_SIZE) {
+            List<Hub> approved = bulkApprovePending();
+            log.info("Auto-approved {} pending hubs — queue reached {}", approved.size(), AUTO_APPROVE_QUEUE_SIZE);
+            Long hubId = hub.getId();
+            hub = approved.stream().filter(h -> h.getId().equals(hubId)).findFirst().orElse(hub);
+        }
+
+        return mapper.toHubResponse(hub);
+    }
+
+    /**
+     * Approves every currently pending hub — shared by the manual admin
+     * bulk-approve endpoint and the queue-size auto-approve trigger above.
+     * Hubs are saved one at a time so each generateUniqueCode call sees
+     * prior codes from this batch (auto-flush before the findByCode query).
+     * Uses a PESSIMISTIC_WRITE lock (findAllPendingForUpdate) so two
+     * concurrent bulk-approval attempts serialize instead of racing on
+     * generateUniqueCode()/the unique hubs.code constraint.
+     */
+    private List<Hub> bulkApprovePending() {
+        List<Hub> pending = hubRepository.findAllPendingForUpdate();
+        List<Hub> approved = new ArrayList<>();
+        for (Hub hub : pending) {
+            hub.setCode(generateUniqueCode(hub.getName()));
+            hub.setStatus(HubStatus.ACTIVE);
+            approved.add(hubRepository.save(hub));
+        }
+        return approved;
     }
 
     /**
@@ -149,10 +190,7 @@ public class HubService {
     }
 
     /**
-     * Admin: approve every pending hub in one pass. Reuses the same
-     * per-hub code generation as {@link #approveHub}; hubs are saved
-     * one at a time so each generateUniqueCode call sees prior codes
-     * from this batch (auto-flush before the findByCode query).
+     * Admin: approve every pending hub in one pass. See {@link #bulkApprovePending}.
      */
     @Caching(evict = {
             @CacheEvict(value = "hubs",       allEntries = true),
@@ -160,20 +198,14 @@ public class HubService {
     })
     @Transactional
     public List<HubResponse> approveAllPendingHubs() {
-        List<Hub> pending = hubRepository.findAllPending();
-        List<HubResponse> approved = new ArrayList<>();
-        for (Hub hub : pending) {
-            hub.setCode(generateUniqueCode(hub.getName()));
-            hub.setStatus(HubStatus.ACTIVE);
-            approved.add(mapper.toHubResponse(hubRepository.save(hub)));
-        }
+        List<Hub> approved = bulkApprovePending();
         log.info("Bulk-approved {} pending hubs", approved.size());
-        return approved;
+        return approved.stream().map(mapper::toHubResponse).toList();
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────
 
-    private HubResponse createPendingHub(SuggestHubRequest request, Long userId) {
+    private Hub createPendingHub(SuggestHubRequest request, Long userId) {
         User suggester = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -187,7 +219,7 @@ public class HubService {
         Hub saved = hubRepository.save(hub);
         log.info("Hub suggested: id={} name={} area={} by userId={}",
                 saved.getId(), saved.getName(), saved.getArea(), userId);
-        return mapper.toHubResponse(saved);
+        return saved;
     }
 
     /**

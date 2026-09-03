@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +55,13 @@ class HubServiceTest {
                 .status(HubStatus.ACTIVE).build();
     }
 
+    private static void stubMapperPassthrough(EntityMapper mapper) {
+        when(mapper.toHubResponse(any())).thenAnswer(inv -> {
+            Hub h = inv.getArgument(0);
+            return new HubResponse(h.getId(), h.getCode(), h.getName(), h.getArea(), h.getStatus());
+        });
+    }
+
     @Test
     @DisplayName("getAllActiveHubs() should return only ACTIVE hubs")
     void shouldReturnActiveHubs() {
@@ -74,29 +82,117 @@ class HubServiceTest {
     void shouldSavePendingHubOnSuggest() {
         var request = new SuggestHubRequest("Wilcon Depot Sucat", "Parañaque");
 
-        when(hubRepository.existsByNameIgnoreCaseAndArea("Wilcon Depot Sucat", "Parañaque"))
-                .thenReturn(false);
+        when(hubRepository.findFirstByNameIgnoreCaseAndArea("Wilcon Depot Sucat", "Parañaque"))
+                .thenReturn(Optional.empty());
         when(userRepository.findById(1L)).thenReturn(Optional.of(driver));
         when(hubRepository.save(any(Hub.class))).thenAnswer(inv -> {
             Hub h = inv.getArgument(0);
-            h = Hub.builder().id(99L).name(h.getName()).area(h.getArea())
-                    .status(h.getStatus()).suggestedBy(h.getSuggestedBy()).build();
+            h.setId(99L);
             return h;
         });
-        when(mapper.toHubResponse(any())).thenAnswer(inv -> {
-            Hub h = inv.getArgument(0);
-            return new HubResponse(h.getId(), h.getCode(), h.getName(),
-                    h.getArea(), h.getStatus());
-        });
+        when(hubRepository.countByStatus(HubStatus.PENDING)).thenReturn(1L);
+        stubMapperPassthrough(mapper);
 
         HubResponse result = hubService.suggestHub(request, 1L);
 
-        // Verify saved as PENDING
         ArgumentCaptor<Hub> captor = ArgumentCaptor.forClass(Hub.class);
         verify(hubRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(HubStatus.PENDING);
         assertThat(captor.getValue().getName()).isEqualTo("Wilcon Depot Sucat");
         assertThat(result.status()).isEqualTo(HubStatus.PENDING);
+        verify(hubRepository, never()).findAllPendingForUpdate();
+    }
+
+    @Test
+    @DisplayName("suggestHub() should return the existing hub as-is when it's already ACTIVE")
+    void shouldDedupeActiveHub() {
+        var request = new SuggestHubRequest("BGC High Street", "Taguig");
+        when(hubRepository.findFirstByNameIgnoreCaseAndArea("BGC High Street", "Taguig"))
+                .thenReturn(Optional.of(activeHub));
+        when(mapper.toHubResponse(activeHub)).thenReturn(
+                new HubResponse(1L, "BGC_HIGH_STREET", "BGC High Street", "Taguig", HubStatus.ACTIVE));
+
+        HubResponse result = hubService.suggestHub(request, 1L);
+
+        assertThat(result.status()).isEqualTo(HubStatus.ACTIVE);
+        verify(hubRepository, never()).save(any());
+        verify(hubRepository, never()).countByStatus(any());
+    }
+
+    @Test
+    @DisplayName("suggestHub() should re-queue a REJECTED hub back to PENDING")
+    void shouldRequeueRejectedHub() {
+        Hub rejectedHub = Hub.builder()
+                .id(5L).name("Old Spot").area("Nowhere").status(HubStatus.REJECTED).build();
+        var request = new SuggestHubRequest("Old Spot", "Nowhere");
+
+        when(hubRepository.findFirstByNameIgnoreCaseAndArea("Old Spot", "Nowhere"))
+                .thenReturn(Optional.of(rejectedHub));
+        when(hubRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(hubRepository.countByStatus(HubStatus.PENDING)).thenReturn(1L);
+        stubMapperPassthrough(mapper);
+
+        HubResponse result = hubService.suggestHub(request, 1L);
+
+        assertThat(result.status()).isEqualTo(HubStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("suggestHub() should NOT auto-approve while the pending queue is below threshold")
+    void shouldNotAutoApproveBelowThreshold() {
+        var request = new SuggestHubRequest("Wilcon Depot Sucat", "Parañaque");
+
+        when(hubRepository.findFirstByNameIgnoreCaseAndArea("Wilcon Depot Sucat", "Parañaque"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(driver));
+        when(hubRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(hubRepository.countByStatus(HubStatus.PENDING)).thenReturn(9L);
+        stubMapperPassthrough(mapper);
+
+        HubResponse result = hubService.suggestHub(request, 1L);
+
+        assertThat(result.status()).isEqualTo(HubStatus.PENDING);
+        verify(hubRepository, never()).findAllPendingForUpdate();
+    }
+
+    @Test
+    @DisplayName("suggestHub() should auto-approve every pending hub once the queue reaches 10")
+    void shouldAutoApproveAllPendingHubsWhenQueueReachesThreshold() {
+        var request = new SuggestHubRequest("Wilcon Depot Sucat", "Parañaque");
+
+        when(hubRepository.findFirstByNameIgnoreCaseAndArea("Wilcon Depot Sucat", "Parañaque"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(driver));
+
+        Hub[] created = new Hub[1];
+        when(hubRepository.save(any(Hub.class))).thenAnswer(inv -> {
+            Hub h = inv.getArgument(0);
+            if (h.getId() == null) {
+                h.setId(99L);
+                created[0] = h;
+            }
+            return h;
+        });
+        when(hubRepository.countByStatus(HubStatus.PENDING)).thenReturn(10L);
+        when(hubRepository.findAllPendingForUpdate()).thenAnswer(inv -> {
+            List<Hub> otherPending = new ArrayList<>();
+            for (long i = 1; i <= 9; i++) {
+                otherPending.add(Hub.builder().id(i).name("Other " + i).area("Somewhere")
+                        .status(HubStatus.PENDING).build());
+            }
+            otherPending.add(created[0]);
+            return otherPending;
+        });
+        when(hubRepository.findByCode(any())).thenReturn(Optional.empty());
+        stubMapperPassthrough(mapper);
+
+        HubResponse result = hubService.suggestHub(request, 1L);
+
+        assertThat(result.status()).isEqualTo(HubStatus.ACTIVE);
+        assertThat(result.code()).isEqualTo("WILCON_DEPOT_SUCAT");
+        verify(hubRepository).findAllPendingForUpdate();
+        // Exactly 10 pending hubs (9 pre-existing + the newly created one), one generateUniqueCode call each
+        verify(hubRepository, times(10)).findByCode(any());
     }
 
     @Test
@@ -108,11 +204,7 @@ class HubServiceTest {
 
         when(hubRepository.findById(99L)).thenReturn(Optional.of(pendingHub));
         when(hubRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(mapper.toHubResponse(any())).thenAnswer(inv -> {
-            Hub h = inv.getArgument(0);
-            return new HubResponse(h.getId(), h.getCode(), h.getName(),
-                    h.getArea(), h.getStatus());
-        });
+        stubMapperPassthrough(mapper);
 
         HubResponse result = hubService.approveHub(99L, "WILCON_SUCAT");
 

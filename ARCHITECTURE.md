@@ -33,7 +33,7 @@ The core entities:
 | `User` | `telegramId`, `fullName`, `role` (PASSENGER/DRIVER/BOTH/ADMIN), `status` | Legacy vehicle fields kept for backward compat |
 | `Ride` | `driver`, `originHub`, `destinationHub`, `departureTime`, `status`, `availableSeats`, `groupMessageId`, `groupMessagePostedAt`, `announceCount` | Status: DRAFT→ACTIVE/FULL→DEPARTED→COMPLETED. `groupMessagePostedAt` records when the Telegram group message was last posted/refreshed — used by the stale-refresh scheduler |
 | `Booking` | `ride`, `passenger`, `status`, `seats` | Status: PENDING→CONFIRMED/DECLINED/TIMED_OUT→COMPLETED |
-| `Hub` | `name`, `area`, `code`, `status` (ACTIVE/PENDING/REJECTED) | Shared pickup/dropoff landmarks |
+| `Hub` | `name`, `area`, `code`, `status` (ACTIVE/PENDING/REJECTED) | Shared pickup/dropoff landmarks; the PENDING queue reaching 10 auto-approves all pending hubs |
 | `Vehicle` | `user`, `plateNumber`, `model`, `color`, `seatCapacity`, `deletedAt` | Soft-delete; up to 3 per user |
 | `Rating` | `rater`, `ratee`, `ride`, `stars`, `comment` | One per rater-ratee-ride combination |
 | `UserFavorite` | `follower`, `favorite` | Follow relationship between users |
@@ -65,7 +65,7 @@ All business logic lives here. Key services:
 - `getFollowers()` — `JOIN FETCH` to avoid N+1
 
 ### `HubService`
-- `suggestHub()` — deduplicates: returns existing if ACTIVE/PENDING, re-queues to PENDING if REJECTED
+- `suggestHub()` — deduplicates: returns existing if ACTIVE/PENDING, re-queues to PENDING if REJECTED; once the PENDING queue reaches 10, auto-approves every pending hub
 - `approveHub()` — auto-generates hub code from name if none provided
 
 Other services: `RatingService`, `ProfileService`, `VehicleService`, `NotificationService`

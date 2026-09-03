@@ -281,6 +281,8 @@ Paginated view of received ratings (stars + optional comment) for any user. Stat
 
 Both callbacks are non-flow-sensitive, same as `PENDING_HUBS`/`APPROVE_HUB`/`REJECT_HUB` — no `SessionRecoveryHandler` change needed.
 
+Once the pending queue reaches 10 hubs, `HubService.suggestHub()` auto-approves the entire queue on the next suggestion — see `carpool-service/CLAUDE.md`. This list can go from showing hubs to "No pending hubs at the moment" between refreshes without any admin tapping ✅/❌.
+
 ## Donate
 
 `/donate` and the `DONATE_GCASH` callback let a member voluntarily support the community — deliberately kept separate from any ride, booking, or fare to stay outside the [PH LTFRB carpooling monetization constraint](project_monetization_constraint.md) (no per-trip/per-passenger fare collection).
