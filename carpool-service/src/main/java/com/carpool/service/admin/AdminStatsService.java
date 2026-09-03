@@ -4,6 +4,7 @@ import com.carpool.domain.enums.BookingStatus;
 import com.carpool.domain.enums.HubStatus;
 import com.carpool.domain.enums.RideStatus;
 import com.carpool.repository.BookingRepository;
+import com.carpool.repository.DonateClickRepository;
 import com.carpool.repository.HubRepository;
 import com.carpool.repository.RideRatingRepository;
 import com.carpool.repository.RideRepository;
@@ -33,6 +34,7 @@ public class AdminStatsService {
     private final BookingRepository    bookingRepository;
     private final HubRepository        hubRepository;
     private final RideRatingRepository rideRatingRepository;
+    private final DonateClickRepository donateClickRepository;
 
     @Transactional(readOnly = true)
     @Cacheable(value = "adminStats", key = "'global'")
@@ -71,7 +73,11 @@ public class AdminStatsService {
                 // Community health
                 hubRepository.countByStatus(HubStatus.PENDING),
                 rideRatingRepository.findGlobalAverageRating(),
-                rideRatingRepository.count()
+                rideRatingRepository.count(),
+
+                // Donations
+                donateClickRepository.countByChannel("GCASH"),
+                donateClickRepository.countDistinctUsersByChannel("GCASH")
         );
     }
 
@@ -97,7 +103,10 @@ public class AdminStatsService {
 
             long pendingHubSuggestions,
             Double avgPlatformRating,
-            long totalRatings
+            long totalRatings,
+
+            long gcashButtonClicks,
+            long gcashCuriousUsers
     ) {
         public double cancellationRate() {
             return totalRides == 0 ? 0.0 : (cancelledRides * 100.0 / totalRides);

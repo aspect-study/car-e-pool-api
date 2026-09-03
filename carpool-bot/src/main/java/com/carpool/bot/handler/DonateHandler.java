@@ -3,6 +3,7 @@ package com.carpool.bot.handler;
 import com.carpool.bot.CarpoolBot;
 import com.carpool.bot.util.BotMessageBuilder;
 import com.carpool.bot.util.ButtonStyle;
+import com.carpool.service.donate.DonateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,7 +28,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DonateHandler {
 
+    private final DonateService donateService;
+
     private static final String GCASH_QR_RESOURCE = "/images/gcash-qr.png";
+    private static final String GCASH_CHANNEL = "GCASH";
 
     /**
      * Gates the donate button on post-ride screens so it doesn't nag on
@@ -62,7 +66,13 @@ public class DonateHandler {
                 .build());
     }
 
-    public void showGcash(Long chatId, CarpoolBot bot) {
+    public void showGcash(Long chatId, Long carpoolUserId, CarpoolBot bot) {
+        try {
+            donateService.recordClick(carpoolUserId, GCASH_CHANNEL);
+        } catch (Exception e) {
+            log.warn("Failed to record donate click: userId={} error={}", carpoolUserId, e.getMessage(), e);
+        }
+
         try (InputStream qr = getClass().getResourceAsStream(GCASH_QR_RESOURCE)) {
             if (qr == null) {
                 log.warn("GCash QR resource not found at {}", GCASH_QR_RESOURCE);

@@ -202,7 +202,7 @@ public class CallbackHandler {
 
         // ── Donate ────────────────────────────────────────────────────────
         commands.put("DONATE", ctx -> donateHandler.showDonate(ctx.chatId(), ctx.bot()));
-        commands.put("DONATE_GCASH", ctx -> donateHandler.showGcash(ctx.chatId(), ctx.bot()));
+        commands.put("DONATE_GCASH", ctx -> donateHandler.showGcash(ctx.chatId(), ctx.carpoolUserId(), ctx.bot()));
     }
 
     // ── Router ────────────────────────────────────────────────────────────

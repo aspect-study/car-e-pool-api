@@ -733,7 +733,10 @@ public class ProfileHandler {
 
                         🏘️ <b>Community</b>
                         Pending hub suggestions: <b>%d</b>
-                        Avg rating: <b>%s</b>""",
+                        Avg rating: <b>%s</b>
+
+                        💙 <b>Donations</b>
+                        GCash button taps: <b>%d</b> (<b>%d</b> unique users)""",
                 LocalDateTime.now(ZoneId.of("Asia/Manila"))
                         .format(DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")),
                 s.totalUsers(), s.newUsersToday(), s.newUsersThisWeek(),
@@ -742,7 +745,8 @@ public class ProfileHandler {
                 s.pendingBookingsNow(), s.bookingsMadeToday(),
                 s.totalBookings(), s.completedBookings(), s.bookingCompletionRate(),
                 s.declinedBookings(), s.cancelledByDriverBookings(), s.cancelledByPassengerBookings(), s.timedOutBookings(),
-                s.pendingHubSuggestions(), ratingLine);
+                s.pendingHubSuggestions(), ratingLine,
+                s.gcashButtonClicks(), s.gcashCuriousUsers());
 
         ctx.bot().send(flowHelper.sendWithInline(ctx.chatId(), report,
                 List.of(

@@ -211,8 +211,17 @@ V43 Flyway migration widens the DB unique constraint on `ride_ratings` from `(ri
 - **Rides:** `activeRidesNow`, `totalRides`, `completedRides`, `cancelledRides`, `ridesPostedToday`, plus a derived `cancellationRate()` method (`cancelledRides / totalRides * 100`, not a stored field — always in sync).
 - **Bookings:** `pendingBookingsNow`, `totalBookings`, `completedBookings`, `bookingsMadeToday`, plus the full outcome breakdown `declinedBookings`, `cancelledByDriverBookings`, `cancelledByPassengerBookings`, `timedOutBookings` (previously invisible — `totalBookings` didn't reconcile with what was shown). Derived `bookingCompletionRate()` mirrors `cancellationRate()`.
 - **Community health:** `pendingHubSuggestions` (`HubRepository.countByStatus(PENDING)`), `avgPlatformRating` (nullable — `RideRatingRepository.findGlobalAverageRating()`, null when no ratings exist yet), `totalRatings`.
+- **Donations:** `gcashButtonClicks` (`DonateClickRepository.countByChannel("GCASH")`) and `gcashCuriousUsers` (`countDistinctUsersByChannel("GCASH")` — distinct tappers, vs. raw tap count). Tracks button-tap intent only — the actual GCash transfer happens manually outside the app and is never recorded. See "Donate Click Tracking" below.
 
 Consumed by `ProfileHandler.handleAdminStats` (bot). The REST `AdminStatsResponse`/`ProfileService.getAdminStats()` path (used by `carpool-admin`) intentionally still maps only the original fields — not yet extended to the new ones.
+
+## Donate Click Tracking
+
+`DonateClick` (`carpool-domain`, table `donate_clicks`, V45 migration) records one row per donate-button tap: `user` (FK), `channel` (e.g. `"GCASH"` — one column supports future channels like GoTyme/Maribank without a new migration), `createdAt`.
+
+`DonateService.recordClick(userId, channel)` (`com.carpool.service.donate`) is the only writer. It's annotated `@CacheEvict(cacheNames = "adminStats", key = "'global'")` — without this, a fresh click wouldn't show up in Admin Stats for up to the cache's 30-minute TTL, defeating the point of a curiosity/intent metric the admin wants to watch. `DonateClickRepository` (`carpool-repository`) exposes the two read-side count methods listed above under Admin Stats.
+
+Called from `carpool-bot`'s `DonateHandler.showGcash(chatId, carpoolUserId, bot)` — recorded before attempting to load/send the QR image, wrapped in its own try-catch so a tracking failure never blocks the donate screen itself.
 
 ## Schedulers
 
