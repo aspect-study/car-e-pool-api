@@ -568,6 +568,39 @@ function genMultiplyFractionsSet(n){
 }
 
 function fracStr(num, den){ const r = reduceFrac(num, den); return fracToString(r.num, r.den); }
+/* Every fraction shown in a question must already be in lowest terms. The
+   lesson tells her to simplify, so the questions must not model the opposite. */
+function pickFrac(maxDen){
+  let d, n;
+  do { d = randInt(2, maxDen); n = randInt(1, d - 1); } while(gcd(n, d) !== 1);
+  return {n, d};
+}
+
+/* Keeps answers challenging without being punishing: no denominator past 24
+   and no huge whole part, so she is practising fractions and not long division. */
+const FRIENDLY_DEN = 24, FRIENDLY_WHOLE = 12;
+function friendlyFrac(num, den){
+  if(den === 0) return false;
+  const r = reduceFrac(num, den);
+  return r.den <= FRIENDLY_DEN && Math.floor(r.num / r.den) <= FRIENDLY_WHOLE;
+}
+
+/* "42/8 = 5 1/4", but never the pointless "1/12 = 1/12" */
+function showReduce(num, den){
+  const raw = num + '/' + den, red = fracStr(num, den);
+  return raw === red ? red : raw + ' = ' + red;
+}
+
+function plural(n, unit){ return Number(n) === 1 ? unit.replace(/s$/, '') : unit; }
+
+/* An unsimplified form of the right answer is offered as a wrong option on
+   purpose. Name it, rather than leaving her to work out why she was marked down. */
+function simplifyNote(num, den){
+  const raw = fracToString(num, den), red = fracStr(num, den);
+  return raw === red ? ''
+    : `<br><i>${raw} and ${red} are the same amount &mdash; but the answer must be written in simplest form.</i>`;
+}
+
 
 /* Distractors sometimes collide with each other or with the right answer, which
    would leave a 50/50 guess. These build extra near-misses to top the list up. */
@@ -596,72 +629,81 @@ function mc4(qText, correctText, wrongCandidates, explain){
 }
 
 /* ================= GENERATOR: Dividing Fractions ================= */
-function genDivideFractionsQuestion(){
-  const type = pick(['fracfrac','fracfrac','fracwhole','wholefrac','mixed','groups','groups']);
+/* Returns null when the answer would be too gnarly, so the caller can reroll. */
+function buildDivideItem(lenient){
+  const type = pick(['fracfrac','fracfrac','fracfrac','fracwhole','wholefrac','mixed','mixed','groups']);
 
   if(type === 'fracfrac'){
-    const d1 = randInt(2,10), n1 = randInt(1, d1-1);
-    const d2 = randInt(2,10), n2 = randInt(1, d2-1);
-    const correctStr = fracStr(n1*d2, d1*n2);
+    const a = pickFrac(10), b = pickFrac(10);
+    const num = a.n * b.d, den = a.d * b.n;
+    if(!lenient && !friendlyFrac(num, den)) return null;
+    const correctStr = fracStr(num, den);
     return mc4(
-      `Divide: ${n1}/${d1} &divide; ${n2}/${d2} <span style="font-weight:600">(simplify your answer)</span>`,
+      `Divide: ${a.n}/${a.d} &divide; ${b.n}/${b.d} <span style="font-weight:600">(simplify your answer)</span>`,
       correctStr,
       [
-        fracToString(n1*d2, d1*n2),
-        fracStr(n1*n2, d1*d2),
-        fracStr(d1*n2, n1*d2),
-        fracStr(n1+d2, d1+n2)
+        fracToString(num, den),
+        fracStr(a.n*b.n, a.d*b.d),
+        fracStr(a.d*b.n, a.n*b.d),
+        fracStr(a.n+b.d, a.d+b.n)
       ],
-      `<b>Keep</b> ${n1}/${d1} &middot; <b>Change</b> &divide; into &times; &middot; <b>Flip</b> ${n2}/${d2} into ${d2}/${n2}.<br>` +
-      `So ${n1}/${d1} &times; ${d2}/${n2} = ${n1*d2}/${d1*n2} = <b>${correctStr}</b>.`
+      `<b>Keep</b> ${a.n}/${a.d} &middot; <b>Change</b> &divide; into &times; &middot; <b>Flip</b> ${b.n}/${b.d} into ${b.d}/${b.n}.<br>` +
+      `So ${a.n}/${a.d} &times; ${b.d}/${b.n} = ${showReduce(num, den)}.` + simplifyNote(num, den)
     );
   }
 
   if(type === 'fracwhole'){
-    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,6);
-    const correctStr = fracStr(a, b*w);
+    const f = pickFrac(9), w = randInt(2,6);
+    const num = f.n, den = f.d * w;
+    if(!lenient && !friendlyFrac(num, den)) return null;
     return mc4(
-      `Divide: ${a}/${b} &divide; ${w} <span style="font-weight:600">(simplify your answer)</span>`,
-      correctStr,
-      [ fracToString(a, b*w), fracStr(a*w, b), fracStr(a, b+w), fracStr(a+w, b) ],
+      `Divide: ${f.n}/${f.d} &divide; ${w} <span style="font-weight:600">(simplify your answer)</span>`,
+      fracStr(num, den),
+      [ fracToString(num, den), fracStr(f.n*w, f.d), fracStr(f.n, f.d + w), fracStr(f.n + w, f.d) ],
       `Dividing by ${w} is the same as multiplying by 1/${w}.<br>` +
-      `${a}/${b} &times; 1/${w} = ${a}/${b*w} = <b>${correctStr}</b>. Sharing something out makes each share <b>smaller</b>.`
+      `${f.n}/${f.d} &times; 1/${w} = ${showReduce(num, den)}. Sharing something out makes each share <b>smaller</b>.` +
+      simplifyNote(num, den)
     );
   }
 
   if(type === 'wholefrac'){
-    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,8);
-    const correctStr = fracStr(w*b, a);
+    const f = pickFrac(9), w = randInt(2,8);
+    const num = w * f.d, den = f.n;
+    if(!lenient && !friendlyFrac(num, den)) return null;
     return mc4(
-      `Divide: ${w} &divide; ${a}/${b} <span style="font-weight:600">(simplify your answer)</span>`,
-      correctStr,
-      [ fracToString(w*b, a), fracStr(w*a, b), fracStr(a, w*b), fracStr(b, w*a) ],
-      `Write ${w} as ${w}/1. <b>Keep</b> ${w}/1 &middot; <b>Change</b> to &times; &middot; <b>Flip</b> ${a}/${b} into ${b}/${a}.<br>` +
-      `${w}/1 &times; ${b}/${a} = ${w*b}/${a} = <b>${correctStr}</b>. Dividing by a fraction smaller than 1 makes the answer <b>bigger</b> &mdash; that is normal!`
+      `Divide: ${w} &divide; ${f.n}/${f.d} <span style="font-weight:600">(simplify your answer)</span>`,
+      fracStr(num, den),
+      [ fracToString(num, den), fracStr(w*f.n, f.d), fracStr(f.n, w*f.d), fracStr(f.d, w*f.n) ],
+      `Write ${w} as ${w}/1. <b>Keep</b> ${w}/1 &middot; <b>Change</b> to &times; &middot; <b>Flip</b> ${f.n}/${f.d} into ${f.d}/${f.n}.<br>` +
+      `${w}/1 &times; ${f.d}/${f.n} = ${showReduce(num, den)}. Dividing by a fraction smaller than 1 makes the answer <b>bigger</b> &mdash; that is normal!` +
+      simplifyNote(num, den)
     );
   }
 
   if(type === 'mixed'){
-    const d1 = randInt(2,8), n1 = randInt(1, d1-1), W = randInt(1,4);
-    const imp = W*d1 + n1;
-    const d2 = randInt(2,9), n2 = randInt(1, d2-1);
-    const correctStr = fracStr(imp*d2, d1*n2);
+    const f = pickFrac(8), b = pickFrac(9), W = randInt(1,4);
+    const imp = W*f.d + f.n;
+    const num = imp * b.d, den = f.d * b.n;
+    if(!lenient && !friendlyFrac(num, den)) return null;
     return mc4(
-      `Divide: ${W} ${n1}/${d1} &divide; ${n2}/${d2} <span style="font-weight:600">(change the mixed number first)</span>`,
-      correctStr,
+      `Divide: ${W} ${f.n}/${f.d} &divide; ${b.n}/${b.d} <span style="font-weight:600">(change the mixed number first)</span>`,
+      fracStr(num, den),
       [
-        fracToString(imp*d2, d1*n2),
-        fracStr(W*d1*d2, d1*n2),
-        fracStr(imp*n2, d1*d2),
-        fracStr(W*d2, n2)
+        fracToString(num, den),
+        fracStr(W*f.d*b.d, f.d*b.n),
+        fracStr(imp*b.n, f.d*b.d),
+        fracStr(W*b.d, b.n)
       ],
-      `First change the mixed number: (${W}&times;${d1})+${n1} = ${imp}, so ${W} ${n1}/${d1} = ${imp}/${d1}.<br>` +
-      `Then Keep&ndash;Change&ndash;Flip: ${imp}/${d1} &times; ${d2}/${n2} = ${imp*d2}/${d1*n2} = <b>${correctStr}</b>.`
+      `First change the mixed number: (${W}&times;${f.d})+${f.n} = ${imp}, so ${W} ${f.n}/${f.d} = ${imp}/${f.d}.<br>` +
+      `Then Keep&ndash;Change&ndash;Flip: ${imp}/${f.d} &times; ${b.d}/${b.n} = ${showReduce(num, den)}.` +
+      simplifyNote(num, den)
     );
   }
 
-  const j = randInt(2,6), t = randInt(2,4), m = randInt(1, j-1);
-  const k = j*t, ans = m*t;
+  // groups: the meaning of division
+  let j, m;
+  do { j = randInt(2,6); m = randInt(1, j-1); } while(gcd(m, j) !== 1);
+  const t = randInt(2,4), k = j*t, ans = m*t;
   return mc4(
     `How many <b>1/${k}</b> are there in <b>${m}/${j}</b>?`,
     String(ans),
@@ -670,6 +712,14 @@ function genDivideFractionsQuestion(){
     `${m}/${j} is the same as ${ans}/${k}, and ${ans}/${k} is <b>${ans}</b> groups of 1/${k}.<br>` +
     `Keep&ndash;Change&ndash;Flip agrees: ${m}/${j} &divide; 1/${k} = ${m}/${j} &times; ${k}/1 = ${m*k}/${j} = <b>${ans}</b>.`
   );
+}
+
+function genDivideFractionsQuestion(){
+  for(let attempt = 0; attempt < 60; attempt++){
+    const item = buildDivideItem(false);
+    if(item) return item;
+  }
+  return buildDivideItem(true);
 }
 function genDivideFractionsSet(n){
   return Array.from({length:n}, ()=> genDivideFractionsQuestion());
@@ -686,13 +736,16 @@ const WP_CONTEXTS = [
   {story:(t,p)=>`A tank has ${t} liter of water. It is filled into bottles of ${p} liter each.`, unit:'bottles'},
 ];
 
-/* Builds a division story whose first step is always a clean whole number. */
+/* Builds a division story whose first step is always a clean whole number,
+   with both fractions already in lowest terms. */
 function buildDivisionStory(){
   const ctx = pick(WP_CONTEXTS);
   let totNum, totDen, perNum, perDen, count;
   if(Math.random() < 0.5){
     let j, t, m;
-    do { j = randInt(2,6); t = randInt(2,4); m = randInt(1, j-1); count = m*t; } while(count < 3);
+    do {
+      j = randInt(2,6); t = randInt(2,4); m = randInt(1, j-1); count = m*t;
+    } while(count < 3 || gcd(m, j) !== 1);
     totNum = m; totDen = j; perNum = 1; perDen = j*t;
   } else {
     let p, q;
@@ -716,9 +769,10 @@ function genWordProblemsQuestion(){
     const addMode = Math.random() < 0.5;
     const k = addMode ? randInt(2,5) : randInt(1, s.count-1);
     const final = addMode ? s.count + k : s.count - k;
+    const unit = s.ctx.unit;
     const tail = addMode
-      ? `Then ${k} more ${s.ctx.unit} are prepared from another batch. How many ${s.ctx.unit} are there altogether?`
-      : `Then ${k} of the ${s.ctx.unit} are used. How many ${s.ctx.unit} are left?`;
+      ? `Then ${k} more ${unit} are prepared from another batch. How many ${unit} are there altogether?`
+      : `Then ${k} of the ${unit} ${k === 1 ? 'is' : 'are'} used. How many ${unit} are left?`;
     const story = `${s.ctx.story(s.totalStr, s.perStr)} ${tail}`;
 
     if(kind === 'first'){
@@ -730,21 +784,27 @@ function genWordProblemsQuestion(){
           addMode ? `Add ${k} to ${s.totalStr}` : `Subtract ${k} from ${s.totalStr}`,
           `Divide ${s.perStr} by ${s.totalStr}`
         ],
-        `Divide first. You cannot ${addMode?'add':'subtract'} ${k} ${s.ctx.unit} until you know how many there were to begin with &mdash; and that means asking how many ${s.perStr} fit inside ${s.totalStr}.<br>` +
+        `Divide first. You cannot ${addMode?'add':'subtract'} ${k} ${plural(k, unit)} until you know how many there were to begin with &mdash; and that means asking how many ${s.perStr} fit inside ${s.totalStr}.<br>` +
         `${s.totalStr} &divide; ${s.perStr} = ${s.count}, then ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b>.`
       );
     }
     if(kind === 'answer'){
+      const wrongs = [
+        String(s.count),
+        String(addMode ? s.count - k : s.count + k),
+        String(k),
+        String(final + 1)
+      ].filter(v => Number(v) >= 1 && Number(v) !== final);
       return mc4(
         story,
         String(final),
-        [ String(s.count), String(addMode ? s.count - k : s.count + k), String(k), String(final+1) ],
+        wrongs,
         `<b>Step 1 &mdash; Divide:</b> ${s.totalStr} &divide; ${s.perStr} = ${s.totalStr} &times; ${s.perDen}/${s.perNum} = ${s.count}.<br>` +
-        `<b>Step 2 &mdash; ${addMode?'Add':'Subtract'}:</b> ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b> ${s.ctx.unit}.`
+        `<b>Step 2 &mdash; ${addMode?'Add':'Subtract'}:</b> ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b> ${plural(final, unit)}.`
       );
     }
     return mc4(
-      `${story}<br><br>Someone answered <b>${s.count} ${s.ctx.unit}</b>. What went wrong?`,
+      `${story}<br><br>Someone answered <b>${s.count} ${plural(s.count, unit)}</b>. What went wrong?`,
       addMode
         ? `They stopped after dividing and forgot to add the ${k} extra. The answer is ${final}.`
         : `They stopped after dividing and forgot to subtract the ${k} used. The answer is ${final}.`,
@@ -759,39 +819,42 @@ function genWordProblemsQuestion(){
   }
 
   if(kind === 'recipe'){
-    const d1 = randInt(2,5), n1 = randInt(1, d1-1);
-    const d2 = pick([2,3,4]);
+    const f = pickFrac(5), d2 = pick([2,3,4]);
     const treat = pick(['cake','muffin','pancake','bread']);
     const stuff = pick(['sugar','flour','butter','milk']);
-    const story = `A ${treat} recipe needs ${n1}/${d1} cup of ${stuff} for one full batch. You only want to make 1/${d2} of the recipe.`;
-    const correctStr = fracStr(n1, d1*d2);
+    const story = `A ${treat} recipe needs ${f.n}/${f.d} cup of ${stuff} for one full batch. You only want to make 1/${d2} of the recipe.`;
+    const num = f.n, den = f.d * d2;
+    const correctStr = fracStr(num, den);
     if(Math.random() < 0.5){
       return mc4(
         `${story}<br><br><b>Which operation do you use?</b>`,
-        `Multiply ${n1}/${d1} by 1/${d2}`,
-        [ `Divide ${n1}/${d1} by 1/${d2}`, `Divide 1/${d2} by ${n1}/${d1}`, `Subtract 1/${d2} from ${n1}/${d1}` ],
-        `The word <b>&ldquo;of&rdquo;</b> means multiply: 1/${d2} <i>of</i> ${n1}/${d1} = ${n1}/${d1} &times; 1/${d2} = <b>${correctStr}</b> cup.<br>` +
+        `Multiply ${f.n}/${f.d} by 1/${d2}`,
+        [ `Divide ${f.n}/${f.d} by 1/${d2}`, `Divide 1/${d2} by ${f.n}/${f.d}`, `Subtract 1/${d2} from ${f.n}/${f.d}` ],
+        `You need 1/${d2} <i>of</i> ${f.n}/${f.d}, and the word <b>&ldquo;of&rdquo;</b> means multiply:<br>` +
+        `${f.n}/${f.d} &times; 1/${d2} = <b>${correctStr}</b> cup.<br>` +
         `Careful! Dividing by 1/${d2} would make the answer <b>bigger</b>, but you are making <b>less</b> than a full batch, so the answer must be smaller.`
       );
     }
     return mc4(
       `${story} How much ${stuff} do you need?`,
       correctStr,
-      [ fracStr(n1*d2, d1), fracToString(n1, d1*d2), fracStr(n1, d1+d2) ],
-      `&ldquo;1/${d2} <b>of</b> the recipe&rdquo; means multiply: ${n1}/${d1} &times; 1/${d2} = ${n1}/${d1*d2} = <b>${correctStr}</b> cup.<br>` +
-      `Check: ${correctStr} is smaller than ${n1}/${d1}, which makes sense because you are making less than one batch.`
+      [ fracStr(f.n*d2, f.d), fracToString(num, den), fracStr(f.n, f.d + d2) ],
+      `&ldquo;1/${d2} <b>of</b> the recipe&rdquo; means multiply:<br>${f.n}/${f.d} &times; 1/${d2} = ${showReduce(num, den)} cup.<br>` +
+      `Check: ${correctStr} is smaller than ${f.n}/${f.d}, which makes sense because you are making less than one batch.`
     );
   }
 
-  const d1 = randInt(2,8), n1 = randInt(1, d1-1), w = randInt(2,5);
+  // equalparts: divide a fraction by a whole number
+  const f = pickFrac(8), w = randInt(2,5);
   const thing = pick(['cookie','brownie','pizza','cupcake']);
-  const correctStr = fracStr(n1, d1*w);
+  const num = f.n, den = f.d * w;
+  const correctStr = fracStr(num, den);
   return mc4(
-    `A ${thing} recipe uses ${n1}/${d1} cup of flour. If you split the recipe into ${w} equal parts, how much flour is in each part?`,
+    `A ${thing} recipe uses ${f.n}/${f.d} cup of flour. If you split the recipe into ${w} equal parts, how much flour is in each part?`,
     correctStr,
-    [ fracStr(n1*w, d1), fracToString(n1, d1*w), fracStr(n1, d1+w), fracStr(w, d1) ],
-    `Splitting into ${w} equal parts means divide by ${w}: ${n1}/${d1} &divide; ${w} = ${n1}/${d1} &times; 1/${w} = ${n1}/${d1*w} = <b>${correctStr}</b> cup.<br>` +
-    `Check: each part must be <b>smaller</b> than ${n1}/${d1}, and it is.`
+    [ fracStr(f.n*w, f.d), fracToString(num, den), fracStr(f.n, f.d + w), fracStr(w, f.d) ],
+    `Splitting into ${w} equal parts means divide by ${w}: ${f.n}/${f.d} &divide; ${w} = ${f.n}/${f.d} &times; 1/${w} = ${showReduce(num, den)} cup.<br>` +
+    `Check: each part must be <b>smaller</b> than ${f.n}/${f.d}, and it is.`
   );
 }
 function genWordProblemsSet(n){
@@ -1373,7 +1436,7 @@ const WALKTHROUGH = [
   },
   {
     id:'wt8',
-    text:'A ribbon is <b>9/10 meter</b> long. It is cut into strips of <b>1/10 meter</b> each. Four of the strips are used to wrap gifts. How many strips are left?',
+    text:'A ribbon is <b>9/10 meter</b> long. It is cut into strips of <b>1/10 meter</b> each. 4 of the strips are used to wrap gifts. How many strips are left?',
     givens:[
       {t:'The ribbon is 9/10 meter long', is:true},
       {t:'Each strip is 1/10 meter', is:true},
@@ -1402,7 +1465,7 @@ const WALKTHROUGH = [
   },
   {
     id:'wt9',
-    text:'A can holds <b>2/3 liter</b> of paint. It is poured into small jars that hold <b>1/9 liter</b> each. Three more jars are then filled from a different can. How many jars are filled altogether?',
+    text:'A can holds <b>2/3 liter</b> of paint. It is poured into small jars that hold <b>1/9 liter</b> each. 3 more jars are then filled from a different can. How many jars are filled altogether?',
     givens:[
       {t:'The can holds 2/3 liter of paint', is:true},
       {t:'Each jar holds 1/9 liter', is:true},
@@ -1431,7 +1494,7 @@ const WALKTHROUGH = [
   },
   {
     id:'wt10',
-    text:'There is <b>3/4 kilogram</b> of rice. It is packed into bags of <b>1/12 kilogram</b> each. Four of the bags are given to a neighbour. How many bags are left?',
+    text:'There is <b>3/4 kilogram</b> of rice. It is packed into bags of <b>1/12 kilogram</b> each. 4 of the bags are given to a neighbour. How many bags are left?',
     givens:[
       {t:'There is 3/4 kilogram of rice', is:true},
       {t:'Each bag holds 1/12 kilogram', is:true},
@@ -1460,7 +1523,7 @@ const WALKTHROUGH = [
   },
   {
     id:'wt11',
-    text:'A tank has <b>3/4 liter</b> of water. It is poured into bottles that hold <b>3/8 liter</b> each. Three more bottles are then filled from a second tank. How many bottles are filled altogether?',
+    text:'A tank has <b>3/4 liter</b> of water. It is poured into bottles that hold <b>3/8 liter</b> each. 3 more bottles are then filled from a second tank. How many bottles are filled altogether?',
     givens:[
       {t:'The tank has 3/4 liter of water', is:true},
       {t:'Each bottle holds 3/8 liter', is:true},
@@ -1489,7 +1552,7 @@ const WALKTHROUGH = [
   },
   {
     id:'wt12',
-    text:'A piece of cloth is <b>4/5 meter</b> long. It is cut into pieces of <b>2/15 meter</b> each. Two of the pieces are used for a sample. How many pieces are left?',
+    text:'A piece of cloth is <b>4/5 meter</b> long. It is cut into pieces of <b>2/15 meter</b> each. 2 of the pieces are used for a sample. How many pieces are left?',
     givens:[
       {t:'The cloth is 4/5 meter long', is:true},
       {t:'Each piece is 2/15 meter', is:true},
@@ -1518,7 +1581,7 @@ const WALKTHROUGH = [
   },
   {
     id:'wt13',
-    text:'A jar holds <b>2/3 kilogram</b> of honey. It is packed into small jars that hold <b>2/9 kilogram</b> each. Four more small jars are filled from a different batch. How many small jars are there altogether?',
+    text:'A jar holds <b>2/3 kilogram</b> of honey. It is packed into small jars that hold <b>2/9 kilogram</b> each. 4 more small jars are filled from a different batch. How many small jars are there altogether?',
     givens:[
       {t:'There is 2/3 kilogram of honey', is:true},
       {t:'Each small jar holds 2/9 kilogram', is:true},
@@ -1827,39 +1890,66 @@ function wtNextProblem(){ wtPos++; openWtProblem(); }
 /* Every builder returns the blank prompt AND its solution, so the same
    randomised item can be printed empty in the exam and solved in the key. */
 
-function wsDrill(){
+function wsDrillItem(lenient){
   const type = pick(['fracfrac','fracfrac','fracwhole','wholefrac','mixed','groups']);
+
   if(type === 'fracfrac'){
-    const d1 = randInt(2,10), n1 = randInt(1, d1-1), d2 = randInt(2,10), n2 = randInt(1, d2-1);
+    const a = pickFrac(10), b = pickFrac(10);
+    const num = a.n * b.d, den = a.d * b.n;
+    if(!lenient && !friendlyFrac(num, den)) return null;
     return {
-      prompt:`${n1}/${d1} &divide; ${n2}/${d2} =`,
-      answer:fracStr(n1*d2, d1*n2),
-      work:`${n1}/${d1} &times; ${d2}/${n2} = ${n1*d2}/${d1*n2}`
+      prompt:`${a.n}/${a.d} &divide; ${b.n}/${b.d} =`,
+      answer:fracStr(num, den),
+      work:`${a.n}/${a.d} &times; ${b.d}/${b.n} = ${showReduce(num, den)}`
     };
   }
   if(type === 'fracwhole'){
-    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,6);
-    return { prompt:`${a}/${b} &divide; ${w} =`, answer:fracStr(a, b*w), work:`${a}/${b} &times; 1/${w} = ${a}/${b*w}` };
-  }
-  if(type === 'wholefrac'){
-    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,8);
-    return { prompt:`${w} &divide; ${a}/${b} =`, answer:fracStr(w*b, a), work:`${w}/1 &times; ${b}/${a} = ${w*b}/${a}` };
-  }
-  if(type === 'mixed'){
-    const d1 = randInt(2,8), n1 = randInt(1, d1-1), W = randInt(1,4), imp = W*d1 + n1;
-    const d2 = randInt(2,9), n2 = randInt(1, d2-1);
+    const f = pickFrac(9), w = randInt(2,6);
+    const num = f.n, den = f.d * w;
+    if(!lenient && !friendlyFrac(num, den)) return null;
     return {
-      prompt:`${W} ${n1}/${d1} &divide; ${n2}/${d2} =`,
-      answer:fracStr(imp*d2, d1*n2),
-      work:`${W} ${n1}/${d1} = ${imp}/${d1}, then ${imp}/${d1} &times; ${d2}/${n2} = ${imp*d2}/${d1*n2}`
+      prompt:`${f.n}/${f.d} &divide; ${w} =`,
+      answer:fracStr(num, den),
+      work:`${f.n}/${f.d} &times; 1/${w} = ${showReduce(num, den)}`
     };
   }
-  const j = randInt(2,6), t = randInt(2,4), m = randInt(1, j-1), k = j*t;
+  if(type === 'wholefrac'){
+    const f = pickFrac(9), w = randInt(2,8);
+    const num = w * f.d, den = f.n;
+    if(!lenient && !friendlyFrac(num, den)) return null;
+    return {
+      prompt:`${w} &divide; ${f.n}/${f.d} =`,
+      answer:fracStr(num, den),
+      work:`${w}/1 &times; ${f.d}/${f.n} = ${showReduce(num, den)}`
+    };
+  }
+  if(type === 'mixed'){
+    const f = pickFrac(8), b = pickFrac(9), W = randInt(1,4);
+    const imp = W*f.d + f.n;
+    const num = imp * b.d, den = f.d * b.n;
+    if(!lenient && !friendlyFrac(num, den)) return null;
+    return {
+      prompt:`${W} ${f.n}/${f.d} &divide; ${b.n}/${b.d} =`,
+      answer:fracStr(num, den),
+      work:`${W} ${f.n}/${f.d} = ${imp}/${f.d}, then ${imp}/${f.d} &times; ${b.d}/${b.n} = ${showReduce(num, den)}`
+    };
+  }
+  let j, m;
+  do { j = randInt(2,6); m = randInt(1, j-1); } while(gcd(m, j) !== 1);
+  const t = randInt(2,4), k = j*t;
   return {
     prompt:`How many 1/${k} are there in ${m}/${j}?`,
     answer:String(m*t),
     work:`${m}/${j} &times; ${k}/1 = ${m*k}/${j} = ${m*t}`
   };
+}
+
+function wsDrill(){
+  for(let attempt = 0; attempt < 60; attempt++){
+    const d = wsDrillItem(false);
+    if(d) return d;
+  }
+  return wsDrillItem(true);
 }
 
 function wsStoryItem(forcedKind){
@@ -1870,50 +1960,53 @@ function wsStoryItem(forcedKind){
     const addMode = Math.random() < 0.5;
     const k = addMode ? randInt(2,5) : randInt(1, s.count-1);
     const final = addMode ? s.count + k : s.count - k;
+    const unit = s.ctx.unit;
     const tail = addMode
-      ? `Then ${k} more ${s.ctx.unit} are prepared from another batch. How many ${s.ctx.unit} are there altogether?`
-      : `Then ${k} of the ${s.ctx.unit} are used. How many ${s.ctx.unit} are left?`;
+      ? `Then ${k} more ${unit} are prepared from another batch. How many ${unit} are there altogether?`
+      : `Then ${k} of the ${unit} ${k === 1 ? 'is' : 'are'} used. How many ${unit} are left?`;
     return {
       text: `${s.ctx.story(s.totalStr, s.perStr)} ${tail}`,
       op: `Divide, then ${addMode ? 'add' : 'subtract'}`,
       given: `${s.totalStr} in total; ${s.perStr} each; ${k} ${addMode ? 'extra' : 'used'}`,
-      asked: `How many ${s.ctx.unit} ${addMode ? 'altogether' : 'are left'}`,
+      asked: `How many ${unit} ${addMode ? 'altogether' : 'are left'}`,
       plan: `Divide ${s.totalStr} by ${s.perStr}, then ${addMode ? 'add' : 'subtract'} ${k}`,
       work: `${s.totalStr} &divide; ${s.perStr} = ${s.totalStr} &times; ${s.perDen}/${s.perNum} = ${s.count}, then ${s.count} ${addMode?'+':'&minus;'} ${k} = ${final}`,
-      answer: `${final} ${s.ctx.unit}`,
+      answer: `${final} ${plural(final, unit)}`,
       check: `${s.count} lots of ${s.perStr} make ${s.totalStr}, so the division is right. ${addMode ? 'Adding' : 'Subtracting'} ${k} gives ${final}.`
     };
   }
 
   if(kind === 'recipe'){
-    const d1 = randInt(2,5), n1 = randInt(1, d1-1), d2 = pick([2,3,4]);
+    const f = pickFrac(5), d2 = pick([2,3,4]);
     const treat = pick(['cake','muffin','pancake','bread']);
     const stuff = pick(['sugar','flour','butter','milk']);
-    const ans = fracStr(n1, d1*d2);
+    const num = f.n, den = f.d * d2;
+    const ans = fracStr(num, den);
     return {
-      text: `A ${treat} recipe needs ${n1}/${d1} cup of ${stuff} for one full batch. You only want to make 1/${d2} of the recipe. How much ${stuff} do you need?`,
+      text: `A ${treat} recipe needs ${f.n}/${f.d} cup of ${stuff} for one full batch. You only want to make 1/${d2} of the recipe. How much ${stuff} do you need?`,
       op: 'Multiply',
-      given: `One batch needs ${n1}/${d1} cup; you are making 1/${d2} of the recipe`,
+      given: `One batch needs ${f.n}/${f.d} cup; you are making 1/${d2} of the recipe`,
       asked: `How much ${stuff} is needed`,
-      plan: `Multiply ${n1}/${d1} by 1/${d2}, because &ldquo;of&rdquo; means multiply`,
-      work: `${n1}/${d1} &times; 1/${d2} = ${n1}/${d1*d2} = ${ans}`,
+      plan: `Multiply ${f.n}/${f.d} by 1/${d2}, because &ldquo;of&rdquo; means multiply`,
+      work: `${f.n}/${f.d} &times; 1/${d2} = ${showReduce(num, den)}`,
       answer: `${ans} cup`,
-      check: `Less than a full batch needs less ${stuff}, and ${ans} is smaller than ${n1}/${d1}.`
+      check: `Less than a full batch needs less ${stuff}, and ${ans} is smaller than ${f.n}/${f.d}.`
     };
   }
 
-  const d1 = randInt(2,8), n1 = randInt(1, d1-1), w = randInt(2,5);
+  const f = pickFrac(8), w = randInt(2,5);
   const thing = pick(['cookie','brownie','pizza','cupcake']);
-  const ans = fracStr(n1, d1*w);
+  const num = f.n, den = f.d * w;
+  const ans = fracStr(num, den);
   return {
-    text: `A ${thing} recipe uses ${n1}/${d1} cup of flour. If you split the recipe into ${w} equal parts, how much flour is in each part?`,
+    text: `A ${thing} recipe uses ${f.n}/${f.d} cup of flour. If you split the recipe into ${w} equal parts, how much flour is in each part?`,
     op: 'Divide by a whole number',
-    given: `The recipe uses ${n1}/${d1} cup of flour; it is split into ${w} equal parts`,
+    given: `The recipe uses ${f.n}/${f.d} cup of flour; it is split into ${w} equal parts`,
     asked: 'How much flour is in each part',
-    plan: `Divide ${n1}/${d1} by ${w}, which is the same as multiplying by 1/${w}`,
-    work: `${n1}/${d1} &times; 1/${w} = ${n1}/${d1*w} = ${ans}`,
+    plan: `Divide ${f.n}/${f.d} by ${w}, which is the same as multiplying by 1/${w}`,
+    work: `${f.n}/${f.d} &times; 1/${w} = ${showReduce(num, den)}`,
     answer: `${ans} cup`,
-    check: `Each part must be smaller than ${n1}/${d1}, and ${w} parts of ${ans} make ${n1}/${d1} again.`
+    check: `Each part must be smaller than ${f.n}/${f.d}, and ${w} parts of ${ans} make ${f.n}/${f.d} again.`
   };
 }
 
