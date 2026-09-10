@@ -136,6 +136,98 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 /* scene pieces */
 .piece{opacity:0; transform:scale(0.6); transform-origin:center; transition:opacity .35s ease, transform .35s ease;}
 .piece.on{opacity:1; transform:scale(1);}
+
+/* UPAC WALKTHROUGH */
+.walk-card{border-color:var(--coral); background:linear-gradient(135deg, color-mix(in srgb, var(--coral) 12%, var(--surface)), var(--surface));}
+.walk-badge{
+  display:inline-block; background:var(--coral); color:#FFFFFF; font-size:0.68rem; font-weight:800;
+  padding:2px 10px; border-radius:999px; margin-bottom:4px; letter-spacing:0.03em;
+}
+.wt-steps{display:flex; gap:8px; margin-bottom:14px;}
+.wt-step{
+  flex:1; text-align:center; padding:8px 0; border-radius:12px; background:var(--surface2);
+  color:var(--ink-soft); font-family:'Baloo 2',cursive; font-weight:700; font-size:1.05rem;
+  border:2px solid transparent;
+}
+.wt-step.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.wt-step.done{border-color:var(--good); color:var(--good);}
+.wt-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; box-shadow:var(--shadow); margin-bottom:16px;
+}
+.wt-problem{font-size:1.02rem; line-height:1.6;}
+.wt-count{color:var(--ink-soft); font-size:0.82rem; font-weight:700; margin-bottom:6px;}
+.wt-prompt{font-size:1.1rem; font-weight:800; margin:6px 0 14px; line-height:1.4;}
+.option.picked{border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--surface));}
+.option.missed{border-color:var(--gold); background:color-mix(in srgb, var(--gold) 20%, var(--surface));}
+.wt-input{
+  width:100%; padding:14px 16px; font-family:'Baloo 2',cursive; font-size:1.5rem; font-weight:700;
+  text-align:center; border:2px solid var(--border); border-radius:14px;
+  background:var(--surface); color:var(--ink);
+}
+.wt-input:disabled{opacity:1;}
+.wt-hint{color:var(--ink-soft); font-size:0.85rem; margin-top:10px; text-align:center; line-height:1.5;}
+.upac-grid{display:grid; gap:10px;}
+.upac-box{border:1px solid var(--border); border-radius:14px; padding:12px 14px; background:var(--surface);}
+.upac-box h4{margin:0 0 6px; font-family:'Baloo 2',cursive; color:var(--accent); font-size:1.05rem;}
+.upac-box p{margin:0; font-size:0.95rem; line-height:1.5;}
+.upac-badge{
+  display:inline-block; width:24px; height:24px; line-height:24px; text-align:center;
+  border-radius:8px; background:var(--accent); color:var(--accent-ink);
+  font-weight:800; font-size:0.85rem; margin-right:7px;
+}
+
+/* PRINTABLE WORKSHEET — a white sheet of paper, in both themes */
+.print-badge{
+  display:inline-block; background:var(--accent); color:var(--accent-ink); font-size:0.68rem; font-weight:800;
+  padding:2px 10px; border-radius:999px; margin-bottom:4px; letter-spacing:0.03em;
+}
+.print-card{border-color:var(--accent);}
+.ws{
+  background:#FFFFFF; color:#111111; padding:26px 24px; border-radius:14px;
+  box-shadow:var(--shadow); line-height:1.5; font-size:0.95rem;
+}
+.ws h1{font-family:'Baloo 2',cursive; font-size:1.45rem; margin:0 0 2px; color:#111111;}
+.ws h2{
+  font-family:'Baloo 2',cursive; font-size:1.08rem; margin:18px 0 4px; color:#111111;
+  border-bottom:1px solid #999999; padding-bottom:3px;
+}
+.ws-sub{font-size:0.83rem; color:#555555; margin:0 0 14px;}
+.ws-meta{
+  display:flex; gap:20px; flex-wrap:wrap; font-size:0.9rem; font-weight:700;
+  border-top:2px solid #111111; border-bottom:2px solid #111111; padding:8px 0; margin-bottom:6px;
+}
+.ws-note{font-size:0.82rem; color:#555555; margin:0 0 10px;}
+.ws-line{border-bottom:1px solid #333333; display:inline-block; min-width:130px; height:1.05em;}
+.ws-drills{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:10px 18px;
+  list-style:none; counter-reset:wsd; padding:0; margin:0;
+}
+.ws-drills li{
+  counter-increment:wsd; border:1px solid #BBBBBB; border-radius:8px;
+  padding:8px 10px; min-height:78px;
+}
+.ws-drills li::before{content:counter(wsd) ". "; font-weight:800;}
+.ws-q{font-weight:700;}
+.ws-word{border:1px solid #BBBBBB; border-radius:8px; padding:10px 12px; margin-bottom:10px;}
+.ws-answerline{margin-top:10px;}
+.upac-print{display:grid; grid-template-columns:1fr 1fr; margin-top:10px; border:1px solid #111111;}
+.upac-print > div{border:1px solid #111111; padding:8px 10px; min-height:100px; font-size:0.8rem; color:#555555;}
+.upac-print b{color:#111111; font-size:0.88rem;}
+.ws-key{margin-top:26px; border-top:3px double #111111; padding-top:16px;}
+.ws-keylist{padding-left:22px; margin:0;}
+.ws-keylist li{margin-bottom:6px; font-size:0.88rem;}
+.ws-dim{color:#555555; font-size:0.85rem;}
+
+@media print{
+  @page{margin:14mm;}
+  body{background:#FFFFFF !important;}
+  .app{max-width:none; margin:0; padding:0;}
+  .no-print{display:none !important;}
+  .ws{box-shadow:none; border-radius:0; padding:0; color:#000000;}
+  .ws-drills li, .ws-word, .ws-part{break-inside:avoid; page-break-inside:avoid;}
+  .ws-key{break-before:page; page-break-before:always; border-top:none;}
+}
 </style>
 
 <div class="app">
@@ -146,7 +238,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="hero-scene" viewBox="0 0 200 200" id="hero-scene-svg"></svg>
       <div>
         <h1>Math Mastery</h1>
-        <p>Divisibility, GEMDAS, and Multiplying Fractions! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the Practice Test once every lesson is glowing!</p>
+        <p>Divisibility, GEMDAS, fractions, and word problems! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the <b>UPAC Walkthrough</b> for word problems, and the Practice Test once every lesson is glowing!</p>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -185,6 +277,31 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div class="options" id="q-options"></div>
     <div id="q-feedback"></div>
     <button class="primary-btn hidden" id="q-next-btn" onclick="nextQuestion()">Next &rarr;</button>
+  </section>
+
+  <!-- UPAC WALKTHROUGH -->
+  <section id="screen-walkthrough" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="goHome()">&larr; Back</button>
+      <h2>UPAC Walkthrough</h2>
+    </div>
+    <div class="wt-count" id="wt-count"></div>
+    <div class="wt-steps" id="wt-steps"></div>
+    <div class="wt-card"><div class="wt-problem" id="wt-problem"></div></div>
+    <div id="wt-body"></div>
+  </section>
+
+  <!-- PRINTABLE WORKSHEET -->
+  <section id="screen-print" class="hidden">
+    <div class="screen-head no-print">
+      <button class="back-btn" onclick="goHome()">&larr; Back</button>
+      <h2>Printable Exam</h2>
+    </div>
+    <div id="print-root"></div>
+    <div class="no-print" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px">
+      <button class="primary-btn" style="width:auto; margin-top:0" onclick="window.print()">🖨️ Print again</button>
+      <button class="secondary-btn" onclick="newWorksheet()">🎲 New exam</button>
+    </div>
   </section>
 
   <!-- RESULTS -->
@@ -406,7 +523,7 @@ function genMultiplyFractionsQuestion(){
     const q = useWordProblem
       ? pick(WORD_TEMPLATES)(w, n1, d1) + ` Give your answer in simplest form.`
       : `Multiply: ${w} &times; ${n1}/${d1} (simplify your answer)`;
-    return mcQuestion(
+    return mc4(
       q, correctStr,
       [unsimplifiedStr, addMistakeStr, wrongDenMistakeStr],
       `${w} &times; ${n1}/${d1} = ${productNum}/${productDen}. Simplified: ${correctStr}.`
@@ -420,7 +537,7 @@ function genMultiplyFractionsQuestion(){
     const correctStr = fracToString(reduced.num, reduced.den);
     const unsimplifiedStr = fracToString(productNum, productDen);
     const addAcrossStr = fracToString(n1+n2, d1+d2);
-    return mcQuestion(
+    return mc4(
       `Multiply: ${n1}/${d1} &times; ${n2}/${d2} (simplify your answer)`,
       correctStr,
       [unsimplifiedStr, addAcrossStr],
@@ -439,7 +556,7 @@ function genMultiplyFractionsQuestion(){
   const unsimplifiedStr = fracToString(productNum, productDen);
   const forgotNumeratorNum = (w*d1)*n2;
   const forgotNumeratorStr = fracToString(forgotNumeratorNum, productDen);
-  return mcQuestion(
+  return mc4(
     `Multiply: ${w} ${n1}/${d1} &times; ${n2}/${d2} (convert the mixed number first, then simplify)`,
     correctStr,
     [unsimplifiedStr, forgotNumeratorStr],
@@ -448,6 +565,237 @@ function genMultiplyFractionsQuestion(){
 }
 function genMultiplyFractionsSet(n){
   return Array.from({length:n}, ()=> genMultiplyFractionsQuestion());
+}
+
+function fracStr(num, den){ const r = reduceFrac(num, den); return fracToString(r.num, r.den); }
+
+/* Distractors sometimes collide with each other or with the right answer, which
+   would leave a 50/50 guess. These build extra near-misses to top the list up. */
+function looksNumeric(s){ return /^\d+ \d+\/\d+$|^\d+\/\d+$|^\d+$/.test(s); }
+function numericVariants(s){
+  let num, den, m;
+  if((m = s.match(/^(\d+) (\d+)\/(\d+)$/))){ den = +m[3]; num = (+m[1])*den + (+m[2]); }
+  else if((m = s.match(/^(\d+)\/(\d+)$/))){ num = +m[1]; den = +m[2]; }
+  else if((m = s.match(/^(\d+)$/))){ num = +m[1]; den = 1; }
+  else return [];
+  return [
+    [num+1, den], [Math.max(1, num-1), den],
+    [num, den+1], [num, Math.max(1, den-1)],
+    [num*2, den], [num, den*2], [den, num]
+  ].filter(([, b])=> b > 0).map(([a, b])=> fracStr(a, b));
+}
+
+/* ---- Helper: cap distractors at 3, drop dupes, top up if we came up short ---- */
+function mc4(qText, correctText, wrongCandidates, explain){
+  const seen = new Set([correctText]);
+  const wrongs = [];
+  const add = t => { if(t && !seen.has(t)) { seen.add(t); wrongs.push(t); } };
+  wrongCandidates.forEach(add);
+  if(wrongs.length < 3 && looksNumeric(correctText)) numericVariants(correctText).forEach(add);
+  return mcQuestion(qText, correctText, wrongs.slice(0,3), explain);
+}
+
+/* ================= GENERATOR: Dividing Fractions ================= */
+function genDivideFractionsQuestion(){
+  const type = pick(['fracfrac','fracfrac','fracwhole','wholefrac','mixed','groups','groups']);
+
+  if(type === 'fracfrac'){
+    const d1 = randInt(2,10), n1 = randInt(1, d1-1);
+    const d2 = randInt(2,10), n2 = randInt(1, d2-1);
+    const correctStr = fracStr(n1*d2, d1*n2);
+    return mc4(
+      `Divide: ${n1}/${d1} &divide; ${n2}/${d2} <span style="font-weight:600">(simplify your answer)</span>`,
+      correctStr,
+      [
+        fracToString(n1*d2, d1*n2),
+        fracStr(n1*n2, d1*d2),
+        fracStr(d1*n2, n1*d2),
+        fracStr(n1+d2, d1+n2)
+      ],
+      `<b>Keep</b> ${n1}/${d1} &middot; <b>Change</b> &divide; into &times; &middot; <b>Flip</b> ${n2}/${d2} into ${d2}/${n2}.<br>` +
+      `So ${n1}/${d1} &times; ${d2}/${n2} = ${n1*d2}/${d1*n2} = <b>${correctStr}</b>.`
+    );
+  }
+
+  if(type === 'fracwhole'){
+    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,6);
+    const correctStr = fracStr(a, b*w);
+    return mc4(
+      `Divide: ${a}/${b} &divide; ${w} <span style="font-weight:600">(simplify your answer)</span>`,
+      correctStr,
+      [ fracToString(a, b*w), fracStr(a*w, b), fracStr(a, b+w), fracStr(a+w, b) ],
+      `Dividing by ${w} is the same as multiplying by 1/${w}.<br>` +
+      `${a}/${b} &times; 1/${w} = ${a}/${b*w} = <b>${correctStr}</b>. Sharing something out makes each share <b>smaller</b>.`
+    );
+  }
+
+  if(type === 'wholefrac'){
+    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,8);
+    const correctStr = fracStr(w*b, a);
+    return mc4(
+      `Divide: ${w} &divide; ${a}/${b} <span style="font-weight:600">(simplify your answer)</span>`,
+      correctStr,
+      [ fracToString(w*b, a), fracStr(w*a, b), fracStr(a, w*b), fracStr(b, w*a) ],
+      `Write ${w} as ${w}/1. <b>Keep</b> ${w}/1 &middot; <b>Change</b> to &times; &middot; <b>Flip</b> ${a}/${b} into ${b}/${a}.<br>` +
+      `${w}/1 &times; ${b}/${a} = ${w*b}/${a} = <b>${correctStr}</b>. Dividing by a fraction smaller than 1 makes the answer <b>bigger</b> &mdash; that is normal!`
+    );
+  }
+
+  if(type === 'mixed'){
+    const d1 = randInt(2,8), n1 = randInt(1, d1-1), W = randInt(1,4);
+    const imp = W*d1 + n1;
+    const d2 = randInt(2,9), n2 = randInt(1, d2-1);
+    const correctStr = fracStr(imp*d2, d1*n2);
+    return mc4(
+      `Divide: ${W} ${n1}/${d1} &divide; ${n2}/${d2} <span style="font-weight:600">(change the mixed number first)</span>`,
+      correctStr,
+      [
+        fracToString(imp*d2, d1*n2),
+        fracStr(W*d1*d2, d1*n2),
+        fracStr(imp*n2, d1*d2),
+        fracStr(W*d2, n2)
+      ],
+      `First change the mixed number: (${W}&times;${d1})+${n1} = ${imp}, so ${W} ${n1}/${d1} = ${imp}/${d1}.<br>` +
+      `Then Keep&ndash;Change&ndash;Flip: ${imp}/${d1} &times; ${d2}/${n2} = ${imp*d2}/${d1*n2} = <b>${correctStr}</b>.`
+    );
+  }
+
+  const j = randInt(2,6), t = randInt(2,4), m = randInt(1, j-1);
+  const k = j*t, ans = m*t;
+  return mc4(
+    `How many <b>1/${k}</b> are there in <b>${m}/${j}</b>?`,
+    String(ans),
+    [ String(t), String(ans+1), String(m*k), fracStr(m, j*k) ],
+    `Division asks &ldquo;how many groups of this size fit inside?&rdquo;<br>` +
+    `${m}/${j} is the same as ${ans}/${k}, and ${ans}/${k} is <b>${ans}</b> groups of 1/${k}.<br>` +
+    `Keep&ndash;Change&ndash;Flip agrees: ${m}/${j} &divide; 1/${k} = ${m}/${j} &times; ${k}/1 = ${m*k}/${j} = <b>${ans}</b>.`
+  );
+}
+function genDivideFractionsSet(n){
+  return Array.from({length:n}, ()=> genDivideFractionsQuestion());
+}
+
+/* ================= GENERATOR: Fraction Word Problems ================= */
+const WP_CONTEXTS = [
+  {story:(t,p)=>`A baker has ${t} kilogram of dough. She divides it into portions of ${p} kilogram each.`, unit:'portions'},
+  {story:(t,p)=>`A container holds ${t} liter of juice. It is poured into cups that hold ${p} liter each.`, unit:'cups'},
+  {story:(t,p)=>`A roll of wire is ${t} meter long. It is cut into pieces of ${p} meter each.`, unit:'pieces'},
+  {story:(t,p)=>`A ribbon is ${t} meter long. It is cut into strips of ${p} meter each.`, unit:'strips'},
+  {story:(t,p)=>`A can holds ${t} liter of paint. It is poured into small jars that hold ${p} liter each.`, unit:'jars'},
+  {story:(t,p)=>`There is ${t} kilogram of rice. It is packed into bags of ${p} kilogram each.`, unit:'bags'},
+  {story:(t,p)=>`A tank has ${t} liter of water. It is filled into bottles of ${p} liter each.`, unit:'bottles'},
+];
+
+/* Builds a division story whose first step is always a clean whole number. */
+function buildDivisionStory(){
+  const ctx = pick(WP_CONTEXTS);
+  let totNum, totDen, perNum, perDen, count;
+  if(Math.random() < 0.5){
+    let j, t, m;
+    do { j = randInt(2,6); t = randInt(2,4); m = randInt(1, j-1); count = m*t; } while(count < 3);
+    totNum = m; totDen = j; perNum = 1; perDen = j*t;
+  } else {
+    let p, q;
+    do { q = randInt(4,15); p = randInt(2,4); count = randInt(3,6); } while(p >= q || count*p > q || gcd(p,q) !== 1);
+    perNum = p; perDen = q;
+    const r = reduceFrac(count*p, q); totNum = r.num; totDen = r.den;
+  }
+  return {
+    ctx, count,
+    totalStr: fracToString(totNum, totDen),
+    perStr: `${perNum}/${perDen}`,
+    totNum, totDen, perNum, perDen
+  };
+}
+
+function genWordProblemsQuestion(){
+  const kind = pick(['first','first','answer','answer','trap','recipe','equalparts']);
+
+  if(kind === 'first' || kind === 'answer' || kind === 'trap'){
+    const s = buildDivisionStory();
+    const addMode = Math.random() < 0.5;
+    const k = addMode ? randInt(2,5) : randInt(1, s.count-1);
+    const final = addMode ? s.count + k : s.count - k;
+    const tail = addMode
+      ? `Then ${k} more ${s.ctx.unit} are prepared from another batch. How many ${s.ctx.unit} are there altogether?`
+      : `Then ${k} of the ${s.ctx.unit} are used. How many ${s.ctx.unit} are left?`;
+    const story = `${s.ctx.story(s.totalStr, s.perStr)} ${tail}`;
+
+    if(kind === 'first'){
+      return mc4(
+        `${story}<br><br><b>What should you do FIRST?</b>`,
+        `Divide ${s.totalStr} by ${s.perStr}`,
+        [
+          `Multiply ${s.totalStr} by ${s.perStr}`,
+          addMode ? `Add ${k} to ${s.totalStr}` : `Subtract ${k} from ${s.totalStr}`,
+          `Divide ${s.perStr} by ${s.totalStr}`
+        ],
+        `Divide first. You cannot ${addMode?'add':'subtract'} ${k} ${s.ctx.unit} until you know how many there were to begin with &mdash; and that means asking how many ${s.perStr} fit inside ${s.totalStr}.<br>` +
+        `${s.totalStr} &divide; ${s.perStr} = ${s.count}, then ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b>.`
+      );
+    }
+    if(kind === 'answer'){
+      return mc4(
+        story,
+        String(final),
+        [ String(s.count), String(addMode ? s.count - k : s.count + k), String(k), String(final+1) ],
+        `<b>Step 1 &mdash; Divide:</b> ${s.totalStr} &divide; ${s.perStr} = ${s.totalStr} &times; ${s.perDen}/${s.perNum} = ${s.count}.<br>` +
+        `<b>Step 2 &mdash; ${addMode?'Add':'Subtract'}:</b> ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b> ${s.ctx.unit}.`
+      );
+    }
+    return mc4(
+      `${story}<br><br>Someone answered <b>${s.count} ${s.ctx.unit}</b>. What went wrong?`,
+      addMode
+        ? `They stopped after dividing and forgot to add the ${k} extra. The answer is ${final}.`
+        : `They stopped after dividing and forgot to subtract the ${k} used. The answer is ${final}.`,
+      [
+        `Nothing &mdash; ${s.count} is the correct answer.`,
+        `They should have multiplied instead of dividing.`,
+        `They flipped the wrong fraction.`
+      ],
+      `${s.totalStr} &divide; ${s.perStr} = ${s.count} is right, but that is only <b>step 1</b>. The question asks how many are ${addMode?'altogether':'left'}, so ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b>.<br>` +
+      `Whenever you see <i>left</i>, <i>remain</i>, or <i>altogether</i>, look for a second step.`
+    );
+  }
+
+  if(kind === 'recipe'){
+    const d1 = randInt(2,5), n1 = randInt(1, d1-1);
+    const d2 = pick([2,3,4]);
+    const treat = pick(['cake','muffin','pancake','bread']);
+    const stuff = pick(['sugar','flour','butter','milk']);
+    const story = `A ${treat} recipe needs ${n1}/${d1} cup of ${stuff} for one full batch. You only want to make 1/${d2} of the recipe.`;
+    const correctStr = fracStr(n1, d1*d2);
+    if(Math.random() < 0.5){
+      return mc4(
+        `${story}<br><br><b>Which operation do you use?</b>`,
+        `Multiply ${n1}/${d1} by 1/${d2}`,
+        [ `Divide ${n1}/${d1} by 1/${d2}`, `Divide 1/${d2} by ${n1}/${d1}`, `Subtract 1/${d2} from ${n1}/${d1}` ],
+        `The word <b>&ldquo;of&rdquo;</b> means multiply: 1/${d2} <i>of</i> ${n1}/${d1} = ${n1}/${d1} &times; 1/${d2} = <b>${correctStr}</b> cup.<br>` +
+        `Careful! Dividing by 1/${d2} would make the answer <b>bigger</b>, but you are making <b>less</b> than a full batch, so the answer must be smaller.`
+      );
+    }
+    return mc4(
+      `${story} How much ${stuff} do you need?`,
+      correctStr,
+      [ fracStr(n1*d2, d1), fracToString(n1, d1*d2), fracStr(n1, d1+d2) ],
+      `&ldquo;1/${d2} <b>of</b> the recipe&rdquo; means multiply: ${n1}/${d1} &times; 1/${d2} = ${n1}/${d1*d2} = <b>${correctStr}</b> cup.<br>` +
+      `Check: ${correctStr} is smaller than ${n1}/${d1}, which makes sense because you are making less than one batch.`
+    );
+  }
+
+  const d1 = randInt(2,8), n1 = randInt(1, d1-1), w = randInt(2,5);
+  const thing = pick(['cookie','brownie','pizza','cupcake']);
+  const correctStr = fracStr(n1, d1*w);
+  return mc4(
+    `A ${thing} recipe uses ${n1}/${d1} cup of flour. If you split the recipe into ${w} equal parts, how much flour is in each part?`,
+    correctStr,
+    [ fracStr(n1*w, d1), fracToString(n1, d1*w), fracStr(n1, d1+w), fracStr(w, d1) ],
+    `Splitting into ${w} equal parts means divide by ${w}: ${n1}/${d1} &divide; ${w} = ${n1}/${d1} &times; 1/${w} = ${n1}/${d1*w} = <b>${correctStr}</b> cup.<br>` +
+    `Check: each part must be <b>smaller</b> than ${n1}/${d1}, and it is.`
+  );
+}
+function genWordProblemsSet(n){
+  return Array.from({length:n}, ()=> genWordProblemsQuestion());
 }
 
 /* ================= LESSONS ================= */
@@ -499,6 +847,32 @@ const LESSONS = [
       {icon:'💡', term:'Shortcut: Cross-Cancel', def:'Before multiplying, see if a numerator and a denominator share a common factor &mdash; you can cancel them first to make the math easier!'},
     ],
     generate: genMultiplyFractionsSet
+  },
+  {
+    id:'dividefractions', emoji:'➗', title:'Dividing Fractions', subtitle:'Keep &ndash; Change &ndash; Flip',
+    flashcards:[
+      {icon:'➗', term:'What Division Really Asks', def:'Division asks &ldquo;how many groups of this size fit inside?&rdquo; So 3/4 &divide; 1/8 means: how many 1/8 pieces fit inside 3/4? (Answer: 6.)'},
+      {icon:'🔄', term:'Keep &ndash; Change &ndash; Flip', def:'<b>Keep</b> the first fraction. <b>Change</b> the &divide; into a &times;. <b>Flip</b> the second fraction upside down. Then multiply straight across!'},
+      {icon:'🙃', term:'Reciprocal', def:'The &ldquo;flipped&rdquo; fraction is called the reciprocal. The reciprocal of 2/3 is 3/2. The reciprocal of 5 is 1/5. Only ever flip the SECOND fraction.'},
+      {icon:'📈', term:'Why the Answer Gets BIGGER', def:'When you divide by a fraction smaller than 1, the answer is bigger than what you started with &mdash; because lots of tiny pieces fit inside. 3/4 &divide; 1/8 = 6. That is not a mistake!'},
+      {icon:'👥', term:'Dividing by a Whole Number', def:'Sharing makes pieces smaller. To divide by 4, multiply by 1/4. So 5/8 &divide; 4 = 5/8 &times; 1/4 = 5/32.'},
+      {icon:'🔢', term:'Whole Number First? Put a 1 Under It', def:'To solve 6 &divide; 2/3, write 6 as 6/1 first. Then Keep&ndash;Change&ndash;Flip: 6/1 &times; 3/2 = 18/2 = 9.'},
+      {icon:'🔄', term:'Mixed Number? Convert First!', def:'Change it to an improper fraction before you divide. 2 1/2 &rarr; (2&times;2)+1 = 5, so 2 1/2 = 5/2.'},
+      {icon:'✅', term:'Always Simplify', def:'Reduce your answer to lowest terms, and turn an improper fraction into a mixed number. 24/4 should be written as 6.'},
+    ],
+    generate: genDivideFractionsSet
+  },
+  {
+    id:'wordproblems', emoji:'📝', title:'Fraction Word Problems', subtitle:'Multi-Step &amp; UPAC',
+    flashcards:[
+      {icon:'🧭', term:'UPAC', def:'<b>U</b>nderstand &rarr; <b>P</b>lan &rarr; <b>A</b>ct &rarr; <b>C</b>heck. Your teacher grades all four boxes, not just the final number. Never skip Check!'},
+      {icon:'➗', term:'Clue Words for DIVIDE', def:'&ldquo;cut into pieces of...&rdquo;, &ldquo;poured into cups that hold...&rdquo;, &ldquo;packed into bags of...&rdquo;, &ldquo;how many ___ fit in...&rdquo;, &ldquo;split into ___ equal parts&rdquo;.'},
+      {icon:'✖️', term:'The Word &ldquo;OF&rdquo; Means MULTIPLY', def:'&ldquo;You make 1/2 <b>of</b> the recipe&rdquo; means MULTIPLY by 1/2, not divide! This is the trickiest trap on the test. Half of a recipe needs LESS, so the answer must be smaller.'},
+      {icon:'⚠️', term:'Watch for the SECOND Step', def:'If the question says <i>left</i>, <i>remain</i>, or <i>altogether</i>, dividing is only step 1. You still have to subtract or add. Forgetting step 2 is the most common way to lose marks.'},
+      {icon:'🤔', term:'Bigger or Smaller?', def:'Before you compute, guess: dividing by a small fraction gives a BIGGER answer. Taking a fraction OF something gives a SMALLER answer. If your answer goes the wrong way, you picked the wrong operation.'},
+      {icon:'✅', term:'How to Write the Check', def:'Do not just write &ldquo;yes.&rdquo; Explain it: &ldquo;3/4 = 6/8, so there are 6 eighths. Using 2 leaves 4.&rdquo; That is what earns the mark.'},
+    ],
+    generate: genWordProblemsSet
   },
 ];
 
@@ -575,9 +949,11 @@ const homeScreen = document.getElementById('screen-home');
 const cardsScreen = document.getElementById('screen-cards');
 const quizScreen = document.getElementById('screen-quiz');
 const resultsScreen = document.getElementById('screen-results');
+const wtScreen = document.getElementById('screen-walkthrough');
+const printScreen = document.getElementById('screen-print');
 
 function showScreen(el){
-  [homeScreen, cardsScreen, quizScreen, resultsScreen].forEach(s=>s.classList.add('hidden'));
+  [homeScreen, cardsScreen, quizScreen, resultsScreen, wtScreen, printScreen].forEach(s=>s.classList.add('hidden'));
   el.classList.remove('hidden');
   window.scrollTo(0,0);
 }
@@ -610,6 +986,37 @@ function renderHome(){
     <div class="go-btn">${finalBest>0?'Retry':'Start'}</div>
   `;
   grid.appendChild(finalCard);
+
+  const wtDone = (progress.wtDone || []).length;
+  const wtCard = document.createElement('button');
+  wtCard.className = 'lesson-card walk-card';
+  wtCard.onclick = ()=>startWalkthrough();
+  wtCard.innerHTML = `
+    <div class="lesson-emoji">🧭</div>
+    <div class="lesson-info">
+      <span class="walk-badge">Word Problems</span>
+      <h3>UPAC Walkthrough</h3>
+      <p>${wtDone >= WALKTHROUGH.length ? 'All ' + WALKTHROUGH.length + ' problems solved — go again!' : wtDone + ' of ' + WALKTHROUGH.length + ' problems solved'}</p>
+    </div>
+    <div class="go-btn">${wtDone>0?'Continue':'Start'}</div>
+  `;
+  grid.appendChild(wtCard);
+
+  const printCard = document.createElement('button');
+  printCard.className = 'lesson-card print-card';
+  printCard.onclick = ()=>openWorksheet();
+  printCard.innerHTML = `
+    <div class="lesson-emoji">🖨️</div>
+    <div class="lesson-info">
+      <span class="print-badge">On Paper</span>
+      <h3>Print an Exam</h3>
+      <p>24-mark exam with UPAC boxes and an answer key &mdash; new questions every time</p>
+    </div>
+    <div class="go-btn">Print</div>
+  `;
+  grid.appendChild(printCard);
+
+
 
   LESSONS.forEach((lesson, i)=>{
     const total = LESSON_QUIZ_LEN;
@@ -760,6 +1167,828 @@ function retryLesson(){
   if(currentQuizMeta.id === 'final'){ startFinalExam(); }
   else { startQuiz(); }
 }
+
+/* ================= UPAC WALKTHROUGH ================= */
+/* Answers are stored already reduced. `work` is the Act box, shown at the end. */
+const WALKTHROUGH = [
+  {
+    id:'wt1',
+    text:'A baker has <b>3/4 kilogram</b> of dough. She divides the dough into portions of <b>1/8 kilogram</b> each. She uses <b>2</b> of the portions to make bread rolls. How many portions of dough remain?',
+    givens:[
+      {t:'There is 3/4 kilogram of dough', is:true},
+      {t:'Each portion is 1/8 kilogram', is:true},
+      {t:'She uses 2 portions', is:true},
+      {t:'The dough weighs 8 kilograms', is:false},
+      {t:'She bakes the rolls for 30 minutes', is:false},
+    ],
+    asked:[
+      {t:'How many portions remain', c:true},
+      {t:'How much dough she started with', c:false},
+      {t:'How heavy one portion is', c:false},
+    ],
+    plan:[
+      {t:'Divide 3/4 by 1/8, then subtract 2', c:true},
+      {t:'Multiply 3/4 by 1/8, then subtract 2', c:false},
+      {t:'Subtract 2 from 3/4, then divide by 1/8', c:false},
+      {t:'Divide 3/4 by 1/8, then add 2', c:false},
+    ],
+    answer:{num:4, den:1}, unit:'portions',
+    work:'3/4 &divide; 1/8 = 3/4 &times; 8/1 = 24/4 = <b>6 portions</b>. Then 6 &minus; 2 = <b>4</b>.',
+    check:[
+      {t:'3/4 is the same as 6/8, so there are 6 eighths. Using 2 leaves 4.', c:true},
+      {t:'4 is smaller than 6, so the answer must be wrong.', c:false},
+      {t:'The answer should be a fraction, because we divided fractions.', c:false},
+    ]
+  },
+  {
+    id:'wt2',
+    text:'A container holds <b>5/6 liter</b> of juice. The juice is poured into cups that hold <b>1/6 liter</b> each. After filling the cups, <b>2</b> cups are given to the teachers. How many cups are left?',
+    givens:[
+      {t:'There is 5/6 liter of juice', is:true},
+      {t:'Each cup holds 1/6 liter', is:true},
+      {t:'2 cups are given away', is:true},
+      {t:'There are 6 teachers', is:false},
+      {t:'Each cup costs 5 pesos', is:false},
+    ],
+    asked:[
+      {t:'How many cups are left', c:true},
+      {t:'How many liters are left', c:false},
+      {t:'How many cups were given to the teachers', c:false},
+    ],
+    plan:[
+      {t:'Divide 5/6 by 1/6, then subtract 2', c:true},
+      {t:'Divide 5/6 by 1/6, then add 2', c:false},
+      {t:'Multiply 5/6 by 1/6, then subtract 2', c:false},
+      {t:'Subtract 1/6 from 5/6 two times', c:false},
+    ],
+    answer:{num:3, den:1}, unit:'cups',
+    work:'5/6 &divide; 1/6 = 5/6 &times; 6/1 = 30/6 = <b>5 cups</b>. Then 5 &minus; 2 = <b>3</b>.',
+    check:[
+      {t:'5 cups of 1/6 liter is 5/6 liter, which matches the container. Giving away 2 leaves 3.', c:true},
+      {t:'5/6 is less than 1, so the answer must be less than 1.', c:false},
+      {t:'There were 6 cups because the denominator is 6.', c:false},
+    ]
+  },
+  {
+    id:'wt3',
+    text:'A science class has <b>5/6 liter</b> of liquid. The teacher pours the liquid equally into containers that hold <b>1/12 liter</b> each. She then prepares <b>2</b> additional containers using another liquid. How many containers does she prepare altogether?',
+    givens:[
+      {t:'There is 5/6 liter of liquid', is:true},
+      {t:'Each container holds 1/12 liter', is:true},
+      {t:'She prepares 2 additional containers', is:true},
+      {t:'There are 12 students in the class', is:false},
+      {t:'The second liquid is also 5/6 liter', is:false},
+    ],
+    asked:[
+      {t:'How many containers she prepares altogether', c:true},
+      {t:'How many containers she filled with the first liquid', c:false},
+      {t:'How much liquid is in each container', c:false},
+    ],
+    plan:[
+      {t:'Divide 5/6 by 1/12, then add 2', c:true},
+      {t:'Divide 5/6 by 1/12, then subtract 2', c:false},
+      {t:'Multiply 5/6 by 1/12, then add 2', c:false},
+      {t:'Add 2 to 5/6, then divide by 1/12', c:false},
+    ],
+    answer:{num:12, den:1}, unit:'containers',
+    work:'5/6 &divide; 1/12 = 5/6 &times; 12/1 = 60/6 = <b>10 containers</b>. Then 10 + 2 = <b>12</b>.',
+    check:[
+      {t:'5/6 is the same as 10/12, so 10 containers can be filled. Two more makes 12.', c:true},
+      {t:'We added 2 because there are 2 liquids.', c:false},
+      {t:'The answer is 12 because the denominator is 12.', c:false},
+    ]
+  },
+  {
+    id:'wt4',
+    text:'A roll of wire is <b>7/8 meter</b> long. It is cut into pieces that are <b>1/8 meter</b> each. The craft group uses <b>3</b> pieces for a project. How many pieces are left?',
+    givens:[
+      {t:'The wire is 7/8 meter long', is:true},
+      {t:'Each piece is 1/8 meter', is:true},
+      {t:'3 pieces are used', is:true},
+      {t:'The craft group has 8 members', is:false},
+      {t:'The project takes 3 hours', is:false},
+    ],
+    asked:[
+      {t:'How many pieces are left', c:true},
+      {t:'How many meters of wire are left', c:false},
+      {t:'How many pieces the wire was cut into', c:false},
+    ],
+    plan:[
+      {t:'Divide 7/8 by 1/8, then subtract 3', c:true},
+      {t:'Subtract 3/8 from 7/8', c:false},
+      {t:'Multiply 7/8 by 1/8, then subtract 3', c:false},
+      {t:'Divide 7/8 by 3, then subtract 1/8', c:false},
+    ],
+    answer:{num:4, den:1}, unit:'pieces',
+    work:'7/8 &divide; 1/8 = 7/8 &times; 8/1 = 56/8 = <b>7 pieces</b>. Then 7 &minus; 3 = <b>4</b>.',
+    check:[
+      {t:'There are 7 eighths in 7/8, and 7 &minus; 3 = 4. Those 4 pieces are 4/8 = 1/2 meter of wire, which is reasonable.', c:true},
+      {t:'4 pieces is 4 meters of wire.', c:false},
+      {t:'Dividing made the number bigger, so something went wrong.', c:false},
+    ]
+  },
+  {
+    id:'wt5',
+    text:'A cake recipe needs <b>2/3 cup</b> of sugar for one full batch. You only want to make <b>1/2</b> of the recipe. How much sugar do you need?',
+    givens:[
+      {t:'One full batch needs 2/3 cup of sugar', is:true},
+      {t:'You are making 1/2 of the recipe', is:true},
+      {t:'You are making 2 cakes', is:false},
+      {t:'The cake bakes at 1/2 heat', is:false},
+    ],
+    asked:[
+      {t:'How much sugar is needed for half a batch', c:true},
+      {t:'How many batches you can make with 2/3 cup', c:false},
+      {t:'How much sugar is needed for 2 batches', c:false},
+    ],
+    plan:[
+      {t:'Multiply 2/3 by 1/2, because "of" means multiply', c:true},
+      {t:'Divide 2/3 by 1/2, because the recipe is being split', c:false},
+      {t:'Divide 1/2 by 2/3', c:false},
+      {t:'Subtract 1/2 from 2/3', c:false},
+    ],
+    answer:{num:1, den:3}, unit:'cup of sugar',
+    work:'2/3 &times; 1/2 = 2/6 = <b>1/3 cup</b>.',
+    check:[
+      {t:'Half a batch needs less sugar than a full batch, and 1/3 is less than 2/3. It works.', c:true},
+      {t:'The answer should be bigger than 2/3 because we used a fraction.', c:false},
+      {t:'1 1/3 cups is correct because 2/3 &divide; 1/2 = 4/3.', c:false},
+    ]
+  },
+  {
+    id:'wt6',
+    text:'A smoothie recipe uses <b>3/4 liter</b> of milk for one full batch. You are making <b>1/3</b> of the recipe. How much milk will you use?',
+    givens:[
+      {t:'One full batch uses 3/4 liter of milk', is:true},
+      {t:'You are making 1/3 of the recipe', is:true},
+      {t:'You are making 3 smoothies', is:false},
+      {t:'The blender holds 3/4 liter', is:false},
+    ],
+    asked:[
+      {t:'How much milk is used for 1/3 of the recipe', c:true},
+      {t:'How many thirds are in 3/4 liter', c:false},
+      {t:'How much milk is left over', c:false},
+    ],
+    plan:[
+      {t:'Multiply 3/4 by 1/3, because "of" means multiply', c:true},
+      {t:'Divide 3/4 by 1/3', c:false},
+      {t:'Divide 3/4 by 3, then add 1/3', c:false},
+      {t:'Subtract 1/3 from 3/4', c:false},
+    ],
+    answer:{num:1, den:4}, unit:'liter of milk',
+    work:'3/4 &times; 1/3 = 3/12 = <b>1/4 liter</b>.',
+    check:[
+      {t:'One third of a batch needs less milk, and 1/4 is less than 3/4. Also 1/4 &times; 3 = 3/4, which brings us back to one full batch.', c:true},
+      {t:'2 1/4 liters is right, because 3/4 &divide; 1/3 = 9/4.', c:false},
+      {t:'The answer must be more than 3/4 because we divided.', c:false},
+    ]
+  },
+  {
+    id:'wt7',
+    text:'A cookie recipe requires <b>5/8 cup</b> of flour. If you divide the recipe into <b>2</b> equal parts, how much flour is in each part?',
+    givens:[
+      {t:'The whole recipe uses 5/8 cup of flour', is:true},
+      {t:'The recipe is split into 2 equal parts', is:true},
+      {t:'Each cookie needs 5/8 cup', is:false},
+      {t:'You bake 8 cookies', is:false},
+    ],
+    asked:[
+      {t:'How much flour is in each equal part', c:true},
+      {t:'How many parts you can make from 5/8 cup', c:false},
+      {t:'How much flour is used altogether', c:false},
+    ],
+    plan:[
+      {t:'Divide 5/8 by 2, which is the same as multiplying by 1/2', c:true},
+      {t:'Divide 5/8 by 1/2, which is the same as multiplying by 2', c:false},
+      {t:'Multiply 5/8 by 2', c:false},
+      {t:'Subtract 2 from 5/8', c:false},
+    ],
+    answer:{num:5, den:16}, unit:'cup of flour',
+    work:'5/8 &divide; 2 = 5/8 &times; 1/2 = <b>5/16 cup</b>.',
+    check:[
+      {t:'Each part must be smaller than 5/8, and 5/16 is. Two parts of 5/16 make 10/16 = 5/8, the whole recipe.', c:true},
+      {t:'1 1/4 cups is right, because 5/8 &divide; 2 makes the answer bigger.', c:false},
+      {t:'5/16 is bigger than 5/8 because 16 is bigger than 8.', c:false},
+    ]
+  },
+  {
+    id:'wt8',
+    text:'A ribbon is <b>9/10 meter</b> long. It is cut into strips of <b>1/10 meter</b> each. Four of the strips are used to wrap gifts. How many strips are left?',
+    givens:[
+      {t:'The ribbon is 9/10 meter long', is:true},
+      {t:'Each strip is 1/10 meter', is:true},
+      {t:'4 strips are used', is:true},
+      {t:'There are 10 gifts to wrap', is:false},
+      {t:'The ribbon costs 9 pesos', is:false},
+    ],
+    asked:[
+      {t:'How many strips are left', c:true},
+      {t:'How long each strip is', c:false},
+      {t:'How many meters of ribbon were used', c:false},
+    ],
+    plan:[
+      {t:'Divide 9/10 by 1/10, then subtract 4', c:true},
+      {t:'Divide 9/10 by 4, then subtract 1/10', c:false},
+      {t:'Multiply 9/10 by 1/10, then subtract 4', c:false},
+      {t:'Subtract 4/10 from 9/10', c:false},
+    ],
+    answer:{num:5, den:1}, unit:'strips',
+    work:'9/10 &divide; 1/10 = 9/10 &times; 10/1 = 90/10 = <b>9 strips</b>. Then 9 &minus; 4 = <b>5</b>.',
+    check:[
+      {t:'There are 9 tenths in 9/10, so there are 9 strips. Using 4 leaves 5.', c:true},
+      {t:'The answer is 5/10 meter of ribbon.', c:false},
+      {t:'9/10 is almost 1, so there can only be 1 strip.', c:false},
+    ]
+  },
+  {
+    id:'wt9',
+    text:'A can holds <b>2/3 liter</b> of paint. It is poured into small jars that hold <b>1/9 liter</b> each. Three more jars are then filled from a different can. How many jars are filled altogether?',
+    givens:[
+      {t:'The can holds 2/3 liter of paint', is:true},
+      {t:'Each jar holds 1/9 liter', is:true},
+      {t:'3 more jars are filled from another can', is:true},
+      {t:'There are 9 cans of paint', is:false},
+      {t:'The paint dries in 3 hours', is:false},
+    ],
+    asked:[
+      {t:'How many jars are filled altogether', c:true},
+      {t:'How many jars came from the first can', c:false},
+      {t:'How much paint is in each jar', c:false},
+    ],
+    plan:[
+      {t:'Divide 2/3 by 1/9, then add 3', c:true},
+      {t:'Divide 2/3 by 1/9, then subtract 3', c:false},
+      {t:'Multiply 2/3 by 1/9, then add 3', c:false},
+      {t:'Add 3 to 2/3, then divide by 1/9', c:false},
+    ],
+    answer:{num:9, den:1}, unit:'jars',
+    work:'2/3 &divide; 1/9 = 2/3 &times; 9/1 = 18/3 = <b>6 jars</b>. Then 6 + 3 = <b>9</b>.',
+    check:[
+      {t:'2/3 is the same as 6/9, so 6 jars can be filled. Three more makes 9.', c:true},
+      {t:'We added 3 because 1/3 of the paint was left over.', c:false},
+      {t:'6 jars is the final answer, because that is what the division gave us.', c:false},
+    ]
+  },
+  {
+    id:'wt10',
+    text:'There is <b>3/4 kilogram</b> of rice. It is packed into bags of <b>1/12 kilogram</b> each. Four of the bags are given to a neighbour. How many bags are left?',
+    givens:[
+      {t:'There is 3/4 kilogram of rice', is:true},
+      {t:'Each bag holds 1/12 kilogram', is:true},
+      {t:'4 bags are given away', is:true},
+      {t:'The neighbour has 4 children', is:false},
+      {t:'There are 12 bags to start with', is:false},
+    ],
+    asked:[
+      {t:'How many bags are left', c:true},
+      {t:'How many kilograms of rice are left', c:false},
+      {t:'How many bags were given away', c:false},
+    ],
+    plan:[
+      {t:'Divide 3/4 by 1/12, then subtract 4', c:true},
+      {t:'Divide 3/4 by 4, then subtract 1/12', c:false},
+      {t:'Multiply 3/4 by 1/12, then subtract 4', c:false},
+      {t:'Divide 3/4 by 1/12, then add 4', c:false},
+    ],
+    answer:{num:5, den:1}, unit:'bags',
+    work:'3/4 &divide; 1/12 = 3/4 &times; 12/1 = 36/4 = <b>9 bags</b>. Then 9 &minus; 4 = <b>5</b>.',
+    check:[
+      {t:'3/4 is the same as 9/12, so 9 bags can be packed. Giving away 4 leaves 5.', c:true},
+      {t:'There must be 12 bags because each bag is 1/12 kilogram.', c:false},
+      {t:'The answer is 5/12 kilogram of rice.', c:false},
+    ]
+  },
+  {
+    id:'wt11',
+    text:'A tank has <b>3/4 liter</b> of water. It is poured into bottles that hold <b>3/8 liter</b> each. Three more bottles are then filled from a second tank. How many bottles are filled altogether?',
+    givens:[
+      {t:'The tank has 3/4 liter of water', is:true},
+      {t:'Each bottle holds 3/8 liter', is:true},
+      {t:'3 more bottles are filled from a second tank', is:true},
+      {t:'The second tank also holds 3/4 liter', is:false},
+      {t:'There are 8 bottles in total', is:false},
+    ],
+    asked:[
+      {t:'How many bottles are filled altogether', c:true},
+      {t:'How much water each bottle holds', c:false},
+      {t:'How much water is left in the tank', c:false},
+    ],
+    plan:[
+      {t:'Divide 3/4 by 3/8, then add 3', c:true},
+      {t:'Multiply 3/4 by 3/8, then add 3', c:false},
+      {t:'Divide 3/8 by 3/4, then add 3', c:false},
+      {t:'Divide 3/4 by 3/8, then subtract 3', c:false},
+    ],
+    answer:{num:5, den:1}, unit:'bottles',
+    work:'3/4 &divide; 3/8 = 3/4 &times; 8/3 = 24/12 = <b>2 bottles</b>. Then 2 + 3 = <b>5</b>.',
+    check:[
+      {t:'Two bottles of 3/8 liter hold 6/8 = 3/4 liter, which is exactly what the tank had. Three more makes 5.', c:true},
+      {t:'The answer is 24/12 bottles.', c:false},
+      {t:'Dividing by 3/8 should give a smaller answer than 3/4.', c:false},
+    ]
+  },
+  {
+    id:'wt12',
+    text:'A piece of cloth is <b>4/5 meter</b> long. It is cut into pieces of <b>2/15 meter</b> each. Two of the pieces are used for a sample. How many pieces are left?',
+    givens:[
+      {t:'The cloth is 4/5 meter long', is:true},
+      {t:'Each piece is 2/15 meter', is:true},
+      {t:'2 pieces are used', is:true},
+      {t:'The cloth is 15 meters wide', is:false},
+      {t:'There are 5 samples to make', is:false},
+    ],
+    asked:[
+      {t:'How many pieces are left', c:true},
+      {t:'How many meters of cloth are left', c:false},
+      {t:'How long each piece is', c:false},
+    ],
+    plan:[
+      {t:'Divide 4/5 by 2/15, then subtract 2', c:true},
+      {t:'Multiply 4/5 by 2/15, then subtract 2', c:false},
+      {t:'Divide 4/5 by 2, then subtract 2/15', c:false},
+      {t:'Subtract 2/15 from 4/5 two times', c:false},
+    ],
+    answer:{num:4, den:1}, unit:'pieces',
+    work:'4/5 &divide; 2/15 = 4/5 &times; 15/2 = 60/10 = <b>6 pieces</b>. Then 6 &minus; 2 = <b>4</b>.',
+    check:[
+      {t:'Six pieces of 2/15 meter make 12/15 = 4/5 meter, the whole cloth. Using 2 leaves 4.', c:true},
+      {t:'6 pieces is the answer, because that is what dividing gave us.', c:false},
+      {t:'4/5 is less than 1, so fewer than 1 piece can be cut.', c:false},
+    ]
+  },
+  {
+    id:'wt13',
+    text:'A jar holds <b>2/3 kilogram</b> of honey. It is packed into small jars that hold <b>2/9 kilogram</b> each. Four more small jars are filled from a different batch. How many small jars are there altogether?',
+    givens:[
+      {t:'There is 2/3 kilogram of honey', is:true},
+      {t:'Each small jar holds 2/9 kilogram', is:true},
+      {t:'4 more small jars are filled from another batch', is:true},
+      {t:'There are 9 small jars available', is:false},
+      {t:'The honey costs 4 pesos per jar', is:false},
+    ],
+    asked:[
+      {t:'How many small jars there are altogether', c:true},
+      {t:'How many small jars came from the first batch', c:false},
+      {t:'How much honey is in each small jar', c:false},
+    ],
+    plan:[
+      {t:'Divide 2/3 by 2/9, then add 4', c:true},
+      {t:'Multiply 2/3 by 2/9, then add 4', c:false},
+      {t:'Divide 2/9 by 2/3, then add 4', c:false},
+      {t:'Divide 2/3 by 2/9, then subtract 4', c:false},
+    ],
+    answer:{num:7, den:1}, unit:'small jars',
+    work:'2/3 &divide; 2/9 = 2/3 &times; 9/2 = 18/6 = <b>3 jars</b>. Then 3 + 4 = <b>7</b>.',
+    check:[
+      {t:'Three jars of 2/9 kilogram hold 6/9 = 2/3 kilogram, which matches. Four more makes 7.', c:true},
+      {t:'The answer is 18/6 jars.', c:false},
+      {t:'We should have added 4 before dividing.', c:false},
+    ]
+  },
+  {
+    id:'wt14',
+    text:'A baker has <b>5/8 kilogram</b> of sugar. She shares it equally into <b>5</b> bags. How much sugar is in each bag?',
+    givens:[
+      {t:'There is 5/8 kilogram of sugar', is:true},
+      {t:'It is shared equally into 5 bags', is:true},
+      {t:'Each bag holds 5/8 kilogram', is:false},
+      {t:'She has 8 bags', is:false},
+    ],
+    asked:[
+      {t:'How much sugar is in each bag', c:true},
+      {t:'How many bags she can fill', c:false},
+      {t:'How much sugar she has altogether', c:false},
+    ],
+    plan:[
+      {t:'Divide 5/8 by 5, which is the same as multiplying by 1/5', c:true},
+      {t:'Divide 5/8 by 1/5, which is the same as multiplying by 5', c:false},
+      {t:'Multiply 5/8 by 5', c:false},
+      {t:'Subtract 5 from 5/8', c:false},
+    ],
+    answer:{num:1, den:8}, unit:'kilogram per bag',
+    work:'5/8 &divide; 5 = 5/8 &times; 1/5 = 5/40 = <b>1/8 kilogram</b>.',
+    check:[
+      {t:'Each bag must hold less than 5/8, and 1/8 is less. Five bags of 1/8 make 5/8, the amount she started with.', c:true},
+      {t:'3 1/8 kilograms is right, because 5/8 &times; 5 = 25/8.', c:false},
+      {t:'Sharing into 5 bags makes each bag bigger.', c:false},
+    ]
+  },
+];
+
+const WT_STAGES = [
+  {title:'Understand', prompt:'Tap <b>every</b> fact the problem gives you.'},
+  {title:'Understand', prompt:'What is the problem asking you to find?'},
+  {title:'Plan',       prompt:'What is your plan? Watch the <b>order</b> of the steps.'},
+  {title:'Act',        prompt:'Solve it on paper, then type your answer.'},
+  {title:'Check',      prompt:'Which check actually proves your answer makes sense?'},
+];
+
+let wtOrder = [];
+let wtPos = 0;
+let wtStage = 0;
+let wtPicks = new Set();
+let wtStageDone = false;
+let wtRecord = {};
+let wtClean = true;
+
+/* Reads "4", "1/2" or "1 1/2". Returns the reduced value plus what was typed. */
+function parseAnswer(str){
+  const t = String(str == null ? '' : str).trim().replace(/\s+/g, ' ');
+  if(!t) return null;
+  let m, rawNum, rawDen;
+  if((m = t.match(/^(\d+) (\d+)\/(\d+)$/))){
+    rawDen = +m[3]; rawNum = (+m[1]) * rawDen + (+m[2]);
+  } else if((m = t.match(/^(\d+)\/(\d+)$/))){
+    rawNum = +m[1]; rawDen = +m[2];
+  } else if((m = t.match(/^(\d+)$/))){
+    rawNum = +m[1]; rawDen = 1;
+  } else {
+    return null;
+  }
+  if(rawDen === 0) return null;
+  const r = reduceFrac(rawNum, rawDen);
+  return {num:r.num, den:r.den, rawNum, rawDen};
+}
+
+function startWalkthrough(){
+  const done = progress.wtDone || [];
+  const fresh = WALKTHROUGH.filter(p => !done.includes(p.id));
+  wtOrder = shuffle((fresh.length ? fresh : WALKTHROUGH).slice());
+  wtPos = 0;
+  openWtProblem();
+}
+
+function wtCurrent(){ return wtOrder[wtPos]; }
+
+function openWtProblem(){
+  wtStage = 0;
+  wtPicks = new Set();
+  wtStageDone = false;
+  wtRecord = {};
+  wtClean = true;
+  renderWalkthrough();
+  showScreen(wtScreen);
+}
+
+function wtAdvance(){
+  if(wtStage >= WT_STAGES.length - 1){ wtShowSummary(); return; }
+  wtStage++;
+  wtStageDone = false;
+  wtPicks = new Set();
+  renderWalkthrough();
+}
+
+function wtRenderSteps(){
+  const activeGroup = wtStage <= 1 ? 0 : wtStage - 1;
+  document.getElementById('wt-steps').innerHTML = ['U','P','A','C'].map((letter, i)=>{
+    const cls = i === activeGroup ? 'active' : (i < activeGroup ? 'done' : '');
+    return `<div class="wt-step ${cls}">${letter}</div>`;
+  }).join('');
+}
+
+function renderWalkthrough(){
+  const p = wtCurrent();
+  const st = WT_STAGES[wtStage];
+  document.getElementById('wt-count').textContent = `Problem ${wtPos+1} of ${wtOrder.length}`;
+  document.getElementById('wt-problem').innerHTML = p.text;
+  wtRenderSteps();
+
+  const body = document.getElementById('wt-body');
+  body.innerHTML =
+    `<div class="wt-prompt">${st.title} &mdash; ${st.prompt}</div>` +
+    (wtStage === 3
+      ? `<input class="wt-input" id="wt-answer" type="text" inputmode="text" autocomplete="off" placeholder="type your answer">` +
+        `<div class="wt-hint">Write a whole number like <b>6</b>, a fraction like <b>1/2</b>, or a mixed number like <b>1 1/2</b>.</div>`
+      : `<div class="options" id="wt-options"></div>`) +
+    `<div id="wt-feedback"></div>` +
+    `<button class="primary-btn hidden" id="wt-action"></button>`;
+
+  const act = document.getElementById('wt-action');
+
+  if(wtStage === 0){
+    const opts = document.getElementById('wt-options');
+    p.givens.forEach((g, i)=>{
+      const b = document.createElement('button');
+      b.className = 'option';
+      b.innerHTML = g.t;
+      b.onclick = ()=>{
+        if(wtStageDone) return;
+        b.classList.toggle('picked');
+        if(wtPicks.has(i)) wtPicks.delete(i); else wtPicks.add(i);
+      };
+      opts.appendChild(b);
+    });
+    act.textContent = 'Check my picks';
+    act.classList.remove('hidden');
+    act.onclick = wtCheckGivens;
+    return;
+  }
+
+  if(wtStage === 3){
+    const inp = document.getElementById('wt-answer');
+    inp.onkeydown = (e)=>{ if(e.key === 'Enter') wtCheckAnswer(); };
+    act.textContent = 'Check my answer';
+    act.classList.remove('hidden');
+    act.onclick = wtCheckAnswer;
+    inp.focus();
+    return;
+  }
+
+  const list = wtStage === 1 ? p.asked : (wtStage === 2 ? p.plan : p.check);
+  const key  = wtStage === 1 ? 'asked'  : (wtStage === 2 ? 'plan'  : 'check');
+  const nextLabel = wtStage === 1 ? 'Next: make a plan &rarr;'
+                  : wtStage === 2 ? 'Next: solve it &rarr;'
+                  : 'See my full UPAC answer &rarr;';
+  wtChoiceStage(list, key, nextLabel);
+}
+
+function wtChoiceStage(list, recordKey, nextLabel){
+  const opts = document.getElementById('wt-options');
+  const btns = [];
+  shuffle(list.map((_, i)=>i)).forEach(i=>{
+    const item = list[i];
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.innerHTML = item.t;
+    b.dataset.right = item.c ? '1' : '0';
+    b.onclick = ()=>{
+      if(wtStageDone) return;
+      wtStageDone = true;
+      const ok = item.c === true;
+      if(!ok) wtClean = false;
+      btns.forEach(x=>{
+        x.disabled = true;
+        if(x.dataset.right === '1') x.classList.add('correct');
+      });
+      if(!ok) b.classList.add('incorrect');
+      const right = list.find(z=>z.c);
+      wtRecord[recordKey] = right.t;
+      document.getElementById('wt-feedback').innerHTML =
+        `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'Yes! 🎉':'Not quite.'}</strong>` +
+        (ok ? 'That is the one.' : `The right one is: <b>${right.t}</b>.`) + `</div>`;
+      const act = document.getElementById('wt-action');
+      act.innerHTML = nextLabel;
+      act.classList.remove('hidden');
+      act.onclick = wtAdvance;
+    };
+    btns.push(b);
+    opts.appendChild(b);
+  });
+}
+
+function wtCheckGivens(){
+  if(wtStageDone) return;
+  wtStageDone = true;
+  const p = wtCurrent();
+  const btns = document.querySelectorAll('#wt-options .option');
+  let ok = true;
+  p.givens.forEach((g, i)=>{
+    const b = btns[i];
+    const picked = wtPicks.has(i);
+    b.disabled = true;
+    b.classList.remove('picked');
+    if(g.is && picked) b.classList.add('correct');
+    else if(g.is && !picked){ b.classList.add('missed'); ok = false; }
+    else if(!g.is && picked){ b.classList.add('incorrect'); ok = false; }
+  });
+  if(!ok) wtClean = false;
+  wtRecord.given = p.givens.filter(g=>g.is).map(g=>g.t).join('; ');
+  document.getElementById('wt-feedback').innerHTML =
+    `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'All of them! 🎉':'Almost.'}</strong>` +
+    `The givens are: <b>${wtRecord.given}</b>.` +
+    (ok ? '' : ' Anything outlined in gold is a fact you missed; anything in red is not in the problem.') +
+    `</div>`;
+  const act = document.getElementById('wt-action');
+  act.innerHTML = 'Next: what is asked? &rarr;';
+  act.onclick = wtAdvance;
+}
+
+function wtCheckAnswer(){
+  if(wtStageDone) return;
+  const p = wtCurrent();
+  const fb = document.getElementById('wt-feedback');
+  const parsed = parseAnswer(document.getElementById('wt-answer').value);
+  if(parsed === null){
+    fb.innerHTML = `<div class="feedback bad"><strong>I could not read that.</strong>` +
+      `Write a whole number like <b>6</b>, a fraction like <b>1/2</b>, or a mixed number like <b>1 1/2</b>.</div>`;
+    return;
+  }
+  wtStageDone = true;
+  const want = p.answer;
+  const ok = parsed.num === want.num && parsed.den === want.den;
+  const wantStr = fracToString(want.num, want.den);
+  if(!ok) wtClean = false;
+  const input = document.getElementById('wt-answer');
+  input.disabled = true;
+  input.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
+  const notSimplified = ok && (parsed.rawNum !== parsed.num || parsed.rawDen !== parsed.den);
+  fb.innerHTML =
+    `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'Correct! 🎉':'Not quite.'}</strong>` +
+    `${p.work}<br>The answer is <b>${wantStr} ${p.unit}</b>.` +
+    (notSimplified ? `<br>Right value! Next time write it in simplest form: <b>${wantStr}</b>.` : '') +
+    `</div>`;
+  const act = document.getElementById('wt-action');
+  act.innerHTML = 'Next: check it &rarr;';
+  act.onclick = wtAdvance;
+}
+
+function wtShowSummary(){
+  const p = wtCurrent();
+  const done = progress.wtDone || [];
+  if(!done.includes(p.id)){ done.push(p.id); progress.wtDone = done; saveProgress(progress); }
+  document.getElementById('wt-steps').innerHTML =
+    ['U','P','A','C'].map(l=>`<div class="wt-step done">${l}</div>`).join('');
+  const more = wtPos < wtOrder.length - 1;
+  document.getElementById('wt-body').innerHTML = `
+    <div class="wt-prompt">${wtClean ? 'Perfect &mdash; every step on the first try! 🎉' : 'Finished! Here is the full UPAC answer.'}</div>
+    <div class="upac-grid">
+      <div class="upac-box"><h4><span class="upac-badge">U</span>Understand</h4>
+        <p><b>Given:</b> ${wtRecord.given}<br><b>Asked:</b> ${wtRecord.asked}</p></div>
+      <div class="upac-box"><h4><span class="upac-badge">P</span>Plan</h4>
+        <p>${wtRecord.plan}</p></div>
+      <div class="upac-box"><h4><span class="upac-badge">A</span>Act</h4>
+        <p>${p.work}<br><b>Answer: ${fracToString(p.answer.num, p.answer.den)} ${p.unit}</b></p></div>
+      <div class="upac-box"><h4><span class="upac-badge">C</span>Check</h4>
+        <p>${wtRecord.check}</p></div>
+    </div>
+    <p class="wt-hint">This is exactly what your teacher wants to see written on paper.</p>
+    <button class="primary-btn" id="wt-continue">${more ? 'Next Problem &rarr;' : 'Back to the Lesson Map'}</button>
+    ${more ? '<button class="secondary-btn" style="width:100%; margin-top:10px" id="wt-stop">Stop for now</button>' : ''}
+  `;
+  document.getElementById('wt-continue').onclick = more ? wtNextProblem : goHome;
+  const stop = document.getElementById('wt-stop');
+  if(stop) stop.onclick = goHome;
+  window.scrollTo(0,0);
+}
+
+function wtNextProblem(){ wtPos++; openWtProblem(); }
+
+/* ================= PRINTABLE WORKSHEET ================= */
+/* Every builder returns the blank prompt AND its solution, so the same
+   randomised item can be printed empty in the exam and solved in the key. */
+
+function wsDrill(){
+  const type = pick(['fracfrac','fracfrac','fracwhole','wholefrac','mixed','groups']);
+  if(type === 'fracfrac'){
+    const d1 = randInt(2,10), n1 = randInt(1, d1-1), d2 = randInt(2,10), n2 = randInt(1, d2-1);
+    return {
+      prompt:`${n1}/${d1} &divide; ${n2}/${d2} =`,
+      answer:fracStr(n1*d2, d1*n2),
+      work:`${n1}/${d1} &times; ${d2}/${n2} = ${n1*d2}/${d1*n2}`
+    };
+  }
+  if(type === 'fracwhole'){
+    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,6);
+    return { prompt:`${a}/${b} &divide; ${w} =`, answer:fracStr(a, b*w), work:`${a}/${b} &times; 1/${w} = ${a}/${b*w}` };
+  }
+  if(type === 'wholefrac'){
+    const b = randInt(2,9), a = randInt(1, b-1), w = randInt(2,8);
+    return { prompt:`${w} &divide; ${a}/${b} =`, answer:fracStr(w*b, a), work:`${w}/1 &times; ${b}/${a} = ${w*b}/${a}` };
+  }
+  if(type === 'mixed'){
+    const d1 = randInt(2,8), n1 = randInt(1, d1-1), W = randInt(1,4), imp = W*d1 + n1;
+    const d2 = randInt(2,9), n2 = randInt(1, d2-1);
+    return {
+      prompt:`${W} ${n1}/${d1} &divide; ${n2}/${d2} =`,
+      answer:fracStr(imp*d2, d1*n2),
+      work:`${W} ${n1}/${d1} = ${imp}/${d1}, then ${imp}/${d1} &times; ${d2}/${n2} = ${imp*d2}/${d1*n2}`
+    };
+  }
+  const j = randInt(2,6), t = randInt(2,4), m = randInt(1, j-1), k = j*t;
+  return {
+    prompt:`How many 1/${k} are there in ${m}/${j}?`,
+    answer:String(m*t),
+    work:`${m}/${j} &times; ${k}/1 = ${m*k}/${j} = ${m*t}`
+  };
+}
+
+function wsStoryItem(forcedKind){
+  const kind = forcedKind || pick(['multistep','multistep','recipe','equalparts']);
+
+  if(kind === 'multistep'){
+    const s = buildDivisionStory();
+    const addMode = Math.random() < 0.5;
+    const k = addMode ? randInt(2,5) : randInt(1, s.count-1);
+    const final = addMode ? s.count + k : s.count - k;
+    const tail = addMode
+      ? `Then ${k} more ${s.ctx.unit} are prepared from another batch. How many ${s.ctx.unit} are there altogether?`
+      : `Then ${k} of the ${s.ctx.unit} are used. How many ${s.ctx.unit} are left?`;
+    return {
+      text: `${s.ctx.story(s.totalStr, s.perStr)} ${tail}`,
+      op: `Divide, then ${addMode ? 'add' : 'subtract'}`,
+      given: `${s.totalStr} in total; ${s.perStr} each; ${k} ${addMode ? 'extra' : 'used'}`,
+      asked: `How many ${s.ctx.unit} ${addMode ? 'altogether' : 'are left'}`,
+      plan: `Divide ${s.totalStr} by ${s.perStr}, then ${addMode ? 'add' : 'subtract'} ${k}`,
+      work: `${s.totalStr} &divide; ${s.perStr} = ${s.totalStr} &times; ${s.perDen}/${s.perNum} = ${s.count}, then ${s.count} ${addMode?'+':'&minus;'} ${k} = ${final}`,
+      answer: `${final} ${s.ctx.unit}`,
+      check: `${s.count} lots of ${s.perStr} make ${s.totalStr}, so the division is right. ${addMode ? 'Adding' : 'Subtracting'} ${k} gives ${final}.`
+    };
+  }
+
+  if(kind === 'recipe'){
+    const d1 = randInt(2,5), n1 = randInt(1, d1-1), d2 = pick([2,3,4]);
+    const treat = pick(['cake','muffin','pancake','bread']);
+    const stuff = pick(['sugar','flour','butter','milk']);
+    const ans = fracStr(n1, d1*d2);
+    return {
+      text: `A ${treat} recipe needs ${n1}/${d1} cup of ${stuff} for one full batch. You only want to make 1/${d2} of the recipe. How much ${stuff} do you need?`,
+      op: 'Multiply',
+      given: `One batch needs ${n1}/${d1} cup; you are making 1/${d2} of the recipe`,
+      asked: `How much ${stuff} is needed`,
+      plan: `Multiply ${n1}/${d1} by 1/${d2}, because &ldquo;of&rdquo; means multiply`,
+      work: `${n1}/${d1} &times; 1/${d2} = ${n1}/${d1*d2} = ${ans}`,
+      answer: `${ans} cup`,
+      check: `Less than a full batch needs less ${stuff}, and ${ans} is smaller than ${n1}/${d1}.`
+    };
+  }
+
+  const d1 = randInt(2,8), n1 = randInt(1, d1-1), w = randInt(2,5);
+  const thing = pick(['cookie','brownie','pizza','cupcake']);
+  const ans = fracStr(n1, d1*w);
+  return {
+    text: `A ${thing} recipe uses ${n1}/${d1} cup of flour. If you split the recipe into ${w} equal parts, how much flour is in each part?`,
+    op: 'Divide by a whole number',
+    given: `The recipe uses ${n1}/${d1} cup of flour; it is split into ${w} equal parts`,
+    asked: 'How much flour is in each part',
+    plan: `Divide ${n1}/${d1} by ${w}, which is the same as multiplying by 1/${w}`,
+    work: `${n1}/${d1} &times; 1/${w} = ${n1}/${d1*w} = ${ans}`,
+    answer: `${ans} cup`,
+    check: `Each part must be smaller than ${n1}/${d1}, and ${w} parts of ${ans} make ${n1}/${d1} again.`
+  };
+}
+
+function buildWorksheet(){
+  const drills = Array.from({length:8}, ()=> wsDrill());
+  /* Part B deliberately mixes divide / multiply / divide-by-whole so she has to
+     tell them apart, which is the mistake the class deck never rehearses. */
+  const ops  = shuffle(['multistep','multistep','recipe','equalparts']).map(k=> wsStoryItem(k));
+  const upac = shuffle(['multistep','multistep', pick(['recipe','equalparts'])]).map(k=> wsStoryItem(k));
+
+  return `
+  <div class="ws">
+    <h1>Dividing Fractions &mdash; Practice Exam</h1>
+    <p class="ws-sub">Problem Solving Involving Division of Fractions &middot; Week 7</p>
+    <div class="ws-meta">
+      <span>Name: <span class="ws-line"></span></span>
+      <span>Date: <span class="ws-line" style="min-width:90px"></span></span>
+      <span>Score: ______ / 24</span>
+    </div>
+
+    <div class="ws-part">
+      <h2>Part A &mdash; Divide. Simplify every answer. (8 marks)</h2>
+      <p class="ws-note">Show your Keep &ndash; Change &ndash; Flip working inside the box.</p>
+      <ol class="ws-drills">${drills.map(d=>`<li><span class="ws-q">${d.prompt}</span></li>`).join('')}</ol>
+    </div>
+
+    <div class="ws-part">
+      <h2>Part B &mdash; Which operation? (4 marks)</h2>
+      <p class="ws-note"><b>Do not solve these.</b> Write the operation you would use first, and why.</p>
+      ${ops.map((o, i)=>`
+        <div class="ws-word">
+          <b>${i+1}.</b> ${o.text}
+          <div class="ws-answerline">Operation: <span class="ws-line"></span>
+            &nbsp; Why? <span class="ws-line" style="min-width:220px"></span></div>
+        </div>`).join('')}
+    </div>
+
+    <div class="ws-part">
+      <h2>Part C &mdash; Solve using UPAC. (12 marks)</h2>
+      <p class="ws-note">Fill in all four boxes. The Check box must explain <i>why</i> the answer is reasonable &mdash; not just &ldquo;yes&rdquo;.</p>
+      ${upac.map((u, i)=>`
+        <div class="ws-word">
+          <b>${i+1}.</b> ${u.text}
+          <div class="upac-print">
+            <div><b>U &mdash; Understand</b><br>Given:<br><br>Asked:</div>
+            <div><b>P &mdash; Plan</b><br>Which operations, in what order?</div>
+            <div><b>A &mdash; Act</b><br>Show your solution:</div>
+            <div><b>C &mdash; Check</b><br>Is it reasonable? Explain why:</div>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <div class="ws-key">
+      <h1>Answer Key</h1>
+      <p class="ws-sub">This is the last page &mdash; keep it, or fold it under before handing the exam over.</p>
+      <h2>Part A</h2>
+      <ol class="ws-keylist">${drills.map(d=>`<li><b>${d.answer}</b> <span class="ws-dim">(${d.work})</span></li>`).join('')}</ol>
+      <h2>Part B</h2>
+      <ol class="ws-keylist">${ops.map(o=>`<li><b>${o.op}</b> <span class="ws-dim">&mdash; ${o.plan}</span></li>`).join('')}</ol>
+      <h2>Part C</h2>
+      <ol class="ws-keylist">${upac.map(u=>`
+        <li><b>${u.answer}</b>
+          <div class="ws-dim"><b>U:</b> ${u.given} &middot; <b>Asked:</b> ${u.asked}<br>
+            <b>P:</b> ${u.plan}<br><b>A:</b> ${u.work}<br><b>C:</b> ${u.check}</div>
+        </li>`).join('')}</ol>
+    </div>
+  </div>`;
+}
+
+function openWorksheet(){
+  document.getElementById('print-root').innerHTML = buildWorksheet();
+  showScreen(printScreen);
+  window.setTimeout(()=>{ try{ window.print(); }catch(e){} }, 250);
+}
+function newWorksheet(){ openWorksheet(); }
 
 renderHome();
 </script>
