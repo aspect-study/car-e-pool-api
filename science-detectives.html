@@ -1,0 +1,779 @@
+<title>Science Detectives</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Rubik:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#F1F7F1;
+    --bg-alt:#E5F0E6;
+    --card:#FFFFFF;
+    --ink:#20291D;
+    --ink-soft:#5E6B58;
+    --accent:#2FA66A;
+    --accent-ink:#155C39;
+    --accent-soft:#DCF3E1;
+    --indigo:#3E86C6;
+    --indigo-deep:#20517D;
+    --indigo-soft:#DCEBF7;
+    --amber:#F2A93B;
+    --amber-deep:#8A5E14;
+    --amber-soft:#FBE9C9;
+    --good:#3F9D5C;
+    --good-soft:#E1F0E4;
+    --bad:#D1554A;
+    --bad-soft:#F7DEDB;
+    --border:rgba(32,41,29,0.12);
+    --shadow:rgba(32,41,29,0.18);
+    --flask-liquid:#3FBFA0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111812;
+      --bg-alt:#182019;
+      --card:#161D17;
+      --ink:#E9F2E7;
+      --ink-soft:#9DB29A;
+      --accent:#59D08A;
+      --accent-ink:#B9F1CE;
+      --accent-soft:#17301F;
+      --indigo:#7FB8ED;
+      --indigo-deep:#C7E2FA;
+      --indigo-soft:#1B2C3D;
+      --amber:#F5C06E;
+      --amber-deep:#FCE3B4;
+      --amber-soft:#3A2E15;
+      --good:#7BC98F;
+      --good-soft:#1F3324;
+      --bad:#E2897E;
+      --bad-soft:#3A2320;
+      --border:rgba(233,242,231,0.14);
+      --shadow:rgba(0,0,0,0.5);
+      --flask-liquid:#38C7A4;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111812;
+    --bg-alt:#182019;
+    --card:#161D17;
+    --ink:#E9F2E7;
+    --ink-soft:#9DB29A;
+    --accent:#59D08A;
+    --accent-ink:#B9F1CE;
+    --accent-soft:#17301F;
+    --indigo:#7FB8ED;
+    --indigo-deep:#C7E2FA;
+    --indigo-soft:#1B2C3D;
+    --amber:#F5C06E;
+    --amber-deep:#FCE3B4;
+    --amber-soft:#3A2E15;
+    --good:#7BC98F;
+    --good-soft:#1F3324;
+    --bad:#E2897E;
+    --bad-soft:#3A2320;
+    --border:rgba(233,242,231,0.14);
+    --shadow:rgba(0,0,0,0.5);
+    --flask-liquid:#38C7A4;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 10% 6%, rgba(47,166,106,0.08), transparent 42%),
+      radial-gradient(circle at 92% 90%, rgba(62,134,198,0.08), transparent 42%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Rubik', system-ui, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:clamp(16px,4vw,40px) 16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) body{
+      background:
+        radial-gradient(circle at 10% 6%, rgba(89,208,138,0.1), transparent 42%),
+        radial-gradient(circle at 92% 90%, rgba(127,184,237,0.1), transparent 42%),
+        var(--bg);
+    }
+  }
+  :root[data-theme="dark"] body{
+    background:
+      radial-gradient(circle at 10% 6%, rgba(89,208,138,0.1), transparent 42%),
+      radial-gradient(circle at 92% 90%, rgba(127,184,237,0.1), transparent 42%),
+      var(--bg);
+  }
+
+  .app{ width:100%; max-width:560px; }
+
+  .eyebrow{
+    font-family:'Rubik',sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--indigo-deep);
+    text-align:center;
+    margin:0 0 6px;
+  }
+
+  h1,h2,h3{font-family:'Righteous', system-ui, sans-serif; text-wrap:balance; margin:0; font-weight:400;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    box-shadow:0 18px 40px -18px var(--shadow), 0 2px 0 var(--border);
+    padding:clamp(22px,5vw,36px);
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block; animation:rise 0.4s ease both;}
+  @media (prefers-reduced-motion: reduce){ .screen.active{animation:none;} }
+  @keyframes rise{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+
+  /* ---- Home ---- */
+  .hero{text-align:center; margin-bottom:20px;}
+  .hero-title{font-size:clamp(2rem,7vw,2.6rem); color:var(--accent-ink); line-height:1.05;}
+  .hero-sub{font-size:1.02rem; color:var(--ink-soft); font-weight:500; margin-top:8px;}
+  .hero-scene{width:min(280px,74%); margin:16px auto 4px;}
+
+  .back-link{
+    background:none; border:none; cursor:pointer; padding:0 0 14px;
+    font-family:'Rubik',sans-serif; font-weight:700; font-size:0.85rem;
+    color:var(--indigo-deep); display:inline-flex; align-items:center; gap:6px;
+  }
+  .back-link:focus-visible{outline:2px solid var(--indigo-deep); outline-offset:3px;}
+  .back-link svg{width:16px; height:16px;}
+
+  .lesson-card{padding:16px 18px; margin-bottom:12px;}
+  .lesson-top{display:flex; align-items:center; gap:14px;}
+  .lesson-icon{width:52px; height:52px; flex:none;}
+  .lesson-info{flex:1; min-width:0;}
+  .lesson-tag-label{font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--indigo-deep);}
+  .lesson-title{font-family:'Righteous',sans-serif; font-size:1.05rem; margin-top:3px; line-height:1.3;}
+  .mini-stars{display:flex; gap:2px; margin-top:6px;}
+  .mini-stars svg{width:15px; height:15px;}
+  .lesson-card .btn{margin-top:14px; padding:12px 16px; font-size:0.95rem; box-shadow:0 4px 0 var(--accent-ink), 0 7px 12px -6px var(--shadow);}
+  .final-card{border:2px solid var(--amber); background:linear-gradient(135deg, var(--amber-soft), var(--card));}
+  .final-badge{color:var(--amber-deep);}
+
+  /* ---- Buttons ---- */
+  .btn{
+    font-family:'Righteous', sans-serif;
+    font-size:1.05rem;
+    border:none;
+    border-radius:14px;
+    padding:16px 20px;
+    cursor:pointer;
+    color:#04261A;
+    background:var(--accent);
+    box-shadow:0 6px 0 var(--accent-ink), 0 10px 18px -8px var(--shadow);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+    width:100%;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 var(--accent-ink), 0 6px 12px -8px var(--shadow);}
+  .btn:focus-visible{outline:3px solid var(--indigo-deep); outline-offset:3px;}
+  .btn.secondary{
+    background:transparent;
+    color:var(--indigo-deep);
+    box-shadow:none;
+    border:2px solid var(--indigo);
+  }
+  .btn.secondary:active{transform:translateY(1px);}
+  .btn-row{display:flex; gap:12px; margin-top:18px;}
+  .btn-row .btn{width:auto; flex:1;}
+
+  /* ---- Flashcards ---- */
+  .flash-dots{display:flex; justify-content:center; gap:8px; margin-bottom:18px;}
+  .flash-dots span{width:8px; height:8px; border-radius:50%; background:var(--border);}
+  .flash-dots span.on{background:var(--indigo);}
+  .flash-icon{width:76px; height:76px; margin:0 auto 14px; display:block;}
+  .flash-lesson-label{text-align:center; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px;}
+  .flash-title{font-size:1.25rem; font-family:'Righteous',sans-serif; color:var(--indigo-deep); text-align:center;}
+  .flash-text{font-size:1.1rem; line-height:1.55; text-align:center; margin-top:12px; color:var(--ink);}
+
+  /* ---- Quiz header ---- */
+  .quiz-head{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
+  .quiz-flask-mini{width:56px; height:64px; flex:none;}
+  .quiz-progress{flex:1;}
+  .quiz-progress-label{font-size:0.82rem; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em;}
+  .track-bar{height:10px; border-radius:6px; background:var(--bg-alt); overflow:hidden; margin-top:6px; border:1px solid var(--border);}
+  .track-fill{height:100%; background:linear-gradient(90deg, var(--indigo), var(--accent)); border-radius:6px; transition:width 0.4s ease;}
+
+  .q-kicker{font-size:0.78rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--indigo-deep); margin-bottom:8px;}
+  .q-text{font-size:1.3rem; font-family:'Righteous',sans-serif; line-height:1.35; margin-bottom:18px;}
+
+  .opt{
+    display:flex; align-items:center; gap:12px;
+    width:100%; text-align:left;
+    background:var(--bg-alt);
+    border:2px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    font-family:'Rubik',sans-serif;
+    font-weight:500;
+    font-size:1.02rem;
+    color:var(--ink);
+    cursor:pointer;
+    margin-bottom:10px;
+    transition:border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+  }
+  .opt:hover{border-color:var(--accent);}
+  .opt:active{transform:scale(0.99);}
+  .opt:focus-visible{outline:3px solid var(--indigo-deep); outline-offset:2px;}
+  .opt .bullet{width:22px; height:22px; flex:none; border-radius:50%; border:2px solid var(--ink-soft); opacity:0.55;}
+  .opt.correct{background:var(--good-soft); border-color:var(--good); color:var(--ink);}
+  .opt.correct .bullet{border-color:var(--good); background:var(--good);}
+  .opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .opt.wrong .bullet{border-color:var(--bad); background:var(--bad);}
+  .opt[disabled]{cursor:default;}
+
+  .tf-row{display:flex; gap:14px;}
+  .tf-btn{
+    flex:1; padding:26px 10px; border-radius:14px; border:2px solid var(--border);
+    background:var(--bg-alt); font-family:'Righteous',sans-serif; font-size:1.1rem;
+    display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; color:var(--ink);
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .tf-btn svg{width:34px; height:34px;}
+  .tf-btn:hover{border-color:var(--accent);}
+  .tf-btn:active{transform:scale(0.98);}
+  .tf-btn:focus-visible{outline:3px solid var(--indigo-deep); outline-offset:2px;}
+  .tf-btn.correct{background:var(--good-soft); border-color:var(--good);}
+  .tf-btn.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .tf-btn[disabled]{cursor:default;}
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; border-radius:14px; font-weight:500; font-size:0.98rem;
+    display:none; align-items:flex-start; gap:10px; line-height:1.45;
+  }
+  .feedback.show{display:flex; animation:pop 0.3s ease both;}
+  @media (prefers-reduced-motion: reduce){ .feedback.show{animation:none;} }
+  @keyframes pop{ from{opacity:0; transform:scale(0.95);} to{opacity:1; transform:none;} }
+  .feedback.good{background:var(--good-soft); color:var(--ink);}
+  .feedback.bad{background:var(--bad-soft); color:var(--ink);}
+  .feedback svg{width:22px; height:22px; flex:none; margin-top:1px;}
+
+  .next-wrap{margin-top:18px; display:none;}
+  .next-wrap.show{display:block;}
+
+  /* ---- Results ---- */
+  #screen-results .card{text-align:center;}
+  .result-flask{width:min(180px,50%); margin:6px auto 8px;}
+  .stars{display:flex; justify-content:center; gap:6px; margin:10px 0 4px;}
+  .stars svg{width:38px; height:38px;}
+  .result-score{font-size:1.3rem; font-family:'Righteous',sans-serif; color:var(--accent-ink); margin-top:6px;}
+  .result-msg{font-size:1.05rem; color:var(--ink-soft); font-weight:500; margin-top:8px; line-height:1.5;}
+
+  /* ---- Flask SVG piece reveal ---- */
+  .piece{opacity:0; transform:scale(0.5); transform-box:fill-box; transform-origin:center; transition:opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1);}
+  .piece.revealed{opacity:1; transform:scale(1);}
+  @media (prefers-reduced-motion: reduce){ .piece{transition:opacity 0.2s ease;} .piece.revealed{transform:none;} }
+  .piece.base{opacity:1; transform:none; transition:none;}
+</style>
+
+<div class="app">
+  <p class="eyebrow">Science 2 &middot; Science Detectives</p>
+
+  <!-- HOME / LESSON MAP -->
+  <section id="screen-home" class="screen active">
+    <div class="hero">
+      <h1 class="hero-title">Science Detectives</h1>
+      <p class="hero-sub">Pick a case file and investigate! Question and answer order shuffle every time, so you really have to know each answer — not just remember the order. Try the Final Mock Exam once you&rsquo;ve solved every case!</p>
+      <svg class="hero-scene" viewBox="0 0 140 100" role="img" aria-label="A bubbling science flask being examined with a magnifying glass">
+        <ellipse cx="66" cy="90" rx="48" ry="6" fill="var(--shadow)" opacity="0.2"/>
+        <rect x="52" y="16" width="28" height="6" rx="2" fill="var(--indigo)"/>
+        <path d="M55 20h22v16l14 32a8 8 0 0 1-7 11H48a8 8 0 0 1-7-11l14-32V20z" fill="var(--card)" stroke="var(--indigo)" stroke-width="3"/>
+        <path d="M49 50h34l9 22a4 4 0 0 1-4 5H44a4 4 0 0 1-4-5z" fill="var(--flask-liquid)"/>
+        <circle cx="60" cy="58" r="2.6" fill="var(--accent-soft)"/>
+        <circle cx="71" cy="64" r="2.2" fill="var(--accent-soft)"/>
+        <circle cx="65" cy="70" r="1.8" fill="var(--accent-soft)"/>
+        <g transform="rotate(18 108 38)">
+          <circle cx="100" cy="32" r="13" fill="none" stroke="var(--amber-deep)" stroke-width="4"/>
+          <line x1="109" y1="41" x2="121" y2="53" stroke="var(--amber-deep)" stroke-width="5" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <div id="home-list"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="screen-flash" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-flash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Lesson List</button>
+      <p class="flash-lesson-label" id="flash-lesson-label"></p>
+      <div class="flash-dots" id="flash-dots"></div>
+      <div id="flash-body"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-flash-prev">Back</button>
+        <button class="btn" id="btn-flash-next">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="card">
+      <button class="back-link" id="back-from-quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>Lesson List</button>
+      <div class="quiz-head">
+        <svg class="quiz-flask-mini" viewBox="0 0 140 100" role="img" aria-label="A flask being filled in as you answer">
+          <g id="flask-mini"></g>
+        </svg>
+        <div class="quiz-progress">
+          <div class="quiz-progress-label" id="q-count">Question 1 of 12</div>
+          <div class="track-bar"><div class="track-fill" id="track-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
+      <div class="q-text" id="q-text"></div>
+      <div id="q-options"></div>
+      <div class="feedback" id="q-feedback"></div>
+      <div class="next-wrap" id="next-wrap">
+        <button class="btn" id="btn-next">Next &rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen">
+    <div class="card">
+      <h2 style="font-size:1.4rem;color:var(--indigo-deep);">Case Solved!</h2>
+      <svg class="result-flask" viewBox="0 0 140 100" role="img" aria-label="Your finished science flask">
+        <g id="flask-final"></g>
+      </svg>
+      <div class="stars" id="stars"></div>
+      <div class="result-score" id="result-score"></div>
+      <p class="result-msg" id="result-msg"></p>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-retry">Retry Lesson</button>
+        <button class="btn" id="btn-go-home">Lesson List</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,13 9,18 20,6"/></svg>';
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function mc(q, opts, good, bad){
+    return { type:'mc', q:q, options: opts.map(function(o){ return {text:o[0], correct:o[1]}; }), good:good, bad:bad };
+  }
+  function tf(q, answer, good, bad){
+    return { type:'tf', q:q, answer:answer, good:good, bad:bad };
+  }
+  function prepareQuestion(item){
+    if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad };
+    return item;
+  }
+  function buildQuizSet(lesson){
+    return shuffle(lesson.quiz).map(prepareQuestion);
+  }
+
+  var STORAGE_KEY = 'sciencedetectives_progress_v1';
+  function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
+  function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
+  var progress = loadProgress();
+
+  var FINAL_EXAM_PER_LESSON = 3;
+
+  function starsFor(pct){
+    if (pct >= 1) return 3;
+    if (pct >= 0.8) return 2;
+    if (pct >= 0.5) return 1;
+    return 0;
+  }
+
+  /* ================= LESSONS ================= */
+  var lessons = [
+    {
+      tag: 'Lesson 1',
+      title: 'My Body Parts',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="38" cy="34" r="16" fill="var(--accent)"/><circle cx="32" cy="32" r="2" fill="var(--card)"/><circle cx="44" cy="32" r="2" fill="var(--card)"/><path d="M32 40q6 5 12 0" stroke="var(--card)" stroke-width="2" fill="none" stroke-linecap="round"/>',
+      flashcards: [
+        { title:'HEAD', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="38" cy="34" r="16" fill="var(--accent)"/><circle cx="32" cy="32" r="2" fill="var(--card)"/><circle cx="44" cy="32" r="2" fill="var(--card)"/><path d="M32 40q6 5 12 0" stroke="var(--card)" stroke-width="2" fill="none" stroke-linecap="round"/>', text:'The head is the upper part of the body that protects the brain. Your eyes, ears, nose, and mouth are found here.' },
+        { title:'FACE PARTS', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><ellipse cx="38" cy="40" rx="20" ry="22" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><circle cx="30" cy="34" r="2.5" fill="var(--indigo)"/><circle cx="46" cy="34" r="2.5" fill="var(--indigo)"/><path d="M36 42l2 4 2-4" stroke="var(--indigo)" stroke-width="2" fill="none"/><path d="M30 50q8 6 16 0" stroke="var(--indigo)" stroke-width="2" fill="none" stroke-linecap="round"/>', text:'Eyes help you see. Ears help you hear. The nose helps you smell. The mouth helps you talk and eat.' },
+        { title:'NECK &amp; SHOULDER', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="38" cy="24" r="8" fill="var(--amber-deep)"/><rect x="34" y="30" width="8" height="8" fill="var(--amber-deep)"/><path d="M20 58c2-14 10-20 18-20s16 6 18 20" fill="var(--amber-deep)"/>', text:'The neck supports the head and lets it move. The shoulder connects the arms to the torso and helps you move your arms.' },
+        { title:'ARM, ELBOW &amp; HAND', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M24 24l10 18-4 20" stroke="var(--good)" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="30" cy="64" r="6" fill="var(--good)"/>', text:'The arm helps you hold, push, pull, and lift. The elbow connects your upper arm to your lower arm and lets it bend. The hand helps you grip, hold, and write, and your fingernails protect the tips of your fingers.' },
+        { title:'CHEST &amp; ABDOMEN', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><rect x="22" y="24" width="32" height="34" rx="8" fill="var(--card)" stroke="var(--bad)" stroke-width="2"/><path d="M38 34c-4-6-14-2-10 6 3 6 10 10 10 10s7-4 10-10c4-8-6-12-10-6z" fill="var(--bad)"/>', text:'The chest protects the heart and lungs. The abdomen protects organs inside, such as the stomach.' },
+        { title:'LEGS &amp; FEET', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="28" y="24" width="8" height="30" rx="3" fill="var(--indigo)"/><rect x="42" y="24" width="8" height="30" rx="3" fill="var(--indigo)"/><ellipse cx="32" cy="58" rx="8" ry="4" fill="var(--indigo-deep)"/><ellipse cx="46" cy="58" rx="8" ry="4" fill="var(--indigo-deep)"/>', text:'Your knee lets your leg bend. Your feet, heel, and toes help you stand, walk, run, and keep your balance.' }
+      ],
+      quiz: [
+        mc('Which body part protects the brain?', [['Head',true],['Hand',false],['Foot',false]], 'That&rsquo;s right! The head protects the brain.', 'The Head is the body part that protects the brain.'),
+        tf('The mouth helps us see.', false, 'Correct! The mouth helps us talk and eat — the eyes help us see.', 'The answer should be False — the mouth helps us talk and eat, not see.'),
+        mc('Which body part helps you smell things?', [['Nose',true],['Ear',false],['Elbow',false]], 'Yes! The nose helps you smell.', 'The Nose is the body part that helps you smell.'),
+        tf('The neck supports the head and allows it to move.', true, 'Correct! That is exactly what the neck does.', 'The answer should be True — the neck supports the head and allows it to move.'),
+        mc('What connects your arms to your torso (body)?', [['Shoulder',true],['Knee',false],['Chest',false]], 'That&rsquo;s right! The shoulder connects the arms to the torso.', 'The Shoulder connects the arms to the torso.'),
+        tf('The knee connects your upper arm to your lower arm.', false, 'Correct! That is the job of the elbow, not the knee.', 'The answer should be False — the elbow connects the upper arm to the lower arm.'),
+        mc('Which body part is used to grip, hold, and write?', [['Hand',true],['Chest',false],['Thigh',false]], 'Yes! The hand helps you grip, hold, and write.', 'The Hand is used to grip, hold, and write.'),
+        tf('Fingernails help protect the tips of your fingers.', true, 'That&rsquo;s right! Fingernails protect and help you grip things.', 'The answer should be True — fingernails protect the tips of your fingers.'),
+        mc('Which body part protects your heart and lungs?', [['Chest',true],['Abdomen',false],['Neck',false]], 'Correct! The chest protects the heart and lungs.', 'The Chest protects the heart and lungs.'),
+        tf('The neck protects your heart and lungs.', false, 'Correct! That is the job of the chest, not the neck.', 'The answer should be False &mdash; the chest protects the heart and lungs.'),
+        mc('Which body part helps you bend your legs to lower or raise your body?', [['Knee',true],['Heel',false],['Shoulder',false]], 'That&rsquo;s right! The knee lets you bend your legs.', 'The Knee helps you bend your legs to lower or raise your body.'),
+        tf('Toes help you balance when walking and running.', true, 'Yes! Toes help provide balance.', 'The answer should be True — toes help you balance when walking and running.')
+      ]
+    },
+    {
+      tag: 'Lesson 2',
+      title: 'My Five Senses',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><path d="M14 38c8-14 22-14 24-14s16 0 24 14c-8 14-22 14-24 14s-16 0-24-14z" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><circle cx="38" cy="38" r="8" fill="var(--indigo)"/>',
+      flashcards: [
+        { title:'FIVE SENSES', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M26 50V30a4 4 0 0 1 8 0v10M34 40V24a4 4 0 0 1 8 0v16M42 40v-12a4 4 0 0 1 8 0v14c0 10-6 16-14 16s-14-6-14-14" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'We use our body parts to learn about the world! Our five senses are sight, hearing, smell, taste, and touch.' },
+        { title:'SIGHT (EYES)', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><path d="M14 38c8-14 22-14 24-14s16 0 24 14c-8 14-22 14-24 14s-16 0-24-14z" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><circle cx="38" cy="38" r="8" fill="var(--indigo)"/>', text:'We use our eyes to see colors, shapes, and sizes. Damaged eyes can cause blurred vision or blindness.' },
+        { title:'HEARING (EARS)', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><path d="M44 20c-12 0-20 10-20 22 0 10 6 16 12 16 4 0 6-3 6-7 0-3-2-4-2-8 0-6 6-8 10-8 6 0 10 5 10-3 0-12-8-12-16-12z" fill="var(--amber-deep)"/>', text:'We use our ears to hear loud or soft sounds, music, and voices. Damaged ears can cause hearing loss, also called deafness.' },
+        { title:'SMELL (NOSE)', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 18c4 10 10 18 10 28a10 10 0 0 1-20 0c0-10 6-18 10-28z" fill="var(--good)"/><circle cx="33" cy="46" r="2" fill="var(--card)"/><circle cx="43" cy="46" r="2" fill="var(--card)"/>', text:'We use our nose to smell things that are sweet, sour, good, or bad. A cold can make it hard to smell.' },
+        { title:'TASTE (TONGUE)', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><path d="M20 30h36a4 4 0 0 1 4 4c0 14-10 22-22 22S16 48 16 34a4 4 0 0 1 4-4z" fill="var(--bad)"/><line x1="38" y1="30" x2="38" y2="52" stroke="var(--card)" stroke-width="2"/>', text:'We use our tongue to taste food. We can taste sweet, sour, salty, and bitter flavors.' },
+        { title:'TOUCH &amp; HEALTHY HABITS', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><path d="M24 50V30a4 4 0 0 1 8 0v6M32 36V24a4 4 0 0 1 8 0v14M40 38v-8a4 4 0 0 1 8 0v10c0 10-6 16-14 16s-14-6-14-14" fill="none" stroke="var(--indigo)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'We use our skin and hands to feel soft or hard, smooth or rough, hot or cold. Wash your hands often and take a bath every day to keep your senses healthy!' }
+      ],
+      quiz: [
+        mc('Which body part do we use to see colors, shapes, and sizes?', [['Eyes',true],['Ears',false],['Tongue',false]], 'That&rsquo;s right! We use our eyes to see.', 'We use our Eyes to see colors, shapes, and sizes.'),
+        tf('Ears help us to smell things.', false, 'Correct! Ears help us hear — the nose helps us smell.', 'The answer should be False — ears help us hear, not smell.'),
+        mc('Which sense organ helps us hear sounds like music and voices?', [['Ears',true],['Eyes',false],['Nose',false]], 'Yes! Our ears help us hear.', 'The Ears help us hear sounds like music and voices.'),
+        tf('Damaged ears can cause hearing loss, also called deafness.', true, 'Correct! Damaged ears can lead to partial or complete hearing loss.', 'The answer should be True — damaged ears can cause hearing loss, or deafness.'),
+        mc('Which body part helps us taste sweet, sour, salty, or bitter food?', [['Tongue',true],['Nose',false],['Skin',false]], 'That&rsquo;s right! The tongue helps us taste.', 'The Tongue helps us taste sweet, sour, salty, and bitter food.'),
+        tf('The nose helps us taste our food.', false, 'Correct! The nose helps us smell — the tongue helps us taste.', 'The answer should be False &mdash; the nose helps us smell, not taste.'),
+        mc('Which body part do we use to feel if something is soft, hard, smooth, rough, hot, or cold?', [['Skin and hands',true],['Eyes',false],['Ears',false]], 'Yes! Our skin and hands help us feel things.', 'We use our Skin and hands to feel textures and temperature.'),
+        tf('Washing your hands often is a healthy habit that helps protect your senses.', true, 'Correct! Washing your hands often keeps you healthy.', 'The answer should be True — washing your hands often is a healthy habit.'),
+        mc('Which of these is a healthy habit for taking care of your senses?', [['Washing your hands often',true],['Watching TV all day',false],['Eating junk food all the time',false]], 'That&rsquo;s right! Washing your hands often keeps you healthy.', 'Washing your hands often is a healthy habit for taking care of your senses.'),
+        tf('Eating junk food and fatty food all the time is a healthy habit.', false, 'Correct! That is not a healthy habit at all.', 'The answer should be False &mdash; eating junk food all the time is not a healthy habit.'),
+        mc('What might happen if your eyes are damaged?', [['Blurred vision or blindness',true],['Better hearing',false],['A stronger sense of smell',false]], 'Yes! Damaged eyes can cause blurred vision or blindness.', 'Damaged eyes can cause Blurred vision or blindness.'),
+        tf('We have five senses: sight, hearing, smell, taste, and touch.', true, 'That&rsquo;s right! Those are our five senses.', 'The answer should be True — we have five senses: sight, hearing, smell, taste, and touch.')
+      ]
+    },
+    {
+      tag: 'Lesson 3',
+      title: 'What Is Matter?',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M32 18h12v12l10 22a6 6 0 0 1-5 9H27a6 6 0 0 1-5-9l10-22V18z" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><path d="M28 42h20l6 14a3 3 0 0 1-3 4H25a3 3 0 0 1-3-4z" fill="var(--accent)"/>',
+      flashcards: [
+        { title:'WHAT IS MATTER?', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="24" y="24" width="28" height="28" rx="4" fill="var(--accent)"/>', text:'Matter is anything that has mass and takes up space. We can describe matter by its mass, size, and texture.' },
+        { title:'SOLID', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><polygon points="38,20 54,32 48,54 28,54 22,32" fill="var(--indigo)"/>', text:'A solid has a definite shape and size that does not change easily. A rock and a cotton ball are examples of solids.' },
+        { title:'LIQUID', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 18c8 12 14 20 14 28a14 14 0 1 1-28 0c0-8 6-16 14-28z" fill="var(--good)"/>', text:'A liquid takes the shape of the container it is poured into. Milk and water are examples of liquids.' },
+        { title:'GAS', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="30" cy="40" r="10" fill="var(--amber-deep)" opacity="0.85"/><circle cx="44" cy="36" r="12" fill="var(--amber-deep)" opacity="0.85"/><circle cx="38" cy="46" r="9" fill="var(--amber-deep)" opacity="0.85"/>', text:'A gas has no definite shape or volume — it spreads out to fill its container. The air we breathe is a gas.' },
+        { title:'USING OUR SENSES', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><rect x="24" y="30" width="28" height="18" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="2"/><path d="M20 50V34a3 3 0 0 1 6 0v6" fill="none" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"/>', text:'We use our senses to observe matter — our eyes to see its size, and our hands to feel its texture.' },
+        { title:'SCIENCE DETECTIVE STATIONS', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><circle cx="34" cy="34" r="12" fill="none" stroke="var(--indigo)" stroke-width="4"/><line x1="43" y1="43" x2="54" y2="54" stroke="var(--indigo)" stroke-width="5" stroke-linecap="round"/>', text:'Science detectives observe objects like a rock, a balloon, cotton, and milk to figure out if they are solid, liquid, or gas.' }
+      ],
+      quiz: [
+        mc('What do we call anything that has mass and takes up space?', [['Matter',true],['Energy',false],['Weather',false]], 'That&rsquo;s right! That is called matter.', 'Anything that has mass and takes up space is called Matter.'),
+        tf('A solid has a definite shape and size.', true, 'Correct! A solid keeps its shape and size.', 'The answer should be True — a solid has a definite shape and size.'),
+        mc('Which of these is an example of a solid?', [['Rock',true],['Milk',false],['Air',false]], 'Yes! A rock is a solid.', 'A Rock is an example of a solid.'),
+        tf('A liquid takes the shape of the container it is poured into.', true, 'Correct! That is exactly what a liquid does.', 'The answer should be True — a liquid takes the shape of its container.'),
+        mc('Which of these is an example of a liquid?', [['Milk',true],['Cotton',false],['Rock',false]], 'That&rsquo;s right! Milk is a liquid.', 'Milk is an example of a liquid.'),
+        tf('Gas has a definite shape that never changes.', false, 'Correct! A gas has no definite shape or volume.', 'The answer should be False &mdash; a gas has no definite shape or volume.'),
+        mc('Which of these is an example of a gas?', [['Air',true],['Rock',false],['Milk',false]], 'Yes! Air is a gas.', 'Air is an example of a gas.'),
+        tf('Air is an example of a liquid.', false, 'Correct! Air is a gas, not a liquid.', 'The answer should be False — air is an example of a gas.'),
+        mc('Which body part do we use to feel the texture of an object, like if it&rsquo;s soft or hard?', [['Hands',true],['Eyes',false],['Ears',false]], 'That&rsquo;s right! We use our hands to feel texture.', 'We use our Hands to feel the texture of an object.'),
+        tf('We can describe matter by its mass, size, and texture.', true, 'Correct! Those are all ways we describe matter.', 'The answer should be True — we can describe matter by its mass, size, and texture.'),
+        mc('What state of matter is a cotton ball?', [['Solid',true],['Liquid',false],['Gas',false]], 'Yes! A cotton ball is a solid.', 'A cotton ball is a Solid.'),
+        tf('Milk is an example of a solid.', false, 'Correct! Milk is a liquid, not a solid.', 'The answer should be False &mdash; milk is an example of a liquid.')
+      ]
+    },
+    {
+      tag: 'Lesson 4',
+      title: 'Animals &amp; Their Babies',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="38" cy="46" r="12" fill="var(--amber-deep)"/><circle cx="24" cy="30" r="6" fill="var(--amber-deep)"/><circle cx="36" cy="24" r="6" fill="var(--amber-deep)"/><circle cx="48" cy="26" r="6" fill="var(--amber-deep)"/><circle cx="54" cy="36" r="6" fill="var(--amber-deep)"/>',
+      flashcards: [
+        { title:'REPRODUCE', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="28" cy="38" r="12" fill="var(--accent)"/><circle cx="50" cy="42" r="7" fill="var(--accent)"/>', text:'Reproduce means to create something that is alike or similar. All living things reproduce their own kind.' },
+        { title:'EXTINCT', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><path d="M38 20c-10 8-16 16-16 24a16 16 0 0 0 32 0c0-8-6-16-16-24z" fill="var(--bad)" opacity="0.4"/><line x1="26" y1="26" x2="50" y2="50" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"/><line x1="50" y1="26" x2="26" y2="50" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"/>', text:'Extinct means no longer living or existing. If living things stop reproducing, they could someday become extinct.' },
+        { title:'PET BABIES', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="38" cy="46" r="12" fill="var(--amber-deep)"/><circle cx="24" cy="30" r="6" fill="var(--amber-deep)"/><circle cx="36" cy="24" r="6" fill="var(--amber-deep)"/><circle cx="48" cy="26" r="6" fill="var(--amber-deep)"/><circle cx="54" cy="36" r="6" fill="var(--amber-deep)"/>', text:'A cat&rsquo;s baby is called a kitten. A dog&rsquo;s baby is called a puppy.' },
+        { title:'FARM BABIES', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><polygon points="38,18 58,34 18,34" fill="var(--good)"/><rect x="22" y="34" width="32" height="24" fill="var(--good)"/><rect x="34" y="42" width="8" height="16" fill="var(--card)"/>', text:'A horse&rsquo;s baby is a foal. A pig&rsquo;s baby is a piglet. A sheep&rsquo;s baby is a lamb, and a goat&rsquo;s baby is a kid.' },
+        { title:'BIRD BABIES', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><ellipse cx="38" cy="44" rx="14" ry="18" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/>', text:'A chicken&rsquo;s baby is a chick. A duck&rsquo;s baby is a duckling.' },
+        { title:'WILD ANIMAL BABIES', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><circle cx="38" cy="42" r="16" fill="var(--bad)"/><circle cx="26" cy="26" r="7" fill="var(--bad)"/><circle cx="50" cy="26" r="7" fill="var(--bad)"/><circle cx="31" cy="40" r="2.5" fill="var(--card)"/><circle cx="45" cy="40" r="2.5" fill="var(--card)"/>', text:'A bear&rsquo;s baby is a cub. A frog&rsquo;s baby is a tadpole.' }
+      ],
+      quiz: [
+        mc('What is a baby cat called?', [['Kitten',true],['Puppy',false],['Cub',false]], 'That&rsquo;s right! A baby cat is a kitten.', 'A baby cat is called a Kitten.'),
+        tf('A baby dog is called a puppy.', true, 'Correct! A baby dog is a puppy.', 'The answer should be True — a baby dog is called a puppy.'),
+        mc('What is a baby horse called?', [['Foal',true],['Piglet',false],['Lamb',false]], 'Yes! A baby horse is called a foal.', 'A baby horse is called a Foal.'),
+        tf('A baby pig is called a piglet.', true, 'Correct! A baby pig is a piglet.', 'The answer should be True — a baby pig is called a piglet.'),
+        mc('What is a baby chicken called?', [['Chick',true],['Duckling',false],['Tadpole',false]], 'That&rsquo;s right! A baby chicken is a chick.', 'A baby chicken is called a Chick.'),
+        tf('A baby duck is called a lamb.', false, 'Correct! A baby duck is called a duckling, not a lamb.', 'The answer should be False &mdash; a baby duck is called a duckling.'),
+        mc('What is a baby frog called?', [['Tadpole',true],['Cub',false],['Kid',false]], 'Yes! A baby frog is called a tadpole.', 'A baby frog is called a Tadpole.'),
+        tf('A baby sheep is called a puppy.', false, 'Correct! A baby sheep is called a lamb, not a puppy.', 'The answer should be False — a baby sheep is called a lamb.'),
+        mc('What does the word "reproduce" mean?', [['To create something that is alike or similar',true],['To disappear forever',false],['To grow taller',false]], 'That&rsquo;s right! Reproduce means to create something alike or similar.', 'Reproduce means To create something that is alike or similar.'),
+        tf('"Extinct" means an animal is no longer living or existing.', true, 'Correct! That is what extinct means.', 'The answer should be True &mdash; extinct means no longer living or existing.'),
+        mc('What could happen if living things stop reproducing?', [['They could become extinct',true],['They could live forever',false],['Nothing would change',false]], 'Yes! Living things could become extinct if they stop reproducing.', 'If living things stop reproducing, They could become extinct.'),
+        tf('A baby goat is called a kitten.', false, 'Correct! A baby goat is called a kid, not a kitten.', 'The answer should be False — a baby goat is called a kid.')
+      ]
+    }
+  ];
+
+  /* ================= Flask SVG ================= */
+  function flaskMarkup(){
+    return ''
+      + '<ellipse class="piece base" data-piece="0" cx="70" cy="90" rx="46" ry="6" fill="var(--shadow)" opacity="0.2"/>'
+      + '<g class="piece" data-piece="1"><rect x="56" y="16" width="28" height="6" rx="2" fill="var(--indigo)"/></g>'
+      + '<g class="piece" data-piece="2"><path d="M59 20h22v16l14 32a8 8 0 0 1-7 11H52a8 8 0 0 1-7-11l14-32V20z" fill="var(--card)" stroke="var(--indigo)" stroke-width="3"/></g>'
+      + '<g class="piece" data-piece="3"><path d="M53 50h34l9 22a4 4 0 0 1-4 5H48a4 4 0 0 1-4-5z" fill="var(--flask-liquid)"/></g>'
+      + '<g class="piece" data-piece="4"><circle cx="64" cy="58" r="2.6" fill="var(--accent-soft)"/><circle cx="75" cy="64" r="2.2" fill="var(--accent-soft)"/></g>'
+      + '<g class="piece" data-piece="5"><circle cx="69" cy="70" r="1.8" fill="var(--accent-soft)"/><circle cx="60" cy="66" r="1.5" fill="var(--accent-soft)"/></g>'
+      + '<g class="piece" data-piece="6"><path d="M64 14c-2-4 2-7 2-7M76 14c2-4-2-7-2-7" stroke="var(--amber)" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>'
+      + '<g class="piece" data-piece="7"><g transform="rotate(18 108 38)"><circle cx="100" cy="32" r="12" fill="none" stroke="var(--amber-deep)" stroke-width="4"/><line x1="109" y1="41" x2="120" y2="52" stroke="var(--amber-deep)" stroke-width="5" stroke-linecap="round"/></g></g>'
+      + '<g class="piece" data-piece="8"><rect x="18" y="58" width="16" height="20" rx="2" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><line x1="21" y1="64" x2="31" y2="64" stroke="var(--indigo)" stroke-width="1.5"/><line x1="21" y1="69" x2="31" y2="69" stroke="var(--indigo)" stroke-width="1.5"/><line x1="21" y1="74" x2="27" y2="74" stroke="var(--indigo)" stroke-width="1.5"/></g>';
+  }
+  document.getElementById('flask-mini').innerHTML = flaskMarkup();
+  document.getElementById('flask-final').innerHTML = flaskMarkup();
+
+  function resetFlask(){
+    document.querySelectorAll('.piece[data-piece]:not([data-piece="0"])').forEach(function(el){ el.classList.remove('revealed'); });
+  }
+  function starsMarkup(filledCount, total){
+    var out = '';
+    for (var i = 1; i <= total; i++){
+      var filled = i <= filledCount;
+      out += '<svg viewBox="0 0 24 24" fill="' + (filled ? 'var(--amber)' : 'none') + '" stroke="var(--amber)" stroke-width="' + (total > 3 ? '2' : '1.6') + '"><polygon points="12,2 15,9 22,9.5 16.5,14.2 18.5,21.5 12,17.5 5.5,21.5 7.5,14.2 2,9.5 9,9"/></svg>';
+    }
+    return out;
+  }
+
+  /* ================= Screens ================= */
+  var screens = ['home','flash','quiz','results'];
+  function showScreen(name){
+    screens.forEach(function(s){
+      document.getElementById('screen-'+s).classList.toggle('active', s === name);
+    });
+  }
+
+  /* ================= Home ================= */
+  function renderHome(){
+    var list = document.getElementById('home-list');
+    var finalTotal = lessons.length * FINAL_EXAM_PER_LESSON;
+    var finalBest = progress['final'] || 0;
+    var finalStars = starsFor(finalBest / finalTotal);
+    var finalCard = '<div class="card lesson-card final-card">' +
+      '<div class="lesson-top">' +
+        '<svg class="lesson-icon" viewBox="0 0 76 76"><circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><polygon points="38,14 44,30 61,31 47,41 52,58 38,48 24,58 29,41 15,31 32,30" fill="var(--amber)"/></svg>' +
+        '<div class="lesson-info">' +
+          '<div class="lesson-tag-label final-badge">Final Mock Exam</div>' +
+          '<div class="lesson-title">Science Detectives Review</div>' +
+          '<div class="mini-stars">' + starsMarkup(finalStars, 3) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn" id="btn-final-exam">' + (finalBest > 0 ? 'Retry Exam' : 'Start') + '</button>' +
+    '</div>';
+
+    var lessonCards = lessons.map(function(l, i){
+      var total = l.quiz.length;
+      var best = progress[i] || 0;
+      var stars = starsFor(best / total);
+      return '<div class="card lesson-card">' +
+        '<div class="lesson-top">' +
+          '<svg class="lesson-icon" viewBox="0 0 76 76">' + l.icon + '</svg>' +
+          '<div class="lesson-info">' +
+            '<div class="lesson-tag-label">' + l.tag + '</div>' +
+            '<div class="lesson-title">' + l.title + '</div>' +
+            '<div class="mini-stars">' + starsMarkup(stars, 3) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn" data-lesson="' + i + '">' + (best > 0 ? 'Retry Lesson' : 'Start') + '</button>' +
+      '</div>';
+    }).join('');
+
+    list.innerHTML = finalCard + lessonCards;
+
+    document.getElementById('btn-final-exam').addEventListener('click', function(){
+      startFinalExam();
+    });
+    list.querySelectorAll('button[data-lesson]').forEach(function(b){
+      b.addEventListener('click', function(){
+        currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
+        flashIdx = 0;
+        renderFlash();
+        showScreen('flash');
+      });
+    });
+  }
+  function goHome(){ renderHome(); showScreen('home'); }
+  document.getElementById('back-from-flash').addEventListener('click', goHome);
+  document.getElementById('back-from-quiz').addEventListener('click', goHome);
+  document.getElementById('btn-go-home').addEventListener('click', goHome);
+
+  /* ================= Flashcards ================= */
+  var currentLesson = 0;
+  var flashIdx = 0;
+  function renderFlash(){
+    var lesson = lessons[currentLesson];
+    var f = lesson.flashcards[flashIdx];
+    document.getElementById('flash-lesson-label').textContent = decode(lesson.title);
+    document.getElementById('flash-body').innerHTML =
+      '<svg class="flash-icon" viewBox="0 0 76 76">' + f.icon + '</svg>' +
+      '<h3 class="flash-title">' + f.title + '</h3>' +
+      '<p class="flash-text">' + f.text + '</p>';
+    document.getElementById('flash-dots').innerHTML = lesson.flashcards.map(function(_, i){
+      return '<span class="' + (i === flashIdx ? 'on' : '') + '"></span>';
+    }).join('');
+    document.getElementById('btn-flash-prev').style.visibility = flashIdx === 0 ? 'hidden' : 'visible';
+    document.getElementById('btn-flash-next').textContent = flashIdx === lesson.flashcards.length - 1 ? 'Start Quiz' : 'Next';
+  }
+  document.getElementById('btn-flash-prev').addEventListener('click', function(){
+    if (flashIdx > 0){ flashIdx--; renderFlash(); }
+  });
+  document.getElementById('btn-flash-next').addEventListener('click', function(){
+    var lesson = lessons[currentLesson];
+    if (flashIdx < lesson.flashcards.length - 1){ flashIdx++; renderFlash(); }
+    else { startQuiz(); }
+  });
+
+  /* ================= Quiz ================= */
+  var qIdx = 0, score = 0, answered = false;
+  var currentQuizSet = [];
+  var currentQuizMeta = null;
+
+  function revealProgress(){
+    var n = Math.round((score / currentQuizSet.length) * 8);
+    for (var p = 1; p <= 8; p++){
+      document.querySelectorAll('[data-piece="' + p + '"]').forEach(function(el){
+        el.classList.toggle('revealed', p <= n);
+      });
+    }
+  }
+
+  function startQuiz(){
+    var lesson = lessons[currentLesson];
+    currentQuizSet = buildQuizSet(lesson);
+    currentQuizMeta = { id: currentLesson, title: lesson.title };
+    qIdx = 0; score = 0; resetFlask();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function startFinalExam(){
+    var qs = [];
+    lessons.forEach(function(l){
+      qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON).map(prepareQuestion));
+    });
+    currentQuizSet = shuffle(qs);
+    currentQuizMeta = { id: 'final', title: 'Science Detectives Review' };
+    qIdx = 0; score = 0; resetFlask();
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function decode(str){
+    return str
+      .replace(/&ldquo;/g,'“').replace(/&rdquo;/g,'”')
+      .replace(/&rsquo;/g,'’').replace(/&mdash;/g,'—').replace(/&amp;/g,'&');
+  }
+
+  function renderQuestion(){
+    answered = false;
+    var item = currentQuizSet[qIdx];
+    document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + currentQuizSet.length + (currentQuizMeta.id === 'final' ? ' — ' + decode(currentQuizMeta.title) : '');
+    document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
+    document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
+    document.getElementById('q-text').textContent = decode(item.q);
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback'; fb.innerHTML = '';
+    document.getElementById('next-wrap').classList.remove('show');
+
+    var optWrap = document.getElementById('q-options');
+    optWrap.innerHTML = '';
+
+    if (item.type === 'tf'){
+      var row = document.createElement('div');
+      row.className = 'tf-row';
+      var trueBtn = document.createElement('button');
+      trueBtn.className = 'tf-btn'; trueBtn.innerHTML = CHECK_ICON + '<span>True</span>';
+      var falseBtn = document.createElement('button');
+      falseBtn.className = 'tf-btn'; falseBtn.innerHTML = X_ICON + '<span>False</span>';
+      trueBtn.addEventListener('click', function(){ handleTF(true, trueBtn); });
+      falseBtn.addEventListener('click', function(){ handleTF(false, falseBtn); });
+      row.appendChild(trueBtn); row.appendChild(falseBtn);
+      optWrap.appendChild(row);
+    } else {
+      item.options.forEach(function(opt){
+        var b = document.createElement('button');
+        b.className = 'opt';
+        b.innerHTML = '<span class="bullet"></span><span>' + decode(opt.text) + '</span>';
+        b.addEventListener('click', function(){ handleMC(opt, b, optWrap); });
+        optWrap.appendChild(b);
+      });
+    }
+  }
+
+  function lockOptions(){
+    document.querySelectorAll('.opt, .tf-btn').forEach(function(el){ el.disabled = true; });
+  }
+
+  function showFeedback(isCorrect){
+    var item = currentQuizSet[qIdx];
+    var fb = document.getElementById('q-feedback');
+    fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
+    fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
+    document.getElementById('next-wrap').classList.add('show');
+    if (isCorrect) score++;
+    revealProgress();
+  }
+
+  function handleMC(opt, btnEl, optWrap){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var item = currentQuizSet[qIdx];
+    optWrap.querySelectorAll('.opt').forEach(function(el, i){
+      var thisOpt = item.options[i];
+      if (thisOpt.correct) el.classList.add('correct');
+      else if (el === btnEl) el.classList.add('wrong');
+    });
+    showFeedback(opt.correct);
+  }
+
+  function handleTF(choice, chosenBtn){
+    if (answered) return;
+    answered = true;
+    lockOptions();
+    var correct = currentQuizSet[qIdx].answer;
+    var isRight = (choice === correct);
+    chosenBtn.classList.add(isRight ? 'correct' : 'wrong');
+    if (!isRight){
+      var rightBtn = (correct === true) ? chosenBtn.parentElement.children[0] : chosenBtn.parentElement.children[1];
+      rightBtn.classList.add('correct');
+    }
+    showFeedback(isRight);
+  }
+
+  document.getElementById('btn-next').addEventListener('click', function(){
+    if (qIdx < currentQuizSet.length - 1){ qIdx++; renderQuestion(); }
+    else { finishQuiz(); }
+  });
+
+  function finishQuiz(){
+    document.getElementById('track-fill').style.width = '100%';
+    var total = currentQuizSet.length;
+    var starCount = starsFor(score / total);
+    var best = Math.max(progress[currentQuizMeta.id] || 0, score);
+    progress[currentQuizMeta.id] = best;
+    saveProgress(progress);
+    document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
+    document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
+    var msg;
+    if (starCount === 3) msg = 'Case closed! You solved this mystery like a true Science Detective!';
+    else if (starCount === 2) msg = 'Nice clue-finding! You are almost a full Science Detective — try again to solve it completely!';
+    else msg = 'Good try! Let’s review the case file and investigate again — you can do it!';
+    document.getElementById('result-msg').textContent = msg;
+    showScreen('results');
+  }
+
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    if (currentQuizMeta.id === 'final') startFinalExam();
+    else startQuiz();
+  });
+
+  renderHome();
+})();
+</script>

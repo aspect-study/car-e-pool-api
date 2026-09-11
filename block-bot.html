@@ -231,7 +231,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 <script>
 const LESSONS = [
   {
-    id:'blocks', emoji:'🧱', title:'Base-Ten Blocks', subtitle:'Counting Up to 1000',
+    id:'blocks', emoji:'🧱', title:'Base-Ten Blocks', subtitle:'Ones, Tens, Hundreds, and Thousands',
     flashcards:[
       {icon:'🔲', term:'1 One (Unit)', def:'The smallest base-ten block. Just 1 tiny square.'},
       {icon:'📏', term:'1 Ten (Rod)', def:'1 rod = 10 ones lined up together.'},
@@ -260,17 +260,17 @@ const LESSONS = [
       {icon:'🔡', term:'1137', def:'In words: one thousand one hundred thirty-seven.'},
       {icon:'🔡', term:'954', def:'In words: nine hundred fifty-four.'},
       {icon:'🔡', term:'307', def:'In words: three hundred and seven.'},
-      {icon:'📐', term:'Spacing Rule', def:'For numerals with 5 digits or more, put a space after every place value, like 12 345.'},
+      {icon:'📐', term:'Spacing Rule', def:'For numerals with 5 digits or more, put a space between the thousands group and the rest of the number, like 12 345.'},
       {icon:'📝', term:'Writing Rule', def:'When writing number words, say the digit first, then the name of its place (thousand, hundred).'},
     ],
     quiz:[
       {q:'How do you write 954 in words?', options:['nine hundred fifty-four','nine hundred fifteen','ninety-five hundred four','nine hundred and forty'], correct:0, explain:'954 has 9 hundreds, 5 tens, 4 ones: nine hundred fifty-four.'},
-      {q:'How do you write 1562 in words?', options:['one thousand five hundred sixty-two','fifteen hundred sixty-two only','one thousand fifty-two','five thousand one hundred sixty-two'], correct:0, explain:'1562 = one thousand five hundred sixty-two.'},
+      {q:'How do you write 1562 in words?', options:['one thousand five hundred sixty-two','one thousand five hundred twenty-six','one thousand fifty-two','five thousand one hundred sixty-two'], correct:0, explain:'1562 = one thousand five hundred sixty-two.'},
       {q:'What numeral is "five thousand two hundred thirty-one"?', options:['5231','5321','2531','5213'], correct:0, explain:'Five thousand, two hundred, thirty-one = 5231.'},
       {q:'What numeral is "nine thousand six hundred eighty-four"?', options:['9648','9684','6984','9864'], correct:1, explain:'Nine thousand, six hundred, eighty-four = 9684.'},
-      {q:'True or False: In writing numerals with 5 digits or more, we put a space after every place value.', options:['True','False'], correct:0, explain:'That is the rule — for example, 12 345 has a space after the thousands place.'},
+      {q:'True or False: In writing numerals with 5 digits or more, we put a space between the thousands group and the rest of the number.', options:['True','False'], correct:0, explain:'That is the rule — for example, 12 345 has one space, right after the thousands group.'},
       {q:'How do you write 301 in words?', options:['three hundred and one','thirty-one','three hundred ten','three thousand one'], correct:0, explain:'301 = three hundred and one.'},
-      {q:'How do you write 1705 in words?', options:['one thousand seven hundred and five','seventeen hundred and five only','one thousand seventy-five','seven thousand one hundred five'], correct:0, explain:'1705 = one thousand seven hundred and five.'},
+      {q:'How do you write 1705 in words?', options:['one thousand seven hundred and five','one thousand seven hundred fifty','one thousand seventy-five','seven thousand one hundred five'], correct:0, explain:'1705 = one thousand seven hundred and five.'},
       {q:'True or False: We write the period name first, then the digit, like "thousand-one".', options:['True','False'], correct:1, explain:'It is the other way around — we write the digit first, then the name of the period, like "one thousand".'},
       {q:'How do you write 2087 in words?', options:['two thousand eighty-seven','twenty thousand eighty-seven','two thousand and eight seven','two hundred eighty-seven'], correct:0, explain:'2087 = two thousand eighty-seven.'},
       {q:'What numeral is "six thousand forty"?', options:['6040','6400','640','6004'], correct:0, explain:'Six thousand, forty = 6040 — there are 0 hundreds, so a 0 sits in the hundreds place.'},
