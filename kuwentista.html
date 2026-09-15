@@ -425,6 +425,11 @@ const STORAGE_KEY = 'kuwentista_progress_v2';
 function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
 function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
 let progress = loadProgress();
+if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+  progress = {};
+  saveProgress(progress);
+  if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+}
 
 function shuffle(arr){
   const a = arr.slice();

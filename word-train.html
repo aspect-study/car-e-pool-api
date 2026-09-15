@@ -397,6 +397,11 @@
   function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
   function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
   var progress = loadProgress();
+  if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+    progress = {};
+    saveProgress(progress);
+    if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+  }
 
   var FINAL_EXAM_PER_LESSON = 3;
 
