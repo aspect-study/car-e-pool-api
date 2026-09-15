@@ -674,11 +674,14 @@ function openLesson(i){
   renderFlash();
   showScreen('flashScreen');
 }
+/* Card and question text may contain simple markup (<b>, entities) written by
+   the lesson author, so these render as HTML, not literal text. Content is
+   author-supplied only — never user input. */
 function renderFlash(){
   const l = LESSONS[currentLessonIdx];
   const c = l.cards[flashIdx];
-  document.getElementById('flashFront').textContent = c.front;
-  document.getElementById('flashBack').textContent = c.back;
+  document.getElementById('flashFront').innerHTML = c.front;
+  document.getElementById('flashBack').innerHTML = c.back;
   document.getElementById('flashBack').style.display = 'none';
   document.getElementById('flashFront').style.display = 'block';
   document.getElementById('flashTag').textContent = 'Term';
@@ -738,7 +741,7 @@ function renderQuestion(){
   document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
   document.getElementById('quizFill').style.width = `${(quizIdx/total)*100}%`;
   document.getElementById('sceneSvg').innerHTML = hoopMarkup(Math.round((quizScore/total)*8));
-  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qText').innerHTML = q.q;
   document.getElementById('explainBox').style.display = 'none';
   document.getElementById('nextBtn').style.display = 'none';
 
@@ -747,7 +750,7 @@ function renderQuestion(){
   q.options.forEach((opt,i)=>{
     const btn = document.createElement('button');
     btn.className = 'option';
-    btn.textContent = opt;
+    btn.innerHTML = opt;
     btn.onclick = ()=>selectOption(i);
     box.appendChild(btn);
   });
@@ -764,7 +767,7 @@ function selectOption(i){
   if(i === q.correct) quizScore++;
   document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
   document.getElementById('sceneSvg').innerHTML = hoopMarkup(Math.round((quizScore/currentQuizSet.length)*8));
-  document.getElementById('explainBox').textContent = q.explain;
+  document.getElementById('explainBox').innerHTML = q.explain;
   document.getElementById('explainBox').style.display = 'block';
   document.getElementById('nextBtn').style.display = 'block';
   document.getElementById('nextBtn').textContent = quizIdx < currentQuizSet.length-1 ? 'Next ▶' : 'See Results 🏆';
