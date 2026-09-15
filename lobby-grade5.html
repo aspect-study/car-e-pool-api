@@ -1,5 +1,5 @@
-<html lang="fil">
-<title>Study Games Lobby</title>
+<html lang="en">
+<title>Study Games Lobby &mdash; Grade 5</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +13,7 @@
     --ink-soft:#6B6656;
     --border:rgba(43,42,34,0.12);
     --shadow:rgba(43,42,34,0.16);
-    --header-accent:#D9667B;
+    --header-accent:#1B7A79;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -24,7 +24,7 @@
       --ink-soft:#B2AC97;
       --border:rgba(241,237,224,0.14);
       --shadow:rgba(0,0,0,0.5);
-      --header-accent:#F1A0B0;
+      --header-accent:#3FBDBA;
     }
   }
   :root[data-theme="dark"]{
@@ -35,15 +35,15 @@
     --ink-soft:#B2AC97;
     --border:rgba(241,237,224,0.14);
     --shadow:rgba(0,0,0,0.5);
-    --header-accent:#F1A0B0;
+    --header-accent:#3FBDBA;
   }
 
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(circle at 8% 4%, rgba(217,102,123,0.08), transparent 42%),
-      radial-gradient(circle at 94% 90%, rgba(62,124,177,0.08), transparent 42%),
+      radial-gradient(circle at 8% 4%, rgba(27,122,121,0.09), transparent 42%),
+      radial-gradient(circle at 94% 90%, rgba(255,182,39,0.10), transparent 42%),
       var(--bg);
     color:var(--ink);
     font-family:'Nunito', system-ui, sans-serif;
@@ -153,9 +153,26 @@
   }
   .go-arrow svg{ width:18px; height:18px; }
 
+  .fresh-note{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px 16px;
+    margin-top:clamp(20px,4vw,28px);
+    font-size:0.88rem;
+    font-weight:600;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+  .fresh-note .fresh-icon{ font-size:1.2rem; line-height:1.2; flex:none; }
+  .fresh-note b{ color:var(--ink); }
+
   .footer-note{
     text-align:center;
-    margin-top:clamp(24px,5vw,36px);
+    margin-top:clamp(18px,4vw,26px);
     font-size:0.85rem;
     font-weight:700;
     color:var(--ink-soft);
@@ -170,87 +187,59 @@
   <div class="hero">
     <div class="hero-emoji">🎒</div>
     <h1>Study Games</h1>
-    <p>Piliin ang paksa at simulan ang laro!</p>
+    <p>Pick a subject and start a fresh run!</p>
   </div>
 
   <div class="grid">
-    <a class="subject-card" href="block-bot.html?reset=1" style="--card-accent:#7C3AED; --card-accent-soft:#EFE9FF; --card-accent-ink:#5B21B6;">
-      <div class="subject-emoji">🤖</div>
+    <a class="subject-card" href="math-mastery.html?reset=1" style="--card-accent:#1B7A79; --card-accent-soft:#D8EEED; --card-accent-ink:#0E4F4E;">
+      <div class="subject-emoji">🧮</div>
       <div class="subject-info">
-        <div class="subject-tag">Grade 2</div>
+        <div class="subject-tag">Grade 5</div>
         <div class="subject-title">Math</div>
-        <div class="subject-app">Block Bot</div>
-        <div class="subject-desc">Numbers, place value, at number lines</div>
+        <div class="subject-app">Math Mastery</div>
+        <div class="subject-desc">Divisibility, GEMDAS, fractions, and UPAC word problems</div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
 
-    <a class="subject-card" href="kuwentista.html?reset=1" style="--card-accent:#D6467E; --card-accent-soft:#FBEADF; --card-accent-ink:#9C2F5C;">
-      <div class="subject-emoji">📖</div>
+    <a class="subject-card" href="rise-shine.html?reset=1" style="--card-accent:#C98600; --card-accent-soft:#FBF0D8; --card-accent-ink:#8A5A00;">
+      <div class="subject-emoji">🏅</div>
       <div class="subject-info">
-        <div class="subject-tag">Grade 2</div>
-        <div class="subject-title">Filipino</div>
-        <div class="subject-app">Kuwentista</div>
-        <div class="subject-desc">Alpabeto, pangngalan, at mga kwento</div>
-      </div>
-      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
-    </a>
-
-    <a class="subject-card" href="word-train.html?reset=1" style="--card-accent:#D64545; --card-accent-soft:#F6D9D6; --card-accent-ink:#7A2020;">
-      <div class="subject-emoji">🚂</div>
-      <div class="subject-info">
-        <div class="subject-tag">Grade 2</div>
-        <div class="subject-title">English</div>
-        <div class="subject-app">Word Train</div>
-        <div class="subject-desc" lang="en">Alphabet, CVC words, and parts of speech</div>
-      </div>
-      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
-    </a>
-
-    <a class="subject-card" href="batang-bayani.html?reset=1" style="--card-accent:#C4552E; --card-accent-soft:#F3E9CE; --card-accent-ink:#8A3E1F;">
-      <div class="subject-emoji">🏘️</div>
-      <div class="subject-info">
-        <div class="subject-tag">Grade 2</div>
-        <div class="subject-title">Makabansa</div>
-        <div class="subject-app">Batang Bayani</div>
-        <div class="subject-desc">Komunidad, klima, at anyong-lupa</div>
-      </div>
-      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
-    </a>
-
-    <a class="subject-card" href="growing-good.html?reset=1" style="--card-accent:#8E86C9; --card-accent-soft:#E7E4F5; --card-accent-ink:#5B54A0;">
-      <div class="subject-emoji">🌱</div>
-      <div class="subject-info">
-        <div class="subject-tag">Grade 2</div>
+        <div class="subject-tag">Grade 5</div>
         <div class="subject-title">GMRC</div>
-        <div class="subject-app">Growing Good</div>
-        <div class="subject-desc">Feelings, prayer, at pag-aalaga sa sarili</div>
+        <div class="subject-app">Rise &amp; Shine</div>
+        <div class="subject-desc">Knowing yourself, saving wisely, and human dignity</div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
 
-    <a class="subject-card" href="byte-buddies.html?reset=1" style="--card-accent:#1FA9BB; --card-accent-soft:#D8F1F3; --card-accent-ink:#0E5C66;">
-      <div class="subject-emoji">💻</div>
+    <a class="subject-card" href="rally-ready.html?reset=1" style="--card-accent:#1F7A5C; --card-accent-soft:#DFF1E8; --card-accent-ink:#0D4A36;">
+      <div class="subject-emoji">🏓</div>
       <div class="subject-info">
-        <div class="subject-tag">Grade 2</div>
-        <div class="subject-title">Computer</div>
-        <div class="subject-app">Byte Buddies</div>
-        <div class="subject-desc">Computer care at mga bahagi nito</div>
+        <div class="subject-tag">Grade 5</div>
+        <div class="subject-title">P.E. &amp; Health</div>
+        <div class="subject-app">Rally Ready</div>
+        <div class="subject-desc">Net &amp; wall games, ABC skills, and the pickleball kitchen</div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
 
-    <a class="subject-card" href="science-detectives.html?reset=1" style="--card-accent:#2FA66A; --card-accent-soft:#DCF3E4; --card-accent-ink:#155C39;">
-      <div class="subject-emoji">🔬</div>
+    <a class="subject-card" href="craft-corner.html?reset=1" style="--card-accent:#8A4F7D; --card-accent-soft:#F3E8F0; --card-accent-ink:#5C3253;">
+      <div class="subject-emoji">🧵</div>
       <div class="subject-info">
-        <div class="subject-tag">Grade 2</div>
-        <div class="subject-title">Science</div>
-        <div class="subject-app">Science Detectives</div>
-        <div class="subject-desc">Katawan, pandama, bagay, at hayop</div>
+        <div class="subject-tag">Grade 5</div>
+        <div class="subject-title">TLE</div>
+        <div class="subject-app">Craft Corner</div>
+        <div class="subject-desc">Home furnishings, embroidery, and crochet stitches</div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
   </div>
 
-  <p class="footer-note">Tap a subject to review the lessons and take the quiz! 🌟</p>
+  <div class="fresh-note">
+    <span class="fresh-icon">⭐</span>
+    <span>Every time you pick a subject here, your <b>stars start empty again</b> &mdash; so you get to earn them all over, not just look at yesterday's score.</span>
+  </div>
+
+  <p class="footer-note">Review the lessons first, then take the quiz! 🌟</p>
 </div>

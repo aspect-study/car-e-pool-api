@@ -1,0 +1,731 @@
+<html lang="en">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Rally Ready: Net &amp; Wall Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF7EC;
+  --card:#FFFFFF;
+  --ink:#2B2320;
+  --accent:#1F7A5C;
+  --accent-dark:#0D4A36;
+  --accent-soft:#DFF1E8;
+  --gold:#FFB627;
+  --coral:#FF6F59;
+  --muted:#8A7F73;
+  --border:#F0E4D2;
+  --good:#2E9E5B;
+  --bad:#E15555;
+  --shadow: 0 10px 28px rgba(43,35,32,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15201F;
+    --card:#1E2C2A;
+    --ink:#F5EFE3;
+    --accent:#48C39A;
+    --accent-dark:#A6ECD5;
+    --accent-soft:#243836;
+    --gold:#FFC65C;
+    --coral:#FF8A73;
+    --muted:#B9AE9E;
+    --border:#2C3B39;
+    --good:#4FCB82;
+    --bad:#FF7A7A;
+    --shadow: 0 10px 28px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15201F;
+  --card:#1E2C2A;
+  --ink:#F5EFE3;
+  --accent:#48C39A;
+  --accent-dark:#A6ECD5;
+  --accent-soft:#243836;
+  --gold:#FFC65C;
+  --coral:#FF8A73;
+  --muted:#B9AE9E;
+  --border:#2C3B39;
+  --good:#4FCB82;
+  --bad:#FF7A7A;
+  --shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Nunito',sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
+#app{max-width:720px;margin:0 auto;padding:20px 16px 60px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.hero{
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  color:#fff;
+  border-radius:22px;
+  padding:26px 22px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+.hero h1{margin:0 0 6px;font-size:1.7rem;}
+.hero p{margin:0;opacity:.92;line-height:1.5;font-size:.95rem;}
+.hero .badge{
+  display:inline-block;background:rgba(255,255,255,.18);
+  padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:800;
+  letter-spacing:.04em;margin-bottom:10px;
+}
+
+.card-list{display:flex;flex-direction:column;gap:12px;}
+.item-card{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, border-color .15s ease;
+}
+.item-card:hover{transform:translateY(-2px);border-color:var(--accent);}
+/* Cards and the flashcard are divs (they contain headings, so they cannot be
+   <button>). They carry role=button + tabindex, so give them a visible focus
+   ring for anyone driving the app from the keyboard. */
+.item-card:focus-visible,
+.flashcard:focus-visible,
+.btn:focus-visible,
+.option:focus-visible,
+.btn-icon:focus-visible{
+  outline:3px solid var(--gold);
+  outline-offset:3px;
+}
+.item-card .icon{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--accent-soft);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;
+}
+.item-card .info{flex:1;min-width:0;}
+.item-card .info h3{margin:0 0 3px;font-size:1.05rem;}
+.item-card .info p{margin:0;color:var(--muted);font-size:.82rem;}
+.stars{font-size:.95rem;letter-spacing:1px;color:var(--gold);white-space:nowrap;}
+.stars .off{color:var(--border);}
+
+.final-card{
+  border-color:var(--gold);
+  background:linear-gradient(135deg,var(--accent-soft),var(--card));
+}
+.final-badge{
+  display:inline-block;background:var(--gold);color:#3A2900;
+  font-size:.68rem;font-weight:800;padding:2px 10px;border-radius:999px;
+  margin-bottom:4px;letter-spacing:.03em;
+}
+.strategy-card{border-color:var(--coral);}
+.strategy-card .icon{background:#FFEAE6;}
+
+.topbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.btn-icon{
+  background:var(--card);border:2px solid var(--border);border-radius:12px;
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.1rem;color:var(--ink);flex-shrink:0;
+}
+.topbar h2{margin:0;font-size:1.15rem;flex:1;}
+
+.flash-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.flashcard{
+  width:100%;min-height:220px;
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:26px 22px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;cursor:pointer;
+  position:relative;
+}
+.flashcard .tag{
+  position:absolute;top:14px;left:16px;font-size:.7rem;font-weight:800;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.05em;
+}
+.flashcard h3{margin:6px 0 10px;font-size:1.3rem;color:var(--accent-dark);}
+.flashcard p{margin:0;font-size:1rem;line-height:1.55;}
+.flashcard .hint{margin-top:14px;font-size:.78rem;color:var(--muted);}
+.flash-nav{display:flex;align-items:center;gap:16px;width:100%;justify-content:space-between;}
+.flash-dots{font-size:.85rem;color:var(--muted);font-weight:700;}
+
+.btn{
+  font-family:'Baloo 2',cursive;
+  border:none;border-radius:14px;
+  padding:13px 22px;font-size:1rem;font-weight:700;
+  cursor:pointer;color:#fff;
+  background:var(--accent);
+  box-shadow:0 6px 0 var(--accent-dark);
+  transition:transform .1s ease;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-dark);}
+.btn.gold{background:var(--gold);box-shadow:0 6px 0 #C98600;color:#3A2900;}
+.btn.gold:active{box-shadow:0 2px 0 #C98600;}
+.btn.ghost{background:var(--card);color:var(--ink);border:2px solid var(--border);box-shadow:none;}
+.btn.full{width:100%;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.progress-bar{
+  height:10px;background:var(--border);border-radius:999px;overflow:hidden;margin-bottom:18px;
+}
+.progress-bar .fill{height:100%;background:var(--gold);transition:width .3s ease;}
+
+.quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.85rem;color:var(--muted);font-weight:700;}
+.scene-box{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:10px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+.scene-box svg{width:100%;max-width:150px;display:block;margin:0 auto;}
+
+.passage{
+  background:var(--accent-soft);border:2px solid var(--accent);border-radius:16px;
+  padding:16px;margin-bottom:16px;font-size:.95rem;line-height:1.6;
+}
+.passage strong{color:var(--accent-dark);}
+
+.q-card{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:20px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.q-card h3{margin:0 0 16px;font-size:1.1rem;line-height:1.5;}
+.option{
+  display:block;width:100%;text-align:left;
+  background:var(--bg);border:2px solid var(--border);border-radius:14px;
+  padding:13px 16px;margin-bottom:10px;font-size:.95rem;font-family:'Nunito',sans-serif;
+  cursor:pointer;color:var(--ink);font-weight:700;
+}
+.option:hover{border-color:var(--accent);}
+.option.correct{background:#E5F6EB;border-color:var(--good);color:#1B6B3C;}
+.option.wrong{background:#FCE9E9;border-color:var(--bad);color:#A82F2F;}
+.option:disabled{cursor:default;}
+.explain{
+  margin-top:12px;padding:12px 14px;background:var(--accent-soft);
+  border-radius:12px;font-size:.88rem;line-height:1.5;color:var(--ink);
+}
+
+.results-hero{text-align:center;padding:20px 0;}
+.results-hero .big-stars{font-size:2.2rem;color:var(--gold);letter-spacing:4px;}
+.results-hero h2{margin:8px 0 4px;}
+.results-hero p{color:var(--muted);margin:0 0 16px;}
+.result-actions{display:flex;flex-direction:column;gap:10px;}
+
+.strategy-list{display:flex;flex-direction:column;gap:12px;}
+.tip{
+  background:var(--card);border:2px solid var(--border);border-left:6px solid var(--coral);
+  border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.tip h4{margin:0 0 5px;font-size:.98rem;color:var(--accent-dark);}
+.tip p{margin:0;font-size:.9rem;line-height:1.55;}
+.tip .kicker{font-size:.7rem;font-weight:800;color:var(--coral);text-transform:uppercase;letter-spacing:.05em;}
+</style>
+
+<div id="app">
+
+  <div id="home" class="screen active">
+    <div class="hero">
+      <span class="badge">P.E. &amp; Health · Grade 5 · Lesson 4</span>
+      <h1>Rally Ready 🏓</h1>
+      <p>Build your pickleball court one correct answer at a time! Study Net &amp; Wall Games, the ABC Skills, Game Tactics, and the famous Kitchen rule — then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
+    </div>
+    <div class="card-list" id="homeList"></div>
+  </div>
+
+  <div id="flashScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2 id="flashTitle"></h2>
+    </div>
+    <div class="flash-wrap">
+      <div class="flashcard" id="flashCard" onclick="flipCard()"
+           role="button" tabindex="0" aria-label="Flashcard. Activate to flip between the term and its meaning."
+           onkeydown="cardKey(event)">
+        <span class="tag" id="flashTag">Term</span>
+        <h3 id="flashFront"></h3>
+        <p id="flashBack" style="display:none;"></p>
+        <div class="hint" id="flashHint">Tap the card to flip</div>
+      </div>
+      <div class="flash-nav">
+        <button class="btn ghost" onclick="prevCard()">◀ Prev</button>
+        <span class="flash-dots" id="flashDots"></span>
+        <button class="btn ghost" onclick="nextCard()">Next ▶</button>
+      </div>
+      <button class="btn gold full" onclick="startQuiz()">Start Quiz 🏓</button>
+    </div>
+  </div>
+
+  <div id="quizScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2 id="quizTitle"></h2>
+    </div>
+    <div class="scene-box"><div id="sceneSvg"></div></div>
+    <div class="progress-bar"><div class="fill" id="quizFill" style="width:0%"></div></div>
+    <div class="quiz-head">
+      <span id="quizCounter"></span>
+      <span id="quizScoreLabel"></span>
+    </div>
+    <div id="passageBox"></div>
+    <div class="q-card">
+      <h3 id="qText"></h3>
+      <div id="optionsBox"></div>
+      <div class="explain" id="explainBox" style="display:none;"></div>
+    </div>
+    <button class="btn full" id="nextBtn" style="display:none;" onclick="nextQuestion()">Next ▶</button>
+  </div>
+
+  <div id="resultsScreen" class="screen">
+    <div class="results-hero">
+      <div class="scene-box" style="max-width:180px;margin:0 auto 14px;"><div id="resultScene"></div></div>
+      <div class="big-stars" id="resultStars"></div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultScore"></p>
+    </div>
+    <div class="result-actions">
+      <button class="btn full" onclick="retryQuiz()">Try Again 🔁</button>
+      <button class="btn ghost full" onclick="goHome()">Back to Home</button>
+    </div>
+  </div>
+
+  <div id="strategyScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2>Exam Strategy 🎯</h2>
+    </div>
+    <div class="hero" style="background:linear-gradient(135deg,var(--coral),#C94B3A);">
+      <span class="badge">Before you take the real test</span>
+      <h1 style="font-size:1.35rem;">How to Ace a P.E. &amp; Health Test</h1>
+      <p>These are the exact moves to use on your teacher's P.E. exam — not just for this app.</p>
+    </div>
+    <div class="strategy-list" id="strategyList"></div>
+  </div>
+
+</div>
+
+<script>
+const LESSONS = [
+  {
+    id:'netwall',
+    icon:'🏓',
+    title:'Net & Wall Games',
+    subtitle:'Pickleball, wall ball & equipment',
+    cards:[
+      {front:'What Are Net and Wall Games?', back:'Activities where players send an object (like a ball) back and forth OVER a net or AGAINST a wall.'},
+      {front:'Pickleball', back:'Using paddles to hit a ball over a LOW net.'},
+      {front:'Wall Ball', back:'Bouncing or throwing a ball against a wall so another player can catch or return it.'},
+      {front:'Why Play Them?', back:'They promote active living and overall health, and they develop important movement skills.'},
+      {front:'Pickleball Equipment', back:'Lightweight kid-friendly paddles, perforated plastic pickleballs, a low or portable net, court markers (cones, floor tape, chalk), and boundary lines.'},
+      {front:'Wall Ball Equipment', back:'Rubber or foam balls (safe indoors and outdoors), a smooth wall surface, floor markers for distance lines, and chalk or tape to mark target zones on the wall.'},
+      {front:'Remember', back:'Net and wall games are not just fun — they build the movement skills you use in every sport.'}
+    ],
+    quiz:[
+      {q:'True or False: In net and wall games, players send an object back and forth over a net or against a wall.', options:['True','False'], correct:0, explain:'Correct — that is exactly the definition of net and wall games.'},
+      {q:'Which equipment belongs to PICKLEBALL and not to wall ball?', options:['A smooth wall surface','A perforated plastic ball and a paddle','Chalk for wall targets','A rubber or foam ball'], correct:1, explain:'Pickleball uses lightweight paddles and a perforated plastic ball. The wall, chalk targets, and foam balls belong to wall ball.'},
+      {q:'True or False: Pickleball is played by hitting a ball over a very HIGH net.', options:['True','False'], correct:1, explain:'False — pickleball uses a LOW net. That is one of the things that makes it easy for beginners to learn.'},
+      {q:'Ramon throws a ball against the gym wall so his partner can catch it and return it. Which game is he playing?', options:['Pickleball','Wall ball','Basketball','Volleyball'], correct:1, explain:'Bouncing or throwing a ball against a wall for another player to catch or return is wall ball.'},
+      {q:'True or False: Net and wall games help promote active living and overall health.', options:['True','False'], correct:0, explain:'Correct — the lesson lists promoting active living and overall health as a key reason for playing them.'},
+      {q:'Your class is setting up a pickleball court in the covered court. Which items do you need for the boundaries?', options:['Cones, floor tape, or chalk','A basketball ring','Foam mats','A whistle only'], correct:0, explain:'Court markers such as cones, floor tape, or chalk are used to mark the court and boundary lines.'},
+      {q:'True or False: Wall ball needs a rough, bumpy wall so the ball bounces in surprising directions.', options:['True','False'], correct:1, explain:'False — wall ball needs a SMOOTH wall surface, such as a gym wall or an outdoor wall.'},
+      {q:'Why are foam or rubber balls used for wall ball in school?', options:['They are the most expensive','They are safe for indoor and outdoor use','They are the heaviest','They never bounce'], correct:1, explain:'The lesson lists rubber or foam balls because they are safe for both indoor and outdoor play.'},
+      {q:'True or False: A pickleball paddle for children should be lightweight and kid-friendly.', options:['True','False'], correct:0, explain:'Correct — the equipment list specifies lightweight, kid-friendly paddles.'},
+      {q:'Your teacher says, "Today we will play a net game." Which activity fits BEST?', options:['Running laps around the field','Pickleball over a low net','Sit-ups in pairs','Rope climbing'], correct:1, explain:'Pickleball sends a ball over a net, so it is a net game. The others do not involve sending an object over a net.'}
+    ]
+  },
+  {
+    id:'abc',
+    icon:'🤸',
+    title:'ABC Skills',
+    subtitle:'Agility, Balance, Coordination & Speed',
+    cards:[
+      {front:'Agility', back:'The ability to move quickly and change direction smoothly — like moving left or right fast to reach a ball, or switching from defense to attack.'},
+      {front:'Balance', back:'The ability to stay steady whether standing still or moving — keeping your body stable while reaching for a ball, and staying centered during swings and catches.'},
+      {front:'Coordination', back:'The ability to use your hands, eyes, and feet together smoothly — hitting a pickleball accurately, or timing a throw or catch in wall ball.'},
+      {front:'Speed', back:'How fast you can move your body or react — running toward a ball before it bounces twice, and reacting quickly to fast hits.'},
+      {front:'How Pickleball Builds ABC', back:'Running toward the ball improves agility. Swinging the paddle with control improves hand–eye coordination. Staying low and ready improves balance. Quick rallies develop speed and reaction time.'},
+      {front:'How Wall Ball Builds ABC', back:'Predicting the bounce sharpens coordination. Quick movements to reach the ball improve agility. Staying balanced while catching or throwing develops core strength. Fast-paced play boosts speed.'},
+      {front:'Fitness Fun Activities', back:'Agility Ladder Runs (side steps, in-and-out, zigzag), Balance Challenges (stand on one foot, slow walking on a line), Reaction Ball Games (chase unpredictable bounces), and Target Wall Hits (hit numbered targets).'},
+      {front:'Why ABC Skills Matter', back:'They help you move confidently, play games more safely, improve sports performance, enjoy physical activities more, and develop teamwork and game sense.'}
+    ],
+    quiz:[
+      {q:'True or False: Agility means the ability to move quickly and change direction smoothly.', options:['True','False'], correct:0, explain:'Correct — that is the lesson’s definition of agility.'},
+      {q:'Mia reaches far to the side for a ball but keeps her body steady and does not fall over. Which ABC skill is she showing?', options:['Speed','Balance','Coordination','Agility'], correct:1, explain:'Staying steady and keeping your body stable while reaching for a ball is balance.'},
+      {q:'True or False: Coordination means how fast you can react to a ball.', options:['True','False'], correct:1, explain:'False — that is SPEED. Coordination is using your hands, eyes, and feet together smoothly, like hitting a pickleball accurately.'},
+      {q:'Noel runs hard to reach the ball before it bounces a second time. Which ABC skill is he using MOST?', options:['Speed','Balance','Flexibility','Strength'], correct:0, explain:'Running toward a ball before it bounces twice is an example of speed in the lesson.'},
+      {q:'True or False: In pickleball, swinging the paddle with control mainly improves hand–eye coordination.', options:['True','False'], correct:0, explain:'Correct — the lesson says swinging the paddle with control improves hand–eye coordination.'},
+      {q:'In wall ball, which ABC skill is sharpened most by PREDICTING where the ball will bounce?', options:['Balance','Coordination','Strength','Flexibility'], correct:1, explain:'The lesson says predicting the bounce sharpens coordination.'},
+      {q:'True or False: In wall ball, staying balanced while catching or throwing mainly develops your flexibility.', options:['True','False'], correct:1, explain:'False — the lesson says staying balanced while catching or throwing develops CORE STRENGTH, not flexibility.'},
+      {q:'Your teacher sets up a ladder on the floor for side steps, in-and-out, and zigzag runs. Which skill is this drill built for?', options:['Agility','Reading','Balance only','Coordination only'], correct:0, explain:'Agility Ladder Runs are listed in the lesson as an activity for improving agility.'},
+      {q:'True or False: Agility Ladder Runs are used mainly to improve your balance.', options:['True','False'], correct:1, explain:'False — Agility Ladder Runs (side steps, in-and-out, zigzag) build AGILITY. The balance activities are standing on one foot and walking slowly along a line.'},
+      {q:'According to the lesson, why are ABC skills important for students?', options:['So they can win every game','So they move confidently, play safely, and enjoy activities more','So they can skip warm-ups','So they only play indoor games'], correct:1, explain:'The lesson says ABC skills help students move confidently, play games more safely, improve sports performance, enjoy physical activities more, and develop teamwork and game sense.'}
+    ]
+  },
+  {
+    id:'gameon',
+    icon:'🥅',
+    title:'Game On!',
+    subtitle:'Positioning, attacking & defending',
+    cards:[
+      {front:'Positioning', back:'Being in the right place at the right time.'},
+      {front:'The Ready Position', back:'Knees bent and paddle or hand up — so you can react to the ball in any direction.'},
+      {front:'Move Back to the Centre', back:'After you hit, move to the centre so you can cover more space. Stay alert to where the ball might go next.'},
+      {front:'Attacking', back:'Trying to score or win the rally. Hit the ball into open spaces, use fast and strong shots (but controlled!), and aim low in pickleball to make the ball harder to return.'},
+      {front:'Defending', back:'Stopping your opponent from scoring. Stay balanced and ready to react, move quickly to block or return shots, and use high, safe returns to give yourself time to recover.'},
+      {front:'Attack vs Defend', back:'Attacking = hit to open space, low and fast. Defending = high and safe, so you have time to get back into position.'},
+      {front:'Remember', back:'Good players are not just fast — they are in the right place, ready before the ball arrives.'}
+    ],
+    quiz:[
+      {q:'True or False: Positioning means being in the right place at the right time.', options:['True','False'], correct:0, explain:'Correct — that is exactly how the lesson defines positioning.'},
+      {q:'What does the READY POSITION look like?', options:['Standing straight with arms down','Knees bent with paddle or hand up','Sitting on the floor','Leaning on the net'], correct:1, explain:'The ready position is knees bent and paddle or hand up, so you can move in any direction.'},
+      {q:'True or False: After hitting the ball, you should stay exactly where you are and wait.', options:['True','False'], correct:1, explain:'False — the lesson says move to the centre after hitting so you can cover more space.'},
+      {q:'You want to WIN the rally. Where should you aim the ball?', options:['Straight at your opponent','Into the open space','Into the net','Out of bounds'], correct:1, explain:'Attacking means hitting the ball to open spaces, where your opponent is not standing.'},
+      {q:'True or False: When attacking in pickleball, you should aim HIGH to make the ball harder to return.', options:['True','False'], correct:1, explain:'False — aim LOW in pickleball. A low ball is much harder for your opponent to return.'},
+      {q:'Your opponent hit a hard shot and you are off balance at the side of the court. What is the BEST defending choice?', options:['A high, safe return to give yourself time to recover','A hard smash straight down','Ignore the ball','Run to the net and stand still'], correct:0, explain:'Defending means using high, safe returns that give you time to recover and get back into position.'},
+      {q:'True or False: Attacking shots should be fast and strong, but still controlled.', options:['True','False'], correct:0, explain:'Correct — the lesson says to use fast and strong shots, but controlled.'},
+      {q:'Which of these BEST describes defending?', options:['Trying to score as fast as possible','Stopping the opponent from scoring','Standing in the kitchen','Serving the ball'], correct:1, explain:'Defending is stopping the opponent from scoring — staying balanced, moving quickly, and returning safely.'},
+      {q:'True or False: Defending means using low, fast smashes to win the point quickly.', options:['True','False'], correct:1, explain:'False — that describes ATTACKING. Defending means staying balanced and using high, safe returns that give you time to recover.'},
+      {q:'Lara keeps getting beaten by shots to the far corner because she stands on one side after every hit. What should she change?', options:['Hit harder every time','Move back to the centre after hitting','Stand closer to the net and stay there','Stop moving completely'], correct:1, explain:'Moving to the centre after hitting lets her cover more space, so corner shots are easier to reach.'}
+    ]
+  },
+  {
+    id:'kitchen',
+    icon:'🍳',
+    title:'Pickleball Facts & The Kitchen',
+    subtitle:'History, the ball & the Non-Volley Zone',
+    cards:[
+      {front:'Where and When It Began', back:'Pickleball started in 1965 on Bainbridge Island, Washington, USA.'},
+      {front:'Who Invented It', back:'Joel Pritchard, Bill Bell, and Barney McCallum — as a backyard game for their families.'},
+      {front:'How It Started', back:'They improvised with ping-pong paddles, a perforated plastic ball, and a badminton court, and eventually developed the rules of the sport we know today.'},
+      {front:'The Pickleball', back:'A perforated plastic ball — a lightweight ball with holes in it.'},
+      {front:'What Is "The Kitchen"?', back:'The informal name for the Non-Volley Zone (NVZ).'},
+      {front:'How Big Is the Kitchen?', back:'It is the 7-foot area on BOTH sides of the net.'},
+      {front:'The Kitchen Rule', back:'Players cannot hit a volley (hitting the ball before it bounces) while standing inside the kitchen.'},
+      {front:'You CAN Enter the Kitchen', back:'Players may enter the kitchen to hit a ball AFTER it bounces. The rule only stops volleys.'},
+      {front:'Why the Kitchen Exists', back:'It prevents players from standing too close to the net and constantly smashing the ball.'}
+    ],
+    quiz:[
+      {q:'True or False: Pickleball started in 1965 on Bainbridge Island, Washington, USA.', options:['True','False'], correct:0, explain:'Correct — 1965, Bainbridge Island, Washington, USA.'},
+      {q:'Who invented pickleball?', options:['Joel Pritchard, Bill Bell, and Barney McCallum','James Naismith','William G. Morgan','Walter Camp'], correct:0, explain:'Joel Pritchard, Bill Bell, and Barney McCallum invented it as a backyard game for their families.'},
+      {q:'True or False: A pickleball is a heavy rubber ball with a smooth surface.', options:['True','False'], correct:1, explain:'False — a pickleball is a perforated plastic ball: lightweight, with holes in it.'},
+      {q:'What is the real name of "the kitchen" in pickleball?', options:['The service box','The Non-Volley Zone (NVZ)','The baseline','The centre line'], correct:1, explain:'"The kitchen" is the informal name for the Non-Volley Zone, or NVZ.'},
+      {q:'True or False: The kitchen is a 7-foot area on both sides of the net.', options:['True','False'], correct:0, explain:'Correct — the kitchen is the 7-foot Non-Volley Zone on both sides of the net.'},
+      {q:'You are standing inside the kitchen and the ball comes toward you in the air, before bouncing. What are you NOT allowed to do?', options:['Step backward out of the kitchen','Hit it as a volley while standing in the kitchen','Let it bounce first','Call for your partner'], correct:1, explain:'You cannot hit a volley — hitting the ball before it bounces — while standing inside the kitchen.'},
+      {q:'True or False: Players are never allowed to step into the kitchen for any reason.', options:['True','False'], correct:1, explain:'False — players CAN enter the kitchen to hit a ball after it bounces. Only volleys are banned there.'},
+      {q:'The ball bounces inside the kitchen. What may you do?', options:['Nothing — it is an automatic loss','Step in and hit it after the bounce','Volley it from inside the kitchen','Catch it with your hand'], correct:1, explain:'Once the ball has bounced, you may enter the kitchen and hit it. The rule only stops volleys.'},
+      {q:'Why does the kitchen rule exist?', options:['To make the court look nicer','To stop players standing too close to the net and constantly smashing','To give the referee somewhere to stand','To slow down the serve'], correct:1, explain:'The kitchen prevents players from standing right at the net and smashing every ball downward.'},
+      {q:'True or False: The inventors of pickleball first used ping-pong paddles and a badminton court.', options:['True','False'], correct:0, explain:'Correct — they improvised with ping-pong paddles, a perforated plastic ball, and a badminton court.'}
+    ]
+  }
+];
+const FINAL_EXAM_PER_LESSON = 5;
+const STORAGE_KEY = 'rallyready_progress_v1';
+
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
+}
+let progress = loadProgress();
+
+/* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
+if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+  progress = {};
+  saveProgress(progress);
+  if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+}
+/* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
+if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+  progress = {};
+  saveProgress(progress);
+  if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function prepareQuestion(q){
+  const order = shuffle(q.options.map((_,i)=>i));
+  const options = order.map(i=>q.options[i]);
+  const correct = order.indexOf(q.correct);
+  return {q:q.q, options, correct, explain:q.explain};
+}
+function starsFor(pct){
+  if(pct >= 1) return 3;
+  if(pct >= 0.8) return 2;
+  if(pct >= 0.5) return 1;
+  return 0;
+}
+function starString(n){
+  let s='';
+  for(let i=0;i<3;i++) s += i<n ? '★' : '<span class="off">★</span>';
+  return s;
+}
+
+function courtMarkup(n){
+  const show = i => n>=i ? 1 : 0.06;
+  return `<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+    <rect x="34" y="24" width="132" height="168" rx="6" fill="var(--accent-soft)" opacity="${show(1)}"/>
+    <rect x="34" y="24" width="132" height="168" rx="6" fill="none" stroke="var(--accent-dark)" stroke-width="3" opacity="${show(2)}"/>
+    <rect x="34" y="82" width="132" height="52" fill="var(--gold)" opacity="${show(3) * 0.45}"/>
+    <g opacity="${show(4)}" stroke="var(--accent-dark)" stroke-width="2.5">
+      <line x1="100" y1="24" x2="100" y2="82"/>
+      <line x1="100" y1="134" x2="100" y2="192"/>
+    </g>
+    <g opacity="${show(5)}">
+      <line x1="24" y1="108" x2="176" y2="108" stroke="var(--ink)" stroke-width="3"/>
+      <circle cx="24" cy="108" r="4" fill="var(--ink)"/>
+      <circle cx="176" cy="108" r="4" fill="var(--ink)"/>
+    </g>
+    <path d="M34 108 h132" stroke="#FFFFFF" stroke-width="1.6" stroke-dasharray="4 4" opacity="${show(6)}"/>
+    <g opacity="${show(7)}">
+      <ellipse cx="58" cy="162" rx="15" ry="19" fill="var(--coral)"/>
+      <rect x="54" y="178" width="8" height="18" rx="3" fill="var(--accent-dark)"/>
+    </g>
+    <g opacity="${show(8)}">
+      <path d="M70 148 Q102 100 124 70" stroke="var(--coral)" stroke-width="2.5" fill="none" stroke-dasharray="5 5" stroke-linecap="round"/>
+      <circle cx="132" cy="62" r="9" fill="var(--gold)" stroke="var(--accent-dark)" stroke-width="2"/>
+      <circle cx="129" cy="59" r="1.5" fill="var(--accent-dark)"/>
+      <circle cx="135.5" cy="62.5" r="1.5" fill="var(--accent-dark)"/>
+      <circle cx="130.5" cy="66" r="1.5" fill="var(--accent-dark)"/>
+      <text x="100" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent-dark)" font-family="Baloo 2, cursive">RALLY!</text>
+    </g>
+  </svg>`;
+}
+
+const STRATEGY = [
+  {kicker:'True or False Tip #1', title:'Watch for absolute words', body:'Words like "always," "never," "only," and "must" often make a statement FALSE. "Players are NEVER allowed in the kitchen" is false &mdash; you may enter it after the ball bounces.'},
+  {kicker:'True or False Tip #2', title:'One false part = the whole thing is False', body:'If any single part of the sentence is wrong, mark the WHOLE sentence False &mdash; even if the rest sounds correct.'},
+  {kicker:'P.E. Tip #1', title:'Learn the exact numbers', body:'P.E. tests love specifics: pickleball began in <b>1965</b> on Bainbridge Island, it had <b>3</b> inventors, and the kitchen is <b>7 feet</b> on <b>both</b> sides of the net. Memorise those four facts.'},
+  {kicker:'P.E. Tip #2', title:'Match the clue word to the ABC skill', body:'"Change direction" &rarr; <b>agility</b>. "Stay steady" or "keep stable" &rarr; <b>balance</b>. "Hands, eyes and feet together" &rarr; <b>coordination</b>. "How fast" or "react quickly" &rarr; <b>speed</b>. The question almost always hides one of these clues.'},
+  {kicker:'P.E. Tip #3', title:'Attack is low and fast, defence is high and safe', body:'If the answer talks about hitting into open space, low and fast, it is <b>attacking</b>. If it talks about a high, safe return that buys you time, it is <b>defending</b>.'},
+  {kicker:'P.E. Tip #4', title:'The kitchen trap', body:'The kitchen only bans <b>volleys</b> &mdash; hitting the ball before it bounces. You may step in and play a ball that has already bounced. Questions are often written to make you forget that.'},
+  {kicker:'Situational Tip', title:'Pick the safest, most controlled action', body:'In situational questions, the right answer is usually the one that is controlled, balanced and ready &mdash; not the wildest or hardest hit.'},
+  {kicker:'General Tip', title:'Reread before you finalize', body:'Read the question one more time with your answer in mind. If it still matches what the lesson actually said, you have got it.'}
+];
+
+let currentLessonIdx = null;
+let flashIdx = 0;
+let currentQuizSet = [];
+let currentQuizMeta = null;
+let quizIdx = 0;
+let quizScore = 0;
+
+function cardKey(e){
+  if(e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
+    e.preventDefault();
+    e.currentTarget.click();
+  }
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){ renderHome(); showScreen('home'); }
+
+function renderHome(){
+  const list = document.getElementById('homeList');
+  const finalTotal = LESSONS.length * FINAL_EXAM_PER_LESSON;
+  const finalBest = progress['final'] || 0;
+  let html = '';
+
+  html += `<div class="item-card final-card" role="button" tabindex="0" onclick="startFinalExam()" onkeydown="cardKey(event)">
+    <div class="icon">🏆</div>
+    <div class="info">
+      <span class="final-badge">Mock Exam</span>
+      <h3>Full Mock Exam</h3>
+      <p>${finalTotal} mixed questions from all ${LESSONS.length} lessons</p>
+    </div>
+    <div class="stars">${starString(starsFor(finalBest/finalTotal))}</div>
+  </div>`;
+
+  html += `<div class="item-card strategy-card" role="button" tabindex="0" onclick="showScreen('strategyScreen')" onkeydown="cardKey(event)">
+    <div class="icon">🎯</div>
+    <div class="info">
+      <h3>Exam Strategy</h3>
+      <p>How to ace True/False & situational questions</p>
+    </div>
+  </div>`;
+
+  LESSONS.forEach((l,i)=>{
+    const best = progress[l.id] || 0;
+    html += `<div class="item-card" role="button" tabindex="0" onclick="openLesson(${i})" onkeydown="cardKey(event)">
+      <div class="icon">${l.icon}</div>
+      <div class="info">
+        <h3>${l.title}</h3>
+        <p>${l.subtitle}</p>
+      </div>
+      <div class="stars">${starString(starsFor(best/l.quiz.length))}</div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function openLesson(i){
+  currentLessonIdx = i;
+  flashIdx = 0;
+  document.getElementById('flashTitle').textContent = LESSONS[i].title;
+  renderFlash();
+  showScreen('flashScreen');
+}
+function renderFlash(){
+  const l = LESSONS[currentLessonIdx];
+  const c = l.cards[flashIdx];
+  document.getElementById('flashFront').textContent = c.front;
+  document.getElementById('flashBack').textContent = c.back;
+  document.getElementById('flashBack').style.display = 'none';
+  document.getElementById('flashFront').style.display = 'block';
+  document.getElementById('flashTag').textContent = 'Term';
+  document.getElementById('flashHint').textContent = 'Tap the card to flip';
+  document.getElementById('flashDots').textContent = `${flashIdx+1} / ${l.cards.length}`;
+}
+function flipCard(){
+  const front = document.getElementById('flashFront');
+  const back = document.getElementById('flashBack');
+  const flipped = back.style.display !== 'none';
+  front.style.display = flipped ? 'block' : 'none';
+  back.style.display = flipped ? 'none' : 'block';
+  document.getElementById('flashTag').textContent = flipped ? 'Term' : 'Meaning';
+}
+function nextCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx+1) % l.cards.length;
+  renderFlash();
+}
+function prevCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx-1+l.cards.length) % l.cards.length;
+  renderFlash();
+}
+
+function startQuiz(){
+  const l = LESSONS[currentLessonIdx];
+  currentQuizSet = shuffle(l.quiz).map(prepareQuestion);
+  currentQuizMeta = {id:l.id, title:l.title};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = l.title;
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function startFinalExam(){
+  let qs = [];
+  LESSONS.forEach(l=>{
+    qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON));
+  });
+  currentQuizSet = shuffle(qs).map(prepareQuestion);
+  currentQuizMeta = {id:'final', title:'Full Mock Exam'};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = 'Full Mock Exam';
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function renderQuestion(){
+  const total = currentQuizSet.length;
+  const q = currentQuizSet[quizIdx];
+  document.getElementById('quizCounter').textContent = `Question ${quizIdx+1} of ${total}`;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('quizFill').style.width = `${(quizIdx/total)*100}%`;
+  document.getElementById('sceneSvg').innerHTML = courtMarkup(Math.round((quizScore/total)*8));
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('explainBox').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const box = document.getElementById('optionsBox');
+  box.innerHTML = '';
+  q.options.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = ()=>selectOption(i);
+    box.appendChild(btn);
+  });
+}
+
+function selectOption(i){
+  const q = currentQuizSet[quizIdx];
+  const buttons = document.querySelectorAll('#optionsBox .option');
+  buttons.forEach((b,idx)=>{
+    b.disabled = true;
+    if(idx === q.correct) b.classList.add('correct');
+    else if(idx === i) b.classList.add('wrong');
+  });
+  if(i === q.correct) quizScore++;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('sceneSvg').innerHTML = courtMarkup(Math.round((quizScore/currentQuizSet.length)*8));
+  document.getElementById('explainBox').textContent = q.explain;
+  document.getElementById('explainBox').style.display = 'block';
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('nextBtn').textContent = quizIdx < currentQuizSet.length-1 ? 'Next ▶' : 'See Results 🏆';
+}
+
+function nextQuestion(){
+  if(quizIdx < currentQuizSet.length-1){
+    quizIdx++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function finishQuiz(){
+  const total = currentQuizSet.length;
+  const best = progress[currentQuizMeta.id] || 0;
+  if(quizScore > best) progress[currentQuizMeta.id] = quizScore;
+  saveProgress(progress);
+  renderResults(total);
+  showScreen('resultsScreen');
+}
+
+function renderResults(total){
+  const pct = quizScore/total;
+  const n = starsFor(pct);
+  document.getElementById('resultScene').innerHTML = courtMarkup(Math.round(pct*8));
+  document.getElementById('resultStars').innerHTML = starString(n);
+  document.getElementById('resultTitle').textContent =
+    n===3 ? 'Match Point! Perfect Score!' :
+    n===2 ? 'Great Rally!' :
+    n===1 ? 'Good Start!' : 'Keep Practicing!';
+  document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
+}
+
+function retryQuiz(){
+  if(currentQuizMeta.id === 'final'){ startFinalExam(); }
+  else { startQuiz(); }
+}
+
+function renderStrategy(){
+  const box = document.getElementById('strategyList');
+  box.innerHTML = STRATEGY.map(t=>`
+    <div class="tip">
+      <div class="kicker">${t.kicker}</div>
+      <h4>${t.title}</h4>
+      <p>${t.body}</p>
+    </div>
+  `).join('');
+}
+
+renderHome();
+renderStrategy();
+</script>

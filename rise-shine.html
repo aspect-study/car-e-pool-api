@@ -1,3 +1,4 @@
+<html lang="en">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>Rise & Shine: GMRC Champions</title>
@@ -94,6 +95,17 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
   transition:transform .15s ease, border-color .15s ease;
 }
 .item-card:hover{transform:translateY(-2px);border-color:var(--accent);}
+/* Cards and the flashcard are divs (they contain headings, so they cannot be
+   <button>). They carry role=button + tabindex, so give them a visible focus
+   ring for anyone driving the app from the keyboard. */
+.item-card:focus-visible,
+.flashcard:focus-visible,
+.btn:focus-visible,
+.option:focus-visible,
+.btn-icon:focus-visible{
+  outline:3px solid var(--gold);
+  outline-offset:3px;
+}
 .item-card .icon{
   width:52px;height:52px;border-radius:14px;
   background:var(--accent-soft);
@@ -232,11 +244,13 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
   <div id="flashScreen" class="screen">
     <div class="topbar">
-      <div class="btn-icon" onclick="goHome()">←</div>
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
       <h2 id="flashTitle"></h2>
     </div>
     <div class="flash-wrap">
-      <div class="flashcard" id="flashCard" onclick="flipCard()">
+      <div class="flashcard" id="flashCard" onclick="flipCard()"
+           role="button" tabindex="0" aria-label="Flashcard. Activate to flip between the term and its meaning."
+           onkeydown="cardKey(event)">
         <span class="tag" id="flashTag">Term</span>
         <h3 id="flashFront"></h3>
         <p id="flashBack" style="display:none;"></p>
@@ -253,7 +267,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
   <div id="quizScreen" class="screen">
     <div class="topbar">
-      <div class="btn-icon" onclick="goHome()">←</div>
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
       <h2 id="quizTitle"></h2>
     </div>
     <div class="medal-box"><div id="medalSvg"></div></div>
@@ -286,7 +300,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
   <div id="strategyScreen" class="screen">
     <div class="topbar">
-      <div class="btn-icon" onclick="goHome()">←</div>
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
       <h2>Exam Strategy 🎯</h2>
     </div>
     <div class="hero" style="background:linear-gradient(135deg,var(--coral),#C94B3A);">
@@ -393,6 +407,12 @@ function saveProgress(p){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
 }
 let progress = loadProgress();
+/* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
+if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+  progress = {};
+  saveProgress(progress);
+  if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+}
 
 function shuffle(arr){
   const a = arr.slice();
@@ -458,6 +478,12 @@ let currentQuizMeta = null;
 let quizIdx = 0;
 let quizScore = 0;
 
+function cardKey(e){
+  if(e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
+    e.preventDefault();
+    e.currentTarget.click();
+  }
+}
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -470,17 +496,17 @@ function renderHome(){
   const finalBest = progress['final'] || 0;
   let html = '';
 
-  html += `<div class="item-card final-card" onclick="startFinalExam()">
+  html += `<div class="item-card final-card" role="button" tabindex="0" onclick="startFinalExam()" onkeydown="cardKey(event)">
     <div class="icon">🏆</div>
     <div class="info">
       <span class="final-badge">Mock Exam</span>
       <h3>Full Mock Exam</h3>
-      <p>${finalTotal} mixed questions from all 3 lessons</p>
+      <p>${finalTotal} mixed questions from all ${LESSONS.length} lessons</p>
     </div>
     <div class="stars">${starString(starsFor(finalBest/finalTotal))}</div>
   </div>`;
 
-  html += `<div class="item-card strategy-card" onclick="showScreen('strategyScreen')">
+  html += `<div class="item-card strategy-card" role="button" tabindex="0" onclick="showScreen('strategyScreen')" onkeydown="cardKey(event)">
     <div class="icon">🎯</div>
     <div class="info">
       <h3>Exam Strategy</h3>
@@ -490,7 +516,7 @@ function renderHome(){
 
   LESSONS.forEach((l,i)=>{
     const best = progress[l.id] || 0;
-    html += `<div class="item-card" onclick="openLesson(${i})">
+    html += `<div class="item-card" role="button" tabindex="0" onclick="openLesson(${i})" onkeydown="cardKey(event)">
       <div class="icon">${l.icon}</div>
       <div class="info">
         <h3>${l.title}</h3>
