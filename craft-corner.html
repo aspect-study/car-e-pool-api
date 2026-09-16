@@ -28,7 +28,7 @@
     --ink:#F5EFE3;
     --accent:#C98BBE;
     --accent-dark:#EBC9E1;
-    --accent-soft:#243836;
+    --accent-soft:#322435;
     --gold:#FFC65C;
     --coral:#FF8A73;
     --muted:#B9AE9E;
@@ -44,7 +44,7 @@
   --ink:#F5EFE3;
   --accent:#C98BBE;
   --accent-dark:#EBC9E1;
-  --accent-soft:#243836;
+  --accent-soft:#322435;
   --gold:#FFC65C;
   --coral:#FF8A73;
   --muted:#B9AE9E;
@@ -74,6 +74,21 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
   padding:26px 22px;
   box-shadow:var(--shadow);
   margin-bottom:20px;
+}
+/* In dark mode --accent-dark is deliberately LIGHT (it is used as text colour on
+   dark cards). That makes the hero gradient pale, and the hero's white text drops
+   to ~1.4:1 contrast. Darken both stops here so the white text stays readable. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .hero{
+    background:linear-gradient(135deg,
+      color-mix(in srgb, var(--accent) 55%, #0C1414),
+      color-mix(in srgb, var(--accent-dark) 35%, #0C1414));
+  }
+}
+:root[data-theme="dark"] .hero{
+  background:linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 55%, #0C1414),
+    color-mix(in srgb, var(--accent-dark) 35%, #0C1414));
 }
 .hero h1{margin:0 0 6px;font-size:1.7rem;}
 .hero p{margin:0;opacity:.92;line-height:1.5;font-size:.95rem;}
@@ -524,13 +539,6 @@ function saveProgress(p){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
 }
 let progress = loadProgress();
-
-/* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
-if (/(^|[?&])reset=1(&|$)/.test(location.search)){
-  progress = {};
-  saveProgress(progress);
-  if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
-}
 /* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
 if (/(^|[?&])reset=1(&|$)/.test(location.search)){
   progress = {};

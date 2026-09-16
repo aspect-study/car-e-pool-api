@@ -1,0 +1,851 @@
+<html lang="en">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Life Lab: Science 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF7EC;
+  --card:#FFFFFF;
+  --ink:#2B2320;
+  --accent:#2E6F9E;
+  --accent-dark:#1B4668;
+  --accent-soft:#DDEBF5;
+  --gold:#FFB627;
+  --coral:#FF6F59;
+  --muted:#8A7F73;
+  --border:#F0E4D2;
+  --good:#2E9E5B;
+  --bad:#E15555;
+  --shadow: 0 10px 28px rgba(43,35,32,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15201F;
+    --card:#1E2C2A;
+    --ink:#F5EFE3;
+    --accent:#6FB6E8;
+    --accent-dark:#B8DDF5;
+    --accent-soft:#1C2E3B;
+    --gold:#FFC65C;
+    --coral:#FF8A73;
+    --muted:#B9AE9E;
+    --border:#2C3B39;
+    --good:#4FCB82;
+    --bad:#FF7A7A;
+    --shadow: 0 10px 28px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15201F;
+  --card:#1E2C2A;
+  --ink:#F5EFE3;
+  --accent:#6FB6E8;
+  --accent-dark:#B8DDF5;
+  --accent-soft:#1C2E3B;
+  --gold:#FFC65C;
+  --coral:#FF8A73;
+  --muted:#B9AE9E;
+  --border:#2C3B39;
+  --good:#4FCB82;
+  --bad:#FF7A7A;
+  --shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Nunito',sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
+#app{max-width:720px;margin:0 auto;padding:20px 16px 60px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.hero{
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  color:#fff;
+  border-radius:22px;
+  padding:26px 22px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+/* In dark mode --accent-dark is deliberately LIGHT (it is used as text colour on
+   dark cards). That makes the hero gradient pale, and the hero's white text drops
+   to ~1.4:1 contrast. Darken both stops here so the white text stays readable. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .hero{
+    background:linear-gradient(135deg,
+      color-mix(in srgb, var(--accent) 55%, #0C1414),
+      color-mix(in srgb, var(--accent-dark) 35%, #0C1414));
+  }
+}
+:root[data-theme="dark"] .hero{
+  background:linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 55%, #0C1414),
+    color-mix(in srgb, var(--accent-dark) 35%, #0C1414));
+}
+.hero h1{margin:0 0 6px;font-size:1.7rem;}
+.hero p{margin:0;opacity:.92;line-height:1.5;font-size:.95rem;}
+.hero .badge{
+  display:inline-block;background:rgba(255,255,255,.18);
+  padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:800;
+  letter-spacing:.04em;margin-bottom:10px;
+}
+
+.card-list{display:flex;flex-direction:column;gap:12px;}
+.item-card{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, border-color .15s ease;
+}
+.item-card:hover{transform:translateY(-2px);border-color:var(--accent);}
+/* Cards and the flashcard are divs (they contain headings, so they cannot be
+   <button>). They carry role=button + tabindex, so give them a visible focus
+   ring for anyone driving the app from the keyboard. */
+.item-card:focus-visible,
+.flashcard:focus-visible,
+.btn:focus-visible,
+.option:focus-visible,
+.btn-icon:focus-visible{
+  outline:3px solid var(--gold);
+  outline-offset:3px;
+}
+.item-card .icon{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--accent-soft);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;
+}
+.item-card .info{flex:1;min-width:0;}
+.item-card .info h3{margin:0 0 3px;font-size:1.05rem;}
+.item-card .info p{margin:0;color:var(--muted);font-size:.82rem;}
+.stars{font-size:.95rem;letter-spacing:1px;color:var(--gold);white-space:nowrap;}
+.stars .off{color:var(--border);}
+
+.final-card{
+  border-color:var(--gold);
+  background:linear-gradient(135deg,var(--accent-soft),var(--card));
+}
+.final-badge{
+  display:inline-block;background:var(--gold);color:#3A2900;
+  font-size:.68rem;font-weight:800;padding:2px 10px;border-radius:999px;
+  margin-bottom:4px;letter-spacing:.03em;
+}
+.strategy-card{border-color:var(--coral);}
+.strategy-card .icon{background:#FFEAE6;}
+
+.topbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.btn-icon{
+  background:var(--card);border:2px solid var(--border);border-radius:12px;
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.1rem;color:var(--ink);flex-shrink:0;
+}
+.topbar h2{margin:0;font-size:1.15rem;flex:1;}
+
+.flash-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.flashcard{
+  width:100%;min-height:220px;
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:26px 22px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;cursor:pointer;
+  position:relative;
+}
+.flashcard .tag{
+  position:absolute;top:14px;left:16px;font-size:.7rem;font-weight:800;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.05em;
+}
+.flashcard h3{margin:6px 0 10px;font-size:1.3rem;color:var(--accent-dark);}
+.flashcard p{margin:0;font-size:1rem;line-height:1.55;}
+.flashcard .hint{margin-top:14px;font-size:.78rem;color:var(--muted);}
+.flash-nav{display:flex;align-items:center;gap:16px;width:100%;justify-content:space-between;}
+.flash-dots{font-size:.85rem;color:var(--muted);font-weight:700;}
+
+.btn{
+  font-family:'Baloo 2',cursive;
+  border:none;border-radius:14px;
+  padding:13px 22px;font-size:1rem;font-weight:700;
+  cursor:pointer;color:#fff;
+  background:var(--accent);
+  box-shadow:0 6px 0 var(--accent-dark);
+  transition:transform .1s ease;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-dark);}
+.btn.gold{background:var(--gold);box-shadow:0 6px 0 #C98600;color:#3A2900;}
+.btn.gold:active{box-shadow:0 2px 0 #C98600;}
+.btn.ghost{background:var(--card);color:var(--ink);border:2px solid var(--border);box-shadow:none;}
+.btn.full{width:100%;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.progress-bar{
+  height:10px;background:var(--border);border-radius:999px;overflow:hidden;margin-bottom:18px;
+}
+.progress-bar .fill{height:100%;background:var(--gold);transition:width .3s ease;}
+
+.quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.85rem;color:var(--muted);font-weight:700;}
+.scene-box{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:10px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+.scene-box svg{width:100%;max-width:150px;display:block;margin:0 auto;}
+
+.passage{
+  background:var(--accent-soft);border:2px solid var(--accent);border-radius:16px;
+  padding:16px;margin-bottom:16px;font-size:.95rem;line-height:1.6;
+}
+.passage strong{color:var(--accent-dark);}
+
+.q-card{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:20px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.q-card h3{margin:0 0 16px;font-size:1.1rem;line-height:1.5;}
+.option{
+  display:block;width:100%;text-align:left;
+  background:var(--bg);border:2px solid var(--border);border-radius:14px;
+  padding:13px 16px;margin-bottom:10px;font-size:.95rem;font-family:'Nunito',sans-serif;
+  cursor:pointer;color:var(--ink);font-weight:700;
+}
+.option:hover{border-color:var(--accent);}
+.option.correct{background:#E5F6EB;border-color:var(--good);color:#1B6B3C;}
+.option.wrong{background:#FCE9E9;border-color:var(--bad);color:#A82F2F;}
+.option:disabled{cursor:default;}
+.explain{
+  margin-top:12px;padding:12px 14px;background:var(--accent-soft);
+  border-radius:12px;font-size:.88rem;line-height:1.5;color:var(--ink);
+}
+
+.results-hero{text-align:center;padding:20px 0;}
+.results-hero .big-stars{font-size:2.2rem;color:var(--gold);letter-spacing:4px;}
+.results-hero h2{margin:8px 0 4px;}
+.results-hero p{color:var(--muted);margin:0 0 16px;}
+.result-actions{display:flex;flex-direction:column;gap:10px;}
+
+.strategy-list{display:flex;flex-direction:column;gap:12px;}
+.tip{
+  background:var(--card);border:2px solid var(--border);border-left:6px solid var(--coral);
+  border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.tip h4{margin:0 0 5px;font-size:.98rem;color:var(--accent-dark);}
+.tip p{margin:0;font-size:.9rem;line-height:1.55;}
+.tip .kicker{font-size:.7rem;font-weight:800;color:var(--coral);text-transform:uppercase;letter-spacing:.05em;}
+</style>
+
+<div id="app">
+
+  <div id="home" class="screen active">
+    <div class="hero">
+      <span class="badge">Science · Grade 5 · Lessons 5, 6 &amp; 7</span>
+      <h1>Life Lab 🔬</h1>
+      <p>Grow your plant one correct answer at a time! Study microorganisms and fungi, the major groups of plants and animals, and the plant organ systems &mdash; then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
+    </div>
+    <div class="card-list" id="homeList"></div>
+  </div>
+
+  <div id="flashScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2 id="flashTitle"></h2>
+    </div>
+    <div class="flash-wrap">
+      <div class="flashcard" id="flashCard" onclick="flipCard()"
+           role="button" tabindex="0" aria-label="Flashcard. Activate to flip between the term and its meaning."
+           onkeydown="cardKey(event)">
+        <span class="tag" id="flashTag">Term</span>
+        <h3 id="flashFront"></h3>
+        <p id="flashBack" style="display:none;"></p>
+        <div class="hint" id="flashHint">Tap the card to flip</div>
+      </div>
+      <div class="flash-nav">
+        <button class="btn ghost" onclick="prevCard()">◀ Prev</button>
+        <span class="flash-dots" id="flashDots"></span>
+        <button class="btn ghost" onclick="nextCard()">Next ▶</button>
+      </div>
+      <button class="btn gold full" onclick="startQuiz()">Start Quiz 🔬</button>
+    </div>
+  </div>
+
+  <div id="quizScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2 id="quizTitle"></h2>
+    </div>
+    <div class="scene-box"><div id="sceneSvg"></div></div>
+    <div class="progress-bar"><div class="fill" id="quizFill" style="width:0%"></div></div>
+    <div class="quiz-head">
+      <span id="quizCounter"></span>
+      <span id="quizScoreLabel"></span>
+    </div>
+    <div id="passageBox"></div>
+    <div class="q-card">
+      <h3 id="qText"></h3>
+      <div id="optionsBox"></div>
+      <div class="explain" id="explainBox" style="display:none;"></div>
+    </div>
+    <button class="btn full" id="nextBtn" style="display:none;" onclick="nextQuestion()">Next ▶</button>
+  </div>
+
+  <div id="resultsScreen" class="screen">
+    <div class="results-hero">
+      <div class="scene-box" style="max-width:180px;margin:0 auto 14px;"><div id="resultScene"></div></div>
+      <div class="big-stars" id="resultStars"></div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultScore"></p>
+    </div>
+    <div class="result-actions">
+      <button class="btn full" onclick="retryQuiz()">Try Again 🔁</button>
+      <button class="btn ghost full" onclick="goHome()">Back to Home</button>
+    </div>
+  </div>
+
+  <div id="strategyScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2>Exam Strategy 🎯</h2>
+    </div>
+    <div class="hero" style="background:linear-gradient(135deg,var(--coral),#C94B3A);">
+      <span class="badge">Before you take the real test</span>
+      <h1 style="font-size:1.35rem;">How to Ace a Science Test</h1>
+      <p>These are the exact moves to use on your teacher's Science exam &mdash; not just for this app.</p>
+    </div>
+    <div class="strategy-list" id="strategyList"></div>
+  </div>
+
+</div>
+
+<script>
+const LESSONS = [
+  {
+    id:'bacteria',
+    icon:'🦠',
+    title:'Microorganisms & Bacteria',
+    subtitle:'Shapes, examples, antibiotics & good bacteria',
+    cards:[
+      {front:'What Are Microorganisms?', back:'Tiny living things that can <b>only</b> be seen with a microscope.'},
+      {front:'Bacteria', back:'Tiny, <b>single-celled</b> organisms that exist all around us. They come in different shapes: spheres, rods, and spirals.'},
+      {front:'Cocci (spheres)', back:'One is a <b>coccus</b>. <i>Streptococcus pneumoniae</i> can cause <b>pneumonia</b>.'},
+      {front:'Bacilli (rods)', back:'One is a <b>bacillus</b>. <i>Bacillus cereus</i> is a common cause of <b>food poisoning</b>.'},
+      {front:'Spirochetes (spirals)', back:'One is a <b>spirochete</b>. <i>Leptospira</i> can cause <b>leptospirosis</b>.'},
+      {front:'E. coli', back:'<i>Escherichia coli</i> is a type of bacteria commonly found in the <b>intestines</b> of humans and animals.'},
+      {front:'Antibiotics', back:'Medicines that can kill or stop the growth of harmful bacteria. <b>Erythromycin</b> prevents bacteria from growing further rather than directly destroying them.'},
+      {front:'Good Bacteria', back:'Not all bacteria are harmful! <b>Lactobacillus</b>, found in yogurt and other fermented foods, helps with diarrhea and other gastrointestinal issues.'}
+    ],
+    quiz:[
+      {q:'True or False: Microorganisms are tiny living things that can only be seen with a microscope.', options:['True','False'], correct:0, explain:'Correct — that is exactly what makes them <i>micro</i>organisms.'},
+      {q:'Bacteria that are shaped like spheres are called...', options:['Cocci','Bacilli','Spirochetes','Fungi'], correct:0, explain:'Cocci are the sphere-shaped bacteria. One of them is called a coccus.'},
+      {q:'True or False: Bacilli are the bacteria shaped like spirals.', options:['True','False'], correct:1, explain:'False — bacilli are shaped like <b>rods</b>. The spiral-shaped ones are the <b>spirochetes</b>.'},
+      {q:'Which bacteria can cause leptospirosis?', options:['Lactobacillus','Leptospira','Bacillus cereus','Streptococcus pneumoniae'], correct:1, explain:'<i>Leptospira</i>, a spirochete, can cause leptospirosis.'},
+      {q:'True or False: Bacteria are single-celled organisms.', options:['True','False'], correct:0, explain:'Correct — bacteria are tiny, single-celled organisms that exist all around us.'},
+      {q:'<i>Bacillus cereus</i> is a common cause of what?', options:['Pneumonia','Food poisoning','Leptospirosis','Athlete&rsquo;s foot'], correct:1, explain:'<i>Bacillus cereus</i>, a rod-shaped bacterium, is a common cause of food poisoning.'},
+      {q:'True or False: All bacteria are harmful to people.', options:['True','False'], correct:1, explain:'False — there are <b>good bacteria</b> too. Lactobacillus in yogurt helps with diarrhea and other gastrointestinal issues.'},
+      {q:'Which helpful bacterium is found in yogurt and other fermented foods?', options:['Lactobacillus','E. coli','Leptospira','Streptococcus'], correct:0, explain:'Lactobacillus is the good bacterium found in yogurt and fermented foods.'},
+      {q:'True or False: Erythromycin works by directly destroying bacteria.', options:['True','False'], correct:1, explain:'False — erythromycin <b>prevents the further growth</b> of bacteria rather than directly destroying them.'},
+      {q:'Where is <i>E. coli</i> commonly found?', options:['On bread and fruit','In the intestines of humans and animals','In pond water only','Inside flowers'], correct:1, explain:'<i>Escherichia coli</i> is commonly found in the intestines of humans and animals.'}
+    ]
+  },
+  {
+    id:'fungi',
+    icon:'🍄',
+    title:'Major Groups of Fungi',
+    subtitle:'The 4 divisions & the discovery of penicillin',
+    cards:[
+      {front:'What Are Fungi?', back:'Organisms that can be <b>unicellular</b> (single-celled) or <b>multicellular</b> &mdash; such as mushrooms or molds.'},
+      {front:'Why Fungi Matter', back:'They break down dead plants, help the process of <b>decomposition</b>, and are used in making <b>breads</b> and <b>medicines</b> (antibiotics).'},
+      {front:'The 4 Divisions', back:'<b>Chytridiomycota</b> (chytrids) &middot; <b>Zygomycota</b> (bread molds) &middot; <b>Ascomycota</b> (yeasts and sac fungi) &middot; <b>Basidiomycota</b> (club fungi)'},
+      {front:'Chytridiomycota (chytrids)', back:'Found in diverse habitats: freshwater, soil, and even the <b>digestive system of animals</b>. They have <b>flagellated spores</b>, which means they can swim and move around.'},
+      {front:'Zygomycota (bread molds)', back:'Commonly found on bread, fruits, and other decaying plant materials. They have a <b>fast growth rate</b> and reproduce using <b>spores</b>.'},
+      {front:'Ascomycota (yeasts and sac fungi)', back:'Yeast used in baking produces <b>carbon dioxide</b>, which helps bread rise. They are also crucial in the <b>fermentation</b> that makes wine and beer. Sac fungi include edible mushrooms and truffles.'},
+      {front:'Basidiomycota (club fungi)', back:'Includes <b>mushrooms, toadstools, and shelf fungi</b>. They play important roles in the environment as <b>decomposers</b>.'},
+      {front:'Alexander Fleming (1881&ndash;1955)', back:'A Scottish physician and microbiologist. In <b>1928</b> he accidentally discovered <b>penicillin</b> from the <i>Penicillium rubens</i> mold &mdash; the beginning of the antibiotic era.'}
+    ],
+    quiz:[
+      {q:'True or False: Fungi can be either unicellular or multicellular.', options:['True','False'], correct:0, explain:'Correct — some fungi are single-celled, like yeast, and others are multicellular, like mushrooms.'},
+      {q:'Which division of fungi is known as the bread molds?', options:['Zygomycota','Ascomycota','Basidiomycota','Chytridiomycota'], correct:0, explain:'Zygomycota are the bread molds, found on bread, fruits, and decaying plant materials.'},
+      {q:'True or False: Chytrids have flagellated spores, which means they can swim and move around.', options:['True','False'], correct:0, explain:'Correct — that is what makes chytrids unusual among fungi.'},
+      {q:'Which division includes the yeasts used in baking?', options:['Basidiomycota','Ascomycota','Zygomycota','Chytridiomycota'], correct:1, explain:'Ascomycota &mdash; the yeasts and sac fungi. Yeast is what makes bread rise.'},
+      {q:'True or False: Yeast produces oxygen, and that is what makes bread rise.', options:['True','False'], correct:1, explain:'False — yeast produces <b>carbon dioxide</b>, and that is the gas that helps bread rise.'},
+      {q:'Mushrooms, toadstools and shelf fungi belong to which division?', options:['Basidiomycota','Zygomycota','Ascomycota','Chytridiomycota'], correct:0, explain:'Basidiomycota, the club fungi. They are important decomposers.'},
+      {q:'True or False: Alexander Fleming discovered penicillin in 1928.', options:['True','False'], correct:0, explain:'Correct — it was an accidental discovery from the <i>Penicillium rubens</i> mold, and it began the antibiotic era.'},
+      {q:'Penicillin was discovered from which mold?', options:['<i>Penicillium rubens</i>','<i>Lactobacillus</i>','<i>Leptospira</i>','<i>Bacillus cereus</i>'], correct:0, explain:'Fleming discovered penicillin from the <i>Penicillium rubens</i> mold in 1928.'},
+      {q:'True or False: Fungi are only harmful and have no useful role in nature.', options:['True','False'], correct:1, explain:'False — fungi break down dead plants, drive decomposition, and are used to make bread and medicines.'},
+      {q:'Which division of fungi is found in freshwater, soil, and even the digestive system of animals?', options:['Chytridiomycota','Zygomycota','Ascomycota','Basidiomycota'], correct:0, explain:'Chytrids (Chytridiomycota) live in those diverse habitats.'}
+    ]
+  },
+  {
+    id:'plantgroups',
+    icon:'🌿',
+    title:'Major Groups of Plants',
+    subtitle:'Flowering & non-flowering plants',
+    cards:[
+      {front:'How Plants Are Classified', back:'Living things are grouped by their similar characteristics. Plants split into <b>flowering</b> and <b>non-flowering</b> plants.'},
+      {front:'Bryophytes (mosses & liverworts)', back:'Includes mosses, liverworts and hornworts. They do <b>NOT</b> have true roots, stems, or leaves.'},
+      {front:'Pteridophytes (ferns & fern allies)', back:'They reproduce using <b>spores</b>, just like mosses and liverworts. Their leaves are called <b>fronds</b>. Ferns help stabilize the soil and prevent erosion.'},
+      {front:'Gymnosperms (conifers & cycads)', back:'Trees and shrubs that do <b>not</b> produce flowers &mdash; they bear their seeds in <b>cones</b>. &ldquo;Gymnosperm&rdquo; means <b>&ldquo;naked seed&rdquo;</b> in Greek, because the seeds are exposed.'},
+      {front:'Angiosperms (flowering plants)', back:'The <b>largest and most diverse</b> group of plants. They produce flowers, and they also produce <b>fruits</b>.'},
+      {front:'Flowering vs Non-flowering', back:'<b>Angiosperm</b> = flowering plant. <b>Gymnosperm</b> = non-flowering plant.'}
+    ],
+    quiz:[
+      {q:'True or False: Bryophytes do not have true roots, stems, or leaves.', options:['True','False'], correct:0, explain:'Correct — mosses, liverworts and hornworts lack true roots, stems and leaves.'},
+      {q:'What does the word &ldquo;gymnosperm&rdquo; mean in Greek?', options:['Naked seed','Cone bearer','Flowering tree','Spore plant'], correct:0, explain:'&ldquo;Gymnosperm&rdquo; means <b>naked seed</b>, because the seeds are exposed rather than enclosed in a fruit.'},
+      {q:'True or False: Angiosperms are the non-flowering plants.', options:['True','False'], correct:1, explain:'False — angiosperms are the <b>flowering</b> plants. The gymnosperms are the non-flowering ones.'},
+      {q:'The leaves of pteridophytes are called...', options:['Fronds','Cones','Scales','Blades'], correct:0, explain:'Fern leaves are called fronds.'},
+      {q:'True or False: Gymnosperms bear their seeds in cones.', options:['True','False'], correct:0, explain:'Correct — conifers and cycads carry their seeds in cones rather than in flowers.'},
+      {q:'Which is the largest and most diverse group of plants?', options:['Angiosperms','Gymnosperms','Bryophytes','Pteridophytes'], correct:0, explain:'Angiosperms, the flowering plants, are the largest and most diverse group.'},
+      {q:'True or False: Ferns reproduce using seeds.', options:['True','False'], correct:1, explain:'False — ferns reproduce using <b>spores</b>, just like mosses and liverworts.'},
+      {q:'Mosses, liverworts and hornworts belong to which group?', options:['Bryophytes','Pteridophytes','Gymnosperms','Angiosperms'], correct:0, explain:'They are the bryophytes &mdash; the group that has no true roots, stems, or leaves.'},
+      {q:'True or False: Ferns help stabilize the soil and prevent erosion.', options:['True','False'], correct:0, explain:'Correct — that is one of the useful roles the lesson gives for ferns.'},
+      {q:'Which group of plants also produces fruits?', options:['Angiosperms','Gymnosperms','Bryophytes','Pteridophytes'], correct:0, explain:'Angiosperms produce both flowers and fruits.'}
+    ]
+  },
+  {
+    id:'vertebrates',
+    icon:'🐾',
+    title:'Vertebrates',
+    subtitle:'Mammals, birds, amphibians, reptiles & fishes',
+    cards:[
+      {front:'What Are Vertebrates?', back:'Animals <b>with a backbone</b>: mammals, birds, reptiles, amphibians, and fishes.'},
+      {front:'Mammals', back:'<b>Warm-blooded</b> animals of the class <b>Mammalia</b>. They are named after their <b>mammary glands</b>, and they give birth to <b>live young</b>.'},
+      {front:'Birds', back:'Animals that have <b>feathers</b>. There are two types: <b>flight</b> and <b>flightless</b> birds.'},
+      {front:'Amphibians', back:'Animals that can live <b>both in water and on land</b>. They are found in diverse habitats including ponds, forests, and even deserts.'},
+      {front:'Reptiles', back:'<b>Cold-blooded</b> animals of the class <b>Reptilia</b>, characterized by their <b>scaly skins</b>.'},
+      {front:'Fishes', back:'Animals that live in water and have <b>gills</b> for breathing underwater.'},
+      {front:'The Fins of a Fish', back:'The <b>dorsal fin</b> provides stability. The <b>pectoral and pelvic fins</b> help with steering and maneuverability. The <b>caudal fin</b> is also known as the <b>tail fin</b>.'}
+    ],
+    quiz:[
+      {q:'True or False: Vertebrates are animals that have a backbone.', options:['True','False'], correct:0, explain:'Correct — the backbone, or vertebral column, is what defines a vertebrate.'},
+      {q:'Mammals are named after which body part?', options:['Their mammary glands','Their backbone','Their lungs','Their scales'], correct:0, explain:'Mammals are named after their mammary glands.'},
+      {q:'True or False: Reptiles are warm-blooded animals.', options:['True','False'], correct:1, explain:'False — reptiles are <b>cold-blooded</b>. It is the mammals that are warm-blooded.'},
+      {q:'Which fin provides stability to a fish?', options:['The dorsal fin','The caudal fin','The pelvic fin','The pectoral fin'], correct:0, explain:'The dorsal fin provides stability.'},
+      {q:'True or False: Amphibians can live both in water and on land.', options:['True','False'], correct:0, explain:'Correct — that dual life is what makes them amphibians.'},
+      {q:'The caudal fin is also known as the...', options:['Tail fin','Side fin','Top fin','Belly fin'], correct:0, explain:'The caudal fin is the tail fin.'},
+      {q:'True or False: All birds can fly.', options:['True','False'], correct:1, explain:'False — the lesson says birds come in two types, <b>flight</b> and <b>flightless</b>. Having feathers is what makes a bird a bird.'},
+      {q:'Reptiles belong to which class?', options:['Reptilia','Mammalia','Amphibia','Aves'], correct:0, explain:'Reptiles belong to the class Reptilia. Mammals belong to Mammalia.'},
+      {q:'True or False: Mammals lay eggs the way birds do.', options:['True','False'], correct:1, explain:'False — the lesson says mammals <b>give birth to live young</b>.'},
+      {q:'Which fins help a fish with steering and maneuverability?', options:['The pectoral and pelvic fins','The dorsal fin only','The caudal fin only','The gill covers'], correct:0, explain:'The pectoral and pelvic fins help with steering and maneuvering.'}
+    ]
+  },
+  {
+    id:'invertebrates',
+    icon:'🦀',
+    title:'Invertebrates',
+    subtitle:'Insects, arachnids, mollusks & crustaceans',
+    cards:[
+      {front:'What Are Invertebrates?', back:'Animals that do <b>NOT</b> have a backbone or vertebral column: insects, spiders, worms, mollusks, and crustaceans.'},
+      {front:'Insects', back:'The <b>largest group</b> of invertebrates. They have <b>three body segments</b> &mdash; head, thorax, and abdomen &mdash; and <b>six legs</b>.'},
+      {front:'Arachnids', back:'Include <b>spiders, scorpions, ticks and mites</b>.'},
+      {front:'Mollusks', back:'Have <b>soft bodies</b> and a <b>protective shell</b>. Includes snails, clams, squids, and octopus.'},
+      {front:'Crustaceans', back:'Include <b>crabs, lobsters, and shrimp</b>. They have a <b>hard skeleton</b> and play important roles in marine ecosystems.'}
+    ],
+    quiz:[
+      {q:'True or False: Invertebrates do not have a backbone.', options:['True','False'], correct:0, explain:'Correct — no backbone or vertebral column is exactly what makes an animal an invertebrate.'},
+      {q:'How many body segments does an insect have?', options:['Three','Two','Six','Eight'], correct:0, explain:'Three: the head, the thorax, and the abdomen.'},
+      {q:'True or False: Insects have eight legs.', options:['True','False'], correct:1, explain:'False — insects have <b>six</b> legs. Spiders, which are arachnids, have eight.'},
+      {q:'Which group includes spiders, scorpions, ticks and mites?', options:['Arachnids','Mollusks','Crustaceans','Insects'], correct:0, explain:'Those are the arachnids. Unlike insects, which have six legs and three body segments, spiders have eight legs.'},
+      {q:'True or False: Insects are the largest group of invertebrates.', options:['True','False'], correct:0, explain:'Correct — insects are the largest group of invertebrates.'},
+      {q:'Snails, clams, squids and octopus belong to which group?', options:['Mollusks','Crustaceans','Arachnids','Insects'], correct:0, explain:'Mollusks &mdash; soft bodies with a protective shell.'},
+      {q:'True or False: Crustaceans have soft bodies with no skeleton at all.', options:['True','False'], correct:1, explain:'False — crustaceans have a <b>hard skeleton</b>. It is the mollusks that have soft bodies.'},
+      {q:'What are the three body segments of an insect?', options:['Head, thorax, and abdomen','Head, shell, and tail','Head, body, and legs','Thorax, abdomen, and tail'], correct:0, explain:'Head, thorax, and abdomen.'},
+      {q:'True or False: Mollusks have soft bodies and a protective shell.', options:['True','False'], correct:0, explain:'Correct — that combination is what defines a mollusk.'},
+      {q:'Crabs, lobsters and shrimp are examples of...', options:['Crustaceans','Mollusks','Arachnids','Amphibians'], correct:0, explain:'They are crustaceans, and they have a hard skeleton.'}
+    ]
+  },
+  {
+    id:'rootsystem',
+    icon:'🌱',
+    title:'The Root System',
+    subtitle:'Roots, zones, xylem & phloem',
+    cards:[
+      {front:'What Is a Plant Organ System?', back:'A group of plant parts (organs) that work together to help the plant <b>survive, grow, and reproduce</b>.'},
+      {front:'The Two Major Systems', back:'Every plant has two: the <b>root system</b> and the <b>shoot system</b>.'},
+      {front:'The Root System', back:'Its job is to <b>anchor</b> the plant to the soil and <b>absorb water and nutrients</b> for growth and development. It is made up of the <b>primary root</b> and the <b>lateral roots</b>.'},
+      {front:'Primary Root vs Lateral Roots', back:'The <b>primary root</b> grows <b>downward</b> from the seed. The <b>lateral roots</b> spread <b>horizontally</b>.'},
+      {front:'Root Hairs & Root Cap', back:'<b>Root hairs</b> increase the surface area for absorption. The <b>root cap</b> protects the growing tip of the root.'},
+      {front:'The Zones of the Root', back:'The <b>meristematic zone</b> enables root growth. The <b>region of elongation</b> extends the root length. The <b>region of maturation</b> develops specialized tissues.'},
+      {front:'Inside the Root', back:'The <b>endodermis</b> regulates water and mineral movement. The <b>cortex</b> stores nutrients and transports water.'},
+      {front:'Xylem and Phloem', back:'The two vascular tissues. <b>Xylem</b> transports <b>water</b> and water-soluble nutrients. <b>Phloem</b> transports <b>food</b> &mdash; sugars, proteins and other molecules.'}
+    ],
+    quiz:[
+      {q:'True or False: The root system anchors the plant to the soil and absorbs water and nutrients.', options:['True','False'], correct:0, explain:'Correct — anchorage and absorption are the two jobs of the root system.'},
+      {q:'Which part of the root grows downward from the seed?', options:['The primary root','A lateral root','The root cap','The cortex'], correct:0, explain:'The primary root grows downward from the seed. Lateral roots spread out horizontally.'},
+      {q:'True or False: Lateral roots grow straight downward into the soil.', options:['True','False'], correct:1, explain:'False — lateral roots spread <b>horizontally</b>. It is the primary root that grows downward.'},
+      {q:'What do root hairs do?', options:['Increase the surface area for absorption','Protect the growing tip','Store food for the plant','Carry sugars to the leaves'], correct:0, explain:'Root hairs increase the surface area so the root can absorb more water.'},
+      {q:'True or False: Xylem transports food such as sugars and proteins.', options:['True','False'], correct:1, explain:'False — <b>xylem carries water</b>. It is the <b>phloem</b> that transports food such as sugars and proteins.'},
+      {q:'Which tissue transports water and water-soluble nutrients?', options:['Xylem','Phloem','Cortex','Endodermis'], correct:0, explain:'Xylem carries water and water-soluble nutrients up the plant.'},
+      {q:'True or False: The root cap protects the growing tip of the root.', options:['True','False'], correct:0, explain:'Correct — the root cap is a shield for the delicate growing tip.'},
+      {q:'Which zone of the root enables root growth?', options:['The meristematic zone','The region of elongation','The region of maturation','The endodermis'], correct:0, explain:'The meristematic zone is where growth happens. Elongation extends the length, and maturation develops specialized tissues.'},
+      {q:'True or False: A plant has two major organ systems, the root system and the shoot system.', options:['True','False'], correct:0, explain:'Correct — those are the two major plant organ systems.'},
+      {q:'What does the endodermis do?', options:['Regulates water and mineral movement','Stores food underground','Captures sunlight','Protects against animals'], correct:0, explain:'The endodermis regulates the movement of water and minerals. The cortex is the part that stores nutrients.'}
+    ]
+  },
+  {
+    id:'shootsystem',
+    icon:'🌳',
+    title:'The Shoot System',
+    subtitle:'Stem, leaves, buds, flowers & nodes',
+    cards:[
+      {front:'The Shoot System', back:'All the <b>above-ground</b> structures, involved in <b>photosynthesis, reproduction, and support</b>.'},
+      {front:'Stem', back:'The main structural axis of the shoot system. It supports leaves, flowers and fruits, and transports water, minerals and nutrients between the roots and the rest of the plant.'},
+      {front:'Leaves', back:'Flattened structures attached to the stem, mainly responsible for <b>photosynthesis</b>. They capture sunlight and convert it into chemical energy.'},
+      {front:'Axillary Buds', back:'Located in the <b>leaf axils</b>, where the leaves attach to the stem. They can develop into <b>lateral shoots, branches, or flowers</b>.'},
+      {front:'Terminal Buds', back:'Found at the <b>apex</b> (tip) of the stem. They drive primary growth and cause <b>apical dominance</b> &mdash; they inhibit the axillary buds so the plant&rsquo;s energy goes into growing upward.'},
+      {front:'Flowers', back:'The <b>reproductive organ</b> of the shoot system. A flower can contain the male and female reproductive parts, and is vital for <b>pollination</b> and seed production.'},
+      {front:'Nodes', back:'The points on the stem where <b>leaves, buds, or branches emerge</b>.'},
+      {front:'Internodes', back:'The <b>segments of stem between the nodes</b>. They determine the distance between leaves, and the plant&rsquo;s overall height and spacing.'}
+    ],
+    quiz:[
+      {q:'True or False: The shoot system is made up of the above-ground parts of the plant.', options:['True','False'], correct:0, explain:'Correct — the shoot system handles photosynthesis, reproduction and support above ground.'},
+      {q:'Which part of the plant is mainly responsible for photosynthesis?', options:['The leaves','The stem','The roots','The nodes'], correct:0, explain:'Leaves capture sunlight and convert it into chemical energy.'},
+      {q:'True or False: Terminal buds are the ones found in the leaf axils.', options:['True','False'], correct:1, explain:'False — <b>axillary</b> buds sit in the leaf axils. <b>Terminal</b> buds are at the apex, the tip of the stem.'},
+      {q:'What are nodes?', options:['The points where leaves, buds or branches emerge','The segments between the leaves','The tip of the growing root','The male part of a flower'], correct:0, explain:'Nodes are the attachment points. The gaps between them are the internodes.'},
+      {q:'True or False: Apical dominance means the terminal bud inhibits the growth of the axillary buds.', options:['True','False'], correct:0, explain:'Correct — that is how the plant directs its energy into upward growth.'},
+      {q:'Which part is the reproductive organ of the plant?', options:['The flower','The leaf','The node','The stem'], correct:0, explain:'The flower is the reproductive organ, vital for pollination and seed production.'},
+      {q:'True or False: Internodes are the points where leaves attach to the stem.', options:['True','False'], correct:1, explain:'False — those are the <b>nodes</b>. Internodes are the stem segments <b>between</b> the nodes.'},
+      {q:'What does the stem transport?', options:['Water, minerals and nutrients between the roots and the rest of the plant','Only sunlight','Only pollen','Nothing &mdash; it just holds the plant up'], correct:0, explain:'Besides supporting the plant, the stem is a transport route between roots and shoots.'},
+      {q:'True or False: Leaves capture sunlight and convert it into chemical energy.', options:['True','False'], correct:0, explain:'Correct — that is photosynthesis, the main job of a leaf.'},
+      {q:'Axillary buds can develop into...', options:['Lateral shoots, branches, or flowers','Roots only','Fruits only','Root hairs'], correct:0, explain:'Axillary buds have the potential to become lateral shoots, branches, or flowers.'}
+    ]
+  },
+  {
+    id:'specialized',
+    icon:'🧅',
+    title:'Specialized Plant Structures',
+    subtitle:'Rhizomes, thorns, tubers, bulbs & aerial roots',
+    cards:[
+      {front:'Why Plants Have Them', back:'Specialized structures are found in parts of the root and shoot systems. They developed as plants evolved with their <b>changing environments</b>, helping them adapt and thrive.'},
+      {front:'Rhizomes', back:'Specialized <b>underground stems</b> that grow <b>horizontally</b>, sending out roots and shoots from their nodes. They also store nutrients for unfavorable seasons. Examples: <b>ginger and bamboo</b>.'},
+      {front:'Thorns', back:'Sharp, pointed structures from the stems or branches. They are a <b>defense mechanism</b>, deterring herbivores from feeding on the plant. Examples: <b>roses and cacti</b>.'},
+      {front:'Tubers', back:'Enlarged, fleshy <b>underground storage structures</b> that develop from modified stems. They store nutrients and energy so the plant can survive bad conditions. Example: the <b>potato</b>.'},
+      {front:'Bulbs', back:'Underground storage organs made of a short, modified stem surrounded by <b>fleshy scale leaves</b>. Examples: <b>onions and tulips</b>.'},
+      {front:'Aerial Roots', back:'Roots that develop <b>above the ground</b>, growing from the stem or branches. They give extra support and can take in moisture and nutrients <b>from the air</b>. Epiphytic plants such as <b>orchids and tropical ferns</b> often have them.'}
+    ],
+    quiz:[
+      {q:'True or False: A potato is an example of a tuber.', options:['True','False'], correct:0, explain:'Correct — the potato is the lesson&rsquo;s example of a tuber, an underground storage structure from a modified stem.'},
+      {q:'Which structure is an underground stem that grows horizontally?', options:['A rhizome','A tuber','A bulb','An aerial root'], correct:0, explain:'A rhizome grows horizontally underground, sending roots and shoots out from its nodes.'},
+      {q:'True or False: Thorns help a plant absorb water from the air.', options:['True','False'], correct:1, explain:'False — thorns are a <b>defense</b> against herbivores. It is the <b>aerial roots</b> that can take moisture from the air.'},
+      {q:'Onions and tulips grow from which specialized structure?', options:['Bulbs','Tubers','Rhizomes','Thorns'], correct:0, explain:'Bulbs &mdash; a short modified stem surrounded by fleshy scale leaves.'},
+      {q:'True or False: Aerial roots grow above the ground.', options:['True','False'], correct:0, explain:'Correct — they grow from the stem or branches, above the soil.'},
+      {q:'Ginger and bamboo are examples of plants with...', options:['Rhizomes','Bulbs','Thorns','Tubers'], correct:0, explain:'Both spread by rhizomes, horizontal underground stems.'},
+      {q:'True or False: A bulb is made of a short, modified stem surrounded by fleshy scale leaves.', options:['True','False'], correct:0, explain:'Correct — that layered structure is exactly what you see when you cut an onion.'},
+      {q:'&ldquo;I store food underground. What am I?&rdquo;', options:['A tuber','A thorn','An aerial root','A frond'], correct:0, explain:'A tuber stores food and energy underground &mdash; like a potato.'},
+      {q:'True or False: Thorns are found only on roses.', options:['True','False'], correct:1, explain:'False — the lesson gives <b>roses and cacti</b> as examples of plants with thorns.'},
+      {q:'Which plants often have aerial roots?', options:['Epiphytic plants such as orchids and tropical ferns','Potatoes and onions','Ginger and bamboo','Roses and cacti'], correct:0, explain:'Epiphytic plants like orchids and tropical ferns often have aerial roots.'}
+    ]
+  }
+];
+const FINAL_EXAM_PER_LESSON = 3;
+const STORAGE_KEY = 'lifelab_progress_v1';
+
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
+}
+let progress = loadProgress();
+/* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
+if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+  progress = {};
+  saveProgress(progress);
+  if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function prepareQuestion(q){
+  const order = shuffle(q.options.map((_,i)=>i));
+  const options = order.map(i=>q.options[i]);
+  const correct = order.indexOf(q.correct);
+  return {q:q.q, options, correct, explain:q.explain};
+}
+function starsFor(pct){
+  if(pct >= 1) return 3;
+  if(pct >= 0.8) return 2;
+  if(pct >= 0.5) return 1;
+  return 0;
+}
+function starString(n){
+  let s='';
+  for(let i=0;i<3;i++) s += i<n ? '★' : '<span class="off">★</span>';
+  return s;
+}
+
+function plantMarkup(n){
+  const show = i => n>=i ? 1 : 0.06;
+  return `<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+    <rect x="18" y="120" width="164" height="76" rx="8" fill="#C9A227" opacity="${show(1) * 0.28}"/>
+    <line x1="18" y1="120" x2="182" y2="120" stroke="#8A6D1F" stroke-width="3" opacity="${show(1)}"/>
+    <ellipse cx="100" cy="132" rx="9" ry="12" fill="#8A6D1F" opacity="${show(2)}"/>
+    <path d="M100 140 v44" stroke="#C48A3A" stroke-width="5" fill="none" stroke-linecap="round" opacity="${show(3)}"/>
+    <g opacity="${show(4)}" stroke="#C48A3A" stroke-width="3" fill="none" stroke-linecap="round">
+      <path d="M100 152 q-22 6 -32 20"/>
+      <path d="M100 164 q22 6 30 18"/>
+      <path d="M100 176 q-16 4 -22 12"/>
+    </g>
+    <path d="M100 124 v-46" stroke="#3E8E5A" stroke-width="6" fill="none" stroke-linecap="round" opacity="${show(5)}"/>
+    <g opacity="${show(6)}" fill="#3E8E5A">
+      <path d="M100 104 q-26 -8 -32 -26 q24 -3 32 26"/>
+      <path d="M100 92 q26 -8 32 -26 q-24 -3 -32 26"/>
+    </g>
+    <circle cx="100" cy="72" r="7" fill="#7FBF7F" opacity="${show(7)}"/>
+    <g opacity="${show(8)}">
+      <g fill="var(--coral)">
+        <circle cx="100" cy="60" r="10"/>
+        <circle cx="86" cy="70" r="10"/>
+        <circle cx="114" cy="70" r="10"/>
+        <circle cx="91" cy="49" r="10"/>
+        <circle cx="109" cy="49" r="10"/>
+      </g>
+      <circle cx="100" cy="60" r="7" fill="var(--gold)"/>
+      <circle cx="36" cy="44" r="3" fill="var(--gold)"/>
+      <circle cx="166" cy="36" r="2.5" fill="var(--accent)"/>
+      <text x="100" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent-dark)" font-family="Baloo 2, cursive">GROWN!</text>
+    </g>
+  </svg>`;
+}
+
+const STRATEGY = [
+  {kicker:'True or False Tip #1', title:'Watch for absolute words', body:'Words like "all," "always," "never," and "only" often make a statement FALSE. "ALL bacteria are harmful" is false &mdash; Lactobacillus in yogurt is good for you. "ALL birds can fly" is false &mdash; there are flightless birds.'},
+  {kicker:'True or False Tip #2', title:'One false part = the whole thing is False', body:'If any single part of the sentence is wrong, mark the WHOLE sentence False &mdash; even if the rest sounds right.'},
+  {kicker:'Science Tip #1', title:'Backbone or no backbone', body:'Every animal-group question comes down to one thing. <b>Vertebrate</b> = has a backbone (mammals, birds, reptiles, amphibians, fishes). <b>Invertebrate</b> = no backbone (insects, arachnids, mollusks, crustaceans). Sort that first, then pick the group.'},
+  {kicker:'Science Tip #2', title:'The three bacteria shapes', body:'<b>Cocci</b> = spheres (think <i>ball</i>). <b>Bacilli</b> = rods (think <i>bar</i>). <b>Spirochetes</b> = spirals (think <i>spring</i>). Each has a disease attached: pneumonia, food poisoning, and leptospirosis in that order.'},
+  {kicker:'Science Tip #3', title:'Xylem vs phloem &mdash; the f trick', body:'<b>PHloem</b> carries <b>Food</b> (ph sounds like f). That leaves <b>xylem</b> for <b>water</b>. Mixing these two up is the single most common mistake on plant tests.'},
+  {kicker:'Science Tip #4', title:'Flowering or not', body:'<b>Angiosperm</b> = flowering, and it makes fruits. Everything else in the lesson is non-flowering: gymnosperms (seeds in cones), bryophytes (no true roots, stems or leaves), and pteridophytes (ferns, which use spores).'},
+  {kicker:'Science Tip #5', title:'Nodes vs internodes, axillary vs terminal', body:'A <b>node</b> is where something attaches; an <b>internode</b> is the gap between. An <b>axillary</b> bud sits in a leaf axil; a <b>terminal</b> bud sits at the tip. Both pairs are classic swap-the-words traps.'},
+  {kicker:'Science Tip #6', title:'Name the job, name the structure', body:'"Stores food underground" &rarr; <b>tuber</b>. "Underground stem growing sideways" &rarr; <b>rhizome</b>. "Layers of fleshy scale leaves" &rarr; <b>bulb</b>. "Protects from animals" &rarr; <b>thorn</b>. "Grows above ground for support" &rarr; <b>aerial root</b>.'},
+  {kicker:'General Tip', title:'Reread before you finalize', body:'Read the question once more with your answer in mind. If it still matches what the lesson actually said, you have got it.'}
+];
+
+let currentLessonIdx = null;
+let flashIdx = 0;
+let currentQuizSet = [];
+let currentQuizMeta = null;
+let quizIdx = 0;
+let quizScore = 0;
+
+function cardKey(e){
+  if(e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
+    e.preventDefault();
+    e.currentTarget.click();
+  }
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){ renderHome(); showScreen('home'); }
+
+function renderHome(){
+  const list = document.getElementById('homeList');
+  const finalTotal = LESSONS.length * FINAL_EXAM_PER_LESSON;
+  const finalBest = progress['final'] || 0;
+  let html = '';
+
+  html += `<div class="item-card final-card" role="button" tabindex="0" onclick="startFinalExam()" onkeydown="cardKey(event)">
+    <div class="icon">🏆</div>
+    <div class="info">
+      <span class="final-badge">Mock Exam</span>
+      <h3>Full Mock Exam</h3>
+      <p>${finalTotal} mixed questions from all ${LESSONS.length} lessons</p>
+    </div>
+    <div class="stars">${starString(starsFor(finalBest/finalTotal))}</div>
+  </div>`;
+
+  html += `<div class="item-card strategy-card" role="button" tabindex="0" onclick="showScreen('strategyScreen')" onkeydown="cardKey(event)">
+    <div class="icon">🎯</div>
+    <div class="info">
+      <h3>Exam Strategy</h3>
+      <p>How to ace True/False & situational questions</p>
+    </div>
+  </div>`;
+
+  LESSONS.forEach((l,i)=>{
+    const best = progress[l.id] || 0;
+    html += `<div class="item-card" role="button" tabindex="0" onclick="openLesson(${i})" onkeydown="cardKey(event)">
+      <div class="icon">${l.icon}</div>
+      <div class="info">
+        <h3>${l.title}</h3>
+        <p>${l.subtitle}</p>
+      </div>
+      <div class="stars">${starString(starsFor(best/l.quiz.length))}</div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function openLesson(i){
+  currentLessonIdx = i;
+  flashIdx = 0;
+  document.getElementById('flashTitle').textContent = LESSONS[i].title;
+  renderFlash();
+  showScreen('flashScreen');
+}
+/* Card and question text may contain simple markup (<b>, entities) written by
+   the lesson author, so these render as HTML, not literal text. Content is
+   author-supplied only — never user input. */
+function renderFlash(){
+  const l = LESSONS[currentLessonIdx];
+  const c = l.cards[flashIdx];
+  document.getElementById('flashFront').innerHTML = c.front;
+  document.getElementById('flashBack').innerHTML = c.back;
+  document.getElementById('flashBack').style.display = 'none';
+  document.getElementById('flashFront').style.display = 'block';
+  document.getElementById('flashTag').textContent = 'Term';
+  document.getElementById('flashHint').textContent = 'Tap the card to flip';
+  document.getElementById('flashDots').textContent = `${flashIdx+1} / ${l.cards.length}`;
+}
+function flipCard(){
+  const front = document.getElementById('flashFront');
+  const back = document.getElementById('flashBack');
+  const flipped = back.style.display !== 'none';
+  front.style.display = flipped ? 'block' : 'none';
+  back.style.display = flipped ? 'none' : 'block';
+  document.getElementById('flashTag').textContent = flipped ? 'Term' : 'Meaning';
+}
+function nextCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx+1) % l.cards.length;
+  renderFlash();
+}
+function prevCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx-1+l.cards.length) % l.cards.length;
+  renderFlash();
+}
+
+function startQuiz(){
+  const l = LESSONS[currentLessonIdx];
+  currentQuizSet = shuffle(l.quiz).map(prepareQuestion);
+  currentQuizMeta = {id:l.id, title:l.title};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = l.title;
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function startFinalExam(){
+  let qs = [];
+  LESSONS.forEach(l=>{
+    qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON));
+  });
+  currentQuizSet = shuffle(qs).map(prepareQuestion);
+  currentQuizMeta = {id:'final', title:'Full Mock Exam'};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = 'Full Mock Exam';
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function renderQuestion(){
+  const total = currentQuizSet.length;
+  const q = currentQuizSet[quizIdx];
+  document.getElementById('quizCounter').textContent = `Question ${quizIdx+1} of ${total}`;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('quizFill').style.width = `${(quizIdx/total)*100}%`;
+  document.getElementById('sceneSvg').innerHTML = plantMarkup(Math.round((quizScore/total)*8));
+  document.getElementById('qText').innerHTML = q.q;
+  document.getElementById('explainBox').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const box = document.getElementById('optionsBox');
+  box.innerHTML = '';
+  q.options.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = opt;
+    btn.onclick = ()=>selectOption(i);
+    box.appendChild(btn);
+  });
+}
+
+function selectOption(i){
+  const q = currentQuizSet[quizIdx];
+  const buttons = document.querySelectorAll('#optionsBox .option');
+  buttons.forEach((b,idx)=>{
+    b.disabled = true;
+    if(idx === q.correct) b.classList.add('correct');
+    else if(idx === i) b.classList.add('wrong');
+  });
+  if(i === q.correct) quizScore++;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('sceneSvg').innerHTML = plantMarkup(Math.round((quizScore/currentQuizSet.length)*8));
+  document.getElementById('explainBox').innerHTML = q.explain;
+  document.getElementById('explainBox').style.display = 'block';
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('nextBtn').textContent = quizIdx < currentQuizSet.length-1 ? 'Next ▶' : 'See Results 🏆';
+}
+
+function nextQuestion(){
+  if(quizIdx < currentQuizSet.length-1){
+    quizIdx++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function finishQuiz(){
+  const total = currentQuizSet.length;
+  const best = progress[currentQuizMeta.id] || 0;
+  if(quizScore > best) progress[currentQuizMeta.id] = quizScore;
+  saveProgress(progress);
+  renderResults(total);
+  showScreen('resultsScreen');
+}
+
+function renderResults(total){
+  const pct = quizScore/total;
+  const n = starsFor(pct);
+  document.getElementById('resultScene').innerHTML = plantMarkup(Math.round(pct*8));
+  document.getElementById('resultStars').innerHTML = starString(n);
+  document.getElementById('resultTitle').textContent =
+    n===3 ? 'Full Bloom! Perfect Score!' :
+    n===2 ? 'Great Growing!' :
+    n===1 ? 'Good Start!' : 'Keep Practicing!';
+  document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
+}
+
+function retryQuiz(){
+  if(currentQuizMeta.id === 'final'){ startFinalExam(); }
+  else { startQuiz(); }
+}
+
+function renderStrategy(){
+  const box = document.getElementById('strategyList');
+  box.innerHTML = STRATEGY.map(t=>`
+    <div class="tip">
+      <div class="kicker">${t.kicker}</div>
+      <h4>${t.title}</h4>
+      <p>${t.body}</p>
+    </div>
+  `).join('');
+}
+
+renderHome();
+renderStrategy();
+</script>
