@@ -123,6 +123,13 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .results h2{font-size:1.8rem; color:var(--accent); margin:0 0 4px;}
 .score-line{font-size:1.1rem; color:var(--ink-soft); margin-bottom:10px;}
 .results-stars{font-size:2rem; letter-spacing:8px; margin-bottom:18px;}
+.missed-review{display:none; text-align:left; margin:0 0 18px; padding-top:16px; border-top:1px solid var(--border);}
+.missed-review.show{display:block;}
+.missed-review h3{font-size:1rem; font-family:'Lilita One',cursive; font-weight:400; color:var(--ink); margin:0 0 10px; text-align:center;}
+.missed-list{max-height:340px; overflow-y:auto; padding-right:2px;}
+.missed-item{background:var(--surface2); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+.missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
+.missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem;}
 .results-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
 .secondary-btn{
   background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:14px;
@@ -220,6 +227,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <h2 id="results-heading"></h2>
       <div class="score-line" id="results-score"></div>
       <div class="results-stars" id="results-stars"></div>
+      <div class="missed-review" id="missed-review"></div>
       <div class="results-actions">
         <button class="primary-btn" style="width:auto" onclick="retryLesson()">Try Again</button>
         <button class="secondary-btn" onclick="goHome()">Lesson Map</button>
@@ -555,6 +563,7 @@ function checkNumberline(){
   answered = true;
   const correct = val === correctAns;
   if(correct) quizScore++;
+  else missedQuestions.push({ q: `${q.start} + ${q.jumps} = ?`, explain: q.explain });
   input.disabled = true;
   input.classList.add(correct ? 'correct' : 'incorrect');
   document.getElementById('nline-check').disabled = true;
@@ -580,6 +589,7 @@ let quizScore = 0;
 let answered = false;
 let currentQuizSet = [];
 let currentQuizMeta = null;
+let missedQuestions = [];
 
 const homeScreen = document.getElementById('screen-home');
 const cardsScreen = document.getElementById('screen-cards');
@@ -681,6 +691,7 @@ function startQuiz(){
   currentQuizMeta = {id: lesson.id, title: lesson.title};
   quizIdx = 0;
   quizScore = 0;
+  missedQuestions = [];
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -698,6 +709,7 @@ function startFinalExam(){
   currentQuizMeta = {id:'final', title:'Final Mock Exam'};
   quizIdx = 0;
   quizScore = 0;
+  missedQuestions = [];
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -747,6 +759,7 @@ function selectOption(idx){
   });
   const correct = idx === q.correct;
   if(correct) quizScore++;
+  else missedQuestions.push({ q: q.q, explain: q.explain });
   renderBot(document.getElementById('quiz-bot-svg'), Math.round((quizScore/total)*8));
   const fb = document.getElementById('q-feedback');
   fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite.'}</strong>${q.explain}</div>`;
@@ -778,6 +791,15 @@ function renderResults(total){
     stars === 3 ? 'Block Bot Complete!' : stars > 0 ? 'Great Progress!' : 'Keep Building!';
   document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
+  const reviewEl = document.getElementById('missed-review');
+  if(missedQuestions.length){
+    reviewEl.innerHTML = '<h3>Questions to Review</h3><div class="missed-list">' +
+      missedQuestions.map(m => `<div class="missed-item"><p class="missed-q">${m.q}</p><p class="missed-explain">${m.explain}</p></div>`).join('') +
+      '</div>';
+  } else {
+    reviewEl.innerHTML = '';
+  }
+  reviewEl.classList.toggle('show', missedQuestions.length > 0);
 }
 
 function retryLesson(){

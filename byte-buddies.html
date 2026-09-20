@@ -274,6 +274,16 @@
   .result-score{font-size:1.3rem; font-family:'Righteous',sans-serif; color:var(--accent-ink); margin-top:6px;}
   .result-msg{font-size:1.05rem; color:var(--ink-soft); font-weight:500; margin-top:8px; line-height:1.5;}
 
+  /* ---- Missed questions review ---- */
+  .missed-review{display:none; text-align:left; margin-top:18px; padding-top:16px; border-top:1px solid var(--border);}
+  .missed-review.show{display:block;}
+  .missed-review h3{font-size:1rem; font-family:'Righteous',sans-serif; color:var(--ink); margin:0 0 10px; text-align:center;}
+  .missed-list{max-height:340px; overflow-y:auto; padding-right:2px;}
+  .missed-item{display:flex; gap:10px; align-items:flex-start; background:var(--bg-alt); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+  .missed-item svg{width:18px; height:18px; flex:none; margin-top:2px; color:var(--bad);}
+  .missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
+  .missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem; font-weight:500;}
+
   /* ---- PC SVG piece reveal ---- */
   .piece{opacity:0; transform:scale(0.5); transform-box:fill-box; transform-origin:center; transition:opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1);}
   .piece.revealed{opacity:1; transform:scale(1);}
@@ -357,6 +367,7 @@
       <div class="stars" id="stars"></div>
       <div class="result-score" id="result-score"></div>
       <p class="result-msg" id="result-msg"></p>
+      <div class="missed-review" id="missed-review"></div>
       <div class="btn-row">
         <button class="btn secondary" id="btn-retry">Retry Lesson</button>
         <button class="btn" id="btn-go-home">Lesson List</button>
@@ -619,6 +630,7 @@
   var qIdx = 0, score = 0, answered = false;
   var currentQuizSet = [];
   var currentQuizMeta = null;
+  var missedQuestions = [];
 
   function revealProgress(){
     var n = Math.round((score / currentQuizSet.length) * 8);
@@ -633,7 +645,7 @@
     var lesson = lessons[currentLesson];
     currentQuizSet = buildQuizSet(lesson);
     currentQuizMeta = { id: currentLesson, title: lesson.title };
-    qIdx = 0; score = 0; resetPc();
+    qIdx = 0; score = 0; missedQuestions = []; resetPc();
     showScreen('quiz');
     renderQuestion();
   }
@@ -645,7 +657,7 @@
     });
     currentQuizSet = shuffle(qs);
     currentQuizMeta = { id: 'final', title: 'Byte Buddies Review' };
-    qIdx = 0; score = 0; resetPc();
+    qIdx = 0; score = 0; missedQuestions = []; resetPc();
     showScreen('quiz');
     renderQuestion();
   }
@@ -703,6 +715,7 @@
     fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
     document.getElementById('next-wrap').classList.add('show');
     if (isCorrect) score++;
+    else missedQuestions.push({ q: decode(item.q), explain: decode(item.bad) });
     revealProgress();
   }
 
@@ -752,6 +765,17 @@
     else if (starCount === 2) msg = 'Nice work! Your computer is almost built — try again to finish the setup!';
     else msg = 'Good try! Let’s review the lesson and build it again — you can do it!';
     document.getElementById('result-msg').textContent = msg;
+    var reviewEl = document.getElementById('missed-review');
+    if (missedQuestions.length){
+      reviewEl.innerHTML = '<h3>Questions to Review</h3><div class="missed-list">' +
+        missedQuestions.map(function(m){
+          return '<div class="missed-item">' + X_ICON + '<div><p class="missed-q">' + m.q + '</p><p class="missed-explain">' + m.explain + '</p></div></div>';
+        }).join('') +
+        '</div>';
+    } else {
+      reviewEl.innerHTML = '';
+    }
+    reviewEl.classList.toggle('show', missedQuestions.length > 0);
     showScreen('results');
   }
 
