@@ -215,6 +215,12 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .upac-print{display:grid; grid-template-columns:1fr 1fr; margin-top:10px; border:1px solid #111111;}
 .upac-print > div{border:1px solid #111111; padding:8px 10px; min-height:100px; font-size:0.8rem; color:#555555;}
 .upac-print b{color:#111111; font-size:0.88rem;}
+.ws-table{width:100%; border-collapse:collapse; margin-top:6px;}
+.ws-table th, .ws-table td{border:1px solid #111111; padding:9px 10px; text-align:left; font-size:0.92rem;}
+.ws-table th{background:#EEEEEE; font-weight:800; font-size:0.85rem;}
+.ws-table td{height:34px;}
+.ws-mono{font-variant-numeric:tabular-nums; font-weight:700; letter-spacing:0.02em;}
+.ws-mono u{text-underline-offset:3px;}
 .ws-key{margin-top:26px; border-top:3px double #111111; padding-top:16px;}
 .ws-keylist{padding-left:22px; margin:0;}
 .ws-keylist li{margin-bottom:6px; font-size:0.88rem;}
@@ -364,17 +370,18 @@ function divisibilityExplain(n, d, isTrue){
   const lastDigit = n % 10;
   const lastTwo = n % 100;
   const lastThree = n % 1000;
+  const N = n.toLocaleString();   // match the formatting used in the question stem
   switch(d){
-    case 2: return `${n} ends in ${lastDigit}, which is ${lastDigit % 2 === 0 ? 'even' : 'odd'} &mdash; so it ${isTrue ? 'IS' : 'is NOT'} divisible by 2.`;
-    case 5: return `${n} ends in ${lastDigit}. Only numbers ending in 0 or 5 are divisible by 5 &mdash; so ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 5.`;
-    case 10: return `${n} ends in ${lastDigit}. Only numbers ending in 0 are divisible by 10 &mdash; so ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 10.`;
-    case 3: return `Add the digits: ${digits.join('+')} = ${sum}. Since ${sum} ${isTrue ? 'is' : 'is NOT'} divisible by 3, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 3.`;
-    case 9: return `Add the digits: ${digits.join('+')} = ${sum}. Since ${sum} ${isTrue ? 'is' : 'is NOT'} divisible by 9, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 9.`;
-    case 4: return `Look at the last two digits: ${lastTwo}. Since ${lastTwo} ${isTrue ? 'is' : 'is NOT'} divisible by 4, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 4.`;
-    case 8: return `Look at the last three digits: ${lastThree}. Since ${lastThree} ${isTrue ? 'is' : 'is NOT'} divisible by 8, ${n} ${isTrue ? 'IS' : 'is NOT'} divisible by 8.`;
+    case 2: return `${N} ends in ${lastDigit}, which is ${lastDigit % 2 === 0 ? 'even' : 'odd'} &mdash; so it ${isTrue ? 'IS' : 'is NOT'} divisible by 2.`;
+    case 5: return `${N} ends in ${lastDigit}. Only numbers ending in 0 or 5 are divisible by 5 &mdash; so ${N} ${isTrue ? 'IS' : 'is NOT'} divisible by 5.`;
+    case 10: return `${N} ends in ${lastDigit}. Only numbers ending in 0 are divisible by 10 &mdash; so ${N} ${isTrue ? 'IS' : 'is NOT'} divisible by 10.`;
+    case 3: return `Add the digits: ${digits.join('+')} = ${sum}. Since ${sum} ${isTrue ? 'is' : 'is NOT'} divisible by 3, ${N} ${isTrue ? 'IS' : 'is NOT'} divisible by 3.`;
+    case 9: return `Add the digits: ${digits.join('+')} = ${sum}. Since ${sum} ${isTrue ? 'is' : 'is NOT'} divisible by 9, ${N} ${isTrue ? 'IS' : 'is NOT'} divisible by 9.`;
+    case 4: return `Look at the last two digits: ${lastTwo}. Since ${lastTwo} ${isTrue ? 'is' : 'is NOT'} divisible by 4, ${N} ${isTrue ? 'IS' : 'is NOT'} divisible by 4.`;
+    case 8: return `Look at the last three digits: ${lastThree}. Since ${lastThree} ${isTrue ? 'is' : 'is NOT'} divisible by 8, ${N} ${isTrue ? 'IS' : 'is NOT'} divisible by 8.`;
     case 6: {
       const by2 = n % 2 === 0, by3 = sum % 3 === 0;
-      return `${n} must pass BOTH the rule for 2 AND the rule for 3. It ${by2?'IS':'is NOT'} even, and its digit sum (${sum}) ${by3?'IS':'is NOT'} divisible by 3 &mdash; so ${n} ${isTrue?'IS':'is NOT'} divisible by 6.`;
+      return `${N} must pass BOTH the rule for 2 AND the rule for 3. It ${by2?'IS':'is NOT'} even, and its digit sum (${sum}) ${by3?'IS':'is NOT'} divisible by 3 &mdash; so ${N} ${isTrue?'IS':'is NOT'} divisible by 6.`;
     }
   }
 }
@@ -512,8 +519,10 @@ function genMultiplyFractionsQuestion(){
   const type = pick(['whole','fracfrac','mixed']);
   if(type === 'whole'){
     const w = randInt(2, 9);
-    const d1 = randInt(3, 10);
-    const n1 = randInt(1, d1-1);
+    /* lowest terms only: the question says "simplify", so the stem must not
+       model the opposite by showing something like 2/4 */
+    const f1 = pickFrac(10);
+    const d1 = f1.d, n1 = f1.n;
     const productNum = w*n1, productDen = d1;
     const reduced = reduceFrac(productNum, productDen);
     const correctStr = fracToString(reduced.num, reduced.den);
@@ -527,12 +536,14 @@ function genMultiplyFractionsQuestion(){
     return mc4(
       q, correctStr,
       [unsimplifiedStr, addMistakeStr, wrongDenMistakeStr],
-      `${w} &times; ${n1}/${d1} = ${productNum}/${productDen}. Simplified: ${correctStr}.`
+      `Multiply the whole number by the <b>numerator</b>, and <b>keep the same denominator</b>.<br>` +
+      `${w} &times; ${n1} = ${productNum}, so ${w} &times; ${n1}/${d1} = ${showReduceBold(productNum, productDen)}.` +
+      simplifyNote(productNum, productDen)
     );
   }
   if(type === 'fracfrac'){
-    const d1 = randInt(3, 10), n1 = randInt(1, d1-1);
-    const d2 = randInt(3, 10), n2 = randInt(1, d2-1);
+    const f1 = pickFrac(10), f2 = pickFrac(10);
+    const d1 = f1.d, n1 = f1.n, d2 = f2.d, n2 = f2.n;
     const productNum = n1*n2, productDen = d1*d2;
     const reduced = reduceFrac(productNum, productDen);
     const correctStr = fracToString(reduced.num, reduced.den);
@@ -542,15 +553,17 @@ function genMultiplyFractionsQuestion(){
       `Multiply: ${n1}/${d1} &times; ${n2}/${d2} (simplify your answer)`,
       correctStr,
       [unsimplifiedStr, addAcrossStr],
-      `Multiply straight across: ${n1}&times;${n2} = ${productNum}, and ${d1}&times;${d2} = ${productDen}, giving ${productNum}/${productDen}. Simplified: ${correctStr}.`
+      `Multiply <b>straight across</b>: numerator &times; numerator, denominator &times; denominator.<br>` +
+      `${n1}&times;${n2} = ${productNum}, and ${d1}&times;${d2} = ${productDen}, giving ${showReduceBold(productNum, productDen)}.` +
+      simplifyNote(productNum, productDen)
     );
   }
   // mixed number x fraction
-  const d1 = randInt(2, 8);
-  const n1 = randInt(1, d1-1);
+  const fm = pickFrac(8), f2m = pickFrac(10);
+  const d1 = fm.d, n1 = fm.n;
   const w = randInt(1, 4);
   const improperNum = w*d1 + n1;
-  const d2 = randInt(3, 10), n2 = randInt(1, d2-1);
+  const d2 = f2m.d, n2 = f2m.n;
   const productNum = improperNum*n2, productDen = d1*d2;
   const reduced = reduceFrac(productNum, productDen);
   const correctStr = fracToString(reduced.num, reduced.den);
@@ -561,7 +574,9 @@ function genMultiplyFractionsQuestion(){
     `Multiply: ${w} ${n1}/${d1} &times; ${n2}/${d2} (convert the mixed number first, then simplify)`,
     correctStr,
     [unsimplifiedStr, forgotNumeratorStr],
-    `Convert the mixed number: (${w}&times;${d1})+${n1} = ${improperNum}, so ${w} ${n1}/${d1} = ${improperNum}/${d1}. Multiply: ${improperNum}/${d1} &times; ${n2}/${d2} = ${productNum}/${productDen}. Simplified: ${correctStr}.`
+    `First change the mixed number to an improper fraction: (${w}&times;${d1})+${n1} = ${improperNum}, so ${w} ${n1}/${d1} = ${improperNum}/${d1}.<br>` +
+    `Then multiply straight across: ${improperNum}/${d1} &times; ${n2}/${d2} = ${showReduceBold(productNum, productDen)}.` +
+    simplifyNote(productNum, productDen)
   );
 }
 function genMultiplyFractionsSet(n){
@@ -593,6 +608,13 @@ function showReduce(num, den){
 }
 
 function plural(n, unit){ return Number(n) === 1 ? unit.replace(/s$/, '') : unit; }
+
+/* "24/4 = <b>6</b>", but just "<b>18/49</b>" when it is already in lowest terms
+   — writing "18/49 = 18/49" reads like a bug to a ten-year-old. */
+function showReduceBold(num, den){
+  const raw = num + '/' + den, red = fracStr(num, den);
+  return raw === red ? '<b>' + red + '</b>' : raw + ' = <b>' + red + '</b>';
+}
 
 /* An unsimplified form of the right answer is offered as a wrong option on
    purpose. Name it, rather than leaving her to work out why she was marked down. */
@@ -862,6 +884,256 @@ function genWordProblemsSet(n){
   return Array.from({length:n}, ()=> genWordProblemsQuestion());
 }
 
+/* ================= Shared: decimal place-value helpers ================= */
+const PLACE_NAMES = ['tenths','hundredths','thousandths'];
+const ORDINALS = ['first','second','third'];
+const WHOLE_PLACES = ['ones','tens','hundreds','thousands'];
+
+const W_ONES = ['zero','one','two','three','four','five','six','seven','eight','nine'];
+const W_TEENS = ['ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const W_TENS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function numWords(n){
+  if(n < 10) return W_ONES[n];
+  if(n < 20) return W_TEENS[n - 10];
+  if(n < 100){
+    const t = Math.floor(n/10), o = n % 10;
+    return W_TENS[t] + (o ? '-' + W_ONES[o] : '');
+  }
+  const h = Math.floor(n/100), r = n % 100;
+  return W_ONES[h] + ' hundred' + (r ? ' ' + numWords(r) : '');
+}
+
+/* A decimal whose digits are all different, so "the digit 3" is never ambiguous. */
+function randDecimal(places){
+  let whole, digits;
+  do {
+    whole = randInt(1, 9);
+    digits = [];
+    for(let i = 0; i < places; i++) digits.push(randInt(0, 9));
+  } while(
+    digits[places-1] === 0 ||                                   // a trailing 0 reads oddly
+    new Set(digits.concat([whole])).size !== places + 1          // keep every digit unique
+  );
+  return {whole, digits, str: whole + '.' + digits.join('')};
+}
+
+/* Pick a position whose digit is NOT zero. "What is the value of the digit in the
+   tenths place" is a dud question when that digit is 0 — the answer is just 0.0,
+   and 0 / 0.0 / 0.00 are all the same number. */
+function nonZeroPos(digits){
+  const idx = [];
+  digits.forEach((d, i)=>{ if(d !== 0) idx.push(i); });
+  return pick(idx);
+}
+
+/* Drop any distractor that is the SAME NUMBER as the answer written differently.
+   The fraction lessons deliberately keep such twins as an "always simplify" trap,
+   so this is scoped to the decimal generators rather than baked into mc4. */
+function distinctNumeric(correct, list){
+  const c = Number(correct);
+  return list.filter(x => !(isFinite(Number(x)) && isFinite(c) && Number(x) === c));
+}
+
+/* The value of a digit sitting `pos` places after the point: 3 at pos 1 -> "0.03" */
+function placeValueOf(digit, pos){
+  return '0.' + '0'.repeat(pos) + digit;
+}
+
+/* Reads a decimal the way the lesson does: "two and eight hundredths" */
+function decimalInWords(whole, digits){
+  const frac = parseInt(digits.join(''), 10);
+  const name = PLACE_NAMES[digits.length - 1];
+  const fracWords = numWords(frac) + ' ' + name;
+  return whole === 0 ? fracWords : numWords(whole) + ' and ' + fracWords;
+}
+
+/* ================= GENERATOR: Decimal Place Value ================= */
+function genDecimalPlaceQuestion(){
+  const type = pick(['placeOf','placeOf','valueOf','valueOf','words','position']);
+  const places = randInt(2, 3);
+  const d = randDecimal(places);
+  const pos = (type === 'valueOf') ? nonZeroPos(d.digits) : randInt(0, places - 1);
+  const digit = d.digits[pos];
+
+  if(type === 'placeOf'){
+    return mc4(
+      `In <b>${d.str}</b>, what is the <b>place value</b> of the digit <b>${digit}</b>?`,
+      PLACE_NAMES[pos],
+      PLACE_NAMES.filter(p => p !== PLACE_NAMES[pos]).concat(['ones']),
+      `Count the places to the right of the decimal point: 1st = tenths, 2nd = hundredths, 3rd = thousandths.<br>` +
+      `In ${d.str} the digit ${digit} is the <b>${ORDINALS[pos]}</b> digit after the point, so its place value is <b>${PLACE_NAMES[pos]}</b>.`
+    );
+  }
+
+  if(type === 'valueOf'){
+    const correct = placeValueOf(digit, pos);
+    const wrongs = [String(digit)];
+    if(pos > 0) wrongs.push(placeValueOf(digit, pos - 1));
+    wrongs.push(placeValueOf(digit, pos + 1));
+    return mc4(
+      `In <b>${d.str}</b>, what is the <b>value</b> of the digit <b>${digit}</b>?`,
+      correct,
+      distinctNumeric(correct, wrongs),
+      `The digit ${digit} is in the <b>${PLACE_NAMES[pos]}</b> place, so its value is <b>${correct}</b>.<br>` +
+      `<i>Careful:</i> the <b>digit</b> is ${digit}, but the <b>value</b> of that digit is ${correct}.`
+    );
+  }
+
+  if(type === 'words'){
+    const correct = decimalInWords(d.whole, d.digits);
+    const wrongPlace = PLACE_NAMES[(places - 1 + 1) % 3];
+    const frac = parseInt(d.digits.join(''), 10);
+    return mc4(
+      `How do you read <b>${d.str}</b> in words?`,
+      correct,
+      [
+        numWords(d.whole) + ' and ' + numWords(frac) + ' ' + wrongPlace,
+        numWords(d.whole) + ' point ' + d.digits.map(x => W_ONES[x]).join(' '),
+        numWords(d.whole) + ' ' + numWords(frac) + ' ' + PLACE_NAMES[places - 1]
+      ],
+      `The whole number is read first, then the word <b>and</b> for the decimal point, then the decimal part named by its <b>last</b> place.<br>` +
+      `${d.str} has ${places} decimal places, so it ends in <b>${PLACE_NAMES[places - 1]}</b>: <b>${correct}</b>.`
+    );
+  }
+
+  const which = randInt(0, 2);
+  return mc4(
+    `Which place is the <b>${ORDINALS[which]}</b> digit after the decimal point?`,
+    PLACE_NAMES[which],
+    PLACE_NAMES.filter(p => p !== PLACE_NAMES[which]).concat(['ones']),
+    `Reading right from the decimal point: 1st = <b>tenths</b>, 2nd = <b>hundredths</b>, 3rd = <b>thousandths</b>.<br>` +
+    `Each place to the right is ten times smaller than the one before it.`
+  );
+}
+function genDecimalPlaceSet(n){
+  return Array.from({length:n}, ()=> genDecimalPlaceQuestion());
+}
+
+/* ================= GENERATOR: Find the Digit ================= */
+function genFindDigitQuestion(){
+  const type = pick(['digitAt','digitAt','valueAt','wholeAt']);
+
+  if(type === 'wholeAt'){
+    let digits;
+    do { digits = [randInt(1,9), randInt(0,9), randInt(0,9), randInt(0,9)]; }
+    while(new Set(digits).size !== 4);
+    const n = digits.join('');
+    const idx = randInt(0, 3);                       // 0 = thousands ... 3 = ones
+    const placeName = WHOLE_PLACES[3 - idx];
+    const digit = digits[idx];
+    return mc4(
+      `In <b>${Number(n).toLocaleString()}</b>, what digit is in the <b>${placeName}</b> place?`,
+      String(digit),
+      digits.filter((_, i) => i !== idx).map(String),
+      `Reading right to left from the end: ones, tens, hundreds, thousands.<br>` +
+      `In ${Number(n).toLocaleString()} the <b>${placeName}</b> digit is <b>${digit}</b>.`
+    );
+  }
+
+  const places = randInt(2, 3);
+  const d = randDecimal(places);
+  const pos = (type === 'valueAt') ? nonZeroPos(d.digits) : randInt(0, places - 1);
+  const digit = d.digits[pos];
+
+  if(type === 'digitAt'){
+    return mc4(
+      `In <b>${d.str}</b>, what <b>digit</b> is in the <b>${PLACE_NAMES[pos]}</b> place?`,
+      String(digit),
+      distinctNumeric(String(digit), d.digits.filter((_, i) => i !== pos).map(String)
+        .concat([String(d.whole), placeValueOf(digit, pos)])),
+      `Start at the decimal point and move <b>${pos + 1}</b> place${pos ? 's' : ''} to the right.<br>` +
+      `In ${d.str} the ${PLACE_NAMES[pos]} digit is <b>${digit}</b>.`
+    );
+  }
+
+  const correct = placeValueOf(digit, pos);
+  return mc4(
+    `In <b>${d.str}</b>, what is the <b>value</b> of the digit in the <b>${PLACE_NAMES[pos]}</b> place?`,
+    correct,
+    distinctNumeric(correct, [String(digit), placeValueOf(digit, pos + 1)].concat(pos > 0 ? [placeValueOf(digit, pos - 1)] : [])),
+    `The digit in the ${PLACE_NAMES[pos]} place is <b>${digit}</b>, and its value is <b>${correct}</b>.<br>` +
+    `<i>This is the classic trap:</i> if the question says <b>digit</b> the answer is ${digit}; if it says <b>value</b> the answer is ${correct}.`
+  );
+}
+function genFindDigitSet(n){
+  return Array.from({length:n}, ()=> genFindDigitQuestion());
+}
+
+/* ================= GENERATOR: Decimals & Fractions ================= */
+/* Denominators that divide 1000, so every fraction terminates cleanly. */
+const TERMINATING_DENS = [2, 4, 5, 8, 10, 20, 25, 50];
+
+/* Every denominator in TERMINATING_DENS divides 1000, so scaling by 1000/den is
+   exact. Handle values >= 1 properly: 2/2 is "1", not "0.1". */
+function decimalString(num, den){
+  const scaled = Math.round(num * (1000 / den));
+  const whole = Math.floor(scaled / 1000);
+  const frac = String(scaled % 1000).padStart(3, '0').replace(/0+$/, '');
+  return frac ? whole + '.' + frac : String(whole);
+}
+
+function genDecFracQuestion(){
+  const type = pick(['decToFrac','decToFrac','fracToDec','fracToDec','denomRule']);
+
+  if(type === 'denomRule'){
+    const places = randInt(1, 3);
+    const d = randDecimal(places);
+    const dens = ['10','100','1,000'];
+    return mc4(
+      `<b>${d.str}</b> has ${places} decimal place${places > 1 ? 's' : ''}. Which denominator do you use to turn it into a fraction?`,
+      dens[places - 1],
+      dens.filter((_, i) => i !== places - 1).concat(['1']),
+      `The number of decimal places tells you the denominator: 1 place &rarr; <b>10</b>, 2 places &rarr; <b>100</b>, 3 places &rarr; <b>1,000</b>.<br>` +
+      `${d.str} has ${places}, so you use <b>${dens[places - 1]}</b> (then simplify).`
+    );
+  }
+
+  if(type === 'decToFrac'){
+    const places = randInt(1, 3);
+    const pow = Math.pow(10, places);
+    let num;
+    do { num = randInt(1, pow - 1); } while(num % 10 === 0);
+    const decStr = '0.' + String(num).padStart(places, '0');
+    const r = reduceFrac(num, pow);
+    const correct = r.num + '/' + r.den;
+    return mc4(
+      `Convert <b>${decStr}</b> to a fraction in <b>simplest form</b>.`,
+      correct,
+      [
+        num + '/' + pow,
+        num + '/' + (pow * 10),
+        r.den + '/' + r.num
+      ],
+      `${places} decimal place${places > 1 ? 's' : ''} means a denominator of <b>${pow.toLocaleString()}</b>: ${decStr} = ${num}/${pow.toLocaleString()}.<br>` +
+      (correct === num + '/' + pow
+        ? `That is already in simplest form: <b>${correct}</b>.`
+        : `Now simplify: ${num}/${pow.toLocaleString()} = <b>${correct}</b>.`)
+    );
+  }
+
+  /* Simplest form only — the lessons tell her to simplify, so a question stem
+     must never show 5/10. It also stops every distractor collapsing onto the
+     answer, which left some questions with just two options. */
+  let den, num;
+  do { den = pick(TERMINATING_DENS); num = randInt(1, den - 1); } while(gcd(num, den) !== 1);
+  const correct = decimalString(num, den);
+  return mc4(
+    `Convert <b>${num}/${den}</b> to a decimal.`,
+    correct,
+    distinctNumeric(correct, [
+      '0.' + num + den,                        // jammed the two digits together
+      '0.0' + correct.replace('0.', ''),       // shifted one place too far right
+      decimalString(num, 10),                  // read the numerator as tenths
+      decimalString(den - num, den)            // subtracted instead of divided
+    ]),
+    `To turn a fraction into a decimal, <b>divide the numerator by the denominator</b>.<br>` +
+    `${num} &divide; ${den} = <b>${correct}</b>.`
+  );
+}
+function genDecFracSet(n){
+  return Array.from({length:n}, ()=> genDecFracQuestion());
+}
+
 /* ================= LESSONS ================= */
 const LESSON_QUIZ_LEN = 10;
 const LESSONS = [
@@ -937,6 +1209,46 @@ const LESSONS = [
       {icon:'✅', term:'How to Write the Check', def:'Do not just write &ldquo;yes.&rdquo; Explain it: &ldquo;3/4 = 6/8, so there are 6 eighths. Using 2 leaves 4.&rdquo; That is what earns the mark.'},
     ],
     generate: genWordProblemsSet
+  },
+  {
+    id:'decimalplace', emoji:'🔢', title:'Decimal Place Value', subtitle:'Tenths, Hundredths &amp; Thousandths',
+    flashcards:[
+      {icon:'🔢', term:'What Is a Decimal Number?', def:'A combination of a <b>whole number</b> and a <b>proper fraction</b>, separated by a <b>decimal point</b>. In 134.536, the 134 is the whole number and .536 is the part less than one.'},
+      {icon:'📍', term:'Place Value', def:'The exact <b>position</b> of each digit in a number.'},
+      {icon:'💰', term:'Value', def:'What a digit is <b>worth</b> in a given number. The value of a digit is based on its place value.'},
+      {icon:'➡️', term:'The Decimal Places in Order', def:'Reading right from the decimal point: <b>tenths</b> (1/10), <b>hundredths</b> (1/100), <b>thousandths</b> (1/1000), then ten thousandths and hundred thousandths.'},
+      {icon:'🔎', term:'Example: 5.438', def:'<b>5</b> is in the ones place &middot; <b>4</b> is in the tenths place &middot; <b>3</b> is in the hundredths place &middot; <b>8</b> is in the thousandths place.'},
+      {icon:'📉', term:'Each Place Is 10 Times Smaller', def:'The tenths place is one tenth the value of the ones place. Put another way, the place to the <b>left</b> is ten times the place to its right.'},
+      {icon:'🗣️', term:'Reading Decimals in Words', def:'Say the whole number, say <b>&ldquo;and&rdquo;</b> for the point, then read the decimal part and name its <b>last</b> place. 2.08 = &ldquo;two and eight hundredths&rdquo;; 4.609 = &ldquo;four and six hundred nine thousandths&rdquo;.'},
+      {icon:'⚠️', term:'Place Value vs Value', def:'For 3.482, the digit 4 has <b>place value</b> = tenths, but <b>value</b> = 0.4. One names the position, the other is what it is worth.'},
+    ],
+    generate: genDecimalPlaceSet
+  },
+  {
+    id:'finddigit', emoji:'🔍', title:'Find the Digit', subtitle:'Given the place value, name the digit',
+    flashcards:[
+      {icon:'🔍', term:'The Three Steps', def:'<b>1.</b> Look at the number. <b>2.</b> Locate the given place value. <b>3.</b> Identify the digit sitting in that position.'},
+      {icon:'➡️', term:'How to Count Across', def:'Start at the decimal point and move right: 1 place = tenths, 2 places = hundredths, 3 places = thousandths. For 6.384, the tenths digit is <b>3</b>.'},
+      {icon:'⚠️', term:'Digit vs Value &mdash; the Big Trap', def:'For 5.274: the <b>digit</b> in the tenths place is <b>2</b>, but the <b>value</b> of that digit is <b>0.2</b>. If the question asks for the digit, answer 2. If it asks for the value, answer 0.2.'},
+      {icon:'🔢', term:'Whole Number Places Too', def:'To the LEFT of the point, reading right to left: <b>ones</b>, <b>tens</b>, <b>hundreds</b>, <b>thousands</b>. In 6,482 the hundreds digit is <b>4</b>.'},
+      {icon:'✅', term:'Worked Example', def:'8.527 &mdash; what digit is in the hundredths place? Move 2 places right of the point. The answer is <b>2</b>.'},
+      {icon:'🔑', term:'Key Idea', def:'Given the place &rarr; locate the place &rarr; identify the digit.'},
+    ],
+    generate: genFindDigitSet
+  },
+  {
+    id:'decfrac', emoji:'🔄', title:'Decimals &amp; Fractions', subtitle:'Converting both ways',
+    flashcards:[
+      {icon:'🔄', term:'Two Forms, One Value', def:'A decimal is just another way of writing a fraction &mdash; especially fractions with denominators like 10, 100 or 1000. Both forms can represent the same value.'},
+      {icon:'🛑', term:'Terminating Decimal', def:'A decimal that <b>ends</b> after a certain number of decimal places. Examples: 0.5, 0.25, 0.375, 1.2.'},
+      {icon:'⬇️', term:'Decimal &rarr; Fraction', def:'Write the decimal over 10, 100 or 1,000, then simplify. <b>The number of decimal places tells you the denominator:</b> 1 place &rarr; 10, 2 places &rarr; 100, 3 places &rarr; 1,000.'},
+      {icon:'✏️', term:'Example: 0.6', def:'1 decimal place, so use 10. 0.6 = 6/10, and simplifying gives <b>3/5</b>.'},
+      {icon:'✏️', term:'Example: 0.125', def:'3 decimal places, so use 1,000. 0.125 = 125/1000, and simplifying gives <b>1/8</b>.'},
+      {icon:'⬆️', term:'Fraction &rarr; Decimal', def:'<b>Divide the numerator by the denominator.</b> 1/2 = 1 &divide; 2 = 0.5 &middot; 3/4 = 3 &divide; 4 = 0.75 &middot; 3/8 = 3 &divide; 8 = 0.375 &middot; 7/20 = 7 &divide; 20 = 0.35.'},
+      {icon:'🍕', term:'What a Fraction Is', def:'A way of showing part of a whole. The <b>numerator</b> (top) is the number of parts taken; the <b>denominator</b> (bottom) is the total equal parts.'},
+      {icon:'✅', term:'Remember', def:'Decimal &rarr; Fraction: write it over 10, 100 or 1,000 and simplify. Fraction &rarr; Decimal: divide top by bottom.'},
+    ],
+    generate: genDecFracSet
   },
 ];
 
@@ -1079,12 +1391,27 @@ function renderHome(){
     <div class="lesson-emoji">🖨️</div>
     <div class="lesson-info">
       <span class="print-badge">On Paper</span>
-      <h3>Print an Exam</h3>
-      <p>24-mark exam with UPAC boxes and an answer key &mdash; new questions every time</p>
+      <h3>Print a Fractions Exam</h3>
+      <p>24-mark exam on dividing fractions, with UPAC boxes and an answer key</p>
     </div>
     <div class="go-btn">Print</div>
   `;
   grid.appendChild(printCard);
+
+  const decCard = document.createElement('button');
+  decCard.className = 'lesson-card print-card';
+  decCard.onclick = ()=>openDecimalWorksheet();
+  decCard.innerHTML = `
+    <div class="lesson-emoji">🔢</div>
+    <div class="lesson-info">
+      <span class="print-badge">On Paper</span>
+      <h3>Print a Decimals Exam</h3>
+      <p>24-mark exam on place value, finding the digit, and converting &mdash; with an answer key</p>
+    </div>
+    <div class="go-btn">Print</div>
+  `;
+  grid.appendChild(decCard);
+
 
 
 
@@ -1893,6 +2220,151 @@ function wtShowSummary(){
 
 function wtNextProblem(){ wtPos++; openWtProblem(); }
 
+/* ================= PRINTABLE WORKSHEET: DECIMALS ================= */
+/* Mirrors the three class activities: "place value and value of the underlined
+   digit", "Find My Digit!", and the decimal/fraction conversion practice. */
+
+function underlineDigit(str, pos){
+  const dot = str.indexOf('.');
+  const at = dot + 1 + pos;
+  return str.slice(0, at) + '<u>' + str[at] + '</u>' + str.slice(at + 1);
+}
+
+function wsPlaceValueItem(){
+  const places = randInt(2, 3);
+  const d = randDecimal(places);
+  const pos = nonZeroPos(d.digits);
+  return {
+    shown: underlineDigit(d.str, pos),
+    digit: d.digits[pos],
+    place: PLACE_NAMES[pos],
+    value: placeValueOf(d.digits[pos], pos)
+  };
+}
+
+function wsDigitItem(forcedPos){
+  const places = (forcedPos === 2) ? 3 : randInt(2, 3);
+  const d = randDecimal(places);
+  const pos = (forcedPos === undefined) ? randInt(0, places - 1) : forcedPos;
+  return {
+    prompt: d.str + ' &rarr; ' + PLACE_NAMES[pos],
+    digit: String(d.digits[pos]),
+    value: placeValueOf(d.digits[pos], pos)
+  };
+}
+
+function wsWordsItem(){
+  const places = randInt(2, 3);
+  const d = randDecimal(places);
+  return { prompt: d.str, answer: decimalInWords(d.whole, d.digits) };
+}
+
+function wsConvertItem(toFraction){
+  if(toFraction){
+    const places = randInt(1, 3);
+    const pow = Math.pow(10, places);
+    let num;
+    do { num = randInt(1, pow - 1); } while(num % 10 === 0);
+    const r = reduceFrac(num, pow);
+    return {
+      prompt: '0.' + String(num).padStart(places, '0') + ' = ________',
+      answer: r.num + '/' + r.den,
+      work: num + '/' + pow.toLocaleString() + (r.num + '/' + r.den === num + '/' + pow ? '' : ' = ' + r.num + '/' + r.den)
+    };
+  }
+  /* Give the fraction in simplest form — the lessons tell her to simplify, so a
+     question stem must never show an unsimplified fraction like 5/10. */
+  let den, num;
+  do { den = pick(TERMINATING_DENS); num = randInt(1, den - 1); } while(gcd(num, den) !== 1);
+  return {
+    prompt: num + '/' + den + ' = ________',
+    answer: decimalString(num, den),
+    work: num + ' &divide; ' + den + ' = ' + decimalString(num, den)
+  };
+}
+
+function buildDecimalWorksheet(){
+  /* Distinct decimals, so the same number never appears twice on one paper. */
+  const partA = [];
+  const usedA = new Set();
+  while(partA.length < 6){
+    const it = wsPlaceValueItem();
+    const key = it.shown.replace(/<\/?u>/g, '');
+    if(usedA.has(key)) continue;
+    usedA.add(key);
+    partA.push(it);
+  }
+  /* Cover tenths, hundredths and thousandths rather than leaving it to chance. */
+  const partB = shuffle([0, 1, 2, randInt(0, 2)]).map(p => wsDigitItem(p));
+  const partC = Array.from({length:2}, ()=> wsWordsItem());
+  const partD = shuffle([true, true, true, false, false, false]).map(t=> wsConvertItem(t));
+
+  return `
+  <div class="ws">
+    <h1>Decimals &mdash; Practice Exam</h1>
+    <p class="ws-sub">Place Value &middot; Finding the Digit &middot; Decimals and Fractions &middot; Weeks 8&ndash;9</p>
+    <div class="ws-meta">
+      <span>Name: <span class="ws-line"></span></span>
+      <span>Date: <span class="ws-line" style="min-width:90px"></span></span>
+      <span>Score: ______ / 24</span>
+    </div>
+
+    <div class="ws-part">
+      <h2>Part A &mdash; Place value and value of the underlined digit. (12 marks)</h2>
+      <p class="ws-note">Write the <b>place value</b> (tenths, hundredths, thousandths) and the <b>value</b> of the underlined digit. 1 mark each.</p>
+      <table class="ws-table">
+        <tr><th style="width:26%">Decimal</th><th style="width:37%">Place Value</th><th style="width:37%">Value</th></tr>
+        ${partA.map(it=>`<tr><td class="ws-mono">${it.shown}</td><td></td><td></td></tr>`).join('')}
+      </table>
+    </div>
+
+    <div class="ws-part">
+      <h2>Part B &mdash; Find My Digit! (4 marks)</h2>
+      <p class="ws-note">Write the <b>digit</b> that sits in the place value given.</p>
+      <table class="ws-table">
+        <tr><th style="width:50%">Number &rarr; place value</th><th style="width:50%">Digit</th></tr>
+        ${partB.map(it=>`<tr><td class="ws-mono">${it.prompt}</td><td></td></tr>`).join('')}
+      </table>
+    </div>
+
+    <div class="ws-part">
+      <h2>Part C &mdash; Write each decimal in words. (2 marks)</h2>
+      ${partC.map((it,i)=>`
+        <div class="ws-word"><b>${i+1}.</b> <span class="ws-mono">${it.prompt}</span>
+          <div class="ws-answerline"><span class="ws-line" style="min-width:330px"></span></div>
+        </div>`).join('')}
+    </div>
+
+    <div class="ws-part">
+      <h2>Part D &mdash; Convert. Fractions in simplest form. (6 marks)</h2>
+      <p class="ws-note">Decimal &rarr; fraction: write it over 10, 100 or 1,000 and simplify. Fraction &rarr; decimal: divide the top by the bottom.</p>
+      <ol class="ws-drills">
+        ${partD.map(it=>`<li><span class="ws-q">${it.prompt}</span></li>`).join('')}
+      </ol>
+    </div>
+
+    <div class="ws-key">
+      <h1>Answer Key</h1>
+      <p class="ws-sub">This is the last page &mdash; keep it, or fold it under before handing the exam over.</p>
+      <h2>Part A</h2>
+      <ol class="ws-keylist">${partA.map(it=>`<li>digit <b>${it.digit}</b> &rarr; <b>${it.place}</b>, value <b>${it.value}</b></li>`).join('')}</ol>
+      <h2>Part B</h2>
+      <ol class="ws-keylist">${partB.map(it=>`<li><b>${it.digit}</b> <span class="ws-dim">(its value is ${it.value})</span></li>`).join('')}</ol>
+      <h2>Part C</h2>
+      <ol class="ws-keylist">${partC.map(it=>`<li><b>${it.answer}</b></li>`).join('')}</ol>
+      <h2>Part D</h2>
+      <ol class="ws-keylist">${partD.map(it=>`<li><b>${it.answer}</b> <span class="ws-dim">(${it.work})</span></li>`).join('')}</ol>
+    </div>
+  </div>`;
+}
+
+function openDecimalWorksheet(){
+  document.getElementById('print-root').innerHTML = buildDecimalWorksheet();
+  showScreen(printScreen);
+  lastWorksheet = buildDecimalWorksheet;
+  window.setTimeout(()=>{ try{ window.print(); }catch(e){} }, 250);
+}
+
 /* ================= PRINTABLE WORKSHEET ================= */
 /* Every builder returns the blank prompt AND its solution, so the same
    randomised item can be printed empty in the exam and solved in the key. */
@@ -2083,12 +2555,19 @@ function buildWorksheet(){
   </div>`;
 }
 
+/* Which exam the "New exam" button should regenerate — fractions or decimals. */
+let lastWorksheet = buildWorksheet;
+
 function openWorksheet(){
+  lastWorksheet = buildWorksheet;
   document.getElementById('print-root').innerHTML = buildWorksheet();
   showScreen(printScreen);
   window.setTimeout(()=>{ try{ window.print(); }catch(e){} }, 250);
 }
-function newWorksheet(){ openWorksheet(); }
+function newWorksheet(){
+  document.getElementById('print-root').innerHTML = lastWorksheet();
+  window.setTimeout(()=>{ try{ window.print(); }catch(e){} }, 250);
+}
 
 renderHome();
 </script>
