@@ -14,6 +14,9 @@
     --border:rgba(43,42,34,0.12);
     --shadow:rgba(43,42,34,0.16);
     --header-accent:#D9667B;
+    --gold:#F2A93B;
+    --gold-deep:#8A5E14;
+    --gold-soft:#FBE9C9;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -25,6 +28,9 @@
       --border:rgba(241,237,224,0.14);
       --shadow:rgba(0,0,0,0.5);
       --header-accent:#F1A0B0;
+      --gold:#F5C06E;
+      --gold-deep:#FCE3B4;
+      --gold-soft:#3A2E15;
     }
   }
   :root[data-theme="dark"]{
@@ -36,6 +42,9 @@
     --border:rgba(241,237,224,0.14);
     --shadow:rgba(0,0,0,0.5);
     --header-accent:#F1A0B0;
+    --gold:#F5C06E;
+    --gold-deep:#FCE3B4;
+    --gold-soft:#3A2E15;
   }
 
   *{box-sizing:border-box;}
@@ -70,6 +79,18 @@
     font-size:1.05rem;
     font-weight:700;
     color:var(--ink-soft);
+  }
+  .points-combined{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:var(--gold-soft);
+    color:var(--gold-deep);
+    font-weight:800;
+    font-size:0.92rem;
+    padding:7px 16px;
+    border-radius:999px;
+    margin-top:12px;
   }
 
   .grid{
@@ -139,6 +160,15 @@
     margin-top:4px;
     line-height:1.4;
   }
+  .subject-points{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:0.76rem;
+    font-weight:800;
+    color:var(--gold-deep);
+    margin-top:6px;
+  }
 
   .go-arrow{
     flex:none;
@@ -171,6 +201,7 @@
     <div class="hero-emoji">🎒</div>
     <h1>Study Games</h1>
     <p>Piliin ang paksa at simulan ang laro!</p>
+    <div class="points-combined" id="points-combined-badge"></div>
   </div>
 
   <div class="grid">
@@ -181,6 +212,7 @@
         <div class="subject-title">Math</div>
         <div class="subject-app">Block Bot</div>
         <div class="subject-desc">Numbers, place value, at number lines</div>
+        <div class="subject-points" data-points-key="blockbot_points_v1"></div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
@@ -192,6 +224,7 @@
         <div class="subject-title">Filipino</div>
         <div class="subject-app">Kuwentista</div>
         <div class="subject-desc">Alpabeto, pangngalan, at mga kwento</div>
+        <div class="subject-points" data-points-key="kuwentista_points_v1"></div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
@@ -203,6 +236,7 @@
         <div class="subject-title">English</div>
         <div class="subject-app">Word Train</div>
         <div class="subject-desc" lang="en">Alphabet, CVC words, and parts of speech</div>
+        <div class="subject-points" data-points-key="wordtrain_points_v1"></div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
@@ -214,6 +248,7 @@
         <div class="subject-title">Makabansa</div>
         <div class="subject-app">Batang Bayani</div>
         <div class="subject-desc">Komunidad, klima, at anyong-lupa</div>
+        <div class="subject-points" data-points-key="batangbayani_points_v1"></div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
@@ -225,6 +260,7 @@
         <div class="subject-title">GMRC</div>
         <div class="subject-app">Growing Good</div>
         <div class="subject-desc">Feelings, prayer, at pag-aalaga sa sarili</div>
+        <div class="subject-points" data-points-key="growinggood_points_v1"></div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
@@ -236,6 +272,7 @@
         <div class="subject-title">Computer</div>
         <div class="subject-app">Byte Buddies</div>
         <div class="subject-desc">Computer care at mga bahagi nito</div>
+        <div class="subject-points" data-points-key="bytebuddies_points_v1"></div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
@@ -247,6 +284,7 @@
         <div class="subject-title">Science</div>
         <div class="subject-app">Science Detectives</div>
         <div class="subject-desc">Katawan, pandama, bagay, at hayop</div>
+        <div class="subject-points" data-points-key="sciencedetectives_points_v1"></div>
       </div>
       <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
     </a>
@@ -254,3 +292,18 @@
 
   <p class="footer-note">Tap a subject to review the lessons and take the quiz! 🌟</p>
 </div>
+
+<script>
+(function(){
+  function getPoints(key){
+    try{ return parseInt(localStorage.getItem(key), 10) || 0; }catch(e){ return 0; }
+  }
+  var total = 0;
+  document.querySelectorAll('[data-points-key]').forEach(function(el){
+    var pts = getPoints(el.getAttribute('data-points-key'));
+    total += pts;
+    el.textContent = '⭐ ' + pts + ' pts';
+  });
+  document.getElementById('points-combined-badge').textContent = '⭐ ' + total + ' points earned across all subjects';
+})();
+</script>
