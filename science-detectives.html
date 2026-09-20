@@ -278,6 +278,13 @@
   .missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
   .missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem; font-weight:500;}
 
+  /* ---- Points & streak ---- */
+  .points-total{display:inline-flex; align-items:center; gap:6px; background:var(--amber-soft); color:var(--amber-deep); font-weight:800; font-size:0.85rem; padding:6px 14px; border-radius:999px; margin-top:10px;}
+  .quiz-progress-label-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .points-live{font-size:0.78rem; font-weight:800; color:var(--amber-deep); white-space:nowrap;}
+  .points-live .streak{color:var(--bad); margin-left:4px;}
+  .points-earned{font-size:1rem; font-weight:800; color:var(--amber-deep); margin-top:6px;}
+
   /* ---- Flask SVG piece reveal ---- */
   .piece{opacity:0; transform:scale(0.5); transform-box:fill-box; transform-origin:center; transition:opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1);}
   .piece.revealed{opacity:1; transform:scale(1);}
@@ -293,6 +300,7 @@
     <div class="hero">
       <h1 class="hero-title">Science Detectives</h1>
       <p class="hero-sub">Pick a case file and investigate! Question and answer order shuffle every time, so you really have to know each answer — not just remember the order. Try the Final Mock Exam once you&rsquo;ve solved every case!</p>
+      <div class="points-total" id="points-total-badge"></div>
       <svg class="hero-scene" viewBox="0 0 140 100" role="img" aria-label="A bubbling science flask being examined with a magnifying glass">
         <ellipse cx="66" cy="90" rx="48" ry="6" fill="var(--shadow)" opacity="0.2"/>
         <rect x="52" y="16" width="28" height="6" rx="2" fill="var(--indigo)"/>
@@ -333,7 +341,10 @@
           <g id="flask-mini"></g>
         </svg>
         <div class="quiz-progress">
-          <div class="quiz-progress-label" id="q-count">Question 1 of 12</div>
+          <div class="quiz-progress-label-row">
+            <div class="quiz-progress-label" id="q-count">Question 1 of 12</div>
+            <div class="points-live" id="points-live"></div>
+          </div>
           <div class="track-bar"><div class="track-fill" id="track-fill" style="width:0%"></div></div>
         </div>
       </div>
@@ -356,6 +367,7 @@
       </svg>
       <div class="stars" id="stars"></div>
       <div class="result-score" id="result-score"></div>
+      <div class="points-earned" id="points-earned"></div>
       <p class="result-msg" id="result-msg"></p>
       <div class="missed-review" id="missed-review"></div>
       <div class="btn-row">
@@ -406,6 +418,11 @@
   }
 
   var FINAL_EXAM_PER_LESSON = 3;
+
+  var POINTS_KEY = 'sciencedetectives_points_v1';
+  function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
+  function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+  var totalPoints = loadTotalPoints();
 
   function starsFor(pct){
     if (pct >= 1) return 3;
@@ -580,6 +597,7 @@
 
   /* ================= Home ================= */
   function renderHome(){
+    document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' points earned';
     var list = document.getElementById('home-list');
     var finalTotal = lessons.length * FINAL_EXAM_PER_LESSON;
     var finalBest = progress['final'] || 0;
@@ -663,6 +681,14 @@
   var currentQuizSet = [];
   var currentQuizMeta = null;
   var missedQuestions = [];
+  var sessionPoints = 0, streak = 0, bestStreak = 0;
+  var POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+
+  function updatePointsLive(){
+    var el = document.getElementById('points-live');
+    if (!el) return;
+    el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+  }
 
   function revealProgress(){
     var n = Math.round((score / currentQuizSet.length) * 8);
@@ -677,7 +703,7 @@
     var lesson = lessons[currentLesson];
     currentQuizSet = buildQuizSet(lesson);
     currentQuizMeta = { id: currentLesson, title: lesson.title };
-    qIdx = 0; score = 0; missedQuestions = []; resetFlask();
+    qIdx = 0; score = 0; missedQuestions = []; sessionPoints = 0; streak = 0; bestStreak = 0; resetFlask();
     showScreen('quiz');
     renderQuestion();
   }
@@ -689,7 +715,7 @@
     });
     currentQuizSet = shuffle(qs);
     currentQuizMeta = { id: 'final', title: 'Science Detectives Review' };
-    qIdx = 0; score = 0; missedQuestions = []; resetFlask();
+    qIdx = 0; score = 0; missedQuestions = []; sessionPoints = 0; streak = 0; bestStreak = 0; resetFlask();
     showScreen('quiz');
     renderQuestion();
   }
@@ -705,6 +731,7 @@
     var item = currentQuizSet[qIdx];
     document.getElementById('q-count').textContent = 'Question ' + (qIdx + 1) + ' of ' + currentQuizSet.length + (currentQuizMeta.id === 'final' ? ' — ' + decode(currentQuizMeta.title) : '');
     document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
+    updatePointsLive();
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
     document.getElementById('q-text').textContent = decode(item.q);
     var fb = document.getElementById('q-feedback');
@@ -746,8 +773,19 @@
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
     document.getElementById('next-wrap').classList.add('show');
-    if (isCorrect) score++;
-    else missedQuestions.push({ q: decode(item.q), explain: decode(item.bad) });
+    if (isCorrect){
+      score++;
+      streak++;
+      if (streak > bestStreak) bestStreak = streak;
+      var pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+      sessionPoints += pts;
+      totalPoints += pts;
+      saveTotalPoints(totalPoints);
+    } else {
+      streak = 0;
+      missedQuestions.push({ q: decode(item.q), explain: decode(item.bad) });
+    }
+    updatePointsLive();
     revealProgress();
   }
 
@@ -792,6 +830,9 @@
     saveProgress(progress);
     document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
     document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
+    var ptsLine = '⭐ +' + sessionPoints + ' points this round';
+    if (bestStreak >= STREAK_BONUS_AT) ptsLine += ' · 🔥 best streak: ' + bestStreak + ' in a row!';
+    document.getElementById('points-earned').textContent = ptsLine;
     var msg;
     if (starCount === 3) msg = 'Case closed! You solved this mystery like a true Science Detective!';
     else if (starCount === 2) msg = 'Nice clue-finding! You are almost a full Science Detective — try again to solve it completely!';

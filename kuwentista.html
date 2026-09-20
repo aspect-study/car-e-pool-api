@@ -137,6 +137,10 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .results h2{font-size:1.75rem; color:var(--accent); margin:0 0 4px;}
 .score-line{font-size:1.05rem; color:var(--ink-soft); margin-bottom:10px;}
 .results-stars{font-size:2rem; letter-spacing:8px; margin-bottom:18px;}
+.points-total{display:inline-flex; align-items:center; gap:6px; background:color-mix(in srgb, var(--gold) 30%, var(--surface)); color:var(--ink); font-weight:800; font-size:0.85rem; padding:6px 14px; border-radius:999px; margin-top:8px;}
+.points-live{font-size:0.85rem; font-weight:800; color:var(--ink); white-space:nowrap; margin-left:auto;}
+.points-live .streak{color:var(--bad); margin-left:4px;}
+.points-earned{font-size:1rem; font-weight:800; color:var(--ink); margin-bottom:4px;}
 .missed-review{display:none; text-align:left; margin:0 0 18px; padding-top:16px; border-top:1px solid var(--border);}
 .missed-review.show{display:block;}
 .missed-review h3{font-size:1rem; font-family:'Chewy',cursive; font-weight:400; color:var(--ink); margin:0 0 10px; text-align:center;}
@@ -164,6 +168,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <div>
         <h1>Kuwentista</h1>
         <p>Mas mahigpit na antas: bagong halimbawa, hindi lang paulit-ulit sa flashcard. Repasuhin, sagutan, at subukan ang Pangwakas na Pagsusulit para maging handa sa tunay na exam!</p>
+        <div class="points-total" id="points-total-badge"></div>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -193,6 +198,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div class="screen-head">
       <button class="back-btn" onclick="goHome()">&larr; Balik</button>
       <h2 id="quiz-title"></h2>
+      <div class="points-live" id="points-live"></div>
     </div>
     <div class="quiz-top">
       <div class="progress-bar"><div class="progress-fill" id="quiz-progress"></div></div>
@@ -211,6 +217,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="results-book" viewBox="0 0 200 200" id="results-book-svg"></svg>
       <h2 id="results-heading"></h2>
       <div class="score-line" id="results-score"></div>
+      <div class="points-earned" id="points-earned"></div>
       <div class="results-stars" id="results-stars"></div>
       <div class="missed-review" id="missed-review"></div>
       <div class="results-actions">
@@ -440,6 +447,11 @@ if (/(^|[?&])reset=1(&|$)/.test(location.search)){
   if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
 }
 
+const POINTS_KEY = 'kuwentista_points_v1';
+function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+let totalPoints = loadTotalPoints();
+
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -516,6 +528,14 @@ let answered = false;
 let currentQuizSet = [];
 let currentQuizMeta = {id:'', title:''};
 let missedQuestions = [];
+let sessionPoints = 0, streak = 0, bestStreak = 0;
+const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+
+function updatePointsLive(){
+  const el = document.getElementById('points-live');
+  if (!el) return;
+  el.innerHTML = '⭐ ' + sessionPoints + ' puntos' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+}
 
 const homeScreen = document.getElementById('screen-home');
 const cardsScreen = document.getElementById('screen-cards');
@@ -536,6 +556,7 @@ function starsFor(pct){
 }
 
 function renderHome(){
+  document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' na puntos';
   renderBook(document.getElementById('hero-book-svg'), 8);
   const grid = document.getElementById('lesson-grid');
   grid.innerHTML = '';
@@ -618,6 +639,7 @@ function startQuiz(){
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
+  sessionPoints = 0; streak = 0; bestStreak = 0;
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -632,6 +654,7 @@ function startFinalExam(){
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
+  sessionPoints = 0; streak = 0; bestStreak = 0;
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -639,6 +662,7 @@ function startFinalExam(){
 function renderQuestion(){
   answered = false;
   document.getElementById('quiz-title').textContent = currentQuizMeta.title;
+  updatePointsLive();
   const total = currentQuizSet.length;
   document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
   renderBook(document.getElementById('quiz-book-svg'), Math.round((quizScore/total)*8));
@@ -670,8 +694,19 @@ function selectOption(idx){
     else if(i === idx) b.classList.add('incorrect');
   });
   const correct = idx === q.correct;
-  if(correct) quizScore++;
-  else missedQuestions.push({ q: q.q, explain: q.explain });
+  if(correct){
+    quizScore++;
+    streak++;
+    if(streak > bestStreak) bestStreak = streak;
+    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    sessionPoints += pts;
+    totalPoints += pts;
+    saveTotalPoints(totalPoints);
+  } else {
+    streak = 0;
+    missedQuestions.push({ q: q.q, explain: q.explain });
+  }
+  updatePointsLive();
   renderBook(document.getElementById('quiz-book-svg'), Math.round((quizScore/currentQuizSet.length)*8));
   const fb = document.getElementById('q-feedback');
   fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Tama! 🎉':'Hindi tama.'}</strong>${q.explain}</div>`;
@@ -702,6 +737,9 @@ function renderResults(){
   document.getElementById('results-heading').textContent =
     stars === 3 ? 'Handa ka na sa Pagsusulit!' : stars > 0 ? 'Malapit ka na!' : 'Balikan Natin!';
   document.getElementById('results-score').textContent = `Nakakuha ka ng ${quizScore} sa ${total} sa ${currentQuizMeta.title}`;
+  let ptsLine = `⭐ +${sessionPoints} puntos sa pagsubok na ito`;
+  if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 pinakamahabang sunod-sunod: ${bestStreak}!`;
+  document.getElementById('points-earned').textContent = ptsLine;
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
   const reviewEl = document.getElementById('missed-review');
   if(missedQuestions.length){

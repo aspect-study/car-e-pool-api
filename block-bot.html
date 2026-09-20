@@ -123,6 +123,10 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .results h2{font-size:1.8rem; color:var(--accent); margin:0 0 4px;}
 .score-line{font-size:1.1rem; color:var(--ink-soft); margin-bottom:10px;}
 .results-stars{font-size:2rem; letter-spacing:8px; margin-bottom:18px;}
+.points-total{display:inline-flex; align-items:center; gap:6px; background:color-mix(in srgb, var(--gold) 30%, var(--surface)); color:var(--ink); font-weight:800; font-size:0.85rem; padding:6px 14px; border-radius:999px; margin-top:8px;}
+.points-live{font-size:0.85rem; font-weight:800; color:var(--ink); white-space:nowrap; margin-left:auto;}
+.points-live .streak{color:var(--bad); margin-left:4px;}
+.points-earned{font-size:1rem; font-weight:800; color:var(--ink); margin-bottom:4px;}
 .missed-review{display:none; text-align:left; margin:0 0 18px; padding-top:16px; border-top:1px solid var(--border);}
 .missed-review.show{display:block;}
 .missed-review h3{font-size:1rem; font-family:'Lilita One',cursive; font-weight:400; color:var(--ink); margin:0 0 10px; text-align:center;}
@@ -171,6 +175,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <div>
         <h1>Block Bot</h1>
         <p>Build your robot with base-ten blocks! Questions and answer order shuffle every time, and numbers change every attempt, so you truly learn each skill. Try the Final Mock Exam once you've mastered every lesson!</p>
+        <div class="points-total" id="points-total-badge"></div>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -200,6 +205,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div class="screen-head">
       <button class="back-btn" onclick="goHome()">&larr; Back</button>
       <h2 id="quiz-title"></h2>
+      <div class="points-live" id="points-live"></div>
     </div>
     <div class="quiz-top">
       <div class="progress-bar"><div class="progress-fill" id="quiz-progress"></div></div>
@@ -226,6 +232,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="results-bot" viewBox="0 0 200 240" id="results-bot-svg"></svg>
       <h2 id="results-heading"></h2>
       <div class="score-line" id="results-score"></div>
+      <div class="points-earned" id="points-earned"></div>
       <div class="results-stars" id="results-stars"></div>
       <div class="missed-review" id="missed-review"></div>
       <div class="results-actions">
@@ -432,6 +439,11 @@ if (/(^|[?&])reset=1(&|$)/.test(location.search)){
 
 const FINAL_EXAM_PER_LESSON = 3;
 
+const POINTS_KEY = 'blockbot_points_v1';
+function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+let totalPoints = loadTotalPoints();
+
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -562,8 +574,19 @@ function checkNumberline(){
   const correctAns = q.start + q.jumps;
   answered = true;
   const correct = val === correctAns;
-  if(correct) quizScore++;
-  else missedQuestions.push({ q: `${q.start} + ${q.jumps} = ?`, explain: q.explain });
+  if(correct){
+    quizScore++;
+    streak++;
+    if(streak > bestStreak) bestStreak = streak;
+    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    sessionPoints += pts;
+    totalPoints += pts;
+    saveTotalPoints(totalPoints);
+  } else {
+    streak = 0;
+    missedQuestions.push({ q: `${q.start} + ${q.jumps} = ?`, explain: q.explain });
+  }
+  updatePointsLive();
   input.disabled = true;
   input.classList.add(correct ? 'correct' : 'incorrect');
   document.getElementById('nline-check').disabled = true;
@@ -590,6 +613,14 @@ let answered = false;
 let currentQuizSet = [];
 let currentQuizMeta = null;
 let missedQuestions = [];
+let sessionPoints = 0, streak = 0, bestStreak = 0;
+const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+
+function updatePointsLive(){
+  const el = document.getElementById('points-live');
+  if (!el) return;
+  el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+}
 
 const homeScreen = document.getElementById('screen-home');
 const cardsScreen = document.getElementById('screen-cards');
@@ -610,6 +641,7 @@ function starsFor(pct){
 }
 
 function renderHome(){
+  document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' points earned';
   renderBot(document.getElementById('hero-bot-svg'), 8);
   const grid = document.getElementById('lesson-grid');
   grid.innerHTML = '';
@@ -692,6 +724,7 @@ function startQuiz(){
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
+  sessionPoints = 0; streak = 0; bestStreak = 0;
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -710,6 +743,7 @@ function startFinalExam(){
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
+  sessionPoints = 0; streak = 0; bestStreak = 0;
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -717,6 +751,7 @@ function startFinalExam(){
 function renderQuestion(){
   answered = false;
   document.getElementById('quiz-title').textContent = currentQuizMeta.title;
+  updatePointsLive();
   const total = currentQuizSet.length;
   document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
   renderBot(document.getElementById('quiz-bot-svg'), Math.round((quizScore/total)*8));
@@ -758,8 +793,19 @@ function selectOption(idx){
     else if(i === idx) b.classList.add('incorrect');
   });
   const correct = idx === q.correct;
-  if(correct) quizScore++;
-  else missedQuestions.push({ q: q.q, explain: q.explain });
+  if(correct){
+    quizScore++;
+    streak++;
+    if(streak > bestStreak) bestStreak = streak;
+    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    sessionPoints += pts;
+    totalPoints += pts;
+    saveTotalPoints(totalPoints);
+  } else {
+    streak = 0;
+    missedQuestions.push({ q: q.q, explain: q.explain });
+  }
+  updatePointsLive();
   renderBot(document.getElementById('quiz-bot-svg'), Math.round((quizScore/total)*8));
   const fb = document.getElementById('q-feedback');
   fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite.'}</strong>${q.explain}</div>`;
@@ -790,6 +836,9 @@ function renderResults(total){
   document.getElementById('results-heading').textContent =
     stars === 3 ? 'Block Bot Complete!' : stars > 0 ? 'Great Progress!' : 'Keep Building!';
   document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
+  let ptsLine = `⭐ +${sessionPoints} points this round`;
+  if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 best streak: ${bestStreak} in a row!`;
+  document.getElementById('points-earned').textContent = ptsLine;
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
   const reviewEl = document.getElementById('missed-review');
   if(missedQuestions.length){
