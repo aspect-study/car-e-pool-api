@@ -2293,64 +2293,27 @@ function wtNextProblem(){ wtPos++; openWtProblem(); }
 
 const CASES = [
   {
-    id:'rice', emoji:'🏪', title:'The Sari-sari Store Rice', tag:'Divide, then subtract',
-    scenario:`Aling Nena has <b>7/8 kilogram</b> of rice in her sari-sari store. She repacks all of it into small bags that hold <b>1/8 kilogram</b> each. Before lunch she sells <b>3</b> of the bags.`,
-    questions:[
-      {
-        q:'How many 1/8-kilogram bags can Aling Nena make from 7/8 kilogram of rice?',
-        type:'num', answer:{num:7,den:1}, unit:'bags',
-        model:{
-          u:'<b>Given:</b> 7/8 kg of rice; each bag holds 1/8 kg. <b>Asked:</b> the number of bags she can make.',
-          p:'Divide. The question asks how many groups of 1/8 kg fit inside 7/8 kg, and "how many groups of this size fit" is division.',
-          a:'7/8 &divide; 1/8 = 7/8 &times; 8/1 = 56/8 = <b>7 bags</b>',
-          c:'7/8 is seven eighths, and each bag is one eighth, so there should be exactly 7 bags. 7 &times; 1/8 = 7/8 &check;'
-        }
-      },
-      {
-        q:'After she sells 3 bags, how many bags of rice are left?',
-        type:'num', answer:{num:4,den:1}, unit:'bags',
-        model:{
-          u:'<b>Given:</b> she made 7 bags and sold 3. <b>Asked:</b> the number of bags left.',
-          p:'Subtract. Both numbers now count bags, so they can be taken away from each other.',
-          a:'7 &minus; 3 = <b>4 bags</b>',
-          c:'4 bags left &times; 1/8 kg = 4/8 = 1/2 kg still unsold, and she started with 7/8 kg. 1/2 kg is less than 7/8 kg, so this is reasonable. &check;'
-        }
-      },
-      {
-        q:'Lito says there is a shortcut: just do 7/8 &minus; 3. Why does that not work?',
-        type:'choice',
-        options:[
-          {t:'Because 3 counts <b>bags</b> while 7/8 counts <b>kilograms</b> &mdash; you must divide first to turn the kilograms into a number of bags, then subtract.', c:true},
-          {t:'Because a whole number can never be taken away from a fraction, so 7/8 has to be rewritten as a mixed number before she can subtract.'},
-          {t:'Because the 3 bags were sold before the rice was repacked, so they were never part of the 7/8 kilogram she began the morning with.'},
-          {t:'Because subtraction must always be left until last in a word problem, after every multiplication and division has been finished.'}
-        ],
-        model:{ why:'The two numbers measure different things. 7/8 is an amount of rice in kilograms; 3 is a count of bags. Subtracting them would be like taking 3 mangoes away from 7/8 of a litre &mdash; the units do not match. Dividing first (7/8 &divide; 1/8 = 7) converts the rice into <b>7 bags</b>, and only then do 7 and 3 measure the same thing, so 7 &minus; 3 = 4 is allowed. <b>Always check that two numbers name the same unit before adding or subtracting them.</b>' }
-      }
-    ]
-  },
-  {
     id:'bibingka', emoji:'🍰', title:'Bibingka at the Fiesta', tag:'A fraction of a fraction',
-    scenario:`Mang Ador brings <b>3/4 of a bibingka</b> to the barangay fiesta. He gives <b>2/3 of what he brought</b> to the children playing outside.`,
+    scenario:`Mang Ador brings <b>3/4 of a bibingka</b> to the barangay fiesta. He gives <b>2/3 of what he brought</b> to the children playing outside. The youngest group is then given <b>half of the children's share</b>.`,
     questions:[
       {
         q:'What fraction of a WHOLE bibingka do the children get?',
         type:'num', answer:{num:1,den:2}, unit:'of a bibingka',
         model:{
-          u:'<b>Given:</b> he brought 3/4 of a bibingka; he gives away 2/3 of that. <b>Asked:</b> what part of one whole bibingka the children receive.',
+          u:'<b>Given:</b> he brought 3/4 of a bibingka; he gives 2/3 of that. <b>Asked:</b> what part of one whole bibingka the children receive.',
           p:'Multiply. The word <b>"of"</b> here means a part of a part &mdash; 2/3 <i>of</i> 3/4 &mdash; and taking a fraction of a fraction is multiplication.',
           a:'3/4 &times; 2/3 = 6/12 = <b>1/2 of a bibingka</b>',
-          c:'Half a bibingka is less than the 3/4 he brought, which must be true because he only gave part of it away. &check;'
+          c:'Half a bibingka is less than the 3/4 he brought, which must be true because he gave away only part of it. &check;'
         }
       },
       {
-        q:'What fraction of a whole bibingka is Mang Ador left holding?',
+        q:"The youngest group gets half of the children's share. What fraction of a whole bibingka is that?",
         type:'num', answer:{num:1,den:4}, unit:'of a bibingka',
         model:{
-          u:'<b>Given:</b> he had 3/4; the children took 1/2. <b>Asked:</b> what is left with him.',
-          p:'Subtract what was given away from what he brought. Rename to a common denominator first.',
-          a:'3/4 &minus; 1/2 = 3/4 &minus; 2/4 = <b>1/4 of a bibingka</b>',
-          c:'1/2 given + 1/4 kept = 2/4 + 1/4 = 3/4, which is exactly what he brought. &check;'
+          u:'<b>Given:</b> the children have 1/2 of a bibingka; the youngest group gets half of that. <b>Asked:</b> the youngest group\'s share of one whole bibingka.',
+          p:'Multiply again. "Half of the children\'s share" is a fraction of an amount, exactly like the first step.',
+          a:'1/2 &times; 1/2 = <b>1/4 of a bibingka</b>',
+          c:'A quarter is smaller than the half the children started with, and 1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1 whole bibingka. &check;'
         }
       },
       {
@@ -2367,76 +2330,113 @@ const CASES = [
     ]
   },
   {
-    id:'smoothie', emoji:'🥭', title:'Three Pitchers of Mango Smoothie', tag:'Scaling a recipe up',
-    scenario:`A mango smoothie recipe makes <b>1 pitcher</b> and uses <b>2/3 cup</b> of mango juice. Ate Joy needs <b>3 pitchers</b> for her cousins. She checks the ref and finds <b>1 3/4 cups</b> of mango juice.`,
+    id:'tank', emoji:'🚰', title:'The Water Tank', tag:'Multiply, then add',
+    scenario:`A water tank is <b>3/4 full</b>. Ben uses <b>2/5 of the water that is in the tank</b> to wash the car. Later his mother uses another <b>1/10 of a full tank</b> to water the plants.`,
     questions:[
       {
-        q:'How much mango juice do 3 pitchers need?',
+        q:'What fraction of a FULL tank does Ben use?',
+        type:'num', answer:{num:3,den:10}, unit:'of a tank',
+        model:{
+          u:'<b>Given:</b> the tank is 3/4 full; Ben uses 2/5 of that water. <b>Asked:</b> what part of a full tank Ben uses.',
+          p:'Multiply. "2/5 of the water in the tank" is a part of a part, so it is 2/5 <i>of</i> 3/4.',
+          a:'3/4 &times; 2/5 = 6/20 = <b>3/10 of a tank</b>',
+          c:'3/10 is less than the 3/4 that was in the tank, which must be true because Ben used only part of it. &check;'
+        }
+      },
+      {
+        q:'How much of a full tank is used altogether?',
+        type:'num', answer:{num:2,den:5}, unit:'of a tank',
+        model:{
+          u:'<b>Given:</b> Ben used 3/10 of a tank; his mother used 1/10 of a tank. <b>Asked:</b> the total used.',
+          p:'Add. Both amounts now measure parts of a <b>full</b> tank, so they can be combined, and the denominators already match.',
+          a:'3/10 + 1/10 = 4/10 = <b>2/5 of a tank</b>',
+          c:'2/5 = 4/10, which is more than Ben\'s 3/10 on its own and still less than the 3/4 the tank held. &check;'
+        }
+      },
+      {
+        q:'Ben used 2/5 and his mother used 1/10. Why can you NOT simply add 2/5 + 1/10 to find the total?',
+        type:'choice',
+        options:[
+          {t:'Because 2/5 counts a part of the <b>water in the tank</b> while 1/10 counts a part of a <b>full tank</b> &mdash; two different wholes.', c:true},
+          {t:'Because 2/5 and 1/10 have different denominators, and two fractions can only be added when their denominators already match.'},
+          {t:'Because Ben used his water before his mother used hers, and amounts used at different times cannot be added together.'},
+          {t:'Because 2/5 is bigger than 1/10, and a bigger fraction must always be multiplied before a smaller one is added to it.'}
+        ],
+        model:{ why:'Every fraction is a fraction <b>of something</b>, and these two name different wholes. Ben\'s 2/5 is 2/5 of the <i>water in the tank</i>; his mother\'s 1/10 is 1/10 of a <i>full tank</i>. Adding them straight away is like adding 2/5 of a glass to 1/10 of a bucket, and it gives the wrong total &mdash; 2/5 + 1/10 = 5/10 = 1/2, not 2/5. Multiplying first rewrites Ben\'s share as 3/10 of a full tank, and only then do both numbers count the same whole. Note that the denominators are <b>not</b> the problem: 2/5 and 1/10 rename to 4/10 and 1/10 easily enough. What matters is what each fraction is a part of.' }
+      }
+    ]
+  },
+  {
+    id:'smoothie', emoji:'🥭', title:'Pitchers of Mango Smoothie', tag:'Scaling a recipe up',
+    scenario:`A mango smoothie recipe makes <b>1 pitcher</b> and uses <b>2/3 cup</b> of mango juice. Ate Joy makes <b>3 pitchers</b> for her cousins. Her Lola then asks for <b>one more pitcher</b>.`,
+    questions:[
+      {
+        q:'How much mango juice do the 3 pitchers need?',
         type:'num', answer:{num:2,den:1}, unit:'cups',
         model:{
-          u:'<b>Given:</b> 2/3 cup per pitcher; 3 pitchers. <b>Asked:</b> the total juice needed.',
+          u:'<b>Given:</b> 2/3 cup per pitcher; 3 pitchers. <b>Asked:</b> the juice needed for the three.',
           p:'Multiply. The same 2/3 cup is needed 3 times, and repeated equal groups is multiplication.',
           a:'2/3 &times; 3 = 2/3 &times; 3/1 = 6/3 = <b>2 cups</b>',
           c:'Adding instead: 2/3 + 2/3 + 2/3 = 6/3 = 2 cups, the same answer. &check;'
         }
       },
       {
-        q:'Does Ate Joy have enough juice in the ref?',
-        type:'choice',
-        options:[
-          {t:'No &mdash; she has 1 3/4 cups but needs 2 cups, so she is 1/4 cup short.', c:true},
-          {t:'Yes &mdash; 1 3/4 cups is more than the 2/3 cup the recipe lists, so she has plenty.'},
-          {t:'Yes &mdash; 1 3/4 rounds up to 2, and rounding is allowed when you are cooking.'},
-          {t:'There is no way to tell until you know how many cups each pitcher holds.'}
-        ],
-        model:{ why:'Compare what she <b>needs</b> with what she <b>has</b>, not with the one-pitcher amount. She needs 2 cups; she has 1 3/4 cups. Writing 2 as 2 0/4, the comparison is 2 0/4 against 1 3/4, so she is short. The tempting wrong answer compares 1 3/4 against 2/3, but 2/3 cup is the juice for a <b>single</b> pitcher, not for all three.' }
+        q:"How much mango juice is needed for all 4 pitchers?",
+        type:'num', answer:{num:8,den:3}, unit:'cups',
+        model:{
+          u:'<b>Given:</b> 2 cups for the first 3 pitchers; Lola\'s pitcher needs another 2/3 cup. <b>Asked:</b> the juice for all 4 pitchers.',
+          p:'Add. One extra pitcher needs one more 2/3 cup on top of the 2 cups already worked out.',
+          a:'2 + 2/3 = <b>2 2/3 cups</b>',
+          c:'Multiplying instead: 2/3 &times; 4 = 8/3 = 2 2/3 cups, the same answer by a different route. &check;'
+        }
       },
       {
-        q:'How much more mango juice does she need to buy?',
-        type:'num', answer:{num:1,den:4}, unit:'cup',
-        model:{
-          u:'<b>Given:</b> she needs 2 cups and has 1 3/4 cups. <b>Asked:</b> the shortfall.',
-          p:'Subtract what she has from what she needs.',
-          a:'2 &minus; 1 3/4 = 8/4 &minus; 7/4 = 1/4, so she needs <b>1/4 cup</b> more.',
-          c:'1 3/4 + 1/4 = 7/4 + 1/4 = 8/4 = 2 cups, exactly what the recipe needs. &check;'
-        }
+        q:'Why does multiplying by 3 give the same total as adding 2/3 three times?',
+        type:'choice',
+        options:[
+          {t:'Because multiplication is the shortcut for repeated equal groups, and all three pitchers need the very same 2/3 cup.', c:true},
+          {t:'Because 3 is a whole number, and adding and multiplying always give the same answer whenever one number is whole.'},
+          {t:'Because the two answers only happen to match here; with a different recipe the two methods would disagree.'},
+          {t:'Because adding fractions and multiplying fractions are really the same operation written with two different signs.'}
+        ],
+        model:{ why:'Multiplication <b>is</b> repeated addition when the groups are equal. Three pitchers each take 2/3 cup, so 2/3 + 2/3 + 2/3 and 2/3 &times; 3 are two ways of describing the same pile of juice, and both come to 6/3 = 2 cups. This is worth knowing for two reasons: it gives you a free C-step check on any "how much for n of them" question, and adding is slow once n gets large &mdash; nobody wants to add 2/3 twelve times.' }
       }
     ]
   },
   {
-    id:'flour', emoji:'🍪', title:'Splitting the Cookie Recipe', tag:'Split it equally',
-    scenario:`A cookie recipe needs <b>5/8 cup</b> of flour. Rina divides the recipe into <b>2 equal parts</b> so that she and her brother can each bake their own batch.`,
+    id:'cookie', emoji:'🍪', title:'Halving the Cookie Recipe', tag:'Half of every amount',
+    scenario:`A cookie recipe uses <b>3/5 cup of butter</b> and <b>5/8 cup of flour</b>. Rina wants to bake only <b>half of the recipe</b>.`,
     questions:[
       {
-        q:'How much flour goes into each part?',
+        q:'How much butter does Rina need?',
+        type:'num', answer:{num:3,den:10}, unit:'cup',
+        model:{
+          u:'<b>Given:</b> the full recipe uses 3/5 cup of butter; Rina makes half of it. <b>Asked:</b> the butter for half a recipe.',
+          p:'Multiply by 1/2. "Half of the recipe" means half of every amount in it.',
+          a:'3/5 &times; 1/2 = <b>3/10 cup</b>',
+          c:'Putting the two halves back: 3/10 + 3/10 = 6/10 = 3/5, the full recipe\'s butter. &check;'
+        }
+      },
+      {
+        q:'How much flour does Rina need?',
         type:'num', answer:{num:5,den:16}, unit:'cup',
         model:{
-          u:'<b>Given:</b> 5/8 cup of flour in all; split into 2 equal parts. <b>Asked:</b> the flour in one part.',
-          p:'Divide by 2. Sharing one amount equally among a number of parts is division.',
-          a:'5/8 &divide; 2 = 5/8 &divide; 2/1 = 5/8 &times; 1/2 = <b>5/16 cup</b>',
-          c:'5/16 is a little less than half of 5/8, and half of 5/8 is exactly what one of two equal parts should be. &check;'
+          u:'<b>Given:</b> the full recipe uses 5/8 cup of flour; Rina makes half of it. <b>Asked:</b> the flour for half a recipe.',
+          p:'Multiply by 1/2 again. Every ingredient is halved by the same step.',
+          a:'5/8 &times; 1/2 = <b>5/16 cup</b>',
+          c:'Putting the two halves back: 5/16 + 5/16 = 10/16 = 5/8, the full recipe\'s flour. &check;'
         }
       },
       {
-        q:'Dividing by 2 gave the same answer as multiplying by something. By what?',
+        q:'Rina took half of every amount. Which single step does "take half" always mean?',
         type:'choice',
         options:[
-          {t:'By <b>1/2</b> &mdash; Keep&ndash;Change&ndash;Flip turns &divide; 2/1 into &times; 1/2.', c:true},
-          {t:'By <b>2/1</b> &mdash; you flip the first fraction, not the second.'},
-          {t:'By <b>2</b> &mdash; dividing and multiplying by the same number are the same thing.'},
-          {t:'By <b>1/8</b> &mdash; you use the denominator of the first fraction.'}
+          {t:'Dividing by 2 &mdash; Keep&ndash;Change&ndash;Flip turns &divide; 2/1 into &times; 1/2, so halving and dividing by 2 are one and the same.', c:true},
+          {t:'Dividing by 1/2 &mdash; you always divide by the fraction that is named, so taking half means dividing by one half.'},
+          {t:'Multiplying by 2 &mdash; the recipe is being split between two batches, so each amount has to be doubled.'},
+          {t:'Multiplying by 1/4 &mdash; half of a half is a quarter, so half a recipe needs a quarter of each amount.'}
         ],
-        model:{ why:'Keep&ndash;Change&ndash;Flip: <b>keep</b> the first fraction (5/8), <b>change</b> &divide; to &times;, and <b>flip the second number only</b> (2/1 becomes 1/2). So 5/8 &divide; 2 is exactly 5/8 &times; 1/2. This is why "divide by 2" and "take half" always mean the same thing, and it is the safest way to handle a whole-number divisor: write it over 1 first, then flip.' }
-      },
-      {
-        q:'Rina gets 5/16 cup and her brother gets 5/16 cup. Add the two parts to check the work. What do you get?',
-        type:'num', answer:{num:5,den:8}, unit:'cup',
-        model:{
-          u:'<b>Given:</b> two equal parts of 5/16 cup each. <b>Asked:</b> the two parts put back together.',
-          p:'Add. Putting the parts back together should rebuild the original amount &mdash; this is the C step of UPAC.',
-          a:'5/16 + 5/16 = 10/16 = <b>5/8 cup</b>',
-          c:'5/8 cup is exactly the flour the recipe started with, so the split was done correctly. Undoing your own work like this is the strongest check you can write. &check;'
-        }
+        model:{ why:'"Take half", "halve it" and "divide by 2" are three names for the same step, and Keep&ndash;Change&ndash;Flip shows why: <b>keep</b> 3/5, <b>change</b> &divide; to &times;, <b>flip</b> 2/1 to 1/2, giving 3/5 &times; 1/2. Watch the tempting wrong answer: dividing <i>by</i> 1/2 does the opposite and makes the amount twice as big, because 3/5 &divide; 1/2 = 3/5 &times; 2/1 = 6/5. Halving means multiplying by 1/2, never dividing by it.' }
       }
     ]
   },
@@ -2469,7 +2469,7 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Because the 2 extra containers hold a different liquid, so you must first find how many the blue liquid fills.', c:true},
-          {t:'Because GEMDAS says division is always done before addition, whatever order the steps happen in inside the story itself.'},
+          {t:'Because GEMDAS says division is always done before addition, whatever order the steps happen in inside the story.'},
           {t:'Because 5/6 is the largest number in the problem, and the largest number in a word problem is always dealt with first.'},
           {t:'Because a whole number cannot be added to a fraction until the fraction has been rewritten with the same denominator.'}
         ],
@@ -2515,38 +2515,39 @@ const CASES = [
     ]
   },
   {
-    id:'paint', emoji:'🪣', title:'Papa Paints the Gate', tag:'Three steps in a row',
-    scenario:`Papa has <b>4/5 of a can</b> of paint left over. He uses <b>3/4 of what is left</b> to paint the gate. Whatever remains he pours into small jars that hold <b>1/10 of a can</b> each.`,
+    id:'rice', emoji:'🏪', title:'The Sari-sari Store Rice', tag:'Divide, then multiply',
+    scenario:`Aling Nena has <b>7/8 kilogram</b> of rice in her sari-sari store. She repacks all of it into small bags that hold <b>1/8 kilogram</b> each. She sets aside <b>3 of the bags</b> for her own family.`,
     questions:[
       {
-        q:'How much of a can of paint did the gate use?',
-        type:'num', answer:{num:3,den:5}, unit:'of a can',
+        q:'How many 1/8-kilogram bags can Aling Nena make from 7/8 kilogram of rice?',
+        type:'num', answer:{num:7,den:1}, unit:'bags',
         model:{
-          u:'<b>Given:</b> 4/5 of a can is left; the gate uses 3/4 of that. <b>Asked:</b> the paint used on the gate.',
-          p:'Multiply. "3/4 <b>of what is left</b>" is a fraction of a fraction.',
-          a:'4/5 &times; 3/4 = 12/20 = <b>3/5 of a can</b>',
-          c:'3/5 is less than the 4/5 he had, which must be true because he used only part of it. &check;'
+          u:'<b>Given:</b> 7/8 kg of rice; each bag holds 1/8 kg. <b>Asked:</b> the number of bags she can make.',
+          p:'Divide. The question asks how many groups of 1/8 kg fit inside 7/8 kg, and "how many groups of this size fit" is division.',
+          a:'7/8 &divide; 1/8 = 7/8 &times; 8/1 = 56/8 = <b>7 bags</b>',
+          c:'7 bags &times; 1/8 kg each: 7 &times; 1/8 = 7/8, exactly the rice she started with. &check;'
         }
       },
       {
-        q:'How much paint is left after the gate is finished?',
-        type:'num', answer:{num:1,den:5}, unit:'of a can',
+        q:'What weight of rice does she set aside for her own family?',
+        type:'num', answer:{num:3,den:8}, unit:'kilogram',
         model:{
-          u:'<b>Given:</b> he started with 4/5 of a can and used 3/5. <b>Asked:</b> what is left.',
-          p:'Subtract the paint used from the paint he started with. The denominators already match.',
-          a:'4/5 &minus; 3/5 = <b>1/5 of a can</b>',
-          c:'3/5 used + 1/5 left = 4/5, exactly what he began with. &check;'
+          u:'<b>Given:</b> she sets aside 3 bags; each bag holds 1/8 kg. <b>Asked:</b> the weight of those 3 bags.',
+          p:'Multiply. Three equal bags of 1/8 kg is repeated equal groups.',
+          a:'3 &times; 1/8 = <b>3/8 kilogram</b>',
+          c:'3/8 kg is less than the 7/8 kg she started with, which must be true for 3 of her 7 bags. &check;'
         }
       },
       {
-        q:'How many 1/10-can jars can he fill with the paint that is left?',
-        type:'num', answer:{num:2,den:1}, unit:'jars',
-        model:{
-          u:'<b>Given:</b> 1/5 of a can of paint remains; each jar holds 1/10 of a can. <b>Asked:</b> the number of jars.',
-          p:'Divide. We need how many 1/10-can jars fit inside 1/5 of a can.',
-          a:'1/5 &divide; 1/10 = 1/5 &times; 10/1 = 10/5 = <b>2 jars</b>',
-          c:'1/5 = 2/10, and each jar takes 1/10, so 2 jars is exactly right. &check;'
-        }
+        q:'Lito says the 3 bags she set aside weigh 3 kilograms. Why is he wrong?',
+        type:'choice',
+        options:[
+          {t:'Because 3 counts <b>bags</b>, not kilograms &mdash; each bag holds only 1/8 kg, so the three together weigh 3/8 kilogram.', c:true},
+          {t:'Because the bags were all filled from 7/8 kilogram, so any 3 of them must weigh 3/7 of a kilogram altogether.'},
+          {t:'Because 3 kilograms is the weight of all seven bags together, not the weight of the three she set aside.'},
+          {t:'Because a bag of rice always weighs a little more than the rice inside it once the packaging is counted.'}
+        ],
+        model:{ why:'The number 3 in this story is a <b>count of bags</b>, not a weight. To turn a count of bags into kilograms you must multiply by what one bag holds: 3 &times; 1/8 = 3/8 kilogram. Lito read "3" as if it already meant kilograms. Before you write any number down, say what it measures out loud &mdash; "3 <i>bags</i>", "1/8 <i>kilogram per bag</i>" &mdash; and the operation you need usually becomes obvious.' }
       }
     ]
   },
@@ -2561,7 +2562,7 @@ const CASES = [
           u:'<b>Given:</b> 12 m of cloth in total; 3/4 of it becomes capes. <b>Asked:</b> the metres used for capes.',
           p:'Multiply. "3/4 <b>of</b> the cloth" is a fraction of an amount.',
           a:'12 &times; 3/4 = 36/4 = <b>9 metres</b>',
-          c:'9 m is three-quarters of 12 m, and one quarter (3 m) is left over. 9 + 3 = 12 &check;'
+          c:'9 m of capes and 3 m left over: 9 + 3 = 12 m, all the cloth accounted for. &check;'
         }
       },
       {
@@ -2571,7 +2572,7 @@ const CASES = [
           u:'<b>Given:</b> 9 m went into capes; 2/3 of <b>that</b> became long capes. <b>Asked:</b> the metres of long capes.',
           p:'Multiply, but multiply 2/3 by <b>9</b>, not by 12 &mdash; the 2/3 describes the cape cloth only.',
           a:'9 &times; 2/3 = 18/3 = <b>6 metres</b>',
-          c:'6 m of long capes plus 3 m of short capes is 9 m of cape cloth. &check;'
+          c:'6 m of long capes and 3 m of short capes: 6 + 3 = 9 m, all the cape cloth. &check;'
         }
       },
       {
@@ -2583,7 +2584,7 @@ const CASES = [
           {t:'His arithmetic slipped: 12 &times; 2/3 does not equal 8 metres, and the correct product would have given him the right answer.'},
           {t:'Nothing went wrong &mdash; 8 metres and 6 metres are the same length written with two different units of measurement.'}
         ],
-        model:{ why:'His arithmetic is fine &mdash; 12 &times; 2/3 really is 8. The mistake is at the <b>U step</b>: he attached the fraction to the wrong whole. Every fraction in a word problem is a fraction <b>of something specific</b>, and here the sentence says "of the cloth that went into capes", which is 9 m, not 12 m. Before multiplying, always finish this sentence out loud: <b>"two-thirds of ______."</b> His answer also fails the C step: if 2/3 of the cape cloth is long capes, the remaining 1/3 must be short capes, so the two lengths have to add up to 9 m. His 8 m would leave only 1 m for the short capes, and 1 m is not a third of 9 m.' }
+        model:{ why:'His arithmetic is fine &mdash; 12 &times; 2/3 really is 8. The mistake is at the <b>U step</b>: he attached the fraction to the wrong whole. Every fraction in a word problem is a fraction <b>of something specific</b>, and here the sentence says "of the cloth that went into capes", which is 9 m, not 12 m. Before multiplying, always finish this sentence out loud: <b>"two-thirds of ______."</b> His answer also fails the C step: the long capes and the short capes together must come to 9 m, and 8 m would leave only 1 m for the short capes, which is not a third of 9 m.' }
       }
     ]
   },
