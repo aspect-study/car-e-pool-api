@@ -178,6 +178,29 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
   font-weight:800; font-size:0.85rem; margin-right:7px;
 }
 
+/* CASE STUDIES */
+.case-card{border-color:var(--gold); background:linear-gradient(135deg, color-mix(in srgb, var(--gold) 14%, var(--surface)), var(--surface));}
+.case-badge{
+  display:inline-block; background:var(--gold); color:#2A1D00; font-size:0.68rem; font-weight:800;
+  padding:2px 10px; border-radius:999px; margin-bottom:4px; letter-spacing:0.03em;
+}
+.case-intro{color:var(--ink-soft); font-size:0.95rem; line-height:1.55; margin:0 0 14px;}
+.lesson-card.case-done{border-color:var(--good);}
+.case-panel{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; box-shadow:var(--shadow); margin-bottom:16px;
+}
+.case-heading{font-family:'Baloo 2',cursive; font-size:1.2rem; margin:0 0 8px; color:var(--accent);}
+.case-scenario{font-size:1.02rem; line-height:1.65;}
+.case-model{
+  margin-top:12px; border:1px solid var(--border); border-left:4px solid var(--good);
+  border-radius:14px; padding:12px 14px; background:var(--surface2);
+}
+.case-model > h4{margin:0 0 10px; font-family:'Baloo 2',cursive; font-size:1rem; color:var(--good);}
+.case-keyitem{margin-bottom:18px;}
+.case-keyq{font-weight:800; font-size:1rem; line-height:1.45;}
+.case-keya{margin:6px 0 0; font-size:0.95rem; line-height:1.5;}
+
 /* PRINTABLE WORKSHEET — a white sheet of paper, in both themes */
 .print-badge{
   display:inline-block; background:var(--accent); color:var(--accent-ink); font-size:0.68rem; font-weight:800;
@@ -211,6 +234,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .ws-drills li::before{content:counter(wsd) ". "; font-weight:800;}
 .ws-q{font-weight:700;}
 .ws-word{border:1px solid #BBBBBB; border-radius:8px; padding:10px 12px; margin-bottom:10px;}
+.ws-write{border:1px solid #BBBBBB; border-radius:6px; min-height:66px; margin:6px 0 2px;}
 .ws-answerline{margin-top:10px;}
 .upac-print{display:grid; grid-template-columns:1fr 1fr; margin-top:10px; border:1px solid #111111;}
 .upac-print > div{border:1px solid #111111; padding:8px 10px; min-height:100px; font-size:0.8rem; color:#555555;}
@@ -245,7 +269,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="hero-scene" viewBox="0 0 200 200" id="hero-scene-svg"></svg>
       <div>
         <h1>Math Mastery</h1>
-        <p>Divisibility, GEMDAS, fractions, and word problems! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the <b>UPAC Walkthrough</b> for word problems, and the Practice Test once every lesson is glowing!</p>
+        <p>Divisibility, GEMDAS, fractions, decimals, and word problems! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the <b>UPAC Walkthrough</b> to practise the four steps, the <b>Case Studies</b> when you want to think a real situation all the way through, and the Practice Test once every lesson is glowing!</p>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -298,6 +322,30 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div id="wt-body"></div>
   </section>
 
+  <!-- CASE STUDIES -->
+  <section id="screen-cases" class="hidden">
+    <div class="screen-head">
+      <button class="back-btn" onclick="caseBack()">&larr; Back</button>
+      <h2>Case Studies</h2>
+    </div>
+
+    <div id="case-picker">
+      <p class="case-intro">Ten real situations that need multiplying or dividing fractions. Read the story, then answer the follow-up questions &mdash; each one has a model answer written the way your teacher marks it.</p>
+      <div class="wt-count" id="case-progress"></div>
+      <div class="lesson-grid" id="case-list"></div>
+      <button class="secondary-btn" style="width:100%; margin-top:14px" onclick="openCaseKey()">🖨️ Print all 10 + answer key</button>
+    </div>
+
+    <div id="case-detail" class="hidden">
+      <div class="wt-count" id="case-count"></div>
+      <div class="case-panel">
+        <h3 class="case-heading" id="case-title"></h3>
+        <div class="case-scenario" id="case-scenario"></div>
+      </div>
+      <div id="case-body"></div>
+    </div>
+  </section>
+
   <!-- PRINTABLE WORKSHEET -->
   <section id="screen-print" class="hidden">
     <div class="screen-head no-print">
@@ -307,7 +355,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div id="print-root"></div>
     <div class="no-print" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px">
       <button class="primary-btn" style="width:auto; margin-top:0" onclick="window.print()">🖨️ Print again</button>
-      <button class="secondary-btn" onclick="newWorksheet()">🎲 New exam</button>
+      <button class="secondary-btn" id="ws-reroll" onclick="newWorksheet()">🎲 New exam</button>
     </div>
   </section>
 
@@ -1332,10 +1380,11 @@ const cardsScreen = document.getElementById('screen-cards');
 const quizScreen = document.getElementById('screen-quiz');
 const resultsScreen = document.getElementById('screen-results');
 const wtScreen = document.getElementById('screen-walkthrough');
+const caseScreen = document.getElementById('screen-cases');
 const printScreen = document.getElementById('screen-print');
 
 function showScreen(el){
-  [homeScreen, cardsScreen, quizScreen, resultsScreen, wtScreen, printScreen].forEach(s=>s.classList.add('hidden'));
+  [homeScreen, cardsScreen, quizScreen, resultsScreen, wtScreen, caseScreen, printScreen].forEach(s=>s.classList.add('hidden'));
   el.classList.remove('hidden');
   window.scrollTo(0,0);
 }
@@ -1383,6 +1432,21 @@ function renderHome(){
     <div class="go-btn">${wtDone>0?'Continue':'Start'}</div>
   `;
   grid.appendChild(wtCard);
+
+  const caseDone = (progress.caseDone || []).length;
+  const caseCard = document.createElement('button');
+  caseCard.className = 'lesson-card case-card';
+  caseCard.onclick = ()=>startCases();
+  caseCard.innerHTML = `
+    <div class="lesson-emoji">🔎</div>
+    <div class="lesson-info">
+      <span class="case-badge">Think It Through</span>
+      <h3>Case Studies</h3>
+      <p>${caseDone >= CASES.length ? 'All ' + CASES.length + ' case studies finished — go again!' : caseDone + ' of ' + CASES.length + ' scenarios finished'}</p>
+    </div>
+    <div class="go-btn">${caseDone>0?'Continue':'Start'}</div>
+  `;
+  grid.appendChild(caseCard);
 
   const printCard = document.createElement('button');
   printCard.className = 'lesson-card print-card';
@@ -2220,6 +2284,607 @@ function wtShowSummary(){
 
 function wtNextProblem(){ wtPos++; openWtProblem(); }
 
+/* ================= CASE STUDIES ================= */
+/* Ten situations drawn from the Week 7 decks (Day 2-3 multiplication, Day 4-5
+   division). Each is a scenario plus 2-3 follow-ups that test whether she can
+   CHOOSE the operation and defend it, not just compute. `model` holds the
+   high-scoring answer: UPAC for the numeric ones, a written justification for
+   the reasoning ones. Both shapes are rendered by caseModelHtml(). */
+
+const CASES = [
+  {
+    id:'rice', emoji:'🏪', title:'The Sari-sari Store Rice', tag:'Divide, then subtract',
+    scenario:`Aling Nena has <b>7/8 kilogram</b> of rice in her sari-sari store. She repacks all of it into small bags that hold <b>1/8 kilogram</b> each. Before lunch she sells <b>3</b> of the bags.`,
+    questions:[
+      {
+        q:'How many 1/8-kilogram bags can Aling Nena make from 7/8 kilogram of rice?',
+        type:'num', answer:{num:7,den:1}, unit:'bags',
+        model:{
+          u:'<b>Given:</b> 7/8 kg of rice; each bag holds 1/8 kg. <b>Asked:</b> the number of bags she can make.',
+          p:'Divide. The question asks how many groups of 1/8 kg fit inside 7/8 kg, and "how many groups of this size fit" is division.',
+          a:'7/8 &divide; 1/8 = 7/8 &times; 8/1 = 56/8 = <b>7 bags</b>',
+          c:'7/8 is seven eighths, and each bag is one eighth, so there should be exactly 7 bags. 7 &times; 1/8 = 7/8 &check;'
+        }
+      },
+      {
+        q:'After she sells 3 bags, how many bags of rice are left?',
+        type:'num', answer:{num:4,den:1}, unit:'bags',
+        model:{
+          u:'<b>Given:</b> she made 7 bags and sold 3. <b>Asked:</b> the number of bags left.',
+          p:'Subtract. Both numbers now count bags, so they can be taken away from each other.',
+          a:'7 &minus; 3 = <b>4 bags</b>',
+          c:'4 bags left &times; 1/8 kg = 4/8 = 1/2 kg still unsold, and she started with 7/8 kg. 1/2 kg is less than 7/8 kg, so this is reasonable. &check;'
+        }
+      },
+      {
+        q:'Lito says there is a shortcut: just do 7/8 &minus; 3. Why does that not work?',
+        type:'choice',
+        options:[
+          {t:'Because 3 counts <b>bags</b> while 7/8 counts <b>kilograms</b> &mdash; you must divide first to turn the kilograms into a number of bags, then subtract.', c:true},
+          {t:'Because a whole number can never be taken away from a fraction, so 7/8 has to be rewritten as a mixed number before she can subtract.'},
+          {t:'Because the 3 bags were sold before the rice was repacked, so they were never part of the 7/8 kilogram she began the morning with.'},
+          {t:'Because subtraction must always be left until last in a word problem, after every multiplication and division has been finished.'}
+        ],
+        model:{ why:'The two numbers measure different things. 7/8 is an amount of rice in kilograms; 3 is a count of bags. Subtracting them would be like taking 3 mangoes away from 7/8 of a litre &mdash; the units do not match. Dividing first (7/8 &divide; 1/8 = 7) converts the rice into <b>7 bags</b>, and only then do 7 and 3 measure the same thing, so 7 &minus; 3 = 4 is allowed. <b>Always check that two numbers name the same unit before adding or subtracting them.</b>' }
+      }
+    ]
+  },
+  {
+    id:'bibingka', emoji:'🍰', title:'Bibingka at the Fiesta', tag:'A fraction of a fraction',
+    scenario:`Mang Ador brings <b>3/4 of a bibingka</b> to the barangay fiesta. He gives <b>2/3 of what he brought</b> to the children playing outside.`,
+    questions:[
+      {
+        q:'What fraction of a WHOLE bibingka do the children get?',
+        type:'num', answer:{num:1,den:2}, unit:'of a bibingka',
+        model:{
+          u:'<b>Given:</b> he brought 3/4 of a bibingka; he gives away 2/3 of that. <b>Asked:</b> what part of one whole bibingka the children receive.',
+          p:'Multiply. The word <b>"of"</b> here means a part of a part &mdash; 2/3 <i>of</i> 3/4 &mdash; and taking a fraction of a fraction is multiplication.',
+          a:'3/4 &times; 2/3 = 6/12 = <b>1/2 of a bibingka</b>',
+          c:'Half a bibingka is less than the 3/4 he brought, which must be true because he only gave part of it away. &check;'
+        }
+      },
+      {
+        q:'What fraction of a whole bibingka is Mang Ador left holding?',
+        type:'num', answer:{num:1,den:4}, unit:'of a bibingka',
+        model:{
+          u:'<b>Given:</b> he had 3/4; the children took 1/2. <b>Asked:</b> what is left with him.',
+          p:'Subtract what was given away from what he brought. Rename to a common denominator first.',
+          a:'3/4 &minus; 1/2 = 3/4 &minus; 2/4 = <b>1/4 of a bibingka</b>',
+          c:'1/2 given + 1/4 kept = 2/4 + 1/4 = 3/4, which is exactly what he brought. &check;'
+        }
+      },
+      {
+        q:'Multiplying usually makes numbers bigger. Why did 3/4 &times; 2/3 give an answer SMALLER than 3/4?',
+        type:'choice',
+        options:[
+          {t:'Because 2/3 is less than 1, and multiplying by a number less than 1 takes only a <b>part</b> of the amount, so the result must be smaller.', c:true},
+          {t:'Because the answer was written in simplest form, and reducing a fraction to lowest terms always makes the amount it stands for smaller.'},
+          {t:'Because 3/4 and 2/3 have different denominators, and multiplying two unlike fractions always shrinks the answer to the smaller one.'},
+          {t:'Because multiplying two fractions is really repeated subtraction, so each one is taken away from the other one in turn.'}
+        ],
+        model:{ why:'"Multiplying makes it bigger" is only true for whole numbers greater than 1. Multiplying by <b>1</b> keeps an amount the same; multiplying by a number <b>less than 1</b> shrinks it. Here 2/3 is less than 1, so 2/3 of 3/4 has to be less than 3/4. This is a fast reasonableness check at the C step: if you multiply by a proper fraction and your answer came out bigger, you have made a mistake somewhere.' }
+      }
+    ]
+  },
+  {
+    id:'smoothie', emoji:'🥭', title:'Three Pitchers of Mango Smoothie', tag:'Scaling a recipe up',
+    scenario:`A mango smoothie recipe makes <b>1 pitcher</b> and uses <b>2/3 cup</b> of mango juice. Ate Joy needs <b>3 pitchers</b> for her cousins. She checks the ref and finds <b>1 3/4 cups</b> of mango juice.`,
+    questions:[
+      {
+        q:'How much mango juice do 3 pitchers need?',
+        type:'num', answer:{num:2,den:1}, unit:'cups',
+        model:{
+          u:'<b>Given:</b> 2/3 cup per pitcher; 3 pitchers. <b>Asked:</b> the total juice needed.',
+          p:'Multiply. The same 2/3 cup is needed 3 times, and repeated equal groups is multiplication.',
+          a:'2/3 &times; 3 = 2/3 &times; 3/1 = 6/3 = <b>2 cups</b>',
+          c:'Adding instead: 2/3 + 2/3 + 2/3 = 6/3 = 2 cups, the same answer. &check;'
+        }
+      },
+      {
+        q:'Does Ate Joy have enough juice in the ref?',
+        type:'choice',
+        options:[
+          {t:'No &mdash; she has 1 3/4 cups but needs 2 cups, so she is 1/4 cup short.', c:true},
+          {t:'Yes &mdash; 1 3/4 cups is more than the 2/3 cup the recipe lists, so she has plenty.'},
+          {t:'Yes &mdash; 1 3/4 rounds up to 2, and rounding is allowed when you are cooking.'},
+          {t:'There is no way to tell until you know how many cups each pitcher holds.'}
+        ],
+        model:{ why:'Compare what she <b>needs</b> with what she <b>has</b>, not with the one-pitcher amount. She needs 2 cups; she has 1 3/4 cups. Writing 2 as 2 0/4, the comparison is 2 0/4 against 1 3/4, so she is short. The tempting wrong answer compares 1 3/4 against 2/3, but 2/3 cup is the juice for a <b>single</b> pitcher, not for all three.' }
+      },
+      {
+        q:'How much more mango juice does she need to buy?',
+        type:'num', answer:{num:1,den:4}, unit:'cup',
+        model:{
+          u:'<b>Given:</b> she needs 2 cups and has 1 3/4 cups. <b>Asked:</b> the shortfall.',
+          p:'Subtract what she has from what she needs.',
+          a:'2 &minus; 1 3/4 = 8/4 &minus; 7/4 = 1/4, so she needs <b>1/4 cup</b> more.',
+          c:'1 3/4 + 1/4 = 7/4 + 1/4 = 8/4 = 2 cups, exactly what the recipe needs. &check;'
+        }
+      }
+    ]
+  },
+  {
+    id:'flour', emoji:'🍪', title:'Splitting the Cookie Recipe', tag:'Split it equally',
+    scenario:`A cookie recipe needs <b>5/8 cup</b> of flour. Rina divides the recipe into <b>2 equal parts</b> so that she and her brother can each bake their own batch.`,
+    questions:[
+      {
+        q:'How much flour goes into each part?',
+        type:'num', answer:{num:5,den:16}, unit:'cup',
+        model:{
+          u:'<b>Given:</b> 5/8 cup of flour in all; split into 2 equal parts. <b>Asked:</b> the flour in one part.',
+          p:'Divide by 2. Sharing one amount equally among a number of parts is division.',
+          a:'5/8 &divide; 2 = 5/8 &divide; 2/1 = 5/8 &times; 1/2 = <b>5/16 cup</b>',
+          c:'5/16 is a little less than half of 5/8, and half of 5/8 is exactly what one of two equal parts should be. &check;'
+        }
+      },
+      {
+        q:'Dividing by 2 gave the same answer as multiplying by something. By what?',
+        type:'choice',
+        options:[
+          {t:'By <b>1/2</b> &mdash; Keep&ndash;Change&ndash;Flip turns &divide; 2/1 into &times; 1/2.', c:true},
+          {t:'By <b>2/1</b> &mdash; you flip the first fraction, not the second.'},
+          {t:'By <b>2</b> &mdash; dividing and multiplying by the same number are the same thing.'},
+          {t:'By <b>1/8</b> &mdash; you use the denominator of the first fraction.'}
+        ],
+        model:{ why:'Keep&ndash;Change&ndash;Flip: <b>keep</b> the first fraction (5/8), <b>change</b> &divide; to &times;, and <b>flip the second number only</b> (2/1 becomes 1/2). So 5/8 &divide; 2 is exactly 5/8 &times; 1/2. This is why "divide by 2" and "take half" always mean the same thing, and it is the safest way to handle a whole-number divisor: write it over 1 first, then flip.' }
+      },
+      {
+        q:'Rina gets 5/16 cup and her brother gets 5/16 cup. Add the two parts to check the work. What do you get?',
+        type:'num', answer:{num:5,den:8}, unit:'cup',
+        model:{
+          u:'<b>Given:</b> two equal parts of 5/16 cup each. <b>Asked:</b> the two parts put back together.',
+          p:'Add. Putting the parts back together should rebuild the original amount &mdash; this is the C step of UPAC.',
+          a:'5/16 + 5/16 = 10/16 = <b>5/8 cup</b>',
+          c:'5/8 cup is exactly the flour the recipe started with, so the split was done correctly. Undoing your own work like this is the strongest check you can write. &check;'
+        }
+      }
+    ]
+  },
+  {
+    id:'containers', emoji:'🧪', title:'The Science Class Containers', tag:'Divide, then add',
+    scenario:`A science class has <b>5/6 litre</b> of blue liquid. The teacher pours all of it equally into containers that hold <b>1/12 litre</b> each. She then prepares <b>2 more containers</b> using a different liquid.`,
+    questions:[
+      {
+        q:'How many containers does the blue liquid fill?',
+        type:'num', answer:{num:10,den:1}, unit:'containers',
+        model:{
+          u:'<b>Given:</b> 5/6 L of blue liquid; each container holds 1/12 L. <b>Asked:</b> how many containers the blue liquid fills.',
+          p:'Divide. We need to know how many 1/12-litre containers fit inside 5/6 litre.',
+          a:'5/6 &divide; 1/12 = 5/6 &times; 12/1 = 60/6 = <b>10 containers</b>',
+          c:'5/6 = 10/12, and each container takes 1/12, so 10 containers is exactly right. &check;'
+        }
+      },
+      {
+        q:'How many containers has she prepared altogether?',
+        type:'num', answer:{num:12,den:1}, unit:'containers',
+        model:{
+          u:'<b>Given:</b> 10 containers of blue liquid plus 2 containers of a different liquid. <b>Asked:</b> the total number of containers.',
+          p:'Add. Both numbers count containers, so they can be combined.',
+          a:'10 + 2 = <b>12 containers</b>',
+          c:'12 is more than the 10 from the blue liquid, which must be true because containers were added, not taken away. &check;'
+        }
+      },
+      {
+        q:'Why must the dividing happen BEFORE the adding in this problem?',
+        type:'choice',
+        options:[
+          {t:'Because the 2 extra containers hold a different liquid, so you must first find how many the blue liquid fills.', c:true},
+          {t:'Because GEMDAS says division is always done before addition, whatever order the steps happen in inside the story itself.'},
+          {t:'Because 5/6 is the largest number in the problem, and the largest number in a word problem is always dealt with first.'},
+          {t:'Because a whole number cannot be added to a fraction until the fraction has been rewritten with the same denominator.'}
+        ],
+        model:{ why:'The order comes from the <b>story</b>, not from a rule. The 2 extra containers hold a different liquid, so they were never part of the 5/6 litre. If you added first (5/6 + 2) you would be adding containers to litres, which is meaningless. Divide to turn the 5/6 litre into <b>10 containers</b>, and only then are both numbers counting the same thing, so 10 + 2 = 12 makes sense. In a multi-step problem, always ask: <b>"what must I know first?"</b>' }
+      }
+    ]
+  },
+  {
+    id:'ribbon', emoji:'🎀', title:'One Ribbon, Two Different Questions', tag:'Choose the operation',
+    scenario:`A ribbon is <b>2/3 metre</b> long. Two classmates are each given a different task.<br><br><b>Task A:</b> Cut the ribbon into pieces that are <b>1/6 metre each</b>. How many pieces are there?<br><b>Task B:</b> Use <b>1/6 of the ribbon</b> to make a bow. How long is the bow?`,
+    questions:[
+      {
+        q:'Answer Task A: how many 1/6-metre pieces come from the ribbon?',
+        type:'num', answer:{num:4,den:1}, unit:'pieces',
+        model:{
+          u:'<b>Given:</b> a 2/3 m ribbon; each piece is 1/6 m. <b>Asked:</b> the number of pieces.',
+          p:'Divide. "Pieces that are 1/6 metre <b>each</b>" asks how many groups of that size fit in the ribbon.',
+          a:'2/3 &divide; 1/6 = 2/3 &times; 6/1 = 12/3 = <b>4 pieces</b>',
+          c:'2/3 = 4/6, and each piece is 1/6, so 4 pieces is exactly right. &check;'
+        }
+      },
+      {
+        q:'Answer Task B: how long is the bow?',
+        type:'num', answer:{num:1,den:9}, unit:'metre',
+        model:{
+          u:'<b>Given:</b> a 2/3 m ribbon; the bow uses 1/6 of it. <b>Asked:</b> the length of the bow.',
+          p:'Multiply. "1/6 <b>of</b> the ribbon" asks for a part of the whole, and a fraction of an amount is multiplication.',
+          a:'2/3 &times; 1/6 = 2/18 = <b>1/9 metre</b>',
+          c:'1/9 m is much shorter than the 2/3 m ribbon, which must be true for a small part of it. &check;'
+        }
+      },
+      {
+        q:'Both tasks used the numbers 2/3 and 1/6, but the answers were 4 and 1/9. What in the wording tells you which operation to use?',
+        type:'choice',
+        options:[
+          {t:'"Pieces of 1/6 metre <b>each</b>" asks how many groups of that size fit &rarr; divide. "1/6 <b>of</b> the ribbon" asks for a part of the whole &rarr; multiply.', c:true},
+          {t:'Task A has the bigger answer, and the task with the bigger answer is always the one that needs division rather than multiplication.'},
+          {t:'The fraction written second tells you the operation, and 1/6 comes second in both tasks, so both of them use the same one.'},
+          {t:'Either operation works for both tasks, because 4 pieces and 1/9 metre are two different ways of writing the very same amount.'}
+        ],
+        model:{ why:'Identical numbers, opposite operations &mdash; the <b>words</b> decide. Watch for two signals:<br>&bull; <b>"each", "per", "cut into pieces of", "how many fit"</b> &rarr; measurement division. The answer <i>counts</i> things, so it is usually a whole number.<br>&bull; <b>"of the", "a part of", "half of it"</b> &rarr; multiplication. The answer is an <i>amount</i> in the same unit, and it is smaller than what you started with.<br>A fast sanity check: 4 pieces and 1/9 metre are not even the same kind of thing, so the two tasks could never share an answer.' }
+      }
+    ]
+  },
+  {
+    id:'paint', emoji:'🪣', title:'Papa Paints the Gate', tag:'Three steps in a row',
+    scenario:`Papa has <b>4/5 of a can</b> of paint left over. He uses <b>3/4 of what is left</b> to paint the gate. Whatever remains he pours into small jars that hold <b>1/10 of a can</b> each.`,
+    questions:[
+      {
+        q:'How much of a can of paint did the gate use?',
+        type:'num', answer:{num:3,den:5}, unit:'of a can',
+        model:{
+          u:'<b>Given:</b> 4/5 of a can is left; the gate uses 3/4 of that. <b>Asked:</b> the paint used on the gate.',
+          p:'Multiply. "3/4 <b>of what is left</b>" is a fraction of a fraction.',
+          a:'4/5 &times; 3/4 = 12/20 = <b>3/5 of a can</b>',
+          c:'3/5 is less than the 4/5 he had, which must be true because he used only part of it. &check;'
+        }
+      },
+      {
+        q:'How much paint is left after the gate is finished?',
+        type:'num', answer:{num:1,den:5}, unit:'of a can',
+        model:{
+          u:'<b>Given:</b> he started with 4/5 of a can and used 3/5. <b>Asked:</b> what is left.',
+          p:'Subtract the paint used from the paint he started with. The denominators already match.',
+          a:'4/5 &minus; 3/5 = <b>1/5 of a can</b>',
+          c:'3/5 used + 1/5 left = 4/5, exactly what he began with. &check;'
+        }
+      },
+      {
+        q:'How many 1/10-can jars can he fill with the paint that is left?',
+        type:'num', answer:{num:2,den:1}, unit:'jars',
+        model:{
+          u:'<b>Given:</b> 1/5 of a can of paint remains; each jar holds 1/10 of a can. <b>Asked:</b> the number of jars.',
+          p:'Divide. We need how many 1/10-can jars fit inside 1/5 of a can.',
+          a:'1/5 &divide; 1/10 = 1/5 &times; 10/1 = 10/5 = <b>2 jars</b>',
+          c:'1/5 = 2/10, and each jar takes 1/10, so 2 jars is exactly right. &check;'
+        }
+      }
+    ]
+  },
+  {
+    id:'cloth', emoji:'🧥', title:'Costumes for the Program', tag:'Fraction of what?',
+    scenario:`The Grade 5 class has <b>12 metres</b> of cloth for their program costumes. They use <b>3/4 of the cloth</b> to make capes. Of the cloth that went into capes, <b>2/3</b> was used for the long capes.`,
+    questions:[
+      {
+        q:'How many metres of cloth went into capes?',
+        type:'num', answer:{num:9,den:1}, unit:'metres',
+        model:{
+          u:'<b>Given:</b> 12 m of cloth in total; 3/4 of it becomes capes. <b>Asked:</b> the metres used for capes.',
+          p:'Multiply. "3/4 <b>of</b> the cloth" is a fraction of an amount.',
+          a:'12 &times; 3/4 = 36/4 = <b>9 metres</b>',
+          c:'9 m is three-quarters of 12 m, and one quarter (3 m) is left over. 9 + 3 = 12 &check;'
+        }
+      },
+      {
+        q:'How many metres became long capes?',
+        type:'num', answer:{num:6,den:1}, unit:'metres',
+        model:{
+          u:'<b>Given:</b> 9 m went into capes; 2/3 of <b>that</b> became long capes. <b>Asked:</b> the metres of long capes.',
+          p:'Multiply, but multiply 2/3 by <b>9</b>, not by 12 &mdash; the 2/3 describes the cape cloth only.',
+          a:'9 &times; 2/3 = 18/3 = <b>6 metres</b>',
+          c:'6 m of long capes plus 3 m of short capes is 9 m of cape cloth. &check;'
+        }
+      },
+      {
+        q:'A classmate computes 12 &times; 2/3 = 8 metres for the long capes. What went wrong?',
+        type:'choice',
+        options:[
+          {t:'He multiplied 2/3 by the <b>whole</b> 12 m, but 2/3 describes only the 9 m that went into capes.', c:true},
+          {t:'He should have divided 12 by 2/3, because the word "of" tells you to divide whenever the first number is a whole number.'},
+          {t:'His arithmetic slipped: 12 &times; 2/3 does not equal 8 metres, and the correct product would have given him the right answer.'},
+          {t:'Nothing went wrong &mdash; 8 metres and 6 metres are the same length written with two different units of measurement.'}
+        ],
+        model:{ why:'His arithmetic is fine &mdash; 12 &times; 2/3 really is 8. The mistake is at the <b>U step</b>: he attached the fraction to the wrong whole. Every fraction in a word problem is a fraction <b>of something specific</b>, and here the sentence says "of the cloth that went into capes", which is 9 m, not 12 m. Before multiplying, always finish this sentence out loud: <b>"two-thirds of ______."</b> His answer also fails the C step: if 2/3 of the cape cloth is long capes, the remaining 1/3 must be short capes, so the two lengths have to add up to 9 m. His 8 m would leave only 1 m for the short capes, and 1 m is not a third of 9 m.' }
+      }
+    ]
+  },
+  {
+    id:'twine', emoji:'🪢', title:'Keychains from a Roll of Twine', tag:'Dividing a mixed number',
+    scenario:`A roll of abaca twine is <b>2 1/4 metres</b> long. Kuya cuts it into pieces that are <b>3/8 metre</b> each to make keychains, and then gives <b>2 pieces</b> to his seatmate.`,
+    questions:[
+      {
+        q:'How many keychain pieces does the whole roll make?',
+        type:'num', answer:{num:6,den:1}, unit:'pieces',
+        model:{
+          u:'<b>Given:</b> a 2 1/4 m roll; each piece is 3/8 m. <b>Asked:</b> the number of pieces.',
+          p:'Divide. Change the mixed number to an improper fraction first, then Keep&ndash;Change&ndash;Flip.',
+          a:'2 1/4 = 9/4, so 9/4 &divide; 3/8 = 9/4 &times; 8/3 = 72/12 = <b>6 pieces</b>',
+          c:'6 pieces &times; 3/8 m = 18/8 = 2 2/8 = 2 1/4 m, the full length of the roll. &check;'
+        }
+      },
+      {
+        q:'What TOTAL LENGTH of twine did Kuya give to his seatmate?',
+        type:'num', answer:{num:3,den:4}, unit:'metre',
+        model:{
+          u:'<b>Given:</b> he gave away 2 pieces, each 3/8 m long. <b>Asked:</b> the total length given away.',
+          p:'Multiply. Two equal pieces of 3/8 m is repeated equal groups.',
+          a:'2 &times; 3/8 = 6/8 = <b>3/4 metre</b>',
+          c:'3/4 m is less than the 2 1/4 m roll, which must be true for only 2 of its 6 pieces. &check;'
+        }
+      },
+      {
+        q:'Why must 2 1/4 be rewritten as 9/4 before you divide?',
+        type:'choice',
+        options:[
+          {t:'Because Keep&ndash;Change&ndash;Flip only works on fractions &mdash; a mixed number has to become an improper fraction first.', c:true},
+          {t:'Because 9/4 is a larger number than 2 1/4, and dividing always needs the larger of the two forms.'},
+          {t:'Because the answer has to be a whole number, and only improper fractions can give whole-number answers.'},
+          {t:'Because you must flip 2 1/4 as well as 3/8, and only an improper fraction can be turned upside down.'}
+        ],
+        model:{ why:'A mixed number is secretly an addition &mdash; 2 1/4 means 2 + 1/4 &mdash; and Keep&ndash;Change&ndash;Flip has nothing to flip when it meets an addition. Writing it as the single fraction 9/4 gives you one numerator and one denominator, which is exactly what the rule needs. Two of the wrong answers are worth naming out loud: 9/4 and 2 1/4 are the <b>same number</b> written two ways, not a larger one and a smaller one; and the flip belongs only to the number you are dividing <b>by</b>, never to the number you are dividing.' }
+      }
+    ]
+  },
+  {
+    id:'marco', emoji:'🔍', title:"Find Marco's Mistake", tag:'Error analysis',
+    scenario:`Marco was given this problem:<br><br><i>"A pitcher holds <b>3/4 litre</b> of buko juice. It is poured into glasses that hold <b>1/8 litre</b> each. How many glasses can be filled?"</i><br><br>Here is the work he handed in:<br><br><b>3/4 &divide; 1/8 = 3/4 &times; 1/8 = 3/32</b><br>Marco's answer: <b>3/32 glasses</b>`,
+    questions:[
+      {
+        q:"Exactly where does Marco's solution go wrong?",
+        type:'choice',
+        options:[
+          {t:'He changed &divide; to &times; but forgot to flip the second fraction &mdash; it should be 3/4 &times; 8/1.', c:true},
+          {t:'He flipped the wrong one; the rule is to turn 3/4 upside down, which gives 4/3 &times; 1/8.'},
+          {t:'He should have left the &divide; sign alone, because Keep&ndash;Change&ndash;Flip is only for multiplying.'},
+          {t:'His method is right and only the last step slipped: 3/32 was never reduced to lowest terms.'}
+        ],
+        model:{ why:'Keep&ndash;Change&ndash;Flip has three parts and Marco did only two. He <b>kept</b> 3/4 and <b>changed</b> &divide; to &times;, but he never <b>flipped</b> the divisor, so he copied 1/8 down unchanged. The correct second step is 3/4 &times; <b>8/1</b>. Note that flipping the <i>first</i> fraction instead (4/3 &times; 1/8) is a different mistake that also gives a wrong answer &mdash; the flip always belongs to the number you are dividing <b>by</b>.' }
+      },
+      {
+        q:'Work the problem correctly. How many glasses can be filled?',
+        type:'num', answer:{num:6,den:1}, unit:'glasses',
+        model:{
+          u:'<b>Given:</b> 3/4 L of buko juice; each glass holds 1/8 L. <b>Asked:</b> the number of glasses.',
+          p:'Divide, using Keep&ndash;Change&ndash;Flip properly.',
+          a:'3/4 &divide; 1/8 = 3/4 &times; 8/1 = 24/4 = <b>6 glasses</b>',
+          c:'3/4 = 6/8, and each glass takes 1/8, so 6 glasses is exactly right. &check;'
+        }
+      },
+      {
+        q:"Which C-step question would have caught Marco's mistake fastest?",
+        type:'choice',
+        options:[
+          {t:'<b>"Is my answer reasonable?"</b> &mdash; 3/32 is less than one glass, but 3/4 litre is far more than 1/8 litre, so the answer had to be bigger than 1.', c:true},
+          {t:'<b>"Did I answer the question?"</b> &mdash; he was asked for a number of glasses, but 3/32 is written as a part of a litre instead of a count.'},
+          {t:'<b>"Is my computation correct?"</b> &mdash; 3/4 &times; 1/8 does not actually equal 3/32, so redoing that one product would have shown the slip.'},
+          {t:'None of them would help here, because every C-step question only tests the arithmetic, and Marco\'s arithmetic was already perfect.'}
+        ],
+        model:{ why:'Marco\'s <b>computation</b> was flawless and he <b>did</b> answer in glasses, so those two checks pass and tell him nothing. The check that bites is <b>reasonableness</b>. Estimating before you compute: 1/8 L is a small glass and 3/4 L is a good-sized pitcher, so the answer should be several glasses &mdash; certainly more than one. An answer of 3/32 of a glass is impossible, and that mismatch points straight at the operation. <b>A wrong operation almost always shows up as an answer of the wrong size, which is why the C step is worth the extra minute.</b>' }
+      }
+    ]
+  }
+];
+
+let caseIdx = 0, caseQ = 0, caseAnswered = false, caseClean = true;
+
+function caseModelHtml(m){
+  if(m.why){
+    return `<div class="case-model"><h4>&#9989; High-scoring answer</h4><p>${m.why}</p></div>`;
+  }
+  return `<div class="case-model"><h4>&#9989; High-scoring answer</h4>
+    <div class="upac-grid">
+      <div class="upac-box"><h4><span class="upac-badge">U</span>Understand</h4><p>${m.u}</p></div>
+      <div class="upac-box"><h4><span class="upac-badge">P</span>Plan</h4><p>${m.p}</p></div>
+      <div class="upac-box"><h4><span class="upac-badge">A</span>Act</h4><p>${m.a}</p></div>
+      <div class="upac-box"><h4><span class="upac-badge">C</span>Check</h4><p>${m.c}</p></div>
+    </div></div>`;
+}
+
+function startCases(){
+  const done = progress.caseDone || [];
+  const list = document.getElementById('case-list');
+  list.innerHTML = '';
+  CASES.forEach((cs, i)=>{
+    const b = document.createElement('button');
+    b.className = 'lesson-card' + (done.includes(cs.id) ? ' case-done' : '');
+    b.onclick = ()=>openCase(i);
+    b.innerHTML = `
+      <div class="lesson-emoji">${cs.emoji}</div>
+      <div class="lesson-info">
+        <span class="case-badge">${cs.tag}</span>
+        <h3>${cs.title}</h3>
+        <p>${cs.questions.length} follow-up questions</p>
+      </div>
+      <div class="go-btn">${done.includes(cs.id) ? '&#10003; Again' : 'Open'}</div>
+    `;
+    list.appendChild(b);
+  });
+  document.getElementById('case-progress').textContent =
+    done.length >= CASES.length
+      ? `All ${CASES.length} case studies finished — go again!`
+      : `${done.length} of ${CASES.length} case studies finished`;
+  document.getElementById('case-detail').classList.add('hidden');
+  document.getElementById('case-picker').classList.remove('hidden');
+  showScreen(caseScreen);
+}
+
+/* From inside a case study, Back belongs to the list of ten — not all the way
+   home, which would lose her place in the set. */
+function caseBack(){
+  if(document.getElementById('case-detail').classList.contains('hidden')) goHome();
+  else startCases();
+}
+
+function openCase(i){
+  caseIdx = i;
+  caseQ = 0;
+  caseClean = true;
+  document.getElementById('case-picker').classList.add('hidden');
+  document.getElementById('case-detail').classList.remove('hidden');
+  renderCase();
+  showScreen(caseScreen);
+}
+
+function renderCase(){
+  const cs = CASES[caseIdx];
+  const q = cs.questions[caseQ];
+  caseAnswered = false;
+  document.getElementById('case-title').innerHTML = `${cs.emoji} ${cs.title}`;
+  document.getElementById('case-scenario').innerHTML = cs.scenario;
+  document.getElementById('case-count').textContent =
+    `Case ${caseIdx+1} of ${CASES.length} — question ${caseQ+1} of ${cs.questions.length}`;
+
+  const body = document.getElementById('case-body');
+  body.innerHTML =
+    `<div class="wt-prompt">${q.q}</div>` +
+    (q.type === 'num'
+      ? `<input class="wt-input" id="case-answer" type="text" inputmode="text" autocomplete="off" placeholder="type your answer">` +
+        `<div class="wt-hint">Write a whole number like <b>6</b>, a fraction like <b>1/2</b>, or a mixed number like <b>1 1/2</b>.</div>`
+      : `<div class="options" id="case-options"></div>`) +
+    `<div id="case-feedback"></div>` +
+    `<button class="primary-btn hidden" id="case-action"></button>`;
+
+  const act = document.getElementById('case-action');
+
+  if(q.type === 'num'){
+    const inp = document.getElementById('case-answer');
+    inp.onkeydown = (e)=>{ if(e.key === 'Enter') caseCheckNum(); };
+    act.textContent = 'Check my answer';
+    act.classList.remove('hidden');
+    act.onclick = caseCheckNum;
+    inp.focus();
+  } else {
+    const opts = document.getElementById('case-options');
+    const btns = [];
+    shuffle(q.options.map((_, i)=>i)).forEach(i=>{
+      const item = q.options[i];
+      const b = document.createElement('button');
+      b.className = 'option';
+      b.innerHTML = item.t;
+      b.dataset.right = item.c ? '1' : '0';
+      b.onclick = ()=>caseCheckChoice(b, btns, item.c === true);
+      btns.push(b);
+      opts.appendChild(b);
+    });
+  }
+  window.scrollTo(0,0);
+}
+
+function caseRevealNext(){
+  const cs = CASES[caseIdx];
+  const act = document.getElementById('case-action');
+  const more = caseQ < cs.questions.length - 1;
+  act.innerHTML = more ? 'Next question &rarr;' : 'See the full answer key &rarr;';
+  act.classList.remove('hidden');
+  act.onclick = more ? ()=>{ caseQ++; renderCase(); } : caseShowKey;
+}
+
+function caseCheckChoice(btn, btns, ok){
+  if(caseAnswered) return;
+  caseAnswered = true;
+  const q = CASES[caseIdx].questions[caseQ];
+  if(!ok) caseClean = false;
+  btns.forEach(x=>{ x.disabled = true; if(x.dataset.right === '1') x.classList.add('correct'); });
+  if(!ok) btn.classList.add('incorrect');
+  document.getElementById('case-feedback').innerHTML =
+    `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'Yes! 🎉':'Not quite.'}</strong>` +
+    (ok ? 'That is the reasoning your teacher is looking for.' : 'The best answer is the one highlighted above.') +
+    `</div>` + caseModelHtml(q.model);
+  caseRevealNext();
+}
+
+function caseCheckNum(){
+  if(caseAnswered) return;
+  const q = CASES[caseIdx].questions[caseQ];
+  const fb = document.getElementById('case-feedback');
+  const parsed = parseAnswer(document.getElementById('case-answer').value);
+  if(parsed === null){
+    fb.innerHTML = `<div class="feedback bad"><strong>I could not read that.</strong>` +
+      `Write a whole number like <b>6</b>, a fraction like <b>1/2</b>, or a mixed number like <b>1 1/2</b>.</div>`;
+    return;
+  }
+  caseAnswered = true;
+  const ok = parsed.num === q.answer.num && parsed.den === q.answer.den;
+  if(!ok) caseClean = false;
+  const wantStr = fracToString(q.answer.num, q.answer.den);
+  const inp = document.getElementById('case-answer');
+  inp.disabled = true;
+  inp.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
+  const notSimplified = ok && (parsed.rawNum !== parsed.num || parsed.rawDen !== parsed.den);
+  fb.innerHTML =
+    `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'Correct! 🎉':'Not quite.'}</strong>` +
+    `The answer is <b>${wantStr} ${q.unit}</b>.` +
+    (notSimplified ? `<br>Right value! Next time write it in simplest form: <b>${wantStr}</b>.` : '') +
+    `</div>` + caseModelHtml(q.model);
+  caseRevealNext();
+}
+
+function caseShowKey(){
+  const cs = CASES[caseIdx];
+  const done = progress.caseDone || [];
+  if(!done.includes(cs.id)){ done.push(cs.id); progress.caseDone = done; saveProgress(progress); }
+  const more = caseIdx < CASES.length - 1;
+  document.getElementById('case-count').textContent = `Answer key — ${cs.title}`;
+  document.getElementById('case-body').innerHTML =
+    `<div class="wt-prompt">${caseClean
+      ? 'Perfect &mdash; every question on the first try! 🎉'
+      : 'Finished! Here is the whole case study with the high-scoring answers.'}</div>` +
+    cs.questions.map((q, i)=>
+      `<div class="case-keyitem"><div class="case-keyq">Question ${i+1}. ${q.q}</div>` +
+      (q.type === 'num'
+        ? `<p class="case-keya">Answer: <b>${fracToString(q.answer.num, q.answer.den)} ${q.unit}</b></p>`
+        : `<p class="case-keya">Answer: <b>${q.options.find(o=>o.c).t}</b></p>`) +
+      caseModelHtml(q.model) + `</div>`).join('') +
+    `<button class="primary-btn" id="case-continue">${more ? 'Next case study &rarr;' : 'Back to the case studies'}</button>` +
+    `<button class="secondary-btn" style="width:100%; margin-top:10px" id="case-stop">Back to the case studies</button>`;
+  document.getElementById('case-continue').onclick = more ? ()=>openCase(caseIdx+1) : startCases;
+  document.getElementById('case-stop').onclick = startCases;
+  window.scrollTo(0,0);
+}
+
+/* The dedicated key on paper: all ten scenarios, every follow-up question, and
+   every model solution, so she can work the set away from the screen. */
+function buildCaseKey(){
+  const modelPrint = m => m.why
+    ? `<div class="ws-dim">${m.why}</div>`
+    : `<div class="ws-dim"><b>U:</b> ${m.u}<br><b>P:</b> ${m.p}<br><b>A:</b> ${m.a}<br><b>C:</b> ${m.c}</div>`;
+  return `<div class="ws">
+    <h1>Fractions Case Studies</h1>
+    <p class="ws-sub">Ten scenarios on multiplying and dividing fractions &mdash; Week 7. Answer every question using UPAC.</p>
+    <div class="ws-meta"><div>Name: <span class="ws-line"></span></div><div>Date: <span class="ws-line"></span></div><div>Score: <span class="ws-line" style="min-width:70px"></span> / 30</div></div>
+    <p class="ws-note">Each case study is worth 3 marks &mdash; one for each follow-up question. Show your solution for every computation. The answer key begins on its own page.</p>
+    ${CASES.map((cs, i)=>`
+      <div class="ws-word">
+        <div class="ws-q">Case ${i+1}. ${cs.title}</div>
+        <p style="margin:6px 0">${cs.scenario}</p>
+        <ol class="ws-keylist" style="padding-left:20px">
+          ${cs.questions.map(q=>`<li style="margin-bottom:10px">${q.q}<div class="ws-write"></div></li>`).join('')}
+        </ol>
+      </div>`).join('')}
+    <div class="ws-key">
+      <h1>Answer Key</h1>
+      <p class="ws-sub">Sample high-scoring solutions. A full-mark answer shows all four UPAC steps, not just the final number.</p>
+      ${CASES.map((cs, i)=>`
+        <h2>Case ${i+1}. ${cs.title}</h2>
+        <ol class="ws-keylist">
+          ${cs.questions.map(q=>`<li>
+            <b>${q.type === 'num'
+              ? fracToString(q.answer.num, q.answer.den) + ' ' + q.unit
+              : q.options.find(o=>o.c).t}</b>
+            ${modelPrint(q.model)}
+          </li>`).join('')}
+        </ol>`).join('')}
+    </div>
+  </div>`;
+}
+
+function openCaseKey(){
+  lastWorksheet = buildCaseKey;
+  document.getElementById('print-root').innerHTML = buildCaseKey();
+  document.getElementById('ws-reroll').classList.add('hidden');
+  showScreen(printScreen);
+  window.setTimeout(()=>{ try{ window.print(); }catch(e){} }, 250);
+}
+
 /* ================= PRINTABLE WORKSHEET: DECIMALS ================= */
 /* Mirrors the three class activities: "place value and value of the underlined
    digit", "Find My Digit!", and the decimal/fraction conversion practice. */
@@ -2360,6 +3025,7 @@ function buildDecimalWorksheet(){
 
 function openDecimalWorksheet(){
   document.getElementById('print-root').innerHTML = buildDecimalWorksheet();
+  document.getElementById('ws-reroll').classList.remove('hidden');
   showScreen(printScreen);
   lastWorksheet = buildDecimalWorksheet;
   window.setTimeout(()=>{ try{ window.print(); }catch(e){} }, 250);
@@ -2561,6 +3227,7 @@ let lastWorksheet = buildWorksheet;
 function openWorksheet(){
   lastWorksheet = buildWorksheet;
   document.getElementById('print-root').innerHTML = buildWorksheet();
+  document.getElementById('ws-reroll').classList.remove('hidden');
   showScreen(printScreen);
   window.setTimeout(()=>{ try{ window.print(); }catch(e){} }, 250);
 }
