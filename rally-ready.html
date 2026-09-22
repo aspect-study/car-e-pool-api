@@ -256,6 +256,17 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
   #home .item-card .icon{align-self:flex-start;}
   #home .item-card .info{flex:1;}
 }
+
+/* ---- POINTS ---- */
+.points-total{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.18);color:#fff;
+  padding:6px 14px;border-radius:999px;
+  font-size:.82rem;font-weight:800;margin-top:12px;
+}
+.points-live{color:var(--gold);font-weight:800;white-space:nowrap;}
+.points-live .streak{color:var(--coral);margin-left:4px;}
+.points-earned{font-size:1rem;font-weight:800;color:var(--ink);margin:8px 0 0;}
 </style>
 
 <div id="app">
@@ -265,6 +276,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
       <span class="badge">P.E. &amp; Health · Grade 5 · Lesson 4</span>
       <h1>Rally Ready 🏓</h1>
       <p>Build your pickleball court one correct answer at a time! Study Net &amp; Wall Games, the ABC Skills, Game Tactics, and the famous Kitchen rule — then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
+      <div class="points-total" id="points-total-badge"></div>
     </div>
     <div class="card-list" id="homeList"></div>
   </div>
@@ -302,6 +314,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
     <div class="quiz-head">
       <span id="quizCounter"></span>
       <span id="quizScoreLabel"></span>
+      <span class="points-live" id="points-live"></span>
     </div>
     <div id="passageBox"></div>
     <div class="q-card">
@@ -318,6 +331,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
       <div class="big-stars" id="resultStars"></div>
       <h2 id="resultTitle"></h2>
       <p id="resultScore"></p>
+      <div class="points-earned" id="points-earned"></div>
     </div>
     <div class="result-actions">
       <button class="btn full" onclick="retryQuiz()">Try Again 🔁</button>
@@ -456,6 +470,12 @@ const LESSONS = [
 ];
 const FINAL_EXAM_PER_LESSON = 5;
 const STORAGE_KEY = 'rallyready_progress_v1';
+/* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
+const POINTS_KEY = 'rallyready_points_v1';
+const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+let totalPoints = loadTotalPoints();
 
 function loadProgress(){
   try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
@@ -545,6 +565,13 @@ let currentQuizSet = [];
 let currentQuizMeta = null;
 let quizIdx = 0;
 let quizScore = 0;
+let sessionPoints = 0, streak = 0, bestStreak = 0;
+
+function updatePointsLive(){
+  const el = document.getElementById('points-live');
+  if(!el) return;
+  el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+}
 
 function cardKey(e){
   if(e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
@@ -559,6 +586,7 @@ function showScreen(id){
 function goHome(){ renderHome(); showScreen('home'); }
 
 function renderHome(){
+  document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' points earned';
   const list = document.getElementById('homeList');
   const finalTotal = LESSONS.length * FINAL_EXAM_PER_LESSON;
   const finalBest = progress['final'] || 0;
@@ -643,6 +671,7 @@ function startQuiz(){
   currentQuizMeta = {id:l.id, title:l.title};
   quizIdx = 0;
   quizScore = 0;
+  sessionPoints = 0; streak = 0; bestStreak = 0;
   document.getElementById('quizTitle').textContent = l.title;
   document.getElementById('passageBox').innerHTML = '';
   renderQuestion();
@@ -658,6 +687,7 @@ function startFinalExam(){
   currentQuizMeta = {id:'final', title:'Full Mock Exam'};
   quizIdx = 0;
   quizScore = 0;
+  sessionPoints = 0; streak = 0; bestStreak = 0;
   document.getElementById('quizTitle').textContent = 'Full Mock Exam';
   document.getElementById('passageBox').innerHTML = '';
   renderQuestion();
@@ -669,6 +699,7 @@ function renderQuestion(){
   const q = currentQuizSet[quizIdx];
   document.getElementById('quizCounter').textContent = `Question ${quizIdx+1} of ${total}`;
   document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  updatePointsLive();
   document.getElementById('quizFill').style.width = `${(quizIdx/total)*100}%`;
   document.getElementById('sceneSvg').innerHTML = courtMarkup(Math.round((quizScore/total)*8));
   document.getElementById('qText').innerHTML = q.q;
@@ -694,7 +725,18 @@ function selectOption(i){
     if(idx === q.correct) b.classList.add('correct');
     else if(idx === i) b.classList.add('wrong');
   });
-  if(i === q.correct) quizScore++;
+  if(i === q.correct){
+    quizScore++;
+    streak++;
+    if(streak > bestStreak) bestStreak = streak;
+    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    sessionPoints += pts;
+    totalPoints += pts;
+    saveTotalPoints(totalPoints);
+  } else {
+    streak = 0;
+  }
+  updatePointsLive();
   document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
   document.getElementById('sceneSvg').innerHTML = courtMarkup(Math.round((quizScore/currentQuizSet.length)*8));
   document.getElementById('explainBox').innerHTML = q.explain;
@@ -731,6 +773,9 @@ function renderResults(total){
     n===2 ? 'Great Rally!' :
     n===1 ? 'Good Start!' : 'Keep Practicing!';
   document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
+  let ptsLine = `⭐ +${sessionPoints} points this round`;
+  if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 best streak: ${bestStreak} in a row!`;
+  document.getElementById('points-earned').textContent = ptsLine;
 }
 
 function retryQuiz(){

@@ -272,6 +272,17 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
   #screen-home .lesson-info{flex:1;}
   #screen-home .go-btn{width:100%; text-align:center;}
 }
+
+/* ---- POINTS ---- */
+.points-total{
+  display:inline-flex; align-items:center; gap:6px;
+  background:color-mix(in srgb, var(--gold) 30%, var(--surface));
+  color:var(--ink); padding:6px 14px; border-radius:999px;
+  font-size:.82rem; font-weight:800; margin-top:10px;
+}
+.points-live{font-size:.85rem; font-weight:800; color:var(--ink); white-space:nowrap;}
+.points-live .streak{color:var(--bad); margin-left:4px;}
+.points-earned{font-size:1rem; font-weight:800; color:var(--ink); margin-bottom:6px;}
 </style>
 
 <div class="app">
@@ -283,6 +294,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <div>
         <h1>Math Mastery</h1>
         <p>Divisibility, GEMDAS, fractions, decimals, and word problems! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the <b>UPAC Walkthrough</b> to practise the four steps, the <b>Case Studies</b> when you want to think a real situation all the way through, and the Practice Test once every lesson is glowing!</p>
+        <div class="points-total" id="points-total-badge"></div>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -312,6 +324,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div class="screen-head">
       <button class="back-btn" onclick="goHome()">&larr; Back</button>
       <h2 id="quiz-title"></h2>
+      <div class="points-live" id="points-live"></div>
     </div>
     <div class="quiz-top">
       <div class="progress-bar"><div class="progress-fill" id="quiz-progress"></div></div>
@@ -328,6 +341,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div class="screen-head">
       <button class="back-btn" onclick="goHome()">&larr; Back</button>
       <h2>UPAC Walkthrough</h2>
+      <div class="points-live" id="wt-points-live"></div>
     </div>
     <div class="wt-count" id="wt-count"></div>
     <div class="wt-steps" id="wt-steps"></div>
@@ -340,6 +354,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     <div class="screen-head">
       <button class="back-btn" onclick="caseBack()">&larr; Back</button>
       <h2>Case Studies</h2>
+      <div class="points-live" id="case-points-live"></div>
     </div>
 
     <div id="case-picker">
@@ -378,6 +393,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="results-scene" viewBox="0 0 200 200" id="results-scene-svg"></svg>
       <h2 id="results-heading"></h2>
       <div class="score-line" id="results-score"></div>
+      <div class="points-earned" id="points-earned"></div>
       <div class="results-stars" id="results-stars"></div>
       <div class="results-actions">
         <button class="primary-btn" style="width:auto" onclick="retryLesson()">Try Again</button>
@@ -1314,6 +1330,12 @@ const LESSONS = [
 ];
 
 const STORAGE_KEY = 'mathmastery_progress_v1';
+/* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
+const POINTS_KEY = 'mathmastery_points_v1';
+const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+let totalPoints = loadTotalPoints();
 function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
 function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
 let progress = loadProgress();
@@ -1384,6 +1406,43 @@ let currentLessonIdx = 0;
 let cardIdx = 0;
 let quizIdx = 0;
 let quizScore = 0;
+let sessionPoints = 0, streak = 0, bestStreak = 0;
+
+function updatePointsLive(){
+  const html = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+  document.querySelectorAll('.points-live').forEach(el => { el.innerHTML = html; });
+}
+
+/* A round is one quiz, one walkthrough problem, or one case study. */
+function startRound(){
+  sessionPoints = 0;
+  streak = 0;
+  bestStreak = 0;
+  updatePointsLive();
+}
+
+/* One answer marked, wherever it was earned: a quiz question, a UPAC step or a
+   case-study follow-up. They all pay the same, so a streak carries across the
+   whole round rather than resetting at each kind of question. */
+function awardPoint(correct){
+  if(correct){
+    streak++;
+    if(streak > bestStreak) bestStreak = streak;
+    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    sessionPoints += pts;
+    totalPoints += pts;
+    saveTotalPoints(totalPoints);
+  } else {
+    streak = 0;
+  }
+  updatePointsLive();
+}
+
+function pointsRoundLine(what){
+  let line = `⭐ +${sessionPoints} points ${what}`;
+  if(bestStreak >= STREAK_BONUS_AT) line += ` · 🔥 best streak: ${bestStreak} in a row!`;
+  return line;
+}
 let answered = false;
 let currentQuizSet = [];
 let currentQuizMeta = null;
@@ -1410,6 +1469,7 @@ function starsFor(pct){
 }
 
 function renderHome(){
+  document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' points earned';
   renderScene(document.getElementById('hero-scene-svg'), 8);
   const grid = document.getElementById('lesson-grid');
   grid.innerHTML = '';
@@ -1552,6 +1612,7 @@ function startQuiz(){
   currentQuizMeta = {id: lesson.id, title: lesson.title};
   quizIdx = 0;
   quizScore = 0;
+  startRound();
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -1565,6 +1626,7 @@ function startFinalExam(){
   currentQuizMeta = {id:'final', title:'Full Practice Test'};
   quizIdx = 0;
   quizScore = 0;
+  startRound();
   renderQuestion();
   showScreen(quizScreen);
 }
@@ -1572,6 +1634,7 @@ function startFinalExam(){
 function renderQuestion(){
   answered = false;
   document.getElementById('quiz-title').textContent = currentQuizMeta.title;
+  updatePointsLive();
   const total = currentQuizSet.length;
   document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
   renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
@@ -1604,6 +1667,7 @@ function selectOption(idx){
   });
   const correct = idx === q.correct;
   if(correct) quizScore++;
+  awardPoint(correct);
   renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
   const fb = document.getElementById('q-feedback');
   fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite.'}</strong>${q.explain}</div>`;
@@ -1634,6 +1698,7 @@ function renderResults(total){
   document.getElementById('results-heading').textContent =
     stars === 3 ? 'Sunrise Complete!' : stars > 0 ? 'Great Progress!' : 'Keep Practicing!';
   document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
+  document.getElementById('points-earned').textContent = pointsRoundLine('this round');
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
 }
 
@@ -2100,6 +2165,7 @@ function openWtProblem(){
   wtStageDone = false;
   wtRecord = {};
   wtClean = true;
+  startRound();
   renderWalkthrough();
   showScreen(wtScreen);
 }
@@ -2190,6 +2256,7 @@ function wtChoiceStage(list, recordKey, nextLabel){
       wtStageDone = true;
       const ok = item.c === true;
       if(!ok) wtClean = false;
+      awardPoint(ok);
       btns.forEach(x=>{
         x.disabled = true;
         if(x.dataset.right === '1') x.classList.add('correct');
@@ -2226,6 +2293,7 @@ function wtCheckGivens(){
     else if(!g.is && picked){ b.classList.add('incorrect'); ok = false; }
   });
   if(!ok) wtClean = false;
+  awardPoint(ok);
   wtRecord.given = p.givens.filter(g=>g.is).map(g=>g.t).join('; ');
   document.getElementById('wt-feedback').innerHTML =
     `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'All of them! 🎉':'Almost.'}</strong>` +
@@ -2252,6 +2320,7 @@ function wtCheckAnswer(){
   const ok = parsed.num === want.num && parsed.den === want.den;
   const wantStr = fracToString(want.num, want.den);
   if(!ok) wtClean = false;
+  awardPoint(ok);
   const input = document.getElementById('wt-answer');
   input.disabled = true;
   input.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
@@ -2285,6 +2354,7 @@ function wtShowSummary(){
       <div class="upac-box"><h4><span class="upac-badge">C</span>Check</h4>
         <p>${wtRecord.check}</p></div>
     </div>
+    <div class="points-earned">${pointsRoundLine('this problem')}</div>
     <p class="wt-hint">This is exactly what your teacher wants to see written on paper.</p>
     <button class="primary-btn" id="wt-continue">${more ? 'Next Problem &rarr;' : 'Back to the Lesson Map'}</button>
     ${more ? '<button class="secondary-btn" style="width:100%; margin-top:10px" id="wt-stop">Stop for now</button>' : ''}
@@ -2694,6 +2764,7 @@ function caseModelHtml(m){
 }
 
 function startCases(){
+  startRound();
   const done = progress.caseDone || [];
   const list = document.getElementById('case-list');
   list.innerHTML = '';
@@ -2732,6 +2803,7 @@ function openCase(i){
   caseIdx = i;
   caseQ = 0;
   caseClean = true;
+  startRound();
   document.getElementById('case-picker').classList.add('hidden');
   document.getElementById('case-detail').classList.remove('hidden');
   renderCase();
@@ -2797,6 +2869,7 @@ function caseCheckChoice(btn, btns, ok){
   caseAnswered = true;
   const q = CASES[caseIdx].questions[caseQ];
   if(!ok) caseClean = false;
+  awardPoint(ok);
   btns.forEach(x=>{ x.disabled = true; if(x.dataset.right === '1') x.classList.add('correct'); });
   if(!ok) btn.classList.add('incorrect');
   document.getElementById('case-feedback').innerHTML =
@@ -2819,6 +2892,7 @@ function caseCheckNum(){
   caseAnswered = true;
   const ok = parsed.num === q.answer.num && parsed.den === q.answer.den;
   if(!ok) caseClean = false;
+  awardPoint(ok);
   const wantStr = fracToString(q.answer.num, q.answer.den);
   const inp = document.getElementById('case-answer');
   inp.disabled = true;
@@ -2848,6 +2922,7 @@ function caseShowKey(){
         ? `<p class="case-keya">Answer: <b>${fracToString(q.answer.num, q.answer.den)} ${q.unit}</b></p>`
         : `<p class="case-keya">Answer: <b>${q.options.find(o=>o.c).t}</b></p>`) +
       caseModelHtml(q.model) + `</div>`).join('') +
+    `<div class="points-earned">${pointsRoundLine('this case study')}</div>` +
     `<button class="primary-btn" id="case-continue">${more ? 'Next case study &rarr;' : 'Back to the case studies'}</button>` +
     `<button class="secondary-btn" style="width:100%; margin-top:10px" id="case-stop">Back to the case studies</button>`;
   document.getElementById('case-continue').onclick = more ? ()=>openCase(caseIdx+1) : startCases;
