@@ -244,6 +244,18 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 .tip h4{margin:0 0 5px;font-size:.98rem;color:var(--accent-dark);}
 .tip p{margin:0;font-size:.9rem;line-height:1.55;}
 .tip .kicker{font-size:.7rem;font-weight:800;color:var(--coral);text-transform:uppercase;letter-spacing:.05em;}
+
+/* 3-up lesson map on wide screens, so every lesson shows at once.
+   Only the lesson list widens -- flashcards, quiz and results stay narrow. */
+@media (min-width:900px){
+  #app{max-width:1120px;}
+  #app .screen:not(#home){max-width:720px; margin-left:auto; margin-right:auto;}
+  #home > *:not(.card-list){max-width:720px; margin-left:auto; margin-right:auto;}
+  #home .card-list{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; align-items:stretch;}
+  #home .item-card{flex-direction:column; align-items:stretch; height:100%;}
+  #home .item-card .icon{align-self:flex-start;}
+  #home .item-card .info{flex:1;}
+}
 </style>
 
 <div id="app">

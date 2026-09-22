@@ -1,0 +1,980 @@
+<html lang="en">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>History Explorers: Araling Panlipunan 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF6F0;
+  --card:#FFFFFF;
+  --ink:#2B2018;
+  --accent:#A8451F;
+  --accent-dark:#6E2A10;
+  --accent-soft:#F9E8E0;
+  --gold:#E8A33D;
+  --coral:#D9643C;
+  --muted:#8A7668;
+  --border:#F2DFD5;
+  --good:#2E9E5B;
+  --bad:#E15555;
+  --shadow: 0 10px 28px rgba(43,35,32,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#201714;
+    --card:#2B1F1A;
+    --ink:#F7EDE4;
+    --accent:#E08A5F;
+    --accent-dark:#F6C9AE;
+    --accent-soft:#3A2419;
+    --gold:#FFC65C;
+    --coral:#FF8A73;
+    --muted:#BFAA9B;
+    --border:#3D2C24;
+    --good:#4FCB82;
+    --bad:#FF7A7A;
+    --shadow: 0 10px 28px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#201714;
+  --card:#2B1F1A;
+  --ink:#F7EDE4;
+  --accent:#E08A5F;
+  --accent-dark:#F6C9AE;
+  --accent-soft:#3A2419;
+  --gold:#FFC65C;
+  --coral:#FF8A73;
+  --muted:#BFAA9B;
+  --border:#3D2C24;
+  --good:#4FCB82;
+  --bad:#FF7A7A;
+  --shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Nunito',sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
+#app{max-width:720px;margin:0 auto;padding:20px 16px 60px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.hero{
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  color:#fff;
+  border-radius:22px;
+  padding:26px 22px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+/* In dark mode --accent-dark is deliberately LIGHT (it is used as text colour on
+   dark cards). That makes the hero gradient pale, and the hero's white text drops
+   to ~1.4:1 contrast. Darken both stops here so the white text stays readable. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .hero{
+    background:linear-gradient(135deg,
+      color-mix(in srgb, var(--accent) 55%, #0C1414),
+      color-mix(in srgb, var(--accent-dark) 35%, #0C1414));
+  }
+}
+:root[data-theme="dark"] .hero{
+  background:linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 55%, #0C1414),
+    color-mix(in srgb, var(--accent-dark) 35%, #0C1414));
+}
+.hero h1{margin:0 0 6px;font-size:1.7rem;}
+.hero p{margin:0;opacity:.92;line-height:1.5;font-size:.95rem;}
+.hero .badge{
+  display:inline-block;background:rgba(255,255,255,.18);
+  padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:800;
+  letter-spacing:.04em;margin-bottom:10px;
+}
+
+.card-list{display:flex;flex-direction:column;gap:12px;}
+.item-card{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, border-color .15s ease;
+}
+.item-card:hover{transform:translateY(-2px);border-color:var(--accent);}
+/* Cards and the flashcard are divs (they contain headings, so they cannot be
+   <button>). They carry role=button + tabindex, so give them a visible focus
+   ring for anyone driving the app from the keyboard. */
+.item-card:focus-visible,
+.flashcard:focus-visible,
+.btn:focus-visible,
+.option:focus-visible,
+.btn-icon:focus-visible{
+  outline:3px solid var(--gold);
+  outline-offset:3px;
+}
+.item-card .icon{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--accent-soft);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;
+}
+.item-card .info{flex:1;min-width:0;}
+.item-card .info h3{margin:0 0 3px;font-size:1.05rem;}
+.item-card .info p{margin:0;color:var(--muted);font-size:.82rem;}
+.stars{font-size:.95rem;letter-spacing:1px;color:var(--gold);white-space:nowrap;}
+.stars .off{color:var(--border);}
+
+.final-card{
+  border-color:var(--gold);
+  background:linear-gradient(135deg,var(--accent-soft),var(--card));
+}
+.final-badge{
+  display:inline-block;background:var(--gold);color:#3A2900;
+  font-size:.68rem;font-weight:800;padding:2px 10px;border-radius:999px;
+  margin-bottom:4px;letter-spacing:.03em;
+}
+.strategy-card{border-color:var(--coral);}
+.strategy-card .icon{background:#FFEAE6;}
+
+.topbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.btn-icon{
+  background:var(--card);border:2px solid var(--border);border-radius:12px;
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.1rem;color:var(--ink);flex-shrink:0;
+}
+.topbar h2{margin:0;font-size:1.15rem;flex:1;}
+
+.flash-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.flashcard{
+  width:100%;min-height:220px;
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:26px 22px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;cursor:pointer;
+  position:relative;
+}
+.flashcard .tag{
+  position:absolute;top:14px;left:16px;font-size:.7rem;font-weight:800;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.05em;
+}
+.flashcard h3{margin:6px 0 10px;font-size:1.3rem;color:var(--accent-dark);}
+.flashcard p{margin:0;font-size:1rem;line-height:1.55;}
+.flashcard .hint{margin-top:14px;font-size:.78rem;color:var(--muted);}
+.flash-nav{display:flex;align-items:center;gap:16px;width:100%;justify-content:space-between;}
+.flash-dots{font-size:.85rem;color:var(--muted);font-weight:700;}
+
+.btn{
+  font-family:'Baloo 2',cursive;
+  border:none;border-radius:14px;
+  padding:13px 22px;font-size:1rem;font-weight:700;
+  cursor:pointer;color:#fff;
+  background:var(--accent);
+  box-shadow:0 6px 0 var(--accent-dark);
+  transition:transform .1s ease;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-dark);}
+.btn.gold{background:var(--gold);box-shadow:0 6px 0 #C98600;color:#3A2900;}
+.btn.gold:active{box-shadow:0 2px 0 #C98600;}
+.btn.ghost{background:var(--card);color:var(--ink);border:2px solid var(--border);box-shadow:none;}
+.btn.full{width:100%;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.progress-bar{
+  height:10px;background:var(--border);border-radius:999px;overflow:hidden;margin-bottom:18px;
+}
+.progress-bar .fill{height:100%;background:var(--gold);transition:width .3s ease;}
+
+.quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.85rem;color:var(--muted);font-weight:700;}
+.boat-box{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:10px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+.boat-box svg{width:100%;max-width:150px;display:block;margin:0 auto;}
+
+.passage{
+  background:var(--accent-soft);border:2px solid var(--accent);border-radius:16px;
+  padding:16px;margin-bottom:16px;font-size:.95rem;line-height:1.6;
+}
+.passage strong{color:var(--accent-dark);}
+
+.q-card{
+  background:var(--card);border:2px solid var(--border);border-radius:18px;
+  padding:20px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.q-card h3{margin:0 0 16px;font-size:1.1rem;line-height:1.5;}
+.option{
+  display:block;width:100%;text-align:left;
+  background:var(--bg);border:2px solid var(--border);border-radius:14px;
+  padding:13px 16px;margin-bottom:10px;font-size:.95rem;font-family:'Nunito',sans-serif;
+  cursor:pointer;color:var(--ink);font-weight:700;
+}
+.option:hover{border-color:var(--accent);}
+.option.correct{background:#E5F6EB;border-color:var(--good);color:#1B6B3C;}
+.option.wrong{background:#FCE9E9;border-color:var(--bad);color:#A82F2F;}
+.option:disabled{cursor:default;}
+.explain{
+  margin-top:12px;padding:12px 14px;background:var(--accent-soft);
+  border-radius:12px;font-size:.88rem;line-height:1.5;color:var(--ink);
+}
+
+.results-hero{text-align:center;padding:20px 0;}
+.results-hero .big-stars{font-size:2.2rem;color:var(--gold);letter-spacing:4px;}
+.results-hero h2{margin:8px 0 4px;}
+.results-hero p{color:var(--muted);margin:0 0 16px;}
+.result-actions{display:flex;flex-direction:column;gap:10px;}
+
+.strategy-list{display:flex;flex-direction:column;gap:12px;}
+.tip{
+  background:var(--card);border:2px solid var(--border);border-left:6px solid var(--coral);
+  border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.tip h4{margin:0 0 5px;font-size:.98rem;color:var(--accent-dark);}
+.tip p{margin:0;font-size:.9rem;line-height:1.55;}
+.tip .kicker{font-size:.7rem;font-weight:800;color:var(--coral);text-transform:uppercase;letter-spacing:.05em;}
+
+/* 3-up lesson map on wide screens, so every lesson shows at once.
+   Only the lesson list widens -- flashcards, quiz and results stay narrow. */
+@media (min-width:900px){
+  #app{max-width:1120px;}
+  #app .screen:not(#home){max-width:720px; margin-left:auto; margin-right:auto;}
+  #home > *:not(.card-list){max-width:720px; margin-left:auto; margin-right:auto;}
+  #home .card-list{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; align-items:stretch;}
+  #home .item-card{flex-direction:column; align-items:stretch; height:100%;}
+  #home .item-card .icon{align-self:flex-start;}
+  #home .item-card .info{flex:1;}
+}
+</style>
+
+<div id="app">
+
+  <div id="home" class="screen active">
+    <div class="hero">
+      <span class="badge">Araling Panlipunan · Grade 5</span>
+      <h1>History Explorers ⛵</h1>
+      <p>Buuin ang iyong balangay sa bawat tamang sagot! Pag-aralan ang organisasyon ng sinaunang lipunan, ang hanapbuhay at kalakalan, at ang materyal at di-materyal na kalinangan — ang mga paniniwala, pangitain, paglilibing, at kasal. Pagkatapos ay subukan ang Full Mock Exam at basahin ang Exam Strategy.</p>
+    </div>
+    <div class="card-list" id="homeList"></div>
+  </div>
+
+  <div id="flashScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2 id="flashTitle"></h2>
+    </div>
+    <div class="flash-wrap">
+      <div class="flashcard" id="flashCard" onclick="flipCard()"
+           role="button" tabindex="0" aria-label="Flashcard. Activate to flip between the term and its meaning."
+           onkeydown="cardKey(event)">
+        <span class="tag" id="flashTag">Term</span>
+        <h3 id="flashFront"></h3>
+        <p id="flashBack" style="display:none;"></p>
+        <div class="hint" id="flashHint">Tap the card to flip</div>
+      </div>
+      <div class="flash-nav">
+        <button class="btn ghost" onclick="prevCard()">◀ Prev</button>
+        <span class="flash-dots" id="flashDots"></span>
+        <button class="btn ghost" onclick="nextCard()">Next ▶</button>
+      </div>
+      <button class="btn gold full" onclick="startQuiz()">Simulan ang Quiz ⛵</button>
+    </div>
+  </div>
+
+  <div id="quizScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2 id="quizTitle"></h2>
+    </div>
+    <div class="boat-box"><div id="boatSvg"></div></div>
+    <div class="progress-bar"><div class="fill" id="quizFill" style="width:0%"></div></div>
+    <div class="quiz-head">
+      <span id="quizCounter"></span>
+      <span id="quizScoreLabel"></span>
+    </div>
+    <div id="passageBox"></div>
+    <div class="q-card">
+      <h3 id="qText"></h3>
+      <div id="optionsBox"></div>
+      <div class="explain" id="explainBox" style="display:none;"></div>
+    </div>
+    <button class="btn full" id="nextBtn" style="display:none;" onclick="nextQuestion()">Next ▶</button>
+  </div>
+
+  <div id="resultsScreen" class="screen">
+    <div class="results-hero">
+      <div class="boat-box" style="max-width:180px;margin:0 auto 14px;"><div id="resultBoat"></div></div>
+      <div class="big-stars" id="resultStars"></div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultScore"></p>
+    </div>
+    <div class="result-actions">
+      <button class="btn full" onclick="retryQuiz()">Try Again 🔁</button>
+      <button class="btn ghost full" onclick="goHome()">Back to Home</button>
+    </div>
+  </div>
+
+  <div id="strategyScreen" class="screen">
+    <div class="topbar">
+      <div class="btn-icon" role="button" tabindex="0" aria-label="Back to home" onclick="goHome()" onkeydown="cardKey(event)">←</div>
+      <h2>Exam Strategy 🎯</h2>
+    </div>
+    <div class="hero" style="background:linear-gradient(135deg,var(--coral),#C94B3A);">
+      <span class="badge">Bago ang tunay na pagsusulit</span>
+      <h1 style="font-size:1.35rem;">Paano Sagutan ang Tama/Mali at Multiple Choice</h1>
+      <p>Ito ang mga eksaktong hakbang na magagamit mo sa tunay na pagsusulit sa Araling Panlipunan — hindi lamang sa app na ito.</p>
+    </div>
+    <div class="strategy-list" id="strategyList"></div>
+  </div>
+
+</div>
+
+<script>
+const LESSONS = [
+  {
+    id:'barangay',
+    icon:'🛖',
+    title:'Ang Barangay',
+    subtitle:'Ang sinaunang pamayanan at kung bakit ito organisado',
+    cards:[
+      {front:'Barangay', back:'Ang sinaunang pamayanan ng mga Pilipino — binubuo ng mga taong magkakasama at magkakaugnay sa isang lugar. May sarili itong pinuno.'},
+      {front:'Mga Kasapi ng Barangay', back:'Ang mga taong naninirahan sa iisang lugar at magkakaugnay sa isa\'t isa. May ugnayan at may tungkulin ang bawat kasapi.'},
+      {front:'Organisadong Pamayanan', back:'Ang isang pamayanan ay organisado kapag may pinuno, may mga pangkat ng tao, may tungkulin ang bawat isa, at nagtutulungan sila.'},
+      {front:'Kung Walang Pinuno', back:'Walang magsasabi kung ano ang dapat gawin, walang malinaw na paraan ng pagpapatakbo ng pamayanan, at maaaring maging magulo ang lahat.'},
+      {front:'Paano Naging Organisado', back:'<b>BARANGAY</b> (pamayanan) → <b>PINUNO</b> (datu, raja/radya, sultan) → <b>PANGKAT</b> (maginoo, timawa, oripun) → <b>TUNGKULIN</b> (gampanin at ugnayan).'},
+      {front:'Iba\'t Ibang Tungkulin', back:'Hindi magkakapareho ang gawain ng lahat. May nangunguna, may nagtatanim, may gumagawa ng kagamitan — iba-iba ang gampanin ngunit nagtutulungan sila.'},
+      {front:'Tandaan', back:'"Ang sinaunang lipunan ay ORGANISADO." Kapag naiintindihan mo ang apat na bahaging ito, naiintindihan mo ang puso ng aralin.'}
+    ],
+    quiz:[
+      {q:'Tama o Mali: Ang <b>barangay</b> ang tawag sa sinaunang pamayanan ng mga Pilipino.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang barangay ang sinaunang pamayanan — binubuo ng mga taong magkakasama at magkakaugnay sa isang lugar.'},
+      {q:'Ano ang mahalagang katangian ng isang <b>organisadong pamayanan</b>?', options:['May pinuno at nagtutulungan ang mga tao','Walang namumuno kaya malaya ang lahat','Iisang tao ang gumagawa ng lahat ng gawain','Walang tuntuning sinusunod ang mga kasapi'], correct:0, explain:'Ang organisadong pamayanan ay may pinuno, may mga pangkat at tungkulin, at nagtutulungan ang mga kasapi nito.'},
+      {q:'Tama o Mali: Ang bawat sinaunang barangay ay walang sariling pinuno.', options:['Tama','Mali'], correct:1, explain:'Mali. Bawat barangay ay may sarili nitong pinuno — iyon ang isa sa mga dahilan kung bakit ito tinatawag na organisado.'},
+      {q:'Alin sa mga ito ang <b>HINDI</b> kabilang sa apat na bahagi ng organisadong sinaunang lipunan?', options:['Kalendaryo','Barangay','Pinuno','Tungkulin'], correct:0, explain:'Ang apat na bahagi ay Barangay, Pinuno, Pangkat, at Tungkulin. Hindi kabilang dito ang kalendaryo.'},
+      {q:'Tama o Mali: Kapag walang pinuno ang isang pamayanan, maaari itong maging magulo at walang malinaw na paraan ng pagpapatakbo.', options:['Tama','Mali'], correct:0, explain:'Tama. Kung walang pinuno, walang magsasabi kung ano ang dapat gawin at nawawala ang kaayusan.'},
+      {q:'Sa isang sinaunang pamayanan, may nangunguna, may nagtatanim, at may gumagawa ng kagamitan. Ano ang ipinapakita nito?', options:['May iba\'t ibang tungkulin ang mga kasapi','Iisa lamang ang gawain ng lahat ng tao','Walang ugnayan ang mga tao sa isa\'t isa','Hindi organisado ang naturang pamayanan'], correct:0, explain:'Ang iba\'t ibang gawain sa iisang pamayanan ay patunay na may kanya-kanyang tungkulin ang mga kasapi.'},
+      {q:'Tama o Mali: Magkakapareho ang tungkulin ng lahat ng kasapi ng isang barangay.', options:['Tama','Mali'], correct:1, explain:'Mali. May iba\'t ibang tungkulin at gampanin ang mga tao sa sinaunang lipunan.'},
+      {q:'Alin ang pinakamainam na paglalarawan sa <b>sinaunang lipunan</b>?', options:['May pamayanan, pinuno, pangkat at tungkulin','Walang anumang organisasyon o tuntunin','Binubuo lamang ito ng mga mandirigma','Iisa ang katayuan ng lahat ng nakatira'], correct:0, explain:'Ang sinaunang lipunan ay organisado: may pamayanan (barangay), may pinuno, may mga pangkat, at may tungkulin ang bawat isa.'},
+      {q:'Tama o Mali: Ang mga kasapi ng isang barangay ay magkakaugnay at naninirahan sa iisang lugar.', options:['Tama','Mali'], correct:0, explain:'Tama. Iyan mismo ang kahulugan ng barangay — mga taong magkakasama at magkakaugnay sa isang lugar.'},
+      {q:'Paano naging organisado ang sinaunang lipunan? Piliin ang tamang daloy.', options:['Barangay → Pinuno → Pangkat → Tungkulin','Tungkulin → Pangkat → Pinuno → Barangay','Pinuno → Barangay → Tungkulin → Pangkat','Pangkat → Tungkulin → Barangay → Pinuno'], correct:0, explain:'Barangay (ang pamayanan) → Pinuno (datu, raja/radya, sultan) → Pangkat (maginoo, timawa, oripun) → Tungkulin (gampanin at ugnayan).'}
+    ]
+  },
+  {
+    id:'pinuno',
+    icon:'👑',
+    title:'Mga Pinuno ng Pamayanan',
+    subtitle:'Datu, Raja/Radya, at Sultan',
+    cards:[
+      {front:'Datu', back:'Ang karaniwang katawagan sa pinuno ng sinaunang barangay.'},
+      {front:'Tungkulin ng Datu', back:'Pamamahala sa pamayanan, pagpapanatili ng kaayusan, at pangunguna sa mga kasapi nito.'},
+      {front:'Raja o Radya', back:'Ang katawagan sa ilang pinuno sa mga pamayanang may impluwensiyang <b>Malay-Indonesian</b>.'},
+      {front:'Sultan', back:'Ang katawagan sa pinuno sa mga pamayanang naapektuhan o naimpluwensiyahan ng <b>Islam</b>.'},
+      {front:'Bakit Iba-iba ang Tawag?', back:'Lahat sila ay tumutukoy sa mga pinuno, ngunit iba-iba ang gamit ng katawagan ayon sa pamayanan at konteksto. Hindi iisa ang eksaktong sistema ng lahat ng pamayanan.'},
+      {front:'Memory Guide', back:'<b>DATU</b> = pinuno ng barangay · <b>RAJA/RADYA</b> = Malay-Indonesian na impluwensiya · <b>SULTAN</b> = impluwensiyang Islam.'}
+    ],
+    quiz:[
+      {q:'Sino ang karaniwang pinuno ng sinaunang barangay?', options:['Datu','Timawa','Oripun','Maginoo'], correct:0, explain:'Datu ang karaniwang katawagan sa pinuno ng sinaunang barangay.'},
+      {q:'Tama o Mali: Ang <b>sultan</b> ay katawagan sa pinuno sa mga pamayanang may impluwensiyang Islam.', options:['Tama','Mali'], correct:0, explain:'Tama. Ginagamit ang sultan sa mga pamayanang naimpluwensiyahan ng Islam.'},
+      {q:'"Ako ang katawagan sa ilang pinuno sa pamayanang may impluwensiyang Malay-Indonesian." Sino ako?', options:['Raja o Radya','Oripun','Timawa','Maginoo'], correct:0, explain:'Raja o radya ang katawagan sa ilang pinuno sa mga pamayanang may impluwensiyang Malay-Indonesian.'},
+      {q:'Tama o Mali: Ang raja o radya ay tawag sa pinakamababang antas ng sinaunang lipunan.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang raja o radya ay isang <b>pinuno</b>. Ang pinakamababang antas ng lipunan ay ang oripun.'},
+      {q:'Alin ang <b>HINDI</b> tungkulin ng datu ayon sa aralin?', options:['Pagtuturo sa loob ng paaralan','Pamamahala sa buong pamayanan','Pagpapanatili ng kaayusan nito','Pangunguna sa mga kasapi nito'], correct:0, explain:'Ang tatlong tungkuling binanggit ay pamamahala, pagpapanatili ng kaayusan, at pangunguna sa pamayanan.'},
+      {q:'Tama o Mali: Iisa lamang ang katawagan sa pinuno sa lahat ng sinaunang pamayanan.', options:['Tama','Mali'], correct:1, explain:'Mali. Iba-iba ang katawagan — datu, raja/radya, o sultan — depende sa pamayanan at konteksto.'},
+      {q:'Ang isang pamayanan ay naimpluwensiyahan ng Islam. Ano ang malamang na katawagan sa pinuno nito?', options:['Sultan','Datu','Timawa','Oripun'], correct:0, explain:'Sultan ang ginagamit na katawagan sa mga pamayanang may impluwensiyang Islam.'},
+      {q:'Tama o Mali: Ang datu, raja, at sultan ay pawang tumutukoy sa mga pinuno ng pamayanan.', options:['Tama','Mali'], correct:0, explain:'Tama. Lahat sila ay pinuno — nagkakaiba lamang sila sa katawagan ayon sa pamayanan at konteksto.'},
+      {q:'Ano ang pangunahing tungkulin ng isang pinuno sa sinaunang pamayanan?', options:['Pamahalaan at panatilihin ang kaayusan','Mag-isang gawin ang lahat ng gawain','Pigilan ang ugnayan sa ibang lugar','Iwasan ang pakikisalamuha sa kasapi'], correct:0, explain:'Ang pinuno ang namamahala, nagpapanatili ng kaayusan, at nangunguna sa pamayanan.'},
+      {q:'Tama o Mali: Ang pagkakaiba sa katawagan ng pinuno ay nakadepende sa pamayanan at sa konteksto nito.', options:['Tama','Mali'], correct:0, explain:'Tama. Iyan ang paalala ng aralin — hindi iisa ang eksaktong sistema ng lahat ng pamayanan.'}
+    ]
+  },
+  {
+    id:'antas',
+    icon:'🧑‍🤝‍🧑',
+    title:'Antas ng Sinaunang Lipunan',
+    subtitle:'Maginoo, Timawa, at Oripun',
+    cards:[
+      {front:'Maginoo', back:'Ang <b>pinakamataas</b> na antas ng sinaunang lipunan. Kabilang dito ang mga datu at iba pang may mataas na katayuan.'},
+      {front:'Timawa', back:'Ang <b>malayang pangkat</b> ng sinaunang lipunan.'},
+      {front:'Oripun', back:'Ang <b>pinakamababang</b> antas ng sinaunang lipunan. Hindi pare-pareho ang kalagayan ng lahat ng oripun.'},
+      {front:'Hindi Lamang Pinuno', back:'Hindi lamang ang pinuno ang bumubuo sa isang lipunan. May iba\'t ibang pangkat ng tao, may iba\'t ibang katayuan at tungkulin, at may ugnayan at pagtutulungan sa pamayanan.'},
+      {front:'Ayos ng mga Antas', back:'MAGINOO (pinakamataas) → TIMAWA (malaya) → ORIPUN (pinakamababa).'},
+      {front:'Tandaan', back:'Ang bawat tao sa sinaunang lipunan ay may kanya-kanyang gampanin — kahit magkakaiba ang kanilang antas.'}
+    ],
+    quiz:[
+      {q:'Alin ang <b>pinakamataas</b> na antas ng sinaunang lipunan?', options:['Maginoo','Timawa','Oripun','Barangay'], correct:0, explain:'Maginoo ang pinakamataas na antas — kabilang dito ang mga datu at iba pang may mataas na katayuan.'},
+      {q:'Tama o Mali: Ang <b>timawa</b> ang malayang pangkat ng sinaunang lipunan.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang timawa ang tinutukoy bilang malayang pangkat ng lipunan.'},
+      {q:'"Kabilang ako sa pinakamababang antas ng sinaunang lipunan." Sino ako?', options:['Oripun','Maginoo','Timawa','Datu'], correct:0, explain:'Oripun ang pinakamababang antas ng sinaunang lipunan.'},
+      {q:'Tama o Mali: Pare-pareho ang eksaktong kalagayan ng lahat ng oripun.', options:['Tama','Mali'], correct:1, explain:'Mali. Sinasabi mismo ng aralin na <b>hindi</b> pare-pareho ang kalagayan ng lahat ng oripun.'},
+      {q:'Saang antas kabilang ang mga datu at iba pang may mataas na katayuan?', options:['Maginoo','Timawa','Oripun','Barangay'], correct:0, explain:'Kabilang sila sa maginoo, ang pinakamataas na antas ng lipunan.'},
+      {q:'Tama o Mali: Ang mga pinuno lamang ang bumubuo sa sinaunang lipunan.', options:['Tama','Mali'], correct:1, explain:'Mali. Hindi lamang pinuno — may iba\'t ibang pangkat ng tao na may iba\'t ibang katayuan at tungkulin.'},
+      {q:'Ayusin ang mga antas mula <b>pinakamataas</b> hanggang <b>pinakamababa</b>.', options:['Maginoo, Timawa, Oripun','Oripun, Timawa, Maginoo','Timawa, Maginoo, Oripun','Maginoo, Oripun, Timawa'], correct:0, explain:'Maginoo (pinakamataas) → Timawa (malaya) → Oripun (pinakamababa).'},
+      {q:'Tama o Mali: May iba\'t ibang katayuan at tungkulin ang mga tao sa sinaunang lipunan.', options:['Tama','Mali'], correct:0, explain:'Tama. Iba-iba ang kanilang katayuan at gampanin, ngunit may ugnayan at pagtutulungan pa rin sila.'},
+      {q:'Alin ang <b>HINDI</b> isang antas o pangkat ng sinaunang lipunan?', options:['Balangay','Maginoo','Timawa','Oripun'], correct:0, explain:'Ang balangay ay isang sasakyang pandagat, hindi isang antas ng lipunan.'},
+      {q:'Tama o Mali: Ang mga kasapi ng sinaunang lipunan ay may ugnayan at pagtutulungan sa isa\'t isa.', options:['Tama','Mali'], correct:0, explain:'Tama. May ugnayan at pagtutulungan sa pamayanan kahit magkakaiba ang kanilang antas.'}
+    ]
+  },
+  {
+    id:'hanapbuhay',
+    icon:'🌾',
+    title:'Kapaligiran at Hanapbuhay',
+    subtitle:'Pagsasaka, pagmimina, at pangingisda',
+    cards:[
+      {front:'Kapaligiran Bilang Batayan', back:'Mahusay na nilinang ng mga sinaunang Pilipino ang kanilang kapaligiran. Ang sistema ng kanilang pamumuhay ay nakabatay sa katangian ng lugar na kanilang tinitirhan.'},
+      {front:'Sa Kapatagan', back:'Umunlad ang <b>pagsasaka at pagtatanim</b> sa mga lugar na angkop sa agrikultura.'},
+      {front:'Sa Kabundukan', back:'Natutong <b>magmina ng ginto at tanso</b>. Pinatag din nila ang dalisdis ng bundok upang maging akma ito sa pagtatanim.'},
+      {front:'Sa Baybaying-Dagat', back:'Mahusay nilang ginamit ang <b>yamang-dagat</b> — kabilang ang pangingisda — para sa kanilang pang-araw-araw na pangangailangan.'},
+      {front:'Pag-angkop sa Kapaligiran', back:'Ang pagpapatag ng dalisdis ng bundok ay patunay na inaangkop ng tao ang kanyang gawain sa hugis at katangian ng lupa.'},
+      {front:'Tandaan (Pormula)', back:'Kapatagan → <b>pagsasaka</b> · Kabundukan → <b>pagmimina</b> · Baybaying-dagat → <b>pangingisda</b>.'}
+    ],
+    quiz:[
+      {q:'Anong hanapbuhay ang umunlad sa <b>kapatagan</b>?', options:['Pagsasaka at pagtatanim','Pagmimina ng ginto','Pangingisda sa dagat','Paggawa ng palayok'], correct:0, explain:'Sa kapatagan umunlad ang pagsasaka at pagtatanim dahil angkop ito sa agrikultura.'},
+      {q:'Tama o Mali: Ang mga nasa kabundukan ay natutong magmina ng <b>ginto at tanso</b>.', options:['Tama','Mali'], correct:0, explain:'Tama. Ginto at tanso ang mga mineral na binanggit sa aralin.'},
+      {q:'Anong hanapbuhay ang umunlad sa <b>baybaying-dagat</b>?', options:['Pangingisda','Pagmimina','Paghahabi','Pag-uukit'], correct:0, explain:'Sa baybaying-dagat, ginamit nila ang yamang-dagat — pangunahin na ang pangingisda.'},
+      {q:'Tama o Mali: Walang kinalaman ang kapaligiran sa uri ng hanapbuhay ng mga sinaunang Pilipino.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang kapaligiran mismo ang batayan ng kanilang hanapbuhay — kaya iba ang gawain sa kapatagan, kabundukan, at baybayin.'},
+      {q:'Bakit pinatag ng mga tao sa kabundukan ang dalisdis ng bundok?', options:['Upang maging akma ito sa pagtatanim','Upang magkaroon ng daanan ng bangka','Upang maiwasan ang pakikipagkalakalan','Upang hindi na mangailangan ng tubig'], correct:0, explain:'Pinatag nila ang dalisdis upang maging angkop ito sa pagtatanim — isang halimbawa ng pag-angkop sa kapaligiran.'},
+      {q:'Tama o Mali: Ang ginto at tanso ay mga mineral na minina sa kabundukan.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang likas na yaman ng kabundukan ay naging bahagi ng kanilang kabuhayan.'},
+      {q:'Nakatira ka sa isang pamayanang malapit sa dagat. Alin ang pinaka-angkop na hanapbuhay para sa iyo?', options:['Pangingisda at paggamit ng yamang-dagat','Pagmimina ng ginto sa mataas na bundok','Pagpapatag ng dalisdis ng mga bundok','Pagtatanim sa napakalawak na kapatagan'], correct:0, explain:'Ang lokasyon ang nagtatakda ng hanapbuhay — malapit sa dagat, kaya pangingisda at yamang-dagat.'},
+      {q:'Tama o Mali: Ang pagpapatag ng dalisdis ng bundok ay nagpapakita ng pag-angkop ng tao sa kapaligiran.', options:['Tama','Mali'], correct:0, explain:'Tama. Binago nila ang anyo ng lupa upang umangkop ito sa kanilang pangangailangang magtanim.'},
+      {q:'Alin ang <b>TAMANG</b> pagtutugma ng lugar at hanapbuhay?', options:['Kapatagan – pagsasaka','Kabundukan – pangingisda','Baybaying-dagat – pagmimina','Kapatagan – paglalayag'], correct:0, explain:'Kapatagan → pagsasaka; kabundukan → pagmimina; baybaying-dagat → pangingisda.'},
+      {q:'Tama o Mali: Hindi marunong gumamit ang mga sinaunang Pilipino ng likas na yaman sa kanilang lugar.', options:['Tama','Mali'], correct:1, explain:'Mali. Mahusay nilang nilinang ang kanilang kapaligiran at ginamit ang likas na yaman nito.'}
+    ]
+  },
+  {
+    id:'teknolohiya',
+    icon:'⛵',
+    title:'Teknolohiya at Kalakalan',
+    subtitle:'Bakal, palayok, balangay, at ugnayan sa Asya',
+    cards:[
+      {front:'Paggamit ng Bakal', back:'Nang matutong gumamit ng <b>bakal</b>, napahusay ng mga sinaunang Pilipino ang paggawa ng mga kagamitang ginamit sa pagtatanim at pangingisda.'},
+      {front:'Palayok', back:'Ginamit ito sa <b>pagluluto</b>, <b>pag-iimbak</b> ng pagkain, <b>pakikipagkalakalan</b>, at <b>paglilibing</b>.'},
+      {front:'Balangay', back:'Isang sasakyang pandagat ng sinaunang Pilipinas. Natuklasan ng National Museum of the Philippines ang mga artifact nito noong <b>1977</b>, at tinatayang may kapasidad itong <b>320 tao</b>.'},
+      {front:'Sulu', back:'Naging <b>mahalagang ruta ng kalakalan sa Asya</b> pagsapit ng <b>ika-14 na siglo</b> dahil sa kinalalagyan nito.'},
+      {front:'Mga Kasosyo sa Kalakalan', back:'Dumating ang mga <b>Arabeng</b> mangangalakal, may ugnayan sa <b>Tsina</b>, at may mga seramikong nagmula sa <b>Vietnam at Thailand</b>.'},
+      {front:'Epekto ng Pakikipagkalakalan', back:'<b>Produkto</b> — nagkaroon ng mga bagay na hindi karaniwang makukuha sa sariling lugar. <b>Ugnayan</b> — napalakas ang pakikipag-ugnayan sa ibang pamayanan. <b>Kaalaman</b> — nakilala ang produkto at kultura ng iba.'},
+      {front:'Buod ng Aralin', back:'KAPALIGIRAN → HANAPBUHAY → TEKNOLOHIYA → KALAKALAN. Ang pamumuhay ng sinaunang Pilipino ay malapit na kaugnay ng kapaligiran, teknolohiya, at pakikipag-ugnayan sa iba.'}
+    ],
+    quiz:[
+      {q:'Ano ang natutuhang gamitin ng mga sinaunang Pilipino upang mapahusay ang paggawa ng kagamitan?', options:['Bakal','Papel','Salamin','Plastik'], correct:0, explain:'Nang matutong gumamit ng bakal, napahusay nila ang mga kagamitan sa pagtatanim at pangingisda.'},
+      {q:'Tama o Mali: Ang <b>balangay</b> ay isang sasakyang pandagat ng sinaunang Pilipinas.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang balangay ang halimbawa ng sasakyang pandagat na binanggit sa aklat.'},
+      {q:'Kailan natuklasan ng National Museum of the Philippines ang mga artifact ng balangay?', options:['Noong 1977','Noong 1521','Noong 1898','Noong 1946'], correct:0, explain:'Noong 1977 natuklasan ng National Museum of the Philippines ang mga artifact ng balangay.'},
+      {q:'Tama o Mali: Ang palayok ay ginamit lamang sa pagluluto at wala nang ibang gamit.', options:['Tama','Mali'], correct:1, explain:'Mali. Ginamit din ito sa pag-iimbak ng pagkain, sa pakikipagkalakalan, at sa paglilibing.'},
+      {q:'Alin ang <b>HINDI</b> kabilang sa mga ginamitan ng palayok ayon sa aralin?', options:['Panghuli ng isda sa dagat','Pagluluto ng mga pagkain','Pag-iimbak ng mga pagkain','Paglilibing at kalakalan'], correct:0, explain:'Ang apat na gamit na binanggit ay pagluluto, pag-iimbak, pakikipagkalakalan, at paglilibing — hindi panghuli ng isda.'},
+      {q:'Tama o Mali: Naging mahalagang ruta ng kalakalan sa Asya ang <b>Sulu</b> pagsapit ng ika-14 na siglo.', options:['Tama','Mali'], correct:0, explain:'Tama. Dahil sa kinalalagyan nito, naging mahalagang ruta ng kalakalan sa Asya ang Sulu sa ika-14 na siglo.'},
+      {q:'Tinatayang ilan ang kapasidad ng isang balangay?', options:['320 katao','32 katao','1,000 katao','3 katao'], correct:0, explain:'Tinatayang may kapasidad na 320 tao ang isang balangay — patunay ng kanilang kakayahan sa paglalayag.'},
+      {q:'Tama o Mali: Walang naitulong ang sasakyang-dagat sa paglalakbay at pakikipagkalakalan.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang sasakyang-dagat ang mismong nakatulong sa paglalakbay at pakikipagkalakalan.'},
+      {q:'Bukod sa Tsina, saang mga bansa nagmula ang ilan sa mga seramikong natagpuan?', options:['Vietnam at Thailand','Espanya at Portugal','Hapon at Korea','India at Nepal'], correct:0, explain:'Binanggit sa aralin ang mga seramikong nagmula sa Vietnam, Thailand, at Tsina.'},
+      {q:'Tama o Mali: Isang epekto ng pakikipagkalakalan ay ang pagkakaroon ng mga produktong hindi karaniwang makukuha sa sariling lugar.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang pagpapalitan ng produkto ang isa sa tatlong epekto: Produkto, Ugnayan, at Kaalaman.'}
+    ]
+  },
+  {
+    id:'kalinangan',
+    icon:'🎭',
+    title:'Konsepto ng Kalinangan',
+    subtitle:'Wika, paniniwala, tradisyon, at kaugalian',
+    cards:[
+      {front:'Kalinangan', back:'Ang kabuuan ng paraan ng pamumuhay ng isang pangkat ng tao — ang nagpapakita kung sino tayo.'},
+      {front:'Limang Bahagi ng Kalinangan', back:'Kabilang dito ang mga bagay na <b>ginagawa</b>, <b>pinaniniwalaan</b>, <b>sinasabi</b>, <b>nililikha</b>, at <b>ipinapasa</b> ng isang pangkat.'},
+      {front:'Wika', back:'Ang paraan ng pakikipag-usap ng mga tao — halimbawa: Filipino, Cebuano, Ilokano, Waray. Daan ito upang maipasa ang kaalaman sa susunod na henerasyon.'},
+      {front:'Paniniwala', back:'Mga bagay na pinaniniwalaan ng isang pangkat, may kaugnayan sa kalikasan, pamilya, at pamayanan. Maaaring magkaiba ang paniniwala ng iba\'t ibang pangkat — kaya mahalaga ang paggalang sa pagkakaiba-iba.'},
+      {front:'Tradisyon at Kaugalian', back:'<b>Pagmamano</b> — paggalang sa nakatatanda. <b>Bayanihan</b> — pagtutulungan sa pamayanan. <b>Pagdiriwang</b> — gawain sa mahahalagang okasyon.'},
+      {front:'Iba Pang Anyo', back:'<b>Sining</b> (sayaw, awit, paghahabi, pag-uukit) · <b>Pagkain</b> · <b>Kasuotan</b> · <b>Pamumuhay</b> (paraan ng paninirahan, pagtatrabaho, at pakikisalamuha).'},
+      {front:'Kalinangan o Hindi?', back:'<b>KALINANGAN:</b> paggamit ng "po" at "opo" sa nakatatanda, pagmamano sa lolo at lola, tradisyonal na sayaw na ipinapasa sa kabataan. <b>HINDI KALINANGAN:</b> pagbili ng bagong cellphone, pagkain ng hamburger, paglalaro ng video game nang mag-isa.'},
+      {front:'Materyal at Di-Materyal', back:'Ang lipunan ng ating mga ninuno ay mailalarawan sa pamamagitan ng <b>materyal</b> at <b>di-materyal</b> na kultura. Ang <b>materyal</b> ay nakikita at nahahawakan. Ang <b>di-materyal</b> ay hindi nahahawakan — tulad ng wika, paniniwala, tradisyon, pangitain, at pamahiin.'},
+      {front:'Patunay ng Mataas na Kabihasnan', back:'Ang materyal at di-materyal na kalinangan ay pawang dagdag na patunay sa <b>mataas na antas ng kabihasnan</b> ng ating mga ninuno. Ang kanilang mga paniniwala at tradisyon ay bunga ng mayabong nilang pakikipag-ugnayan sa kapaligiran at sa isa\'t isa — at <b>marami rito ang pinaniniwalaan pa rin ng mga Pilipino sa kasalukuyan</b>.'},
+      {front:'Tandaan', back:'Ang kalinangan ay bahagi ng <b>pagkakakilanlan</b> ng isang pangkat, at ipinapasa ito mula sa mga nakatatanda patungo sa mga kabataan.'}
+    ],
+    quiz:[
+      {q:'Ano ang <b>kalinangan</b>?', options:['Kabuuan ng paraan ng pamumuhay ng isang pangkat','Mga bagay na binibili sa modernong tindahan','Ang pangalan ng isang sinaunang pamayanan','Isang uri ng sinaunang sasakyang pandagat'], correct:0, explain:'Ang kalinangan ay ang kabuuan ng paraan ng pamumuhay ng isang pangkat ng tao.'},
+      {q:'Tama o Mali: Ang pagmamano sa lolo at lola ay isang halimbawa ng kalinangan.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang pagmamano ay isang kaugaliang nagpapakita ng paggalang sa nakatatanda.'},
+      {q:'Alin sa mga ito ang <b>HINDI</b> halimbawa ng kalinangan ayon sa aralin?', options:['Pagbili ng bagong cellphone','Paggamit ng "po" at "opo"','Pagmamano sa nakatatanda','Tradisyonal na sayaw'], correct:0, explain:'Ang pagbili ng cellphone ay pansariling gawain lamang. Ang kalinangan ay ipinapasa sa susunod na henerasyon at bahagi ng pagkakakilanlan.'},
+      {q:'Tama o Mali: Pareho ang paniniwala ng lahat ng pangkat ng tao.', options:['Tama','Mali'], correct:1, explain:'Mali. Maaaring magkaiba ang paniniwala ng iba\'t ibang pangkat — kaya mahalaga ang pag-unawa at paggalang.'},
+      {q:'Ang Filipino, Cebuano, Ilokano, at Waray ay mga halimbawa ng alin?', options:['Wika','Sayaw','Kasuotan','Pagkain'], correct:0, explain:'Mga wika ang mga ito — ang paraan ng pakikipag-usap ng mga tao.'},
+      {q:'Tama o Mali: Ang <b>bayanihan</b> ay kaugaliang nagpapakita ng pagtutulungan sa pamayanan.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang bayanihan ay pagtutulungan; ang pagmamano naman ay paggalang sa nakatatanda.'},
+      {q:'Alin ang pinakamalapit na kahulugan ng <b>pagmamano</b>?', options:['Paggalang sa nakatatanda','Pagtutulungan sa pamayanan','Pagdiriwang ng okasyon','Pagpapahayag sa sining'], correct:0, explain:'Ang pagmamano ay paggalang sa nakatatanda.'},
+      {q:'Tama o Mali: Ang tradisyon ay hindi na maipapasa sa mga kabataan.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang tradisyon ay maipapasa mula sa mga nakatatanda patungo sa mga kabataan.'},
+      {q:'Alin ang <b>HINDI</b> kabilang sa mga anyo ng kalinangang binanggit sa aralin?', options:['Bilang ng pera sa bangko','Sining tulad ng sayaw at awit','Pagkaing bahagi ng tradisyon','Kasuotang nagpapakilanlan'], correct:0, explain:'Ang mga anyong binanggit ay wika, paniniwala, tradisyon, sining, pagkain, kasuotan, at pamumuhay.'},
+      {q:'Tama o Mali: Ang kalinangan ay bahagi ng pagkakakilanlan ng isang pangkat ng tao.', options:['Tama','Mali'], correct:0, explain:'Tama. Ito mismo ang paalala ng aralin — ang kalinangan ay nagpapakita kung sino tayo.'},
+      {q:'Alin sa mga ito ang halimbawa ng <b>DI-MATERYAL</b> na kalinangan?', options:['Ang paniniwala sa mga pangitain','Ang bahay na yari sa kawayan','Ang bangang pinaglibingan','Ang palayok na panluto'], correct:0, explain:'Ang di-materyal na kalinangan ay hindi nahahawakan — tulad ng paniniwala, wika, tradisyon, at pangitain. Bagay na nahahawakan ang tatlo pang pagpipilian.'},
+      {q:'Ano ang pinatutunayan ng materyal at di-materyal na kalinangan ng ating mga ninuno?', options:['Ang mataas na antas ng kanilang kabihasnan','Ang kanilang pakikipagdigma sa iba','Ang kakulangan nila sa likas na yaman','Ang kanilang paglipat sa ibang bansa'], correct:0, explain:'Ang dalawang uri ng kalinangan ay pawang dagdag na patunay sa mataas na antas ng kabihasnan ng ating mga ninuno.'}
+    ]
+  },
+  {
+    id:'materyal',
+    icon:'🏠',
+    title:'Kalinangang Materyal',
+    subtitle:'Bahay-kubo, torogan, at mga bagay na nagsasalaysay',
+    cards:[
+      {front:'Kalinangang Materyal', back:'Mga bagay na maaaring <b>makita at mahawakan</b> na nagpapakita ng paraan ng pamumuhay at kultura ng isang pangkat.'},
+      {front:'Saan Ito Makikita', back:'Sa mga <b>tirahan</b> (bahay-kubo, torogan), <b>kagamitan</b> (palayok), <b>kasuotan</b>, <b>sasakyang-dagat</b> (balangay), <b>palamuti</b>, at iba pang bagay na nililikha at ginagamit.'},
+      {front:'Kapaligiran at Materyales', back:'Ang mga likas na yaman at materyales na makukuha sa isang lugar ay nakakaapekto sa paraan ng pagtatayo at pamumuhay. Kaya tingnan hindi lang ang bagay kundi pati ang lugar.'},
+      {front:'Bahay-Kubo', back:'Gumagamit ng mga materyales na matatagpuan sa kapaligiran. Simple at praktikal ang disenyo, at ang anyo nito ay may kaugnayan sa pangangailangan ng mga nakatira.'},
+      {front:'Torogan', back:'Tradisyonal na tirahan ng mga <b>Maranao</b>. May natatanging disenyo at anyo, at nagpapakita ito ng pagkakakilanlang pangkultura.'},
+      {front:'Bakit Mahalaga', back:'<b>Ebidensiya</b> — nakatutulong sa pag-aaral ng nakaraan. <b>Pamumuhay</b> — ipinapakita kung paano namuhay at umangkop ang mga tao. <b>Kultura</b> — nagpapakita ng kasanayan, tradisyon, at pagkakakilanlan.'},
+      {front:'Materyal kontra Di-Materyal', back:'Ang <b>materyal</b> na kalinangan ay nakikita at nahahawakan. Ang <b>di-materyal</b> ay hindi — tulad ng wika, paniniwala, tradisyon, at pamahiin. Parehong patunay ang mga ito sa mataas na antas ng kabihasnan ng ating mga ninuno.'},
+      {front:'Tandaan', back:'Kalinangang Materyal = mga bagay na nagsasalaysay ng pamumuhay. MGA BAGAY → MGA GAWI → PAMUMUHAY → KULTURA.'}
+    ],
+    quiz:[
+      {q:'Ano ang <b>kalinangang materyal</b>?', options:['Mga bagay na nakikita at nahahawakan','Mga paniniwalang hindi nakikita','Mga awiting ipinapasa sa salita','Mga tuntuning sinusunod sa bahay'], correct:0, explain:'Ang kalinangang materyal ay ang mga bagay na maaaring makita at mahawakan na nagpapakita ng pamumuhay at kultura.'},
+      {q:'Tama o Mali: Ang <b>torogan</b> ay tradisyonal na tirahan ng mga Maranao.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang torogan ang tradisyonal na tirahan ng mga Maranao.'},
+      {q:'Alin ang <b>HINDI</b> halimbawa ng kalinangang materyal?', options:['Isang paniniwala tungkol sa kalikasan','Isang palayok na gawa sa luad','Isang tradisyonal na kasuotan','Isang sinaunang sasakyang-dagat'], correct:0, category:true, explain:'Ang paniniwala ay hindi nakikita o nahahawakan, kaya di-materyal ito — hindi kalinangang materyal.'},
+      {q:'Tama o Mali: Walang kaugnayan ang kapaligiran sa mga materyales na ginagamit sa pagtatayo ng bahay.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang likas na yaman at materyales na makukuha sa isang lugar ang mismong umaapekto sa paraan ng pagtatayo.'},
+      {q:'Anong tirahan ang gumagamit ng materyales mula sa kapaligiran at may simple at praktikal na disenyo?', options:['Bahay-kubo','Torogan','Balangay','Palayok'], correct:0, explain:'Ang bahay-kubo ay gumagamit ng materyales na matatagpuan sa kapaligiran at simple at praktikal ang disenyo.'},
+      {q:'Tama o Mali: Ang mga bagay na naiwan ng mga tao ay maaaring maging ebidensiya sa pag-aaral ng nakaraan.', options:['Tama','Mali'], correct:0, explain:'Tama. Iyan ang unang dahilan kung bakit mahalaga ang kalinangang materyal — ito ay ebidensiya.'},
+      {q:'Ano ang natatangi sa <b>torogan</b> kumpara sa bahay-kubo?', options:['May natatanging disenyo at anyo','Gawa lamang ito sa plastik','Ginagamit itong sasakyang-dagat','Wala itong kinalaman sa kultura'], correct:0, explain:'Ang torogan ay may natatanging disenyo at anyo na nagpapakita ng pagkakakilanlang pangkultura ng mga Maranao.'},
+      {q:'Tama o Mali: Walang maisasabi ang isang tirahan tungkol sa pamumuhay ng mga taong nakatira dito.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang tirahan ay maaaring gamitin bilang ebidensiya sa pag-aaral ng pamumuhay ng mga tao.'},
+      {q:'Saan natin makikita ang kalinangang materyal?', options:['Sa tirahan, kagamitan, at kasuotan','Sa mga panaginip at alaala lamang','Sa mga kuwentong pasalindila lamang','Sa mga awiting hindi pa naisusulat'], correct:0, explain:'Makikita ito sa tirahan, kagamitan, kasuotan, sasakyang-dagat, palamuti, at iba pang bagay na nililikha at ginagamit.'},
+      {q:'Tama o Mali: Ang bahay-kubo at ang torogan ay parehong halimbawa ng kalinangang materyal.', options:['Tama','Mali'], correct:0, explain:'Tama. Pareho silang bagay na nakikita at nahahawakan na nagpapakita ng paraan ng pamumuhay at kultura.'},
+      {q:'Alin sa mga ito ang <b>DI-MATERYAL</b> na kalinangan?', options:['Ang wika at mga paniniwala','Ang torogan ng mga Maranao','Ang palayok na gawa sa luad','Ang balangay na pandagat'], correct:0, explain:'Ang wika at paniniwala ay hindi nahahawakan, kaya di-materyal ang mga ito. Bagay na nahahawakan ang torogan, palayok, at balangay.'},
+      {q:'Ano ang pagkakaiba ng materyal at di-materyal na kalinangan?', options:['Ang materyal ay nahahawakan, ang di-materyal ay hindi','Ang materyal ay luma, ang di-materyal naman ay bago','Ang materyal ay sa dagat, ang di-materyal ay sa bundok','Ang materyal ay sa datu, ang di-materyal ay sa timawa'], correct:0, explain:'Iyan ang pangunahing pagkakaiba: nakikita at nahahawakan ang materyal, samantalang hindi nahahawakan ang di-materyal.'}
+    ]
+  },
+  {
+    id:'paniniwala',
+    icon:'🙏',
+    title:'Anituismo at mga Diyos',
+    subtitle:'Anito, Bathala, Lakapati, at mga diyos ng ninuno',
+    cards:[
+      {front:'Anituismo', back:'Ang tawag ng mga <b>Espanyol</b> sa paniniwala ng ating mga ninuno sa mga anito.'},
+      {front:'Anito', back:'Ang <b>kaluluwa ng mga yumaong kamag-anak</b>. Tinutukoy rin bilang anito ang mga <b>espiritu sa kalikasan</b>.'},
+      {front:'Paniniwala sa Kaluluwa', back:'Ang kaluluwa ng yumao ay <b>hindi kasamang namamatay</b> — sumasakabilang-buhay lang ito.'},
+      {front:'Ang Paligid ay Isang Kabuuan', back:'Naniniwala ang ating mga ninuno na ang paligid ay may <b>pisikal at espiritwal</b> na elemento, at kinabibilangan ito ng mga tao, diyos, espiritu, at anito.'},
+      {front:'Mga Diyos Ayon sa Pangkat', back:'<b>Igorot</b> → Apo Kabunian · <b>Bikol</b> → Gugurang · <b>Bisaya</b> → Laon · <b>Tagalog</b> → Bathala.'},
+      {front:'Iba Pang Diyos ng mga Tagalog', back:'<b>Lakapati</b> — sinasamba kapag panahon ng pagtatanim. <b>Aman Ikabli</b> — diyos ng mga mangangaso. <b>Dian Masalanta</b> — diyos ng mga mangingibig.'},
+      {front:'Tandaan', back:'Ang mga ninuno ay may <b>maraming</b> diyos, at iba-iba ang pangalan nito sa bawat pangkat. Ang anituismo ang tawag ng mga Espanyol sa kabuuan ng paniniwalang ito.'}
+    ],
+    quiz:[
+      {q:'Ano ang tawag ng mga Espanyol sa paniniwala ng ating mga ninuno sa mga anito?', options:['Anituismo','Animismo','Pagmomomiya','Pamahiin'], correct:0, explain:'Anituismo ang itinawag ng mga Espanyol sa paniniwalang ito. Ang animismo naman ay ang paniniwalang may kaluluwa ang mga bagay sa kapaligiran.'},
+      {q:'Tama o Mali: Ang <b>anito</b> ay tumutukoy sa kaluluwa ng mga yumaong kamag-anak.', options:['Tama','Mali'], correct:0, explain:'Tama. Tinutukoy rin bilang anito ang mga espiritu sa kalikasan.'},
+      {q:'Ano ang tawag ng mga <b>Igorot</b> sa kanilang diyos?', options:['Apo Kabunian','Gugurang','Laon','Bathala'], correct:0, explain:'Apo Kabunian ang tawag ng mga Igorot. Gugurang sa Bikol, Laon sa Bisaya, at Bathala sa mga Tagalog.'},
+      {q:'Tama o Mali: Ayon sa paniniwala ng ating mga ninuno, ang kaluluwa ng yumao ay namamatay kasama ng katawan.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang kaluluwa ng yumao ay hindi kasamang namamatay — sumasakabilang-buhay lang ito.'},
+      {q:'Sino ang diyos na sinasamba ng mga Tagalog kapag panahon ng <b>pagtatanim</b>?', options:['Lakapati','Aman Ikabli','Dian Masalanta','Apo Kabunian'], correct:0, explain:'Si Lakapati ang sinasamba kapag panahon ng pagtatanim.'},
+      {q:'Tama o Mali: Si "Laon" ang tawag sa diyos ng mga Bisaya.', options:['Tama','Mali'], correct:0, explain:'Tama. Laon sa Bisaya, Gugurang sa Bikol, Apo Kabunian sa Igorot, at Bathala sa Tagalog.'},
+      {q:'Sino ang itinuturing na diyos ng mga <b>mangangaso</b>?', options:['Aman Ikabli','Lakapati','Dian Masalanta','Gugurang'], correct:0, explain:'Si Aman Ikabli ang itinuturing na diyos ng mga mangangaso.'},
+      {q:'Tama o Mali: Si "Bathala" ang tawag ng mga taga-Bikol sa kanilang diyos.', options:['Tama','Mali'], correct:1, explain:'Mali. Si Gugurang ang sa mga taga-Bikol. Si Bathala ang sa mga Tagalog.'},
+      {q:'Sino ang diyos ng mga <b>mangingibig</b> ayon sa aralin?', options:['Dian Masalanta','Aman Ikabli','Lakapati','Apo Kabunian'], correct:0, explain:'Si Dian Masalanta ang diyos ng mga mangingibig.'},
+      {q:'Tama o Mali: Tinutukoy rin bilang anito ang mga espiritu sa kalikasan.', options:['Tama','Mali'], correct:0, explain:'Tama. Bukod sa kaluluwa ng mga yumaong kamag-anak, anito rin ang tawag sa mga espiritu sa kalikasan.'}
+    ]
+  },
+  {
+    id:'babaylan',
+    icon:'🔮',
+    title:'Babaylan at Animismo',
+    subtitle:'Tagapamagitan, kalikasan, at mga espiritu',
+    cards:[
+      {front:'Anito bilang Tagapamagitan', back:'Itinuturing ang mga anito bilang <b>tagapamagitan</b> sa sinasambang diyos. Sa kanilang tingin ay mas pakikinggan ang panalangin kung ipinadaan sa mga anito.'},
+      {front:'Babaylan at Katalonan', back:'<b>Babaylan</b> (Bisaya) at <b>katalonan</b> (Tagalog) — sila ang tagapamagitan sa mga espiritwal na nilalang tulad ng anito at sa mga tao.'},
+      {front:'Tungkulin ng Babaylan', back:'Nangunguna sa pagsasagawa ng mga <b>ritwal</b> para maiparating ang panalangin at para sa kalugdan ng mga anito. May tungkulin din silang <b>manggamot</b> sa mga may sakit.'},
+      {front:'Animismo', back:'Ang paniniwalang ang mga <b>bagay sa kapaligiran ay may kaluluwa</b>. Mayroon ding kaluluwa o espiritu ang kabundukan, mga puno, at mga hayop.'},
+      {front:'Araw, Buwan, at Bituin', back:'Naniniwala ang mga <b>taga-Visayas</b> sa kahalagahan ng araw, buwan, at bituin. Ang <b>buwan</b> ay simbolo ng kasaganaan, at ang mga <b>bituin</b> ay pinaniniwalaang nakatutulong sa masaganang ani.'},
+      {front:'Nono (Buwaya)', back:'Mataas ang paggalang sa mga <b>buwaya</b>. Tinatawag nila itong <b>nono</b>, na ang kahulugan ay <b>ninuno</b>, lalo na kapag nakikita sa katubigan. Nag-aalay sila ng pagkain kasabay ng panawagang huwag silang saktan.'},
+      {front:'Puno ng Balete', back:'Pinaniniwalaang <b>pinamamahayan ng mga espiritu</b>, kaya dito sila nagsasagawa ng mga pag-aalay.'},
+      {front:'Mga Espiritu ng Suwerte (Bikol)', back:'May kinikilalang mga espiritu ang mga taga-Bikol na nagdadala ng suwerte: <b>alagad</b>, <b>gugurang</b>, at <b>okot</b>. <i>Paalala: ginagamit din ng aklat ang salitang</i> gugurang <i>bilang tawag sa diyos ng mga taga-Bikol — iisang salita, dalawang gamit.</i>'}
+    ],
+    quiz:[
+      {q:'Ano ang tawag sa tagapamagitan sa mga espiritu at sa mga tao sa mga <b>Bisaya</b>?', options:['Babaylan','Katalonan','Datu','Oripun'], correct:0, explain:'Babaylan ang tawag sa Bisaya. Katalonan naman ang katumbas nito sa mga Tagalog.'},
+      {q:'Tama o Mali: Ang <b>katalonan</b> ang katawagan sa tagapamagitan sa mga Tagalog.', options:['Tama','Mali'], correct:0, explain:'Tama. Babaylan sa Bisaya, katalonan sa Tagalog — pareho silang tagapamagitan sa mga espiritu at sa mga tao.'},
+      {q:'Alin ang <b>HINDI</b> tungkulin ng babaylan ayon sa aralin?', options:['Pangangalakal sa ibang bansa','Pamamagitan sa mga espiritu','Pangunguna sa mga ritwal','Panggagamot sa may sakit'], correct:0, explain:'Ang tungkulin ng babaylan ay pamamagitan, pangunguna sa ritwal, at panggagamot — hindi pangangalakal.'},
+      {q:'Tama o Mali: Ang <b>animismo</b> ay ang paniniwalang ang mga bagay sa kapaligiran ay may kaluluwa.', options:['Tama','Mali'], correct:0, explain:'Tama. May kaluluwa o espiritu ang kabundukan, mga puno, at mga hayop ayon sa animismo.'},
+      {q:'Ano ang tawag ng ating mga ninuno sa <b>buwaya</b> bilang tanda ng paggalang?', options:['Nono','Anito','Tanggal','Okot'], correct:0, explain:'Nono ang tawag nila rito, na ang kahulugan ay ninuno.'},
+      {q:'Tama o Mali: Ayon sa aralin, walang anumang kahulugan ang mga bituin para sa mga taga-Visayas.', options:['Tama','Mali'], correct:1, explain:'Mali. Pinaniniwalaan nilang nakatutulong ang mga bituin sa pagkakaroon ng masaganang ani.'},
+      {q:'Saan nagsasagawa ng pag-aalay ang ating mga ninuno dahil pinaniniwalaang pinamamahayan ito ng espiritu?', options:['Sa puno ng balete','Sa ilalim ng bahay','Sa loob ng kuweba','Sa gitna ng dagat'], correct:0, explain:'Ang puno ng balete ay pinaniniwalaang pinamamahayan ng mga espiritu, kaya dito sila nag-aalay.'},
+      {q:'Tama o Mali: Mas pakikinggan ang panalangin kung ipinadaan ito sa mga anito.', options:['Tama','Mali'], correct:0, explain:'Tama. Kaya itinuturing ang mga anito bilang tagapamagitan sa kanilang sinasambang diyos.'},
+      {q:'Alin ang mga espiritung pinaniniwalaan ng mga <b>taga-Bikol</b> na nagdadala ng suwerte?', options:['Alagad, gugurang, at okot','Lumay, oropok, at awug','Aswang, tanggal, at mantiw','Bugay, himaraw, at mana'], correct:0, explain:'Alagad, gugurang, at okot ang tawag nila sa mga espiritung nagdadala ng suwerte.'},
+      {q:'Tama o Mali: Ang salitang "nono" ay nangangahulugang bagong silang na sanggol.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang nono ay nangangahulugang <b>ninuno</b> — ito ang magalang na tawag sa buwaya.'}
+    ]
+  },
+  {
+    id:'pangitain',
+    icon:'🦎',
+    title:'Masasamang Elemento at Pangitain',
+    subtitle:'Aswang, omen, pamahiin, at mahika',
+    cards:[
+      {front:'Aswang', back:'Pinaniniwalaang <b>kumakain ng atay ng tao</b>. Tinatawag itong <b>silagan</b> ng mga Bikolano.'},
+      {front:'Tanggal', back:'Ang elementong <b>nahahati ang katawan at lumilipad</b>.'},
+      {front:'Mantiw', back:'Ang mga <b>higanteng elemento sa kagubatan</b>.'},
+      {front:'Pangitain (Omen)', back:'Kabilang sa <b>di-materyal</b> na kalinangan. Ito ang mga tandang pinaniniwalaang nagbabadya ng isang pangyayari.'},
+      {front:'Mga Halimbawa ng Pangitain', back:'<b>Bayawak</b> sa ilalim ng bahay → nagbabadya ng sakuna o pagkamatay; kung ito ay pinatay at inilibing, ito ang magiging kapalit ng kaluluwa ng nakatakdang mamatay. <b>Butiki o ahas</b> sa dinadaanan → hudyat na kailangang bumalik. <b>Tigmamanukan</b> na lumipad mula kaliwa pakanan sa harap ng maglalakbay (Tagalog) → hindi na sila makababalik. <b>Tanim na naunang namunga</b> kaysa sa mga katabi nito (Bikolano) → nagbabadya ng sakuna.'},
+      {front:'Pamahiin', back:'Naniniwala ang mga <b>Bikolano</b> na ang isang dalagang mula sa mataas na antas ng lipunan ay maaaring magkasakit kung pupunta siya sa isang bagong lugar.'},
+      {front:'Panghuhula at Mahika', back:'<b>Lumay</b> — ginagamit upang paibigin ang isang tao. <b>Oropok</b> — kayang padamihin ang mga daga sa isang taniman. <b>Awug</b> — ginagamit upang palakihin ang tiyan ng isang tao. <b>Ropok</b> — kayang pasunurin ang isang tao.'}
+    ],
+    quiz:[
+      {q:'Ano ang tawag ng mga Bikolano sa <b>aswang</b>?', options:['Silagan','Tanggal','Mantiw','Nono'], correct:0, explain:'Silagan ang tawag ng mga Bikolano sa aswang, na pinaniniwalaang kumakain ng atay ng tao.'},
+      {q:'Tama o Mali: Ang <b>tanggal</b> ay elementong nahahati ang katawan at lumilipad.', options:['Tama','Mali'], correct:0, explain:'Tama. Iyan mismo ang paglalarawan sa tanggal.'},
+      {q:'Ano ang tawag sa mga <b>higanteng elemento sa kagubatan</b>?', options:['Mantiw','Silagan','Okot','Lumay'], correct:0, explain:'Mantiw ang tawag sa mga higanteng elemento sa kagubatan.'},
+      {q:'Tama o Mali: Ang mga pangitain o omen ay kabilang sa <b>materyal</b> na kalinangan.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang pangitain ay hindi nakikita o nahahawakan, kaya kabilang ito sa <b>di-materyal</b> na kalinangan.'},
+      {q:'Ayon sa paniniwala, ano ang ibig sabihin ng paglitaw ng <b>bayawak</b> sa ilalim ng bahay?', options:['Sakuna o pagkamatay','Masaganang ani','Pagdating ng bisita','Magandang panahon'], correct:0, explain:'Nagbabadya ito ng sakuna o pagkamatay. Kung ito ay pinatay at inilibing, ito ang magiging kapalit ng kaluluwa ng nakatakdang mamatay.'},
+      {q:'Tama o Mali: Kapag nakakita ng butiki o ahas sa dinadaanan, hudyat ito na kailangang bumalik.', options:['Tama','Mali'], correct:0, explain:'Tama. Isa itong halimbawa ng pangitain o omen.'},
+      {q:'Ano ang ginagamit upang <b>mapaibig</b> ang isang tao?', options:['Lumay','Oropok','Awug','Ropok'], correct:0, explain:'Ang lumay ang ginagamit upang mapaibig ang isang tao.'},
+      {q:'Tama o Mali: Ang <b>oropok</b> ay ginagamit upang palakihin ang tiyan ng isang tao.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang <b>awug</b> ang nakapagpapalaki ng tiyan. Ang oropok ay nakapagpapadami ng daga sa isang taniman.'},
+      {q:'Ano ang magagawa ng <b>ropok</b> ayon sa aralin?', options:['Pasunurin ang isang tao','Paibigin ang isang tao','Padamihin ang mga daga','Palakihin ang tiyan'], correct:0, explain:'Kayang pasunurin ang isang tao kung ito ay ginamitan ng ropok.'},
+      {q:'Tama o Mali: Para sa mga Tagalog, kapag lumipad ang ibong tigmamanukan mula kaliwa pakanan sa harap ng mga maglalakbay, tanda ito na hindi na sila makababalik.', options:['Tama','Mali'], correct:0, explain:'Tama. Isa ito sa mga pangitaing pinaniniwalaan ng mga Tagalog.'},
+      {q:'Tama o Mali: Ipinagbabawal ng mga datu ang paniniwala sa panghuhula.', options:['Tama','Mali'], correct:1, explain:'Mali. Naniniwala mismo ang ating mga ninuno sa panghuhula at sa paggamit ng mahika tulad ng lumay, oropok, awug, at ropok.'},
+      {q:'Para sa mga <b>Bikolano</b>, ano ang nagbabadya ng sakuna?', options:['Kapag naunang namunga ang tanim kaysa sa katabi','Kapag umulan nang malakas sa buong magdamag','Kapag namatay ang alagang hayop sa bukirin','Kapag tumubo ang damo sa gilid ng bahay'], correct:0, explain:'Para sa mga Bikolano, nagbabadyang magkakaroon ng sakuna kapag naunang namunga ang tanim nang mas maaga kaysa sa mga katabi nito.'}
+    ]
+  },
+  {
+    id:'paglilibing',
+    icon:'⚱️',
+    title:'Tradisyon ng Paglilibing',
+    subtitle:'Burial jar, Manunggul, Maitum, at momiya',
+    cards:[
+      {front:'Bakit May Tradisyon ng Paglilibing', back:'Bahagi ito ng pagpapakita ng <b>paggalang sa mga yumao</b>.'},
+      {front:'William Henry Scott', back:'Ayon sa pag-aaral ng historyador na si <b>William Henry Scott</b>, ang mga <b>alahas</b> ay isinasama sa paglibing sa mga yumao.'},
+      {front:'Mga Alipin sa Libingan', back:'May mga <b>aliping habambuhay</b> na nagbabantay sa libingan ng kaniyang panginoon. Ang ibang alipin ay isinasakripisyo kapag namatay ang isang <b>datu</b>, dahil inaasahang paglilingkuran niya ito sa kabilang-buhay.'},
+      {front:'Banga bilang Libingan', back:'Makikita sa <b>Samar, Masbate, Camiguin, Babuyan, Batanes, at Palawan</b>. Karaniwang nakikita ang mga banga sa mga lugar na <b>malapit sa dagat</b>.'},
+      {front:'Primary kontra Secondary Burial Jar', back:'<b>Primary burial jar</b> — ang bangang pinaglalagyan ng bangkay at inililibing sa isang lugar. <b>Secondary burial jar</b> — ang bangang pinaglalagyan ng bangkay <b>pagkatapos itong alisin</b> sa dating pinaglilibingan nito.'},
+      {front:'Manunggul Jar', back:'Nadiskubre sa <b>Palawan</b>; halimbawa ng <b>secondary burial jar</b>. May bangka sa ibabaw na may nakaukit na bibig at mata (karaniwan ang ganitong disenyo sa Sulu). Nakasakay ang dalawang pigura: ang una ay nakapatong ang mga kamay sa dibdib, at ang ikalawa ay nagsasagwan.'},
+      {front:'Kahulugan ng Manunggul Jar', back:'Ang bangka at ang dalawang pigura ay sumisimbolo sa <b>pagtawid ng kaluluwa sa kabilang-buhay</b>. Kinulayan ito gamit ang <b>hematite</b>, at ang mga kurbang linya sa ibabaw ay tila mga <b>alon ng dagat</b> — patunay sa pagpapahalaga ng ating mga ninuno sa karagatan.'},
+      {front:'Maitum Anthropomorphic Jar', back:'Noong <b>1991</b> nahukay ang mga <b>secondary burial jar</b> sa bayan ng <b>Maitum, Sarangani</b>. Tinawag itong anthropomorphic jar dahil may disenyo ito ng <b>katawan ng tao</b>, at ang takip ay may disenyo ng <b>ulo ng tao</b>. Bawat banga ay kakaiba at mababanaag ang magkakaibang emosyon.'},
+      {front:'Wooden Coffin ng Banton', back:'Noong <b>1936</b> nakahukay ang Pambansang Museo ng Pilipinas ng mga <b>secondary burial wooden coffin</b> sa isla ng <b>Banton, Romblon</b>. Kasamang nahukay ang telang nakabalot sa bangkay at ilang buto ng tao.'},
+      {front:'Momiya ng Kabayan', back:'Sa bayan ng <b>Kabayan, Benguet</b> may tradisyon ng <b>pagmomomiya</b> (mummification) o pagpreserba sa katawan ng mga yumao. Tinatayang <b>150–200 taon</b> ang edad ng mga momiya, at nakita ang mga ito sa tinatayang <b>22 kuweba</b>. Katulad ng Manunggul Jar, idineklara silang <b>National Cultural Treasure</b>.'}
+    ],
+    quiz:[
+      {q:'Ayon sa pag-aaral ng historyador na si William Henry Scott, ano ang isinasama sa paglibing sa mga yumao?', options:['Mga alahas','Mga sandata','Mga hayop','Mga bangka'], correct:0, explain:'Ayon kay William Henry Scott, ang mga alahas ay isinasama sa paglibing sa mga yumao.'},
+      {q:'Tama o Mali: Ang <b>primary burial jar</b> ay ang bangang pinaglalagyan ng bangkay at inililibing sa isang lugar.', options:['Tama','Mali'], correct:0, explain:'Tama. Ang secondary naman ay pinaglalagyan ng bangkay pagkatapos itong alisin sa dating pinaglilibingan.'},
+      {q:'Ang <b>Manunggul Jar</b> ay halimbawa ng anong uri ng banga?', options:['Secondary burial jar','Primary burial jar','Anthropomorphic jar','Palayok na pangluto'], correct:0, explain:'Ang Manunggul Jar ay isang secondary burial jar — inilagay ang bangkay dito pagkatapos alisin sa dating libingan.'},
+      {q:'Tama o Mali: Ang Maitum Anthropomorphic Jar ay halimbawa ng <b>primary burial jar</b>.', options:['Tama','Mali'], correct:1, explain:'Mali. Ang mga bangang nahukay sa Maitum ay <b>secondary</b> burial jar, tulad din ng Manunggul Jar.'},
+      {q:'Saan natagpuan ang <b>Manunggul Jar</b>?', options:['Sa Palawan','Sa Sarangani','Sa Romblon','Sa Benguet'] , correct:0, explain:'Nadiskubre ang Manunggul Jar sa Palawan.'},
+      {q:'Tama o Mali: Ang lalawigan ng <b>Benguet</b> ay may tradisyon ng pagmomomiya.', options:['Tama','Mali'], correct:0, explain:'Tama. Sa bayan ng Kabayan sa Benguet natagpuan ang mga momiya, sa tinatayang 22 kuweba.'},
+      {q:'Kailan nahukay ang mga anthropomorphic jar sa bayan ng Maitum, Sarangani?', options:['Noong 1991','Noong 1936','Noong 1977','Noong 1521'], correct:0, explain:'Noong 1991 nahukay ang mga secondary burial jar sa Maitum, Sarangani.'},
+      {q:'Tama o Mali: Ang mga momiya ng Kabayan ay tinatayang may edad na 1,000 taon.', options:['Tama','Mali'], correct:1, explain:'Mali. Tinatayang <b>150–200 taon</b> ang edad ng mga momiya sa Kabayan.'},
+      {q:'Ano ang sumisimbolo sa bangka at sa dalawang pigura sa ibabaw ng Manunggul Jar?', options:['Ang pagtawid ng kaluluwa sa kabilang-buhay','Ang pakikipagkalakalan sa ibang bansa','Ang paghahanap ng bagong pamayanan','Ang pangingisda sa malalim na dagat'], correct:0, explain:'Sumisimbolo ito sa pagtawid ng kaluluwa sa kabilang-buhay — patunay sa paniniwala nila rito.'},
+      {q:'Tama o Mali: Ang Manunggul Jar at ang mga momiya ng Kabayan ay parehong idineklara bilang <b>National Cultural Treasure</b>.', options:['Tama','Mali'], correct:0, explain:'Tama. Pareho silang kinilala bilang National Cultural Treasure.'},
+      {q:'Saan natagpuan ng Pambansang Museo ang mga secondary burial wooden coffin noong 1936?', options:['Sa isla ng Banton, Romblon','Sa bayan ng Maitum, Sarangani','Sa bayan ng Kabayan, Benguet','Sa lalawigan ng Palawan'], correct:0, explain:'Sa isla ng Banton sa lalawigan ng Romblon nahukay ang mga wooden coffin noong 1936.'},
+      {q:'Karaniwang saan matatagpuan ang mga bangang ginawang libingan?', options:['Sa mga lugar na malapit sa dagat','Sa gitna ng malalawak na kabukiran','Sa tuktok ng matataas na bundok','Sa loob ng makakapal na gubat'], correct:0, explain:'Karaniwang nakikita ang mga banga sa mga lugar na malapit sa dagat — tulad ng Samar, Masbate, Camiguin, Babuyan, Batanes, at Palawan.'}
+    ]
+  },
+  {
+    id:'kasal',
+    icon:'💍',
+    title:'Kasal at Pamilya',
+    subtitle:'Bugay, himaraw, diborsiyo, at mana',
+    cards:[
+      {front:'Kasal bilang Pormalidad', back:'Ang kasal ay seremonyang <b>hindi lamang</b> para sa mga nagmamahalan — pormalidad din ito ng pag-uugnayan ng mga pamilya. Sa kaso ng <b>datu</b>, paraan ito para bumuo ng mga <b>alyansa</b>.'},
+      {front:'Katayuang Pang-ekonomiko', back:'Malaki ang kinalaman ng katayuang pang-ekonomiko sa mga <b>ritwal at seremonya</b> na isinasagawa tuwing may kasalan.'},
+      {front:'Bugay', back:'Sa Kabisayaan, ang <b>bugay</b> ay ang halaga ng yamang ibibigay ng pamilya ng <b>LALAKI</b> sa pamilya ng <b>BABAE</b>. Itinatakda ito ng <b>ama ng babaeng ikakasal</b> pagkatapos ng pag-uusap ng dalawang pamilya, at ibinibigay ang ilang bahagi nito bago pa man maganap ang kasal.'},
+      {front:'Himaraw', back:'Ang <b>kompensasyon</b> na maaaring hingin ng <b>nanay ng babae</b> para sa kaniyang pag-aalaga sa anak noong ito ay sanggol pa.'},
+      {front:'Diborsiyo', back:'May diborsiyo sa sinaunang lipunan. Kapag nagdesisyon ang mag-asawa na maghiwalay sa pamamagitan nito, kailangang <b>ibalik ang ibinigay na bugay</b>.'},
+      {front:'Mana', back:'<b>Pantay</b> ang karapatan ng mga anak na babae at lalaki sa mana, maliban na lamang kung may <b>iniwang bilin</b> ang mga magulang. Ang mga <b>hindi lehitimong anak</b> ay magkakaroon lamang ng mana kung <b>papayagan ito ng mga lehitimong anak</b>.'}
+    ],
+    quiz:[
+      {q:'Ano ang tawag sa halaga ng yamang ibinibigay ng pamilya ng lalaki sa pamilya ng babae?', options:['Bugay','Himaraw','Mana','Anito'], correct:0, explain:'Bugay ang tawag dito sa Kabisayaan. Ang himaraw naman ay kompensasyon para sa nanay ng babae.'},
+      {q:'Tama o Mali: Ang <b>bugay</b> ay ang yamang ibinibigay ng pamilya ng <b>babae</b> sa pamilya ng <b>lalaki</b> bago ang kasal.', options:['Tama','Mali'], correct:1, explain:'Mali — baligtad ito. Ang bugay ay mula sa pamilya ng <b>lalaki</b> patungo sa pamilya ng <b>babae</b>.'},
+      {q:'Sino ang nagtatakda ng <b>bugay</b>?', options:['Ang ama ng babaeng ikakasal','Ang datu ng buong pamayanan','Ang babaylan ng pamayanan','Ang lalaking ikakasal mismo'], correct:0, explain:'Itinatakda ito ng ama ng babaeng ikakasal pagkatapos ng pag-uusap ng dalawang pamilya.'},
+      {q:'Tama o Mali: Ipinagbabawal ang diborsiyo sa sinaunang lipunan ng ating mga ninuno.', options:['Tama','Mali'], correct:1, explain:'Mali. May diborsiyo sa sinaunang lipunan — kailangan lamang ibalik ang ibinigay na bugay kapag naghiwalay ang mag-asawa.'},
+      {q:'Ano ang tawag sa kompensasyong maaaring hingin ng nanay ng babae para sa kaniyang pag-aalaga sa anak?', options:['Himaraw','Bugay','Mana','Alyansa'], correct:0, explain:'Himaraw ang tawag sa kompensasyong ito.'},
+      {q:'Tama o Mali: Kapag naghiwalay ang mag-asawa sa pamamagitan ng diborsiyo, kailangang ibalik ang ibinigay na bugay.', options:['Tama','Mali'], correct:0, explain:'Tama. Ibinabalik ang bugay kapag natuloy ang paghihiwalay.'},
+      {q:'Bakit mahalaga ang kasal sa kaso ng isang <b>datu</b>?', options:['Paraan ito para bumuo ng mga alyansa','Paraan ito para makalimutan ang utang','Paraan ito para makakuha ng alipin','Paraan ito para lumipat ng pamayanan'], correct:0, explain:'Sa kaso ng datu, ang kasal ay paraan para bumuo ng mga alyansa sa ibang pamilya at pamayanan.'},
+      {q:'Tama o Mali: Sa pagkakaloob ng mana, may pantay na karapatan ang mga anak na babae at lalaki.', options:['Tama','Mali'], correct:0, explain:'Tama — maliban na lamang kung may iniwang bilin ang mga magulang.'},
+      {q:'Kailan magkakaroon ng mana ang mga <b>hindi lehitimong anak</b>?', options:['Kung papayagan ng mga lehitimong anak','Kung pahihintulutan ng datu ng lugar','Kung mas matanda sila kaysa sa iba','Kung sila ay nakatira sa iisang bahay'], correct:0, explain:'Magkakaroon lamang sila ng mana kung papayagan ito ng mga lehitimong anak.'},
+      {q:'Tama o Mali: Ang kasal sa sinaunang lipunan ay seremonya lamang para sa mga nagmamahalan.', options:['Tama','Mali'], correct:1, explain:'Mali. Pormalidad din ito ng pag-uugnayan ng mga pamilya, at sa kaso ng datu ay paraan ito para bumuo ng alyansa.'}
+    ]
+  }
+];
+const FINAL_EXAM_PER_LESSON = 2;
+const STORAGE_KEY = 'historyexplorers_progress_v1';
+
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
+}
+let progress = loadProgress();
+/* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
+if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+  progress = {};
+  saveProgress(progress);
+  if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function prepareQuestion(q){
+  const order = shuffle(q.options.map((_,i)=>i));
+  const options = order.map(i=>q.options[i]);
+  const correct = order.indexOf(q.correct);
+  return {q:q.q, options, correct, explain:q.explain};
+}
+function starsFor(pct){
+  if(pct >= 1) return 3;
+  if(pct >= 0.8) return 2;
+  if(pct >= 0.5) return 1;
+  return 0;
+}
+function starString(n){
+  let s='';
+  for(let i=0;i<3;i++) s += i<n ? '★' : '<span class="off">★</span>';
+  return s;
+}
+
+function balangayMarkup(n){
+  const show = i => n>=i ? 1 : 0.06;
+  return `<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Balangay na binubuo sa bawat tamang sagot">
+    <path d="M0,182 Q25,174 50,182 T100,182 T150,182 T200,182 L200,220 L0,220 Z" fill="var(--accent)" opacity="${n>=1 ? 0.22 : 0.06}"/>
+    <path d="M38,150 L162,150 L140,182 L60,182 Z" fill="var(--accent-dark)" opacity="${show(2)}"/>
+    <g opacity="${show(3)}" stroke="var(--accent)" stroke-width="5" stroke-linecap="round">
+      <path d="M30,168 L54,158"/><path d="M170,168 L146,158"/>
+      <path d="M26,160 L26,176"/><path d="M174,160 L174,176"/>
+    </g>
+    <rect x="97" y="52" width="6" height="100" rx="3" fill="var(--accent-dark)" opacity="${show(4)}"/>
+    <path d="M97,58 L97,140 L34,140 Z" fill="var(--gold)" opacity="${show(5)}"/>
+    <path d="M103,66 L103,140 L156,140 Z" fill="var(--coral)" opacity="${show(6)}"/>
+    <g opacity="${show(7)}">
+      <circle cx="78" cy="164" r="7" fill="var(--gold)"/>
+      <circle cx="100" cy="164" r="7" fill="var(--gold)"/>
+      <circle cx="122" cy="164" r="7" fill="var(--gold)"/>
+    </g>
+    <g opacity="${show(8)}">
+      <path d="M100,46 L128,54 L100,62 Z" fill="var(--coral)"/>
+      <circle cx="40" cy="40" r="13" fill="var(--gold)"/>
+      <text x="100" y="208" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent-dark)" font-family="Baloo 2, cursive">BALANGAY</text>
+    </g>
+  </svg>`;
+}
+
+const STRATEGY = [
+  {kicker:'Tama o Mali #1', title:'Bantayan ang mga salitang "lahat", "laging", at "lamang"', body:'Ang mga salitang <b>lahat, laging, tanging, iisa, walang, hindi kailanman</b> ay madalas nagpapa-MALI sa isang pangungusap. Halimbawa: "Ang palayok ay ginamit <b>lamang</b> sa pagluluto" — MALI, dahil ginamit din ito sa pag-iimbak, kalakalan, at paglilibing.'},
+  {kicker:'Tama o Mali #2', title:'Isang maling bahagi = MALI ang buong pangungusap', body:'Kung may kahit isang maling salita sa pangungusap, MALI na ang kabuuan nito — kahit tama pa ang iba. Basahin ang buong pangungusap bago sumagot, hindi lang ang simula.'},
+  {kicker:'Multiple Choice #1', title:'Sa tanong na may "HINDI" o "ALIN ANG HINDI", baliktad ang hanap', body:'Ang sagot ay ang <b>tanging hindi itinuro</b> sa aralin. Bilugan ang salitang HINDI sa papel mo, tapos alisin ang tatlong tama — ang natira ang sagot.'},
+  {kicker:'Multiple Choice #2', title:'Gamitin ang tatlong pormula ng aralin', body:'<b>Lugar → Hanapbuhay:</b> kapatagan → pagsasaka, kabundukan → pagmimina, baybaying-dagat → pangingisda. <b>Pinuno:</b> datu → barangay, raja/radya → Malay-Indonesian, sultan → Islam. <b>Antas:</b> maginoo → timawa → oripun (mataas hanggang mababa). Karamihan ng tanong ay nasa isa sa tatlong ito.'},
+  {kicker:'Multiple Choice #3', title:'Alamin muna kung anong aralin ang tinatanong', body:'Bago pumili, itanong sa sarili: <b>Organisasyon ba ito (barangay, pinuno, antas)? Ekonomiya ba (hanapbuhay, teknolohiya, kalakalan)? O kalinangan ba (wika, tradisyon, bagay)?</b> Kapag nahanap mo ang aralin, halos laging halata na ang sagot.'},
+  {kicker:'Kalinangan Tip', title:'Kalinangan = ipinapasa sa susunod na henerasyon', body:'Kung ang halimbawa ay pansariling gawain lamang tulad ng pagbili ng cellphone o paglalaro ng video game nang mag-isa, <b>hindi</b> ito kalinangan. Kung ito ay ipinapasa ng nakatatanda at bahagi ng pagkakakilanlan — tulad ng pagmamano, po at opo, at tradisyonal na sayaw — <b>kalinangan</b> ito.'},
+  {kicker:'Materyal Tip', title:'Nakikita at nahahawakan ba ito?', body:'Kalinangang <b>materyal</b> = bagay na makikita at mahahawakan (bahay-kubo, torogan, palayok, kasuotan, balangay). Kung ito ay paniniwala, wika, o kaugalian — hindi ito materyal, kahit bahagi pa rin ito ng kalinangan.'},
+  {kicker:'Trap #1: Baligtad', title:'Ang bugay ay mula sa LALAKI patungo sa BABAE', body:'Ito ang paboritong baligtarin ng pagsusulit. <b>Bugay</b> = yamang ibinibigay ng pamilya ng <b>lalaki</b> sa pamilya ng <b>babae</b>. Kapag sinabi ng pangungusap na mula sa babae patungo sa lalaki — <b>MALI</b>. Ang <b>himaraw</b> naman ay para sa <b>nanay ng babae</b>, bilang bayad sa pag-aalaga niya sa anak noong sanggol pa ito.'},
+  {kicker:'Trap #2: Primary o Secondary?', title:'Ang Manunggul at Maitum ay PAREHONG secondary', body:'<b>Primary burial jar</b> = doon <b>unang</b> inilibing ang bangkay. <b>Secondary</b> = inilipat doon ang bangkay <b>pagkatapos alisin</b> sa dating libingan. Ang <b>Manunggul Jar</b> (Palawan) at ang <b>Maitum Anthropomorphic Jar</b> (Sarangani) ay <b>parehong secondary</b> — pati ang mga wooden coffin ng Banton. Kapag sinabing "primary" ang alinman sa mga ito, MALI.'},
+  {kicker:'Trap #3: May diborsiyo', title:'Hindi ipinagbabawal ang diborsiyo noong unang panahon', body:'May diborsiyo sa sinaunang lipunan ng ating mga ninuno — kailangan lamang <b>ibalik ang bugay</b> kapag naghiwalay ang mag-asawa. Ganoon din: <b>pantay</b> ang karapatan sa mana ng anak na babae at lalaki. Huwag ipagpalagay na kagaya ng ngayon ang mga patakaran noon.'},
+  {kicker:'Anituismo o Animismo?', title:'Dalawang magkaibang salita', body:'<b>Anituismo</b> — ang tawag ng mga <b>Espanyol</b> sa paniniwala sa mga <b>anito</b> (kaluluwa ng mga yumaong kamag-anak at espiritu ng kalikasan). <b>Animismo</b> — ang paniniwalang ang mga <b>bagay sa kapaligiran</b> (bundok, puno, hayop) ay <b>may kaluluwa</b>. Magkahawig ang tunog, magkaiba ang kahulugan.'},
+  {kicker:'Diyos at Pangkat', title:'Isaulo ang apat na pares', body:'<b>Igorot → Apo Kabunian · Bikol → Gugurang · Bisaya → Laon · Tagalog → Bathala.</b> At sa mga Tagalog pa: <b>Lakapati</b> (pagtatanim), <b>Aman Ikabli</b> (mangangaso), <b>Dian Masalanta</b> (mangingibig). Ang pagpapalit ng pares ang pinakamadaling tanong na nagagawang mali.'},
+  {kicker:'Materyal o Di-Materyal?', title:'Tanungin: nahahawakan ba ito?', body:'<b>Materyal</b> = nakikita at nahahawakan — bahay-kubo, torogan, palayok, banga, balangay, kasuotan. <b>Di-materyal</b> = hindi nahahawakan — wika, paniniwala, tradisyon, <b>pangitain</b>, pamahiin. Pareho silang <b>patunay sa mataas na antas ng kabihasnan</b> ng ating mga ninuno.'},
+  {kicker:'Petsa at Bilang', title:'Isaulo ang mga numero', body:'<b>1936</b> — wooden coffin sa Banton, Romblon. <b>1977</b> — mga artifact ng balangay. <b>1991</b> — anthropomorphic jar sa Maitum, Sarangani. <b>320 tao</b> — kapasidad ng isang balangay. <b>150–200 taon</b> — edad ng mga momiya ng Kabayan, na nasa <b>22 kuweba</b>. <b>Ika-14 na siglo</b> — Sulu bilang ruta ng kalakalan.'},
+  {kicker:'Pangkalahatan', title:'Huwag matagalan ang isang tanong', body:'Kung mahirap ang isang aitem, isulat ang pinakamalapit mong hula, magpatuloy, at balikan mo na lang kung may oras pa. Mas mahalagang matapos ang buong pagsusulit kaysa maperpekto ang isang tanong.'}
+];
+
+let currentLessonIdx = null;
+let flashIdx = 0;
+let currentQuizSet = [];
+let currentQuizMeta = null;
+let quizIdx = 0;
+let quizScore = 0;
+
+function cardKey(e){
+  if(e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
+    e.preventDefault();
+    e.currentTarget.click();
+  }
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){ renderHome(); showScreen('home'); }
+
+function renderHome(){
+  const list = document.getElementById('homeList');
+  const finalTotal = LESSONS.length * FINAL_EXAM_PER_LESSON;
+  const finalBest = progress['final'] || 0;
+  let html = '';
+
+  html += `<div class="item-card final-card" role="button" tabindex="0" onclick="startFinalExam()" onkeydown="cardKey(event)">
+    <div class="icon">🏆</div>
+    <div class="info">
+      <span class="final-badge">Mock Exam</span>
+      <h3>Full Mock Exam</h3>
+      <p>${finalTotal} mixed questions from all ${LESSONS.length} lessons</p>
+    </div>
+    <div class="stars">${starString(starsFor(finalBest/finalTotal))}</div>
+  </div>`;
+
+  html += `<div class="item-card strategy-card" role="button" tabindex="0" onclick="showScreen('strategyScreen')" onkeydown="cardKey(event)">
+    <div class="icon">🎯</div>
+    <div class="info">
+      <h3>Exam Strategy</h3>
+      <p>How to ace True/False & situational questions</p>
+    </div>
+  </div>`;
+
+  LESSONS.forEach((l,i)=>{
+    const best = progress[l.id] || 0;
+    html += `<div class="item-card" role="button" tabindex="0" onclick="openLesson(${i})" onkeydown="cardKey(event)">
+      <div class="icon">${l.icon}</div>
+      <div class="info">
+        <h3>${l.title}</h3>
+        <p>${l.subtitle}</p>
+      </div>
+      <div class="stars">${starString(starsFor(best/l.quiz.length))}</div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function openLesson(i){
+  currentLessonIdx = i;
+  flashIdx = 0;
+  document.getElementById('flashTitle').textContent = LESSONS[i].title;
+  renderFlash();
+  showScreen('flashScreen');
+}
+/* Card and question text may contain simple markup (<b>, entities) written by
+   the lesson author, so these render as HTML, not literal text. Content is
+   author-supplied only — never user input. */
+function renderFlash(){
+  const l = LESSONS[currentLessonIdx];
+  const c = l.cards[flashIdx];
+  document.getElementById('flashFront').innerHTML = c.front;
+  document.getElementById('flashBack').innerHTML = c.back;
+  document.getElementById('flashBack').style.display = 'none';
+  document.getElementById('flashFront').style.display = 'block';
+  document.getElementById('flashTag').textContent = 'Term';
+  document.getElementById('flashHint').textContent = 'Tap the card to flip';
+  document.getElementById('flashDots').textContent = `${flashIdx+1} / ${l.cards.length}`;
+}
+function flipCard(){
+  const front = document.getElementById('flashFront');
+  const back = document.getElementById('flashBack');
+  const flipped = back.style.display !== 'none';
+  front.style.display = flipped ? 'block' : 'none';
+  back.style.display = flipped ? 'none' : 'block';
+  document.getElementById('flashTag').textContent = flipped ? 'Term' : 'Meaning';
+}
+function nextCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx+1) % l.cards.length;
+  renderFlash();
+}
+function prevCard(){
+  const l = LESSONS[currentLessonIdx];
+  flashIdx = (flashIdx-1+l.cards.length) % l.cards.length;
+  renderFlash();
+}
+
+function startQuiz(){
+  const l = LESSONS[currentLessonIdx];
+  currentQuizSet = shuffle(l.quiz).map(prepareQuestion);
+  currentQuizMeta = {id:l.id, title:l.title};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = l.title;
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function startFinalExam(){
+  let qs = [];
+  LESSONS.forEach(l=>{
+    qs = qs.concat(shuffle(l.quiz).slice(0, FINAL_EXAM_PER_LESSON));
+  });
+  currentQuizSet = shuffle(qs).map(prepareQuestion);
+  currentQuizMeta = {id:'final', title:'Full Mock Exam'};
+  quizIdx = 0;
+  quizScore = 0;
+  document.getElementById('quizTitle').textContent = 'Full Mock Exam';
+  document.getElementById('passageBox').innerHTML = '';
+  renderQuestion();
+  showScreen('quizScreen');
+}
+
+function renderQuestion(){
+  const total = currentQuizSet.length;
+  const q = currentQuizSet[quizIdx];
+  document.getElementById('quizCounter').textContent = `Question ${quizIdx+1} of ${total}`;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('quizFill').style.width = `${(quizIdx/total)*100}%`;
+  document.getElementById('boatSvg').innerHTML = balangayMarkup(Math.round((quizScore/total)*8));
+  document.getElementById('qText').innerHTML = q.q;
+  document.getElementById('explainBox').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const box = document.getElementById('optionsBox');
+  box.innerHTML = '';
+  q.options.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = opt;
+    btn.onclick = ()=>selectOption(i);
+    box.appendChild(btn);
+  });
+}
+
+function selectOption(i){
+  const q = currentQuizSet[quizIdx];
+  const buttons = document.querySelectorAll('#optionsBox .option');
+  buttons.forEach((b,idx)=>{
+    b.disabled = true;
+    if(idx === q.correct) b.classList.add('correct');
+    else if(idx === i) b.classList.add('wrong');
+  });
+  if(i === q.correct) quizScore++;
+  document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
+  document.getElementById('boatSvg').innerHTML = balangayMarkup(Math.round((quizScore/currentQuizSet.length)*8));
+  document.getElementById('explainBox').innerHTML = q.explain;
+  document.getElementById('explainBox').style.display = 'block';
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('nextBtn').textContent = quizIdx < currentQuizSet.length-1 ? 'Next ▶' : 'See Results 🏆';
+}
+
+function nextQuestion(){
+  if(quizIdx < currentQuizSet.length-1){
+    quizIdx++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function finishQuiz(){
+  const total = currentQuizSet.length;
+  const best = progress[currentQuizMeta.id] || 0;
+  if(quizScore > best) progress[currentQuizMeta.id] = quizScore;
+  saveProgress(progress);
+  renderResults(total);
+  showScreen('resultsScreen');
+}
+
+function renderResults(total){
+  const pct = quizScore/total;
+  const n = starsFor(pct);
+  document.getElementById('resultBoat').innerHTML = balangayMarkup(Math.round(pct*8));
+  document.getElementById('resultStars').innerHTML = starString(n);
+  document.getElementById('resultTitle').textContent =
+    n===3 ? 'Perpekto! Napakahusay!' :
+    n===2 ? 'Magaling!' :
+    n===1 ? 'Magandang simula!' : 'Magsanay pa!';
+  document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
+}
+
+function retryQuiz(){
+  if(currentQuizMeta.id === 'final'){ startFinalExam(); }
+  else { startQuiz(); }
+}
+
+function renderStrategy(){
+  const box = document.getElementById('strategyList');
+  box.innerHTML = STRATEGY.map(t=>`
+    <div class="tip">
+      <div class="kicker">${t.kicker}</div>
+      <h4>${t.title}</h4>
+      <p>${t.body}</p>
+    </div>
+  `).join('');
+}
+
+renderHome();
+renderStrategy();
+</script>

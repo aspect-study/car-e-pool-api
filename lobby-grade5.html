@@ -53,7 +53,7 @@
     padding:clamp(20px,5vw,48px) 16px 60px;
   }
 
-  .wrap{ width:100%; max-width:760px; }
+  .wrap{ width:100%; max-width:1120px; }
 
   .hero{ text-align:center; margin-bottom:clamp(24px,5vw,40px); }
   .hero-emoji{ font-size:clamp(2.4rem,8vw,3.2rem); line-height:1; margin-bottom:6px; }
@@ -78,7 +78,12 @@
     gap:16px;
   }
   @media (min-width:560px){
-    .grid{ grid-template-columns:1fr 1fr; }
+    .grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  }
+  @media (min-width:900px){
+    .grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+    .subject-card{ gap:12px; padding:16px; }
+    .subject-emoji{ width:52px; height:52px; font-size:1.9rem; }
   }
 
   .subject-card{
@@ -191,6 +196,17 @@
   </div>
 
   <div class="grid">
+    <a class="subject-card" href="history-explorers.html?reset=1" style="--card-accent:#A8451F; --card-accent-soft:#F9E8E0; --card-accent-ink:#6E2A10;">
+      <div class="subject-emoji">⛵</div>
+      <div class="subject-info">
+        <div class="subject-tag">Grade 5 &middot; 12 lessons</div>
+        <div class="subject-title">Araling Panlipunan</div>
+        <div class="subject-app">History Explorers</div>
+        <div class="subject-desc">Barangay, leaders and classes, livelihood and trade, plus beliefs, omens, burial traditions and marriage</div>
+      </div>
+      <div class="go-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,5 16,12 9,19"/></svg></div>
+    </a>
+
     <a class="subject-card" href="math-mastery.html?reset=1" style="--card-accent:#1B7A79; --card-accent-soft:#D8EEED; --card-accent-ink:#0E4F4E;">
       <div class="subject-emoji">🧮</div>
       <div class="subject-info">
