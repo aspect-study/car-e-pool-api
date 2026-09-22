@@ -297,6 +297,17 @@
   .piece.revealed{opacity:1; transform:scale(1);}
   @media (prefers-reduced-motion: reduce){ .piece{transition:opacity 0.2s ease;} .piece.revealed{transform:none;} }
   .piece.base{opacity:1; transform:none; transition:none;}
+
+/* 3-up lesson map on wide screens, so every lesson shows at once.
+   Only the lesson list widens -- flashcards, quiz and results stay narrow. */
+@media (min-width:900px){
+  .app{max-width:1120px;}
+  .app section:not(#screen-home){max-width:560px; margin-left:auto; margin-right:auto;}
+  #screen-home > *:not(#home-list){max-width:560px; margin-left:auto; margin-right:auto;}
+  #home-list{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; align-items:stretch;}
+  #home-list .lesson-card{margin-bottom:0; height:100%; display:flex; flex-direction:column;}
+  #home-list .lesson-top{flex:1; align-items:flex-start;}
+}
 </style>
 
 <div class="app">

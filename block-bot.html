@@ -164,6 +164,19 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
   display:inline-block; background:var(--gold); color:#3A2900; font-size:0.68rem; font-weight:800;
   padding:2px 10px; border-radius:999px; margin-bottom:4px; letter-spacing:0.03em;
 }
+
+/* 3-up lesson map on wide screens, so every lesson shows at once.
+   Only the lesson list widens -- flashcards, quiz and results stay narrow. */
+@media (min-width:900px){
+  .app{max-width:1120px;}
+  .app section:not(#screen-home){max-width:720px; margin-left:auto; margin-right:auto;}
+  #screen-home > *:not(.lesson-grid){max-width:720px; margin-left:auto; margin-right:auto;}
+  #screen-home .lesson-grid{grid-template-columns:repeat(3, minmax(0,1fr)); align-items:stretch;}
+  #screen-home .lesson-card{flex-direction:column; align-items:stretch; gap:10px; height:100%;}
+  #screen-home .lesson-emoji{align-self:flex-start;}
+  #screen-home .lesson-info{flex:1;}
+  #screen-home .go-btn{width:100%; text-align:center;}
+}
 </style>
 
 <div class="app">
@@ -424,6 +437,111 @@ const LESSONS = [
       {icon:'🧠', term:'When the Numbers Are Hidden', def:'Sometimes the number line will only show the starting point — no numbers in between. That is normal! Count forward in your head, one number at a time, and keep track of how many jumps you take.'},
     ],
     generate: genNumberlineSet
+  },
+  {
+    id:'expanded', emoji:'🧩', title:'Expanded Form', subtitle:'Standard, Word, and Expanded Form',
+    flashcards:[
+      {icon:'🔢', term:'Standard Form', def:'A number written with one digit for each place value. Example: 5,437'},
+      {icon:'✍️', term:'Word Form', def:'A number written in words. Example: five thousand four hundred thirty-seven'},
+      {icon:'🧩', term:'Expanded Form', def:'A number written to show the value of each digit added together. Example: 5000 + 400 + 30 + 7'},
+      {icon:'📊', term:'How to Expand a Number', def:'Write the value of each digit starting with the highest place value, and put a plus sign in between each one.'},
+      {icon:'🔍', term:'Example: 2184', def:'2 thousands = 2000, 1 hundred = 100, 8 tens = 80, 4 ones = 4. So 2184 = 2000 + 100 + 80 + 4.'},
+      {icon:'0️⃣', term:'What About Zero?', def:'A zero has no value, so we leave it out. 8603 = 8000 + 600 + 3, because there are 0 tens.'},
+      {icon:'🔙', term:'Back to Standard Form', def:'Add all the parts back together. 700 + 50 + 4 = 754.'},
+    ],
+    quiz:[
+      {q:'Write 974 in expanded form.', options:['900 + 70 + 4','90 + 70 + 4','900 + 7 + 40','9 + 7 + 4'], correct:0, explain:'9 hundreds = 900, 7 tens = 70, 4 ones = 4. So 974 = 900 + 70 + 4.'},
+      {q:'Write 4329 in expanded form.', options:['4000 + 300 + 20 + 9','400 + 30 + 20 + 9','4000 + 30 + 200 + 9','4 + 3 + 2 + 9'], correct:0, explain:'4 thousands + 3 hundreds + 2 tens + 9 ones = 4000 + 300 + 20 + 9.'},
+      {q:'Write 7548 in expanded form.', options:['7000 + 500 + 40 + 8','7000 + 50 + 400 + 8','700 + 500 + 40 + 8','7000 + 500 + 4 + 80'], correct:0, explain:'7 thousands + 5 hundreds + 4 tens + 8 ones = 7000 + 500 + 40 + 8.'},
+      {q:'Write 8946 in expanded form.', options:['8000 + 900 + 40 + 6','8000 + 90 + 40 + 6','800 + 900 + 4 + 6','8000 + 900 + 4 + 60'], correct:0, explain:'8 thousands + 9 hundreds + 4 tens + 6 ones = 8000 + 900 + 40 + 6.'},
+      {q:'Write 5892 in expanded form.', options:['5000 + 800 + 90 + 2','500 + 800 + 90 + 2','5000 + 80 + 900 + 2','5000 + 800 + 9 + 20'], correct:0, explain:'5 thousands + 8 hundreds + 9 tens + 2 ones = 5000 + 800 + 90 + 2.'},
+      {q:'Write 700 + 50 + 4 in standard form.', options:['754','745','7504','574'], correct:0, explain:'700 + 50 + 4 = 754.'},
+      {q:'Write 1000 + 500 + 30 + 9 in standard form.', options:['1539','1593','1359','15309'], correct:0, explain:'1000 + 500 + 30 + 9 = 1539.'},
+      {q:'Write 8000 + 600 + 3 in standard form.', options:['8603','8630','863','8063'], correct:0, explain:'There are 0 tens, so a 0 goes in the tens place: 8603.'},
+      {q:'Write 6000 + 50 + 9 in standard form.', options:['6059','6590','6509','659'], correct:0, explain:'There are 0 hundreds, so a 0 goes in the hundreds place: 6059.'},
+      {q:'Write 4000 + 800 + 70 + 1 in standard form.', options:['4871','4817','4781','48701'], correct:0, explain:'4000 + 800 + 70 + 1 = 4871.'},
+      {q:'Which form is "five thousand four hundred thirty-seven"?', options:['Word form','Standard form','Expanded form','Place value form'], correct:0, explain:'A number written using words is in word form. Its standard form is 5,437.'},
+      {q:'True or False: In expanded form we write the value of each digit, not just the digit itself.', options:['True','False'], correct:0, explain:'Correct. In 2184 the 8 is worth 80, so we write 80 and not 8.'},
+    ]
+  },
+  {
+    id:'addnoregroup', emoji:'➕', title:'Addition Without Regrouping', subtitle:'Ones, Tens, Hundreds, and Thousands',
+    flashcards:[
+      {icon:'➕', term:'What Does It Mean?', def:'Addition without regrouping means the sum in each column is less than 10, so there is nothing to carry over.'},
+      {icon:'📐', term:'Line Up the Digits', def:'Write the numbers one on top of the other so ones are under ones, tens under tens, and hundreds under hundreds.'},
+      {icon:'1️⃣', term:'Step 1: Add the Ones', def:'Always start at the right side, in the ones column.'},
+      {icon:'2️⃣', term:'Step 2: Add the Tens', def:'Move one column to the left and add the tens.'},
+      {icon:'3️⃣', term:'Step 3: Add the Hundreds', def:'Then add the hundreds, and the thousands if the numbers have them.'},
+      {icon:'🔍', term:'Example: 426 + 142', def:'Ones: 6 + 2 = 8. Tens: 2 + 4 = 6. Hundreds: 4 + 1 = 5. The sum is 568.'},
+      {icon:'🔍', term:'Example: 351 + 138', def:'Ones: 1 + 8 = 9. Tens: 5 + 3 = 8. Hundreds: 3 + 1 = 4. The sum is 489.'},
+      {icon:'🧠', term:'Addend and Sum', def:'The numbers you add together are called addends. The answer is called the sum.'},
+    ],
+    quiz:[
+      {q:'426 + 142 = ?', options:['568','558','468','578'], correct:0, explain:'Ones: 6 + 2 = 8. Tens: 2 + 4 = 6. Hundreds: 4 + 1 = 5. The sum is 568.'},
+      {q:'567 + 112 = ?', options:['679','669','779','689'], correct:0, explain:'Ones: 7 + 2 = 9. Tens: 6 + 1 = 7. Hundreds: 5 + 1 = 6. The sum is 679.'},
+      {q:'351 + 138 = ?', options:['489','479','498','589'], correct:0, explain:'Ones: 1 + 8 = 9. Tens: 5 + 3 = 8. Hundreds: 3 + 1 = 4. The sum is 489.'},
+      {q:'234 + 145 = ?', options:['379','369','389','479'], correct:0, explain:'Ones: 4 + 5 = 9. Tens: 3 + 4 = 7. Hundreds: 2 + 1 = 3. The sum is 379.'},
+      {q:'512 + 236 = ?', options:['748','758','648','738'], correct:0, explain:'Ones: 2 + 6 = 8. Tens: 1 + 3 = 4. Hundreds: 5 + 2 = 7. The sum is 748.'},
+      {q:'Which column do we add first?', options:['The ones','The tens','The hundreds','Any column you like'], correct:0, explain:'We always start at the right side with the ones column.'},
+      {q:'True or False: In addition without regrouping, the sum in each column is less than 10.', options:['True','False'], correct:0, explain:'Correct. Because no column reaches 10, there is nothing to carry over.'},
+      {q:'1023 + 2431 = ?', options:['3454','3444','3554','2454'], correct:0, explain:'Ones: 3 + 1 = 4. Tens: 2 + 3 = 5. Hundreds: 0 + 4 = 4. Thousands: 1 + 2 = 3. The sum is 3454.'},
+      {q:'640 + 125 = ?', options:['765','755','665','775'], correct:0, explain:'Ones: 0 + 5 = 5. Tens: 4 + 2 = 6. Hundreds: 6 + 1 = 7. The sum is 765.'},
+      {q:'What do we call the answer in an addition problem?', options:['The sum','The addend','The difference','The number line'], correct:0, explain:'The numbers being added are the addends, and the answer is the sum.'},
+      {q:'703 + 261 = ?', options:['964','954','864','974'], correct:0, explain:'Ones: 3 + 1 = 4. Tens: 0 + 6 = 6. Hundreds: 7 + 2 = 9. The sum is 964.'},
+      {q:'True or False: We start adding from the left side, in the hundreds column.', options:['True','False'], correct:1, explain:'We start from the right side, in the ones column.'},
+    ]
+  },
+  {
+    id:'addregroup', emoji:'🔁', title:'Addition With Regrouping', subtitle:'Carrying Over to the Next Place',
+    flashcards:[
+      {icon:'🔁', term:'What Is Regrouping?', def:'Regrouping means adding numbers when the sum in one place value is 10 or more. The extra is carried over to the next place.'},
+      {icon:'🔟', term:'Regroup 12 Ones', def:'12 ones = 1 ten and 2 ones. Write the 2 in the ones place and carry the 1 over to the tens.'},
+      {icon:'⬆️', term:'Where Does the Carry Go?', def:'The carried 1 goes on top of the next column to the left, and you add it together with that column.'},
+      {icon:'🔍', term:'Example: 426 + 146', def:'Ones: 6 + 6 = 12, so write 2 and carry 1. Tens: 1 + 2 + 4 = 7. Hundreds: 4 + 1 = 5. The sum is 572.'},
+      {icon:'🔍', term:'Example: 274 + 365', def:'Ones: 4 + 5 = 9. Tens: 7 + 6 = 13, so write 3 and carry 1. Hundreds: 1 + 2 + 3 = 6. The sum is 639.'},
+      {icon:'🔍', term:'Example: 186 + 447', def:'Ones: 6 + 7 = 13, write 3 and carry 1. Tens: 1 + 8 + 4 = 13, write 3 and carry 1. Hundreds: 1 + 1 + 4 = 6. The sum is 633.'},
+      {icon:'🤔', term:'When Do I Regroup?', def:'Only when a column adds up to 10 or more. If the column is 9 or less, just write the answer down.'},
+    ],
+    quiz:[
+      {q:'426 + 146 = ?', options:['572','562','672','582'], correct:0, explain:'Ones: 6 + 6 = 12, write 2 and carry 1. Tens: 1 + 2 + 4 = 7. Hundreds: 4 + 1 = 5. The sum is 572.'},
+      {q:'274 + 365 = ?', options:['639','629','539','649'], correct:0, explain:'Ones: 4 + 5 = 9. Tens: 7 + 6 = 13, write 3 and carry 1. Hundreds: 1 + 2 + 3 = 6. The sum is 639.'},
+      {q:'186 + 447 = ?', options:['633','623','533','643'], correct:0, explain:'Ones: 6 + 7 = 13, carry 1. Tens: 1 + 8 + 4 = 13, carry 1. Hundreds: 1 + 1 + 4 = 6. The sum is 633.'},
+      {q:'420 + 612 = ?', options:['1032','932','1022','1132'], correct:0, explain:'Ones: 0 + 2 = 2. Tens: 2 + 1 = 3. Hundreds: 4 + 6 = 10, so write 0 and carry 1 to the thousands. The sum is 1032.'},
+      {q:'916 + 852 = ?', options:['1768','1668','768','1778'], correct:0, explain:'Ones: 6 + 2 = 8. Tens: 1 + 5 = 6. Hundreds: 9 + 8 = 17, so write 7 and carry 1. The sum is 1768.'},
+      {q:'When you add the ones and get 12, how do you regroup it?', options:['1 ten and 2 ones','2 tens and 1 one','1 hundred and 2 ones','12 tens'], correct:0, explain:'12 ones is the same as 1 ten and 2 ones, so the 1 ten is carried to the tens column.'},
+      {q:'True or False: We regroup only when a column adds up to 10 or more.', options:['True','False'], correct:0, explain:'Correct. If a column is 9 or less, there is nothing to carry over.'},
+      {q:'158 + 127 = ?', options:['285','275','385','295'], correct:0, explain:'Ones: 8 + 7 = 15, write 5 and carry 1. Tens: 1 + 5 + 2 = 8. Hundreds: 1 + 1 = 2. The sum is 285.'},
+      {q:'367 + 225 = ?', options:['592','582','492','602'], correct:0, explain:'Ones: 7 + 5 = 12, write 2 and carry 1. Tens: 1 + 6 + 2 = 9. Hundreds: 3 + 2 = 5. The sum is 592.'},
+      {q:'When the tens column adds up to 13, how do you regroup it?', options:['1 hundred and 3 tens','1 ten and 3 ones','3 hundreds and 1 ten','13 hundreds'], correct:0, explain:'13 tens is the same as 1 hundred and 3 tens, so the 1 hundred is carried to the hundreds column.'},
+      {q:'489 + 156 = ?', options:['645','635','545','655'], correct:0, explain:'Ones: 9 + 6 = 15, carry 1. Tens: 1 + 8 + 5 = 14, carry 1. Hundreds: 1 + 4 + 1 = 6. The sum is 645.'},
+      {q:'True or False: 503 + 306 needs regrouping.', options:['True','False'], correct:1, explain:'No column reaches 10: 3 + 6 = 9, 0 + 0 = 0, 5 + 3 = 8. The sum is 809 with no carrying.'},
+    ]
+  },
+  {
+    id:'money', emoji:'💰', title:'Pesos and Centavos', subtitle:'Philippine Bills, Coins, and Amounts',
+    flashcards:[
+      {icon:'💵', term:'Philippine Bills', def:'The bills are the 50-peso, 100-peso, 200-peso, 500-peso, and 1000-peso bills.'},
+      {icon:'🪙', term:'Philippine Coins', def:'The coins are 5 centavos, 25 centavos, 1 peso, 5 pesos, 10 pesos, and 20 pesos.'},
+      {icon:'💯', term:'Centavos and Pesos', def:'100 centavos make 1 peso.'},
+      {icon:'⚫', term:'The Dot Separates Them', def:'The dot separates the pesos from the centavos. In 230.35, the 230 is pesos and the 35 is centavos.'},
+      {icon:'🧮', term:'Counting Example', def:'50 + 20 + 1 = 71 pesos, and 5c + 5c + 5c = 15 centavos. We write this as 71.15.'},
+      {icon:'🗣️', term:'Reading Money', def:'71.15 is read as seventy-one pesos and fifteen centavos.'},
+      {icon:'🛒', term:'Count Bills First', def:'Count all the bills and peso coins to get the pesos, then count the centavo coins. Put them together with a dot.'},
+    ],
+    quiz:[
+      {q:'A 50-peso bill, a 20-peso coin, a 1-peso coin, and three 5-centavo coins. How much is this?', options:['71.15','70.15','71.05','7.115'], correct:0, explain:'50 + 20 + 1 = 71 pesos, and 5c + 5c + 5c = 15 centavos, so it is 71.15.'},
+      {q:'A 200-peso bill, a 20-peso coin, a 10-peso coin, one 25-centavo coin, and two 5-centavo coins. How much is this?', options:['230.35','230.25','220.35','203.35'], correct:0, explain:'200 + 20 + 10 = 230 pesos, and 25c + 5c + 5c = 35 centavos, so it is 230.35.'},
+      {q:'A 500-peso bill, a 10-peso coin, a 5-peso coin, and three 25-centavo coins. How much is this?', options:['515.75','515.25','510.75','505.75'], correct:0, explain:'500 + 10 + 5 = 515 pesos, and 25c + 25c + 25c = 75 centavos, so it is 515.75.'},
+      {q:'How do we read 230.35?', options:['Two hundred thirty pesos and thirty-five centavos','Two hundred thirty-five pesos','Two hundred thirty centavos and thirty-five pesos','Twenty-three pesos and thirty-five centavos'], correct:0, explain:'The part before the dot is the pesos and the part after the dot is the centavos.'},
+      {q:'What does the dot in 71.15 separate?', options:['The pesos from the centavos','The tens from the ones','The bills from the coins','The hundreds from the tens'], correct:0, explain:'The dot separates the pesos on the left from the centavos on the right.'},
+      {q:'How many centavos make 1 peso?', options:['100','10','25','50'], correct:0, explain:'100 centavos are equal to 1 peso.'},
+      {q:'Which of these amounts comes as a bill, not a coin?', options:['500 pesos','25 centavos','10 pesos','5 centavos'], correct:0, explain:'The bills are 50, 100, 200, 500, and 1000 pesos. The 10 pesos, 25 centavos and 5 centavos all come as coins.'},
+      {q:'How much are two 25-centavo coins together?', options:['50 centavos','25 centavos','75 centavos','2 pesos'], correct:0, explain:'25c + 25c = 50 centavos.'},
+      {q:'What does 532.00 mean?', options:['Five hundred thirty-two pesos and no centavos','Five hundred thirty-two centavos','Five pesos and thirty-two centavos','Fifty-three pesos and two centavos'], correct:0, explain:'The 00 after the dot means there are no centavos at all.'},
+      {q:'How do you write seven hundred twenty-two pesos and five centavos?', options:['722.05','722.50','7225','72.25'], correct:0, explain:'722 pesos goes before the dot, and 05 centavos goes after it.'},
+      {q:'How do we read 2510.25?', options:['Two thousand five hundred ten pesos and twenty-five centavos','Two thousand five hundred ten centavos and twenty-five pesos','Two hundred fifty-one pesos and twenty-five centavos','Two thousand fifty-one pesos and twenty-five centavos'], correct:0, explain:'2510 is the pesos and 25 is the centavos.'},
+      {q:'True or False: A 5-centavo coin is worth more than a 1-peso coin.', options:['True','False'], correct:1, explain:'1 peso is 100 centavos, so the 1-peso coin is worth much more than 5 centavos.'},
+    ]
   },
 ];
 
