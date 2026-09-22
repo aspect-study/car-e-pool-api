@@ -1,4 +1,5 @@
 <html lang="en">
+<meta charset="utf-8">
 <title>Block Bot</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,6 +83,10 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
   text-align:center; padding:32px 24px; box-shadow:var(--shadow); gap:14px;
 }
 .card-icon{font-size:2.6rem;}
+.card-icon.has-art{font-size:0; line-height:0;}
+.money-group{display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px;}
+.money-group svg{display:block;}
+.q-art{margin:2px 0 14px;}
 .card-term{font-family:'Lilita One',cursive; font-size:1.6rem; color:var(--accent);}
 .card-def{font-size:1.05rem; color:var(--ink-soft); line-height:1.5;}
 .card-nav{display:flex; justify-content:space-between; align-items:center; margin-top:16px; gap:10px;}
@@ -225,6 +230,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="quiz-bot" viewBox="0 0 200 240" id="quiz-bot-svg"></svg>
     </div>
     <div class="q-text" id="q-text"></div>
+    <div class="q-art hidden" id="q-art"></div>
     <div class="options" id="q-options"></div>
     <div class="nline-box hidden" id="q-numberline">
       <div class="mode-badge" id="nline-badge"></div>
@@ -258,6 +264,103 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 </div>
 
 <script>
+/* ---- Philippine money art -------------------------------------------------
+   Coins are drawn to true relative diameter (5 sentimo 16mm up to 20 piso
+   30mm), so size is a real clue the way it is in a coin purse -- on this
+   series the bigger the coin, the more it is worth. Bills are drawn larger
+   than every coin but not to true scale: a real note is 160mm across, which
+   would leave the coins too small to read. */
+const COIN_SPECS = {
+  '5s' : {mm:16, num:'5',  unit:'SENTIMO', name:'5-centavo coin',  sun:true},
+  '25s': {mm:20, num:'25', unit:'SENTIMO', name:'25-centavo coin', sun:true},
+  '1p' : {mm:23, num:'1',  unit:'PISO',    name:'1-peso coin'},
+  '5p' : {mm:25, num:'5',  unit:'PISO',    name:'5-peso coin', sides:9},
+  '10p': {mm:27, num:'10', unit:'PISO',    name:'10-peso coin'},
+  '20p': {mm:30, num:'20', unit:'PISO',    name:'20-peso coin', bimetal:true},
+};
+
+const BILL_SPECS = {
+  '50'  : {num:'50',   ink:'#B14A36', name:'50-peso bill'},
+  '100' : {num:'100',  ink:'#7E5FA4', name:'100-peso bill'},
+  '200' : {num:'200',  ink:'#2F7F52', name:'200-peso bill'},
+  '500' : {num:'500',  ink:'#B8860B', name:'500-peso bill'},
+  '1000': {num:'1000', ink:'#2F5F92', name:'1000-peso bill'},
+};
+
+function polygonPoints(cx, cy, r, sides){
+  const pts = [];
+  for(let i=0;i<sides;i++){
+    const a = (Math.PI*2*i/sides) - Math.PI/2;
+    pts.push((cx + r*Math.cos(a)).toFixed(1) + ',' + (cy + r*Math.sin(a)).toFixed(1));
+  }
+  return pts.join(' ');
+}
+
+function sunMotif(){
+  let rays = '';
+  for(let i=0;i<8;i++){
+    const a = Math.PI*2*i/8;
+    const x1 = 50 + 7.5*Math.cos(a), y1 = 27 + 7.5*Math.sin(a);
+    const x2 = 50 + 11*Math.cos(a),  y2 = 27 + 11*Math.sin(a);
+    rays += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#8B97A3" stroke-width="2" stroke-linecap="round"/>`;
+  }
+  return `<g opacity="0.75"><circle cx="50" cy="27" r="5.5" fill="#8B97A3"/>${rays}</g>`;
+}
+
+function coinSvg(key, pxPerMm){
+  const s = COIN_SPECS[key];
+  const px = Math.round(s.mm * pxPerMm);
+  const silver = '#D6DCE2', rim = '#98A3AE', ink = '#3D4B59';
+
+  const body = s.sides
+    ? `<polygon points="${polygonPoints(50,50,47,s.sides)}" fill="${silver}" stroke="${rim}" stroke-width="2.5" stroke-linejoin="round"/>`
+    : `<circle cx="50" cy="50" r="47" fill="${s.bimetal ? '#C2865A' : silver}" stroke="${rim}" stroke-width="2.5"/>`;
+
+  const inner = s.bimetal
+    ? `<circle cx="50" cy="50" r="33" fill="${silver}" stroke="#A8B2BC" stroke-width="2"/>`
+    : `<circle cx="50" cy="50" r="40" fill="none" stroke="#B9C1C9" stroke-width="1.5"/>`;
+
+  const numY    = s.bimetal ? 56 : (s.sun ? 62 : 58);
+  const numSize = s.bimetal ? 30 : (s.sun ? 32 : 40);
+  const unitY   = s.bimetal ? 70 : 78;
+
+  return `<svg class="coin" viewBox="0 0 100 100" width="${px}" height="${px}" role="img" aria-label="${s.name}">`
+    + body + inner
+    + (s.sun ? sunMotif() : '')
+    + `<text x="50" y="${numY}" text-anchor="middle" font-family="Mulish, sans-serif" font-size="${numSize}" font-weight="800" fill="${ink}">${s.num}</text>`
+    + `<text x="50" y="${unitY}" text-anchor="middle" font-family="Mulish, sans-serif" font-size="12" font-weight="700" fill="#5A6875">${s.unit}</text>`
+    + `</svg>`;
+}
+
+function billSvg(key, w){
+  const b = BILL_SPECS[key];
+  const h = Math.round(w * 66 / 160);
+  const numSize = b.num.length > 3 ? 18 : 24;
+  return `<svg class="bill" viewBox="0 0 160 66" width="${w}" height="${h}" role="img" aria-label="${b.name}">`
+    + `<rect x="2" y="2" width="156" height="62" rx="6" fill="#FCF8F0" stroke="${b.ink}" stroke-width="2.5"/>`
+    + `<rect x="8" y="8" width="144" height="50" rx="4" fill="none" stroke="${b.ink}" stroke-width="1" opacity="0.4"/>`
+    + `<ellipse cx="38" cy="36" rx="16" ry="19" fill="${b.ink}" opacity="0.13"/>`
+    + `<circle cx="38" cy="29" r="7" fill="${b.ink}" opacity="0.3"/>`
+    + `<path d="M25 48 q13 -12 26 0 z" fill="${b.ink}" opacity="0.3"/>`
+    + `<text x="80" y="17" text-anchor="middle" font-family="Mulish, sans-serif" font-size="6.5" font-weight="700" letter-spacing="0.6" fill="${b.ink}" opacity="0.85">REPUBLIKA NG PILIPINAS</text>`
+    + `<text x="112" y="43" text-anchor="middle" font-family="Mulish, sans-serif" font-size="${numSize}" font-weight="800" fill="${b.ink}">&#8369;${b.num}</text>`
+    + `<text x="112" y="54" text-anchor="middle" font-family="Mulish, sans-serif" font-size="7.5" font-weight="700" letter-spacing="1.4" fill="${b.ink}" opacity="0.85">PISO</text>`
+    + `</svg>`;
+}
+
+/* A row of money to count. Bills first, then coins biggest to smallest --
+   the order the lesson teaches for adding them up. */
+function moneyGroup(items, opt){
+  const o = opt || {};
+  const coinPx = o.coinPx || 3.0, billW = o.billW || 150;
+  const html = items.map(k => BILL_SPECS[k] ? billSvg(k, billW) : coinSvg(k, coinPx)).join('');
+  return `<div class="money-group">${html}</div>`;
+}
+
+function allBills(w){ return `<div class="money-group">` + Object.keys(BILL_SPECS).map(k=>billSvg(k, w||96)).join('') + `</div>`; }
+function allCoins(pxPerMm){ return `<div class="money-group">` + Object.keys(COIN_SPECS).map(k=>coinSvg(k, pxPerMm||3.4)).join('') + `</div>`; }
+
+
 const LESSONS = [
   {
     id:'blocks', emoji:'🧱', title:'Base-Ten Blocks', subtitle:'Ones, Tens, Hundreds, and Thousands',
@@ -444,12 +547,17 @@ const LESSONS = [
       {icon:'🔢', term:'Standard Form', def:'A number written with one digit for each place value. Example: 5,437'},
       {icon:'✍️', term:'Word Form', def:'A number written in words. Example: five thousand four hundred thirty-seven'},
       {icon:'🧩', term:'Expanded Form', def:'A number written to show the value of each digit added together. Example: 5000 + 400 + 30 + 7'},
+      {icon:'📋', term:'Place Value Chart: TH H T O', def:'The places are Thousands, Hundreds, Tens, and Ones. In 2184 the 2 is in the thousands place, the 1 in the hundreds, the 8 in the tens, and the 4 in the ones.'},
+      {icon:'🔎', term:'Finding a Digit in a Place', def:'Always count the places starting from the RIGHT: ones, then tens, then hundreds, then thousands. In 8104 the tens place holds a 0.'},
       {icon:'📊', term:'How to Expand a Number', def:'Write the value of each digit starting with the highest place value, and put a plus sign in between each one.'},
       {icon:'🔍', term:'Example: 2184', def:'2 thousands = 2000, 1 hundred = 100, 8 tens = 80, 4 ones = 4. So 2184 = 2000 + 100 + 80 + 4.'},
       {icon:'0️⃣', term:'What About Zero?', def:'A zero has no value, so we leave it out. 8603 = 8000 + 600 + 3, because there are 0 tens.'},
       {icon:'🔙', term:'Back to Standard Form', def:'Add all the parts back together. 700 + 50 + 4 = 754.'},
     ],
     quiz:[
+      {q:'In 2369, which digit is in the ones place?', options:['9','6','3','2'], correct:0, explain:'Counting from the right: 9 ones, 6 tens, 3 hundreds, 2 thousands. The ones place holds the 9.'},
+      {q:'In 8104, which digit is in the tens place?', options:['0','1','4','8'], correct:0, explain:'8104 is 8 thousands, 1 hundred, 0 tens and 4 ones, so the tens place holds a 0.'},
+      {q:'In 569, which digit is in the thousands place?', options:['0','5','6','9'], correct:0, explain:'569 has no thousands at all, so the thousands place holds a 0.'},
       {q:'Write 974 in expanded form.', options:['900 + 70 + 4','90 + 70 + 4','900 + 7 + 40','9 + 7 + 4'], correct:0, explain:'9 hundreds = 900, 7 tens = 70, 4 ones = 4. So 974 = 900 + 70 + 4.'},
       {q:'Write 4329 in expanded form.', options:['4000 + 300 + 20 + 9','400 + 30 + 20 + 9','4000 + 30 + 200 + 9','4 + 3 + 2 + 9'], correct:0, explain:'4 thousands + 3 hundreds + 2 tens + 9 ones = 4000 + 300 + 20 + 9.'},
       {q:'Write 7548 in expanded form.', options:['7000 + 500 + 40 + 8','7000 + 50 + 400 + 8','700 + 500 + 40 + 8','7000 + 500 + 4 + 80'], correct:0, explain:'7 thousands + 5 hundreds + 4 tens + 8 ones = 7000 + 500 + 40 + 8.'},
@@ -520,26 +628,31 @@ const LESSONS = [
   {
     id:'money', emoji:'💰', title:'Pesos and Centavos', subtitle:'Philippine Bills, Coins, and Amounts',
     flashcards:[
-      {icon:'💵', term:'Philippine Bills', def:'The bills are the 50-peso, 100-peso, 200-peso, 500-peso, and 1000-peso bills.'},
-      {icon:'🪙', term:'Philippine Coins', def:'The coins are 5 centavos, 25 centavos, 1 peso, 5 pesos, 10 pesos, and 20 pesos.'},
-      {icon:'💯', term:'Centavos and Pesos', def:'100 centavos make 1 peso.'},
+      {icon:'💵', art:allBills(92), term:'Philippine Bills', def:'The bills are the 50, 100, 200, 500, and 1000-peso bills. Each one has its own colour, so you can tell them apart across the room.'},
+      {icon:'🪙', art:allCoins(3.4), term:'Philippine Coins', def:'The coins are 5 sentimo, 25 sentimo, 1 piso, 5 piso, 10 piso, and 20 piso. On this set the bigger the coin, the more it is worth.'},
+      {icon:'☀️', art:coinSvg('5s',4.6)+coinSvg('25s',4.6), term:'The Sentimo Coins', def:'The two smallest coins are the centavo coins. They are marked SENTIMO, the Filipino word for centavo, and they show a small sun instead of a face.'},
+      {icon:'🔩', art:coinSvg('5p',4.6), term:'The 5-Piso Coin', def:'The 5-piso coin is not round. Count the sides and you will find nine, so you can pick it out even without looking.'},
+      {icon:'🟠', art:coinSvg('20p',4.6), term:'The 20-Piso Coin', def:'The 20 piso is the biggest coin, and the only one with a copper-coloured ring around a silver middle.'},
+      {icon:'💯', art:moneyGroup(['25s','25s','25s','25s'],{coinPx:4.0}), term:'100 Centavos Make 1 Peso', def:'Four 25-centavo coins make 100 centavos, and 100 centavos are worth exactly 1 peso.'},
+      {icon:'🧮', art:moneyGroup(['50','20p','1p','5s','5s','5s']), term:'Counting Money', def:'Count the pesos first: 50 + 20 + 1 = 71 pesos. Then count the centavos: 5 + 5 + 5 = 15 centavos. Put them together as 71.15.'},
       {icon:'⚫', term:'The Dot Separates Them', def:'The dot separates the pesos from the centavos. In 230.35, the 230 is pesos and the 35 is centavos.'},
-      {icon:'🧮', term:'Counting Example', def:'50 + 20 + 1 = 71 pesos, and 5c + 5c + 5c = 15 centavos. We write this as 71.15.'},
       {icon:'🗣️', term:'Reading Money', def:'71.15 is read as seventy-one pesos and fifteen centavos.'},
-      {icon:'🛒', term:'Count Bills First', def:'Count all the bills and peso coins to get the pesos, then count the centavo coins. Put them together with a dot.'},
     ],
     quiz:[
-      {q:'A 50-peso bill, a 20-peso coin, a 1-peso coin, and three 5-centavo coins. How much is this?', options:['71.15','70.15','71.05','7.115'], correct:0, explain:'50 + 20 + 1 = 71 pesos, and 5c + 5c + 5c = 15 centavos, so it is 71.15.'},
-      {q:'A 200-peso bill, a 20-peso coin, a 10-peso coin, one 25-centavo coin, and two 5-centavo coins. How much is this?', options:['230.35','230.25','220.35','203.35'], correct:0, explain:'200 + 20 + 10 = 230 pesos, and 25c + 5c + 5c = 35 centavos, so it is 230.35.'},
-      {q:'A 500-peso bill, a 10-peso coin, a 5-peso coin, and three 25-centavo coins. How much is this?', options:['515.75','515.25','510.75','505.75'], correct:0, explain:'500 + 10 + 5 = 515 pesos, and 25c + 25c + 25c = 75 centavos, so it is 515.75.'},
+      {q:'How much money is this?', art:moneyGroup(['50','20p','1p','5s','5s','5s']), options:['71.15','70.15','71.05','7.115'], correct:0, explain:'Pesos: 50 + 20 + 1 = 71. Centavos: 5 + 5 + 5 = 15. Together it is 71.15.'},
+      {q:'How much money is this?', art:moneyGroup(['200','20p','10p','25s','5s','5s']), options:['230.35','230.25','220.35','203.35'], correct:0, explain:'Pesos: 200 + 20 + 10 = 230. Centavos: 25 + 5 + 5 = 35. Together it is 230.35.'},
+      {q:'How much money is this?', art:moneyGroup(['500','10p','5p','25s','25s','25s']), options:['515.75','515.25','510.75','505.75'], correct:0, explain:'Pesos: 500 + 10 + 5 = 515. Centavos: 25 + 25 + 25 = 75. Together it is 515.75.'},
+      {q:'How much money is this?', art:moneyGroup(['500','20p','10p','1p','1p']), options:['532.00','531.00','522.00','532.50'], correct:0, explain:'Pesos: 500 + 20 + 10 + 1 + 1 = 532. There are no centavo coins, so we write 532.00.'},
+      {q:'How much money is this?', art:moneyGroup(['500','200','20p','1p','1p','5s']), options:['722.05','722.50','702.05','721.05'], correct:0, explain:'Pesos: 500 + 200 + 20 + 1 + 1 = 722. Centavos: just one 5, so 05. Together it is 722.05.'},
+      {q:'How much money is this?', art:moneyGroup(['1000','1000','500','10p','25s']), options:['2510.25','2501.25','2510.75','1510.25'], correct:0, explain:'Pesos: 1000 + 1000 + 500 + 10 = 2510. Centavos: one 25. Together it is 2510.25.'},
+      {q:'How much money is this?', art:moneyGroup(['500','100','20p','10p','5p','1p','1p','25s','5s']), options:['637.30','637.03','627.30','637.25'], correct:0, explain:'Pesos: 500 + 100 + 20 + 10 + 5 + 1 + 1 = 637. Centavos: 25 + 5 = 30. Together it is 637.30.'},
+      {q:'Which bill is this?', art:moneyGroup(['100']), options:['100 pesos','10 pesos','1000 pesos','100 centavos'], correct:0, explain:'It is the one hundred-peso bill. The 100 and the 1000 are easy to mix up, so always count the zeros.'},
+      {q:'Which coin is this?', art:moneyGroup(['25s'],{coinPx:5.2}), options:['25 centavos','25 pesos','5 centavos','2 pesos'], correct:0, explain:'It is marked 25 SENTIMO, and sentimo is the Filipino word for centavo. It is one of the two small sun coins.'},
+      {q:'Which coin is this?', art:moneyGroup(['20p'],{coinPx:5.2}), options:['20 pesos','20 centavos','10 pesos','2 pesos'], correct:0, explain:'The copper-coloured ring around a silver middle only ever means the 20-piso coin, the biggest one.'},
+      {q:'Which coin has nine sides instead of being round?', art:moneyGroup(['5p'],{coinPx:5.2}), options:['The 5-piso coin','The 1-piso coin','The 25-centavo coin','The 20-piso coin'], correct:0, explain:'The 5-piso coin is nine-sided, so you can tell it apart from the round coins just by its edges.'},
       {q:'How do we read 230.35?', options:['Two hundred thirty pesos and thirty-five centavos','Two hundred thirty-five pesos','Two hundred thirty centavos and thirty-five pesos','Twenty-three pesos and thirty-five centavos'], correct:0, explain:'The part before the dot is the pesos and the part after the dot is the centavos.'},
       {q:'What does the dot in 71.15 separate?', options:['The pesos from the centavos','The tens from the ones','The bills from the coins','The hundreds from the tens'], correct:0, explain:'The dot separates the pesos on the left from the centavos on the right.'},
-      {q:'How many centavos make 1 peso?', options:['100','10','25','50'], correct:0, explain:'100 centavos are equal to 1 peso.'},
-      {q:'Which of these amounts comes as a bill, not a coin?', options:['500 pesos','25 centavos','10 pesos','5 centavos'], correct:0, explain:'The bills are 50, 100, 200, 500, and 1000 pesos. The 10 pesos, 25 centavos and 5 centavos all come as coins.'},
-      {q:'How much are two 25-centavo coins together?', options:['50 centavos','25 centavos','75 centavos','2 pesos'], correct:0, explain:'25c + 25c = 50 centavos.'},
-      {q:'What does 532.00 mean?', options:['Five hundred thirty-two pesos and no centavos','Five hundred thirty-two centavos','Five pesos and thirty-two centavos','Fifty-three pesos and two centavos'], correct:0, explain:'The 00 after the dot means there are no centavos at all.'},
-      {q:'How do you write seven hundred twenty-two pesos and five centavos?', options:['722.05','722.50','7225','72.25'], correct:0, explain:'722 pesos goes before the dot, and 05 centavos goes after it.'},
-      {q:'How do we read 2510.25?', options:['Two thousand five hundred ten pesos and twenty-five centavos','Two thousand five hundred ten centavos and twenty-five pesos','Two hundred fifty-one pesos and twenty-five centavos','Two thousand fifty-one pesos and twenty-five centavos'], correct:0, explain:'2510 is the pesos and 25 is the centavos.'},
+      {q:'How many centavos make 1 peso?', options:['100','10','25','50'], correct:0, explain:'100 centavos are equal to 1 peso, which is why four 25-centavo coins make a peso.'},
       {q:'True or False: A 5-centavo coin is worth more than a 1-peso coin.', options:['True','False'], correct:1, explain:'1 peso is 100 centavos, so the 1-peso coin is worth much more than 5 centavos.'},
     ]
   },
@@ -574,7 +687,7 @@ function prepareQuestion(q){
   const order = shuffle(q.options.map((_,i)=>i));
   const options = order.map(i=>q.options[i]);
   const correct = order.indexOf(q.correct);
-  return {q:q.q, options, correct, explain:q.explain};
+  return {q:q.q, options, correct, explain:q.explain, art:q.art};
 }
 function buildQuizSet(lesson){
   if(lesson.generate) return lesson.generate(8);
@@ -815,7 +928,9 @@ function renderCard(){
   const lesson = LESSONS[currentLessonIdx];
   document.getElementById('cards-title').textContent = lesson.title;
   const fc = lesson.flashcards[cardIdx];
-  document.getElementById('card-icon').textContent = fc.icon;
+  const cardIcon = document.getElementById('card-icon');
+  if(fc.art){ cardIcon.innerHTML = fc.art; cardIcon.classList.add('has-art'); }
+  else { cardIcon.textContent = fc.icon; cardIcon.classList.remove('has-art'); }
   document.getElementById('card-term').textContent = fc.term;
   document.getElementById('card-def').textContent = fc.def;
   document.getElementById('card-prev').disabled = cardIdx === 0;
@@ -879,6 +994,7 @@ function renderQuestion(){
 
   if(q.type === 'numberline'){
     document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: Find the sum.`;
+    document.getElementById('q-art').classList.add('hidden');
     document.getElementById('q-options').classList.add('hidden');
     document.getElementById('q-numberline').classList.remove('hidden');
     renderNumberlineQuestion(q);
@@ -888,6 +1004,9 @@ function renderQuestion(){
   document.getElementById('q-numberline').classList.add('hidden');
   document.getElementById('q-options').classList.remove('hidden');
   document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: ${q.q}`;
+  const qArt = document.getElementById('q-art');
+  if(q.art){ qArt.innerHTML = q.art; qArt.classList.remove('hidden'); }
+  else { qArt.innerHTML = ''; qArt.classList.add('hidden'); }
   const opts = document.getElementById('q-options');
   opts.innerHTML = '';
   q.options.forEach((opt, idx)=>{
