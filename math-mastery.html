@@ -293,7 +293,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="hero-scene" viewBox="0 0 200 200" id="hero-scene-svg"></svg>
       <div>
         <h1>Math Mastery</h1>
-        <p>Divisibility, GEMDAS, fractions, decimals, and word problems! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the <b>UPAC Walkthrough</b> to practise the four steps, the <b>Case Studies</b> when you want to think a real situation all the way through, and the Practice Test once every lesson is glowing!</p>
+        <p>Divisibility, GEMDAS, adding, subtracting, multiplying and dividing fractions, decimals, and word problems! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the <b>UPAC Walkthrough</b> to practise the four steps, the <b>Case Studies</b> when you want to think a real situation all the way through, and the Practice Test once every lesson is glowing!</p>
         <div class="points-total" id="points-total-badge"></div>
       </div>
     </div>
@@ -1174,10 +1174,11 @@ function genDecFracQuestion(){
     const r = reduceFrac(num, pow);
     const correct = r.num + '/' + r.den;
     return mc4(
-      `Convert <b>${decStr}</b> to a fraction in <b>simplest form</b>.`,
+      pick([`Convert <b>${decStr}</b> to a fraction in <b>simplest form</b>.`, `Which fraction is equal to <b>${decStr}</b>?`]),
       correct,
       [
         num + '/' + pow,
+        r.den + '/' + num,                     // flipped, like choosing 2/5 for 0.5
         num + '/' + (pow * 10),
         r.den + '/' + r.num
       ],
@@ -1209,6 +1210,316 @@ function genDecFracQuestion(){
 }
 function genDecFracSet(n){
   return Array.from({length:n}, ()=> genDecFracQuestion());
+}
+
+/* ================= GENERATOR: Adding & Subtracting Fractions ================= */
+/* Built from her pre-assessment, where she added straight across (1/2 + 1/4 = 2/6)
+   and subtracted straight across (5/6 - 1/3 = 4/3). Those exact slips are always
+   among the distractors, written unsimplified the way she wrote them. */
+const ADD_DENS = [2, 3, 4, 5, 6, 8, 9, 10, 12];
+function lcm(a, b){ return a / gcd(a, b) * b; }
+function fracWithDen(d){
+  let n;
+  do { n = randInt(1, d - 1); } while(gcd(n, d) !== 1);
+  return n;
+}
+
+/* Two different denominators with an LCD of at most 24. Half the time one
+   denominator is a multiple of the other, like 2 & 4 and 6 & 3 on her test. */
+function pickDissimilarDens(){
+  let d1, d2;
+  do {
+    d1 = pick(ADD_DENS); d2 = pick(ADD_DENS);
+  } while(d1 === d2 || lcm(d1, d2) > FRIENDLY_DEN || (Math.random() < 0.5 && lcm(d1, d2) !== Math.max(d1, d2)));
+  return [d1, d2];
+}
+
+function renameLine(n, d, lcd){
+  const k = lcd / d;
+  return k === 1 ? `${n}/${d} already has the LCD.` : `${n}/${d} = ${n}&times;${k} / ${d}&times;${k} = <b>${n*k}/${lcd}</b>`;
+}
+
+function buildAddSub(op, similar){
+  for(;;){
+    let d1, d2;
+    if(similar){ d1 = d2 = pick(ADD_DENS.filter(d => d > 2)); }
+    else { [d1, d2] = pickDissimilarDens(); }
+    const n1 = fracWithDen(d1), n2 = fracWithDen(d2);
+    if(similar && n1 === n2) continue;
+    const lcd = lcm(d1, d2);
+    const a = n1 * (lcd / d1), b = n2 * (lcd / d2);
+    if(op === '-' && a <= b) continue;
+    const num = op === '+' ? a + b : a - b;
+    if(!friendlyFrac(num, lcd)) continue;
+    return {n1, d1, n2, d2, lcd, a, b, num};
+  }
+}
+
+function addSubExplain(p, op, withNote){
+  const note = withNote ? simplifyNote(p.num, p.lcd) : '';
+  const sym = op === '+' ? '+' : '&minus;';
+  const verb = op === '+' ? 'Add' : 'Subtract';
+  if(p.d1 === p.d2){
+    return `These are <b>similar fractions</b> (same denominator), so ${verb.toLowerCase()} the numerators and keep the denominator:<br>` +
+      `${p.n1}/${p.d1} ${sym} ${p.n2}/${p.d2} = ${showReduceBold(p.num, p.lcd)}` + note;
+  }
+  return `These are <b>dissimilar fractions</b>, so find the LCD first.<br>` +
+    `<b>1. LCD</b> of ${p.d1} and ${p.d2} is <b>${p.lcd}</b>.<br>` +
+    `<b>2. Rename:</b> ${renameLine(p.n1, p.d1, p.lcd)} &middot; ${renameLine(p.n2, p.d2, p.lcd)}<br>` +
+    `<b>3. ${verb}</b> the numerators, keep the LCD: ${p.a}/${p.lcd} ${sym} ${p.b}/${p.lcd} = ${p.num}/${p.lcd}<br>` +
+    `<b>4. Simplify:</b> ${showReduceBold(p.num, p.lcd)}` + note;
+}
+
+/* 1/2 + 1/4 -> "2/6": numerators and denominators both combined. Returned raw,
+   because that is how she wrote it; null when it would be meaningless. */
+function acrossSlip(p, op){
+  const top = op === '+' ? p.n1 + p.n2 : p.n1 - p.n2;
+  const bot = op === '+' ? p.d1 + p.d2 : p.d1 - p.d2;
+  if(top <= 0 || bot <= 0) return null;
+  return top + '/' + bot;
+}
+
+/* Two wrong options worth the same amount (5/10 and 1/2) can be ruled out as a
+   pair, which gives the answer away. Keep one per value; the only allowed twin is
+   the unsimplified form of the correct answer, which is the "simplify" trap. */
+function distinctWrongs(correct, list){
+  const val = t => { const m = String(t).match(/^(?:(\d+) )?(\d+)\/(\d+)$/); return m ? (+(m[1] || 0)) + m[2] / m[3] : Number(t); };
+  const seen = new Set(), out = [];
+  list.forEach(t => {
+    if(!t || t === correct) return;
+    const v = val(t);
+    const twin = Math.abs(v - val(correct)) < 1e-9;
+    const key = twin ? 'twin' : v.toFixed(9);
+    if(seen.has(key)) return;
+    seen.add(key); out.push(t);
+  });
+  return out;
+}
+
+function genAddSubQuestion(){
+  const type = pick(['addSimilar','subSimilar','addDissimilar','addDissimilar','subDissimilar','subDissimilar',
+                     'lcd','rename','mistake','vocab','firstStep']);
+
+  if(type === 'addSimilar' || type === 'subSimilar' || type === 'addDissimilar' || type === 'subDissimilar'){
+    const op = type.startsWith('add') ? '+' : '-';
+    const p = buildAddSub(op, type === 'addSimilar' || type === 'subSimilar');
+    const sym = op === '+' ? '+' : '&minus;';
+    const correct = fracStr(p.num, p.lcd);
+    const wrongs = [
+      acrossSlip(p, op),
+      fracToString(p.num, p.lcd),
+      op === '+' ? fracStr(p.n1 + p.n2, p.lcd) : fracStr(Math.abs(p.n1 - p.n2) || 1, p.lcd),
+      op === '+' ? fracStr(p.a + p.b, p.lcd * 2) : fracStr(p.a + p.b, p.lcd)
+    ];
+    return mc4(
+      `What is <b>${p.n1}/${p.d1} ${sym} ${p.n2}/${p.d2}</b>? Write it in simplest form.`,
+      correct, distinctWrongs(correct, wrongs.concat(numericVariants(correct), [fracStr(p.num + 1, p.lcd), fracStr(Math.max(1, p.num - 1), p.lcd), fracStr(p.num + p.lcd, p.lcd)])), addSubExplain(p, op, true)
+    );
+  }
+
+  if(type === 'lcd'){
+    const [d1, d2] = pickDissimilarDens();
+    const n1 = fracWithDen(d1), n2 = fracWithDen(d2);
+    const L = lcm(d1, d2);
+    return mc4(
+      `What is the <b>LCD</b> (least common denominator) of <b>${n1}/${d1}</b> and <b>${n2}/${d2}</b>?`,
+      String(L),
+      [String(d1 * d2), String(d1 + d2), String(Math.min(d1, d2)), String(L * 2)],
+      `The LCD is the <b>smallest</b> number that both denominators divide into evenly.<br>` +
+      `Multiples of ${Math.max(d1, d2)}: ${[1,2,3,4].map(k => Math.max(d1, d2) * k).join(', ')}&hellip; ` +
+      `The first one that ${Math.min(d1, d2)} also divides into is <b>${L}</b>.`
+    );
+  }
+
+  if(type === 'rename'){
+    let d1, d2;
+    do { [d1, d2] = pickDissimilarDens(); } while(lcm(d1, d2) === d1);
+    const n1 = fracWithDen(d1), n2 = fracWithDen(d2);
+    const L = lcm(d1, d2), k = L / d1;
+    return mc4(
+      `To add <b>${n1}/${d1} + ${n2}/${d2}</b>, you rename both fractions with the LCD <b>${L}</b>. What does <b>${n1}/${d1}</b> become?`,
+      `${n1 * k}/${L}`,
+      [`${n1}/${L}`, `${n1 + (L - d1)}/${L}`, `${n1 * k}/${d1}`, `${n1 + k}/${L}`],
+      `${d1} &times; <b>${k}</b> = ${L}, so multiply the numerator by the same ${k}: ` +
+      `${n1}&times;${k} / ${d1}&times;${k} = <b>${n1 * k}/${L}</b>.<br>Whatever you do to the bottom, you do to the top.`
+    );
+  }
+
+  if(type === 'mistake'){
+    const op = pick(['+', '-']);
+    let p, slip;
+    const val = str => { const [t, b] = str.split('/').map(Number); return t / b; };
+    /* The wrong answer is shown unsimplified on purpose (her test paper read 2/6),
+       but only as a proper fraction: 8/4 would be a puzzle of its own. */
+    do { p = buildAddSub(op, false); slip = acrossSlip(p, op); } while(!slip || val(slip) >= 1 || val(slip) === p.num / p.lcd);
+    const sym = op === '+' ? '+' : '&minus;';
+    const name = pick(['Mia', 'Carlo', 'Lara', 'Ben']);
+    /* Only offer the sense check when it really does expose the slip. Adding across
+       always lands between the two fractions, so it is smaller than the bigger one. */
+    const big = p.n1 / p.d1 >= p.n2 / p.d2 ? `${p.n1}/${p.d1}` : `${p.n2}/${p.d2}`;
+    const check = op === '+'
+      ? `<br><i>Quick check:</i> adding makes an answer <b>bigger than both</b> fractions, but ${slip} is smaller than ${big}. That tells you something went wrong.`
+      : (val(slip) >= p.n1 / p.d1 ? `<br><i>Quick check:</i> subtracting must give <b>less</b> than ${p.n1}/${p.d1}, but ${slip} is not less. That tells you something went wrong.` : '');
+    return mcQuestion(
+      `${name} wrote <b>${p.n1}/${p.d1} ${sym} ${p.n2}/${p.d2} = ${slip}</b>. What did ${name} do wrong?`,
+      `${op === '+' ? 'Added' : 'Subtracted'} the denominators instead of finding the LCD`,
+      ['Forgot to multiply the two numerators together',
+       `Should have ${op === '+' ? 'subtracted' : 'added'} the two fractions instead of ${op === '+' ? 'adding' : 'subtracting'}`,
+       'Nothing &mdash; the answer is already correct'],
+      `You never ${op === '+' ? 'add' : 'subtract'} the denominators. Find the LCD, rename, then ${op === '+' ? 'add' : 'subtract'} only the numerators.<br>` +
+      addSubExplain(p, op) + check
+    );
+  }
+
+  if(type === 'vocab'){
+    const kind = pick(['similar', 'dissimilar', 'equivalent']);
+    const f = () => { const d = pick(ADD_DENS); return {n: fracWithDen(d), d}; };
+    const pair = (a, b) => `${a.n}/${a.d} and ${b.n}/${b.d}`;
+    const three = (gen, avoid) => { const out = new Set(); while(out.size < 3){ const x = gen(); if(x !== avoid) out.add(x); } return [...out]; };
+    const samePair = () => { let d = pick(ADD_DENS.filter(x => x > 2)), a, b; do { a = fracWithDen(d); b = fracWithDen(d); } while(a === b); return pair({n:a, d}, {n:b, d}); };
+    const diffPair = () => { const [d1, d2] = pickDissimilarDens(); return pair({n: fracWithDen(d1), d: d1}, {n: fracWithDen(d2), d: d2}); };
+    /* An equivalent pair has to show one fraction unsimplified — that is the
+       whole point of the question (her test used 3/6 and 1/2). */
+    const eqPair = () => { const a = f(), k = randInt(2, 4); return pair({n: a.n * k, d: a.d * k}, a); };
+    const notEqPair = () => { const a = f(), k = randInt(2, 4); return pair({n: a.n * k + 1, d: a.d * k}, a); };
+    if(kind === 'similar'){
+      return mcQuestion('Which pair shows <b>similar</b> fractions?', samePair(), three(diffPair),
+        '<b>Similar</b> fractions have the <b>same denominator</b>. Look only at the bottom numbers.');
+    }
+    if(kind === 'dissimilar'){
+      return mcQuestion('Which pair shows <b>dissimilar</b> fractions?', diffPair(), three(samePair),
+        '<b>Dissimilar</b> fractions have <b>different denominators</b>. These are the ones that need an LCD before you add or subtract.');
+    }
+    const eq = eqPair();
+    return mcQuestion('Which pair shows <b>equivalent</b> fractions?', eq, three(notEqPair, eq),
+      '<b>Equivalent</b> fractions name the <b>same amount</b>. Simplify the fraction with the bigger numbers: if it becomes the other fraction, they are equivalent.');
+  }
+
+  const which = pick(['adding', 'subtracting']);
+  return mcQuestion(
+    `What is the <b>first step</b> in ${which} dissimilar fractions?`,
+    'Find the LCD',
+    [`${which === 'adding' ? 'Add' : 'Subtract'} the denominators`, 'Multiply the numerators', `${which === 'adding' ? 'Add' : 'Subtract'} the numerators`],
+    'Dissimilar fractions have different denominators, so <b>find the LCD first</b>. Then rename, then work with the numerators only, then simplify.'
+  );
+}
+function genAddSubSet(n){
+  return Array.from({length:n}, ()=> genAddSubQuestion());
+}
+
+/* ================= GENERATOR: Comparing & Ordering Decimals ================= */
+/* Her pre-assessment item: order 0.25, 0.52, 0.205 from least to greatest. She put
+   them greatest to least, so the reversed list is always a distractor — as is the
+   "more digits means bigger" order. Values are handled as integer thousandths. */
+function decStr(w, th){
+  const frac = String(th).padStart(3, '0').replace(/0+$/, '');
+  return frac ? w + '.' + frac : w + '.0';
+}
+function padded(w, th){ return w + '.' + String(th).padStart(3, '0'); }
+function decPlaces(th){ return String(th).padStart(3, '0').replace(/0+$/, '').length; }
+
+/* 0.ab, 0.ba, 0.a0b — the same digits, three lengths, like her test */
+function trapTriple(){
+  let a, b;
+  do { a = randInt(1, 9); b = randInt(1, 9); } while(a === b);
+  return [a * 100 + b * 10, b * 100 + a * 10, a * 100 + b];
+}
+function randomTriple(){
+  const out = new Set();
+  while(out.size < 3){
+    const places = randInt(1, 3);
+    const unit = [100, 10, 1][places - 1];
+    let th;
+    do { th = randInt(1, 999); th -= th % unit; } while(th === 0 || th % (unit * 10) === 0);
+    out.add(th);
+  }
+  return [...out];
+}
+
+/* Only warn about digit count when that is the trap in this very question —
+   saying "fewest digits is not automatically smallest" when it is would confuse. */
+function lengthTrapNote(vals, want, best){
+  const places = vals.map(decPlaces), most = Math.max(...places), fewest = Math.min(...places);
+  if(want === 'greatest' && decPlaces(best) !== most) return ' More digits does not mean bigger.';
+  if(want === 'least' && decPlaces(best) !== fewest) return ' Fewer digits does not mean smaller.';
+  return '';
+}
+
+function genOrderDecQuestion(){
+  const type = pick(['order','order','order','compare','compare','extreme','extreme','zeros']);
+  const w = Math.random() < 0.7 ? 0 : randInt(1, 9);
+
+  if(type === 'order'){
+    const vals = shuffle(Math.random() < 0.6 ? trapTriple() : randomTriple());
+    const up = Math.random() < 0.6;
+    const asc = vals.slice().sort((x, y) => x - y);
+    const target = up ? asc : asc.slice().reverse();
+    const list = arr => arr.map(v => decStr(w, v)).join(', ');
+    const byLength = vals.slice().sort((x, y) => decPlaces(x) - decPlaces(y) || x - y);
+    const perms = [[0,2,1],[1,0,2],[1,2,0],[2,0,1]].map(ix => ix.map(i => asc[i]));
+    const wrongs = [list(target.slice().reverse()), list(up ? byLength : byLength.slice().reverse())]
+      .concat(perms.map(list));
+    return mc4(
+      `What is the correct arrangement of these decimals from <b>${up ? 'least to greatest' : 'greatest to least'}</b>: ${list(vals)}?`,
+      list(target), wrongs,
+      `Line up the decimal points and fill the empty places with zeros: ${vals.map(v => padded(w, v)).join(', ')}.<br>` +
+      `Now compare them like whole numbers: ${asc.map(v => String(v).padStart(3, '0')).join(' &lt; ')}.<br>` +
+      `${up ? '<b>Least</b> (smallest) comes first' : '<b>Greatest</b> (biggest) comes first'}: <b>${list(target)}</b>.<br>` +
+      `<i>Read the direction twice &mdash; the reversed list is always one of the choices.</i>`
+    );
+  }
+
+  if(type === 'compare'){
+    let x, y;
+    const kind = pick(['trap', 'trap', 'equal', 'plain']);
+    if(kind === 'equal'){ x = randInt(1, 9) * 100; y = x; }
+    else if(kind === 'trap'){
+      /* fewer digits but bigger: 0.4 vs 0.38 */
+      do { x = randInt(2, 9) * 100; y = randInt(10, 99) * 10 + (Math.random() < 0.5 ? randInt(1, 9) : 0); } while(y >= x || Math.floor(y / 100) === x / 100);
+      if(Math.random() < 0.5) [x, y] = [y, x];
+    } else {
+      do { x = randInt(1, 99) * 10; y = randInt(1, 99) * 10; } while(x === y);
+    }
+    const sx = decStr(w, x);
+    const sy = kind === 'equal' ? (w + '.' + String(y / 100) + '0') : decStr(w, y);
+    const correct = x > y ? '&gt;' : x < y ? '&lt;' : '=';
+    const word = x > y ? 'greater than' : x < y ? 'less than' : 'equal to';
+    return mcQuestion(
+      `Which symbol makes this true? <b>${sx} ___ ${sy}</b>`,
+      correct, ['&gt;', '&lt;', '='].filter(s => s !== correct),
+      `Fill with zeros so both have the same number of places: ${padded(w, x)} and ${padded(w, y)}.<br>` +
+      `Compare place by place from the left: ${sx} is <b>${word}</b> ${sy}, so the answer is <b>${correct}</b>.` +
+      (kind === 'equal' ? `<br><i>Adding a zero at the end of a decimal does not change its value.</i>` : '')
+    );
+  }
+
+  if(type === 'extreme'){
+    const want = pick(['greatest', 'least']);
+    let vals;
+    do { vals = [...new Set(randomTriple().concat(randomTriple()))].slice(0, 4); } while(vals.length < 4);
+    const best = want === 'greatest' ? Math.max(...vals) : Math.min(...vals);
+    return mcQuestion(
+      `Which decimal is the <b>${want}</b>?`,
+      decStr(w, best), vals.filter(v => v !== best).map(v => decStr(w, v)),
+      `Fill with zeros so they all have three places: ${vals.map(v => padded(w, v)).join(', ')}.<br>` +
+      `Then compare: the ${want} is <b>${decStr(w, best)}</b>.` + lengthTrapNote(vals, want, best)
+    );
+  }
+
+  const t = pick([
+    () => { const x = randInt(1, 9); return {q:`True or False: <b>${w}.${x}</b> and <b>${w}.${x}0</b> have the same value.`, a:true,
+      e:`True &mdash; a zero at the end of a decimal does not change its value: ${w}.${x} = ${w}.${x}0 = ${w}.${x}00.`}; },
+    () => { let x, y; do { x = randInt(2, 9); y = randInt(10, 99); } while(Math.floor(y / 10) >= x || y % 10 === 0); return {q:`True or False: <b>${w}.${y}</b> is greater than <b>${w}.${x}</b> because ${y} is bigger than ${x}.`, a:false,
+      e:`False &mdash; fill with zeros: ${w}.${y} vs ${w}.${x}0. The tenths digit decides first: ${Math.floor(y / 10)} ${Math.floor(y / 10) === 1 ? 'tenth is' : 'tenths are'} less than ${x} tenths, so ${w}.${y} is <b>less</b>.`}; },
+    () => ({q:'True or False: &ldquo;Least to greatest&rdquo; means you write the smallest number first.', a:true,
+      e:'True &mdash; <b>least</b> means smallest. Least to greatest starts small and ends big.'}),
+    () => ({q:'True or False: &ldquo;Least to greatest&rdquo; means you write the biggest number first.', a:false,
+      e:'False &mdash; that is <b>greatest to least</b>. Least to greatest starts with the smallest number.'})
+  ])();
+  return mcQuestion(t.q, t.a ? 'True' : 'False', [t.a ? 'False' : 'True'], t.e);
+}
+function genOrderDecSet(n){
+  return Array.from({length:n}, ()=> genOrderDecQuestion());
 }
 
 /* ================= LESSONS ================= */
@@ -1249,6 +1560,22 @@ const LESSONS = [
       {icon:'📏', term:'Proper vs. Improper', def:'A proper fraction has a numerator smaller than the denominator (like 3/4). An improper fraction has a numerator bigger than or equal to the denominator (like 7/4).'},
     ],
     generate: genFractionBasicsSet
+  },
+  {
+    id:'addsubfractions', emoji:'➕', title:'Adding &amp; Subtracting Fractions', subtitle:'Similar, dissimilar &amp; the LCD',
+    flashcards:[
+      {icon:'👯', term:'Similar Fractions', def:'Fractions with the <b>same denominator</b>, like 2/5 and 4/5.'},
+      {icon:'🔀', term:'Dissimilar Fractions', def:'Fractions with <b>different denominators</b>, like 2/3 and 1/4.'},
+      {icon:'🟰', term:'Equivalent Fractions', def:'Fractions that name the <b>same amount</b>, like 3/6 and 1/2. Multiply or divide the top and bottom by the <b>same</b> number to make one.'},
+      {icon:'➕', term:'Similar? Just the Numerators', def:'Add or subtract the <b>numerators</b> and <b>keep</b> the denominator. 2/7 + 3/7 = 5/7.'},
+      {icon:'🔢', term:'LCD', def:'The <b>least common denominator</b>: the smallest number both denominators divide into. LCD of 2 and 4 = 4 &middot; of 6 and 3 = 6 &middot; of 3 and 4 = 12.'},
+      {icon:'🪜', term:'Dissimilar? 4 Steps', def:'<b>1.</b> Find the LCD. <b>2.</b> Rename each fraction with the LCD. <b>3.</b> Add or subtract the numerators, keep the LCD. <b>4.</b> Simplify.'},
+      {icon:'✏️', term:'Example: 1/2 + 1/4', def:'LCD = 4. 1/2 = 2/4. Then 2/4 + 1/4 = <b>3/4</b>.'},
+      {icon:'✏️', term:'Example: 5/6 &minus; 1/3', def:'LCD = 6. 1/3 = 2/6. Then 5/6 &minus; 2/6 = 3/6 = <b>1/2</b>.'},
+      {icon:'🚫', term:'Never Add the Bottoms', def:'1/2 + 1/4 is <b>not</b> 2/6, and 5/6 &minus; 1/3 is <b>not</b> 4/3 &mdash; both were on your pre-assessment. Only the <b>numerators</b> are added or subtracted.'},
+      {icon:'✅', term:'Sense Check', def:'Adding must give <b>more</b> than each fraction: 2/6 is less than 1/2, so it cannot be right. Subtracting must give <b>less</b> than what you started with: 4/3 is more than 5/6, so it cannot be right.'},
+    ],
+    generate: genAddSubSet
   },
   {
     id:'multiplyfractions', emoji:'✖️', title:'Multiplying Fractions', subtitle:'Whole × Fraction, Fraction × Fraction, Mixed Numbers',
@@ -1295,6 +1622,7 @@ const LESSONS = [
       {icon:'💰', term:'Value', def:'What a digit is <b>worth</b> in a given number. The value of a digit is based on its place value.'},
       {icon:'➡️', term:'The Decimal Places in Order', def:'Reading right from the decimal point: <b>tenths</b> (1/10), <b>hundredths</b> (1/100), <b>thousandths</b> (1/1000), then ten thousandths and hundred thousandths.'},
       {icon:'🔎', term:'Example: 5.438', def:'<b>5</b> is in the ones place &middot; <b>4</b> is in the tenths place &middot; <b>3</b> is in the hundredths place &middot; <b>8</b> is in the thousandths place.'},
+      {icon:'👉', term:'Count From the POINT', def:'Always start counting at the decimal point. In <b>7.45</b>, the 4 is the <b>1st</b> digit after the point &rarr; <b>tenths</b>. The 5 is the 2nd &rarr; hundredths. (Item 14 on your pre-assessment.)'},
       {icon:'📉', term:'Each Place Is 10 Times Smaller', def:'The tenths place is one tenth the value of the ones place. Put another way, the place to the <b>left</b> is ten times the place to its right.'},
       {icon:'🗣️', term:'Reading Decimals in Words', def:'Say the whole number, say <b>&ldquo;and&rdquo;</b> for the point, then read the decimal part and name its <b>last</b> place. 2.08 = &ldquo;two and eight hundredths&rdquo;; 4.609 = &ldquo;four and six hundred nine thousandths&rdquo;.'},
       {icon:'⚠️', term:'Place Value vs Value', def:'For 3.482, the digit 4 has <b>place value</b> = tenths, but <b>value</b> = 0.4. One names the position, the other is what it is worth.'},
@@ -1314,6 +1642,19 @@ const LESSONS = [
     generate: genFindDigitSet
   },
   {
+    id:'orderdecimals', emoji:'📶', title:'Comparing &amp; Ordering Decimals', subtitle:'Least to greatest, &gt; &lt; =',
+    flashcards:[
+      {icon:'📍', term:'Line Up the Points', def:'Write the decimals one under another so the <b>decimal points line up</b>.'},
+      {icon:'0️⃣', term:'Fill With Zeros', def:'Add zeros at the end so every decimal has the same number of places. 0.5 = 0.50 = 0.500 &mdash; the value does not change.'},
+      {icon:'⬅️', term:'Compare From the Left', def:'Compare the <b>tenths</b> first. Only if they are equal, compare the hundredths, then the thousandths.'},
+      {icon:'⚠️', term:'Longer Is NOT Bigger', def:'0.205 has more digits than 0.25, but 0.205 is <b>smaller</b>: 0.205 vs 0.250 &rarr; 205 &lt; 250.'},
+      {icon:'↗️', term:'Least to Greatest', def:'Start with the <b>smallest</b>, end with the biggest. <b>Greatest to least</b> is the reverse. Read the direction twice!'},
+      {icon:'✏️', term:'Example From Your Test', def:'0.25, 0.52, 0.205 &rarr; 0.250, 0.520, 0.205 &rarr; least to greatest: <b>0.205, 0.25, 0.52</b>. (Your answer was greatest to least &mdash; right order, wrong direction.)'},
+      {icon:'🐊', term:'The Symbols', def:'<b>&gt;</b> greater than &middot; <b>&lt;</b> less than &middot; <b>=</b> equal to. The open side faces the bigger number. 0.4 &gt; 0.38.'},
+    ],
+    generate: genOrderDecSet
+  },
+  {
     id:'decfrac', emoji:'🔄', title:'Decimals &amp; Fractions', subtitle:'Converting both ways',
     flashcards:[
       {icon:'🔄', term:'Two Forms, One Value', def:'A decimal is just another way of writing a fraction &mdash; especially fractions with denominators like 10, 100 or 1000. Both forms can represent the same value.'},
@@ -1323,6 +1664,7 @@ const LESSONS = [
       {icon:'✏️', term:'Example: 0.125', def:'3 decimal places, so use 1,000. 0.125 = 125/1000, and simplifying gives <b>1/8</b>.'},
       {icon:'⬆️', term:'Fraction &rarr; Decimal', def:'<b>Divide the numerator by the denominator.</b> 1/2 = 1 &divide; 2 = 0.5 &middot; 3/4 = 3 &divide; 4 = 0.75 &middot; 3/8 = 3 &divide; 8 = 0.375 &middot; 7/20 = 7 &divide; 20 = 0.35.'},
       {icon:'🍕', term:'What a Fraction Is', def:'A way of showing part of a whole. The <b>numerator</b> (top) is the number of parts taken; the <b>denominator</b> (bottom) is the total equal parts.'},
+      {icon:'⚠️', term:'0.5 = 1/2, Not 2/5', def:'0.5 = 5/10 = <b>1/2</b>. The 5 is the numerator over 10 &mdash; it does not move to the bottom. 2/5 is 0.4. (Item 12 on your pre-assessment.)'},
       {icon:'✅', term:'Remember', def:'Decimal &rarr; Fraction: write it over 10, 100 or 1,000 and simplify. Fraction &rarr; Decimal: divide top by bottom.'},
     ],
     generate: genDecFracSet
@@ -1584,7 +1926,7 @@ function openLesson(i){
 
 function renderCard(){
   const lesson = LESSONS[currentLessonIdx];
-  document.getElementById('cards-title').textContent = lesson.title;
+  document.getElementById('cards-title').innerHTML = lesson.title;
   const fc = lesson.flashcards[cardIdx];
   document.getElementById('card-icon').textContent = fc.icon;
   document.getElementById('card-term').innerHTML = fc.term;
@@ -1633,7 +1975,7 @@ function startFinalExam(){
 
 function renderQuestion(){
   answered = false;
-  document.getElementById('quiz-title').textContent = currentQuizMeta.title;
+  document.getElementById('quiz-title').innerHTML = currentQuizMeta.title;
   updatePointsLive();
   const total = currentQuizSet.length;
   document.getElementById('quiz-progress').style.width = `${(quizIdx/total)*100}%`;
@@ -1697,7 +2039,7 @@ function renderResults(total){
   const stars = starsFor(quizScore/total);
   document.getElementById('results-heading').textContent =
     stars === 3 ? 'Sunrise Complete!' : stars > 0 ? 'Great Progress!' : 'Keep Practicing!';
-  document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
+  document.getElementById('results-score').innerHTML = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
   document.getElementById('points-earned').textContent = pointsRoundLine('this round');
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
 }

@@ -273,9 +273,9 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
   <div id="home" class="screen active">
     <div class="hero">
-      <span class="badge">TLE 5 · Lessons 4, 5 &amp; 6</span>
+      <span class="badge">TLE 5 · First Term</span>
       <h1>Craft Corner 🧵</h1>
-      <p>Stitch your embroidery hoop one correct answer at a time! Study Home Furnishings, Embroidery Tools, Designs and Stitches, Crochet Tools, Stitches and Abbreviations &mdash; then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
+      <p>Stitch your embroidery hoop one correct answer at a time! Study Home Furnishings, Embroidery Tools, Designs and Stitches, Crochet Tools, Stitches and Abbreviations, plus Hand and Machine Sewing &mdash; then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
       <div class="points-total" id="points-total-badge"></div>
     </div>
     <div class="card-list" id="homeList"></div>
@@ -553,6 +553,59 @@ const LESSONS = [
       {q:'Which abbreviation means "together"?', options:['tog','tg','tgr','to'], correct:0, explain:'<b>tog</b> means together, as in working two stitches together.'},
       {q:'A pattern tells you to "<b>sk</b> 1 <b>st</b>". What are you being told to do?', options:['Skip one stitch','Sew one stitch','Start one stitch','Shorten one stitch'], correct:0, explain:'<b>sk</b> = skip and <b>st</b> = stitch, so "sk 1 st" means skip one stitch.'}
     ]
+  },
+  {
+    id:'handsewing',
+    icon:'🪡',
+    title:'Hand Sewing & Sewing Tools',
+    subtitle:'Hand vs machine sewing, running stitch, correct tools',
+    cards:[
+      {front:'Hand Sewing', back:'Sewing with a <b>needle and thread</b>, done <b>without an electric sewing machine</b>.'},
+      {front:'Machine Sewing', back:'Sewing with a <b>sewing machine</b>.'},
+      {front:'Running Stitch in Sewing', back:'The same running stitch from embroidery. In sewing it is commonly used for making <b>strong, temporary stitches</b>. It should have <b>evenly spaced</b> stitches so the work is <b>neat and uniform</b>.'},
+      {front:'Why Use the Correct Tools?', back:'The correct sewing tools and equipment <b>make sewing safer and easier</b>.'},
+      {front:'Check Before You Sew', back:'Check your sewing tools and equipment <b>before using them</b> to make sure they are <b>safe</b> and in <b>good condition</b>.'},
+      {front:'Put Sharp Tools Away', back:'Leaving needles, pins, and scissors anywhere on the sewing table is <b>NOT SAFE</b> (UNSAFE). Put them back after using them.'}
+    ],
+    quiz:[
+      {q:'Which sewing method uses a needle and thread and is done without an electric sewing machine?', options:['hand sewing','weaving','embroidery','machine sewing'], correct:0, explain:'Needle and thread, no machine &rarr; <b>hand sewing</b>.'},
+      {q:'Which stitch is commonly used for making strong, temporary stitches?', options:['running stitch','satin stitch','chain stitch','lazy daisy stitch'], correct:0, explain:'The <b>running stitch</b> is the one for strong, temporary stitches.'},
+      {q:'Why is it important to use the correct sewing tools and equipment?', options:['to make sewing safer and easier','to use all the tools at once','to avoid finishing the project','to make the fabric feel heavier'], correct:0, explain:'The right tools make sewing <b>safer and easier</b>.'},
+      {q:'Why should a running stitch have evenly spaced stitches?', options:['to make the work neat and uniform','to make the fabric heavier','to make the thread longer','to make the needle sharper'], correct:0, explain:'Even spacing makes the work <b>neat and uniform</b>.'},
+      {q:'True or False: Hand sewing is done with an electric sewing machine.', options:['True','False'], correct:1, explain:'False — hand sewing uses only a <b>needle and thread</b>.'},
+      {q:'True or False: A learner should check the sewing tools and equipment before using them to make sure they are safe and in good condition.', options:['True','False'], correct:0, explain:'Correct — this was TRUE on your test.'},
+      {q:'True or False: It is safe to leave needles, pins, and scissors anywhere on the sewing table after using them.', options:['True','False'], correct:1, explain:'False — it is <b>NOT SAFE</b>. On your test the answer key wanted <b>NOT SAFE</b> or <b>UNSAFE</b>; &ldquo;DANGEROUS&rdquo; was not accepted.'},
+      {q:'On your test you had to change the underlined word to make the statement true: &ldquo;It is <u>safe</u> to leave needles, pins, and scissors anywhere on the sewing table.&rdquo; Which answer did the key accept?', options:['UNSAFE','DANGEROUS','RISKY','CAREFUL'], correct:0, explain:'The key accepted <b>UNSAFE</b> or <b>NOT SAFE</b>, the direct opposite of the underlined word. DANGEROUS means nearly the same thing, but it was marked wrong.'},
+      {q:'True or False: A running stitch should have evenly spaced stitches.', options:['True','False'], correct:0, explain:'Correct — so the work is neat and uniform.'},
+      {q:'What should you do with pins and scissors after using them?', options:['Put them back where they belong','Leave them anywhere on the table','Keep them in your pocket','Leave them on your chair'], correct:0, explain:'Sharp tools left lying around are <b>unsafe</b>, so put them away.'}
+    ]
+  },
+  {
+    id:'machinesewing',
+    icon:'🧵',
+    title:'Machine Sewing & Safety',
+    subtitle:'Steps, parts and what to do when something goes wrong',
+    cards:[
+      {front:'Preparing to Sew by Machine', back:'<b>A.</b> Prepare the fabric and materials. <b>B.</b> Check the sewing machine and its parts. <b>C.</b> Thread the sewing machine correctly. <b>D.</b> Begin sewing carefully.'},
+      {front:'Presser Foot', back:'The part that <b>holds the fabric firmly against the feed dogs</b> while you sew.'},
+      {front:'Note About Your Test', back:'Your test asked which part holds the fabric against the feed dogs, but <b>presser foot</b> was not one of the choices. The answer key said <b>needle</b>. In real sewing it is the <b>presser foot</b>; the needle carries the thread through the fabric. If the exact same question comes back with no presser foot choice, your teacher&rsquo;s key is <b>needle</b>.'},
+      {front:'Before Pressing the Foot Pedal', back:'<b>Check if the machine is properly threaded and the needle is correctly installed.</b>'},
+      {front:'Fabric Not Moving?', back:'<b>Stop the machine and check the presser foot and fabric placement.</b> Do not keep sewing faster.'},
+      {front:'Changing the Needle', back:'<b>Turn off</b> the sewing machine before changing the needle or making adjustments.'}
+    ],
+    quiz:[
+      {q:'What is the FIRST step in preparing to sew by machine?', options:['Prepare the fabric and materials.','Check the sewing machine and its parts.','Thread the sewing machine correctly.','Begin sewing carefully.'], correct:0, explain:'Order: prepare the fabric &rarr; check the machine &rarr; thread it &rarr; begin sewing.'},
+      {q:'Which step comes right AFTER checking the sewing machine and its parts?', options:['Thread the sewing machine correctly.','Prepare the fabric and materials.','Begin sewing carefully.','Turn off the sewing machine.'], correct:0, explain:'Check the machine, then <b>thread it</b>, then begin sewing.'},
+      {q:'What is the LAST step in preparing to sew by machine?', options:['Begin sewing carefully.','Thread the sewing machine correctly.','Check the sewing machine and its parts.','Prepare the fabric and materials.'], correct:0, explain:'You only <b>begin sewing</b> once everything else is ready.'},
+      {q:'Which part of the sewing machine holds the fabric firmly against the feed dogs?', options:['presser foot','bobbin','spool of thread','foot pedal'], correct:0, explain:'The <b>presser foot</b>. On your test this choice was missing and the key said needle.'},
+      {q:'Lewis is ready to use the sewing machine. What should he do before pressing the foot pedal?', options:['Check if the machine is properly threaded and the needle is correctly installed','Continue sewing faster','Turn off the sewing machine','Stop the machine and check the presser foot and fabric placement'], correct:0, explain:'Before starting, make sure it is <b>threaded</b> and the <b>needle is installed</b> correctly.'},
+      {q:'While sewing, Cynthia notices that the fabric is not moving properly under the presser foot. What should she do?', options:['Stop the machine and check the presser foot and fabric placement','Continue sewing faster','Turn off the sewing machine','Check if the machine is properly threaded and the needle is correctly installed'], correct:0, explain:'Something went wrong <b>while</b> sewing, so stop and check the <b>presser foot and fabric</b>.'},
+      {q:'Bryan needs to change the needle of the sewing machine. What should he do first?', options:['Turn off the sewing machine','Continue sewing faster','Stop the machine and check the presser foot and fabric placement','Check if the machine is properly threaded and the needle is correctly installed'], correct:0, explain:'Changing a part means <b>turning off</b> the machine first, so it cannot start while your fingers are near the needle.'},
+      {q:'True or False: A learner should turn off the sewing machine before changing the needle or making adjustments.', options:['True','False'], correct:0, explain:'Correct — this was TRUE on your test.'},
+      {q:'True or False: If the fabric is not moving properly, you should keep sewing faster.', options:['True','False'], correct:1, explain:'False — <b>stop</b> and check the presser foot and fabric placement.'},
+      {q:'True or False: You should thread the sewing machine before checking the machine and its parts.', options:['True','False'], correct:1, explain:'False — <b>check</b> the machine first, then thread it.'},
+      {q:'Lewis and Cynthia both need to check something. What is the difference?', options:['Lewis checks before starting; Cynthia stops to check during sewing.','Both of them should just sew faster so they can finish the project.','Lewis should stop in the middle of a seam, and Cynthia never starts.','Neither of them needs to check anything before or while sewing.'], correct:0, explain:'<b>Before</b> sewing: check threading and needle. <b>During</b> sewing, if the fabric will not move: stop and check the presser foot and fabric.'}
+    ]
   }
 ];
 const FINAL_EXAM_PER_LESSON = 3;
@@ -646,6 +699,8 @@ const STRATEGY = [
   {kicker:'TLE Tip #5', title:'Design names have giveaway words', body:'"Size, form, colour and texture" &rarr; <b>structural</b>. "Colours need not be real" &rarr; <b>decorative</b>. "From nature" &rarr; <b>naturalistic</b>. "Square and triangle" &rarr; <b>geometric</b>. "Suggestion, not appearance" &rarr; <b>abstract</b>. "Idealistic, not the natural form" &rarr; <b>conventional</b>.'},
   {kicker:'TLE Tip #6', title:'Embroidery stitches have giveaway words', body:'"Simplest and quickest" &rarr; <b>running</b>. "Like running but longer" &rarr; <b>straight</b>. "Thread emerges on the left" &rarr; <b>stem/outline</b>. "Plump, solidly filled" &rarr; <b>satin</b>. "One petal per loop" &rarr; <b>lazy daisy</b>. "Same hole, good for buttonholes" &rarr; <b>overcasting</b>.'},
   {kicker:'TLE Tip #7', title:'The two abbreviation traps', body:'<b>rep</b> is REPEAT but <b>rem</b> is REMAINING. <b>sc</b> is SINGLE CROCHET but <b>sl st</b> is SLIP STITCH. Examiners love both of these pairs &mdash; read the last letter carefully.'},
+  {kicker:'Lost Mark', title:'Change the word to its exact opposite', body:'When a TRUE/FALSE item says to change the underlined word, write its <b>direct opposite</b>: SAFE &rarr; <b>UNSAFE</b> or <b>NOT SAFE</b>. On your test DANGEROUS was marked wrong even though it means almost the same.'},
+  {kicker:'Sewing Tip', title:'Before vs during', body:'<b>Before</b> you press the foot pedal: check the threading and the needle. <b>During</b> sewing, if the fabric will not move: stop and check the presser foot and fabric placement.'},
   {kicker:'General Tip', title:'Reread before you finalize', body:'Read the question once more with your answer in mind. If it still matches what the lesson actually said, you have got it.'}
 ];
 

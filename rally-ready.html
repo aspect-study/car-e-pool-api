@@ -273,9 +273,9 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
   <div id="home" class="screen active">
     <div class="hero">
-      <span class="badge">P.E. &amp; Health · Grade 5 · Lesson 4</span>
+      <span class="badge">P.E. &amp; Health · Grade 5 · First Term</span>
       <h1>Rally Ready 🏓</h1>
-      <p>Build your pickleball court one correct answer at a time! Study Net &amp; Wall Games, the ABC Skills, Game Tactics, and the famous Kitchen rule — then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
+      <p>Build your pickleball court one correct answer at a time! Study Net &amp; Wall Games, the ABC Skills, Game Tactics, the famous Kitchen rule, and how to manage stress in healthy ways — then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
       <div class="points-total" id="points-total-badge"></div>
     </div>
     <div class="card-list" id="homeList"></div>
@@ -466,9 +466,92 @@ const LESSONS = [
       {q:'Why does the kitchen rule exist?', options:['To make the court look nicer','To stop players standing too close to the net and constantly smashing','To give the referee somewhere to stand','To slow down the serve'], correct:1, explain:'The kitchen prevents players from standing right at the net and smashing every ball downward.'},
       {q:'True or False: The inventors of pickleball first used ping-pong paddles and a badminton court.', options:['True','False'], correct:0, explain:'Correct — they improvised with ping-pong paddles, a perforated plastic ball, and a badminton court.'}
     ]
+  },
+  {
+    id:'stress',
+    icon:'🧠',
+    title:'Stress & Healthy Coping',
+    subtitle:'Signs of stress, healthy vs unhealthy choices',
+    cards:[
+      {front:'What Is Stress?', back:'The feeling of being worried, overwhelmed or under pressure &mdash; often from <b>responsibilities</b> like many assignments or an upcoming quiz.'},
+      {front:'Signs of Stress', back:'Feeling <b>worried</b>, <b>overwhelmed</b>, <b>nervous</b>, <b>anxious</b>, <b>tense</b>, <b>frustrated</b> or <b>mentally tired</b>, and having <b>difficulty concentrating</b>.'},
+      {front:'Healthy Coping', back:'Deals with the problem <b>calmly</b>: make a plan, take a short break, organize your tasks, ask for help, practise ahead, breathe deeply, move your body.'},
+      {front:'Unhealthy Coping', back:'Runs away from the problem or makes it worse: avoiding people or school, <b>blaming others</b>, pretending to be sick, staying up late on games, scrolling for hours, <b>comparing yourself</b> with classmates, ignoring your work.'},
+      {front:'Positive Thinking', back:'Reminding yourself that <b>mistakes are part of learning</b> and that you <b>can improve with more practice</b>.'},
+      {front:'Low Score? Make a Plan', back:'Sofia felt disappointed after a low score. The healthy choice: <b>create a plan to improve her study habits</b> &mdash; not blame others or stay away from school.'},
+      {front:'Overwhelmed? Break, Organize, Ask', back:'Marco still had unfinished homework. First: <b>take a short break, organize his tasks, and ask for help if needed</b>.'},
+      {front:'Nervous? Prepare and Breathe', back:'Paolo before presenting: <b>deep breathing and reviewing calmly</b>. Alyssa after forgetting her lines: <b>practise ahead of time and use deep breathing</b>.'}
+    ],
+    quiz:[
+      {q:'Miguel has several assignments and an upcoming quiz. He starts feeling worried and overwhelmed. What is the feeling Miguel is experiencing?', options:['stress caused by pressure from responsibilities','happiness from having free time','confidence from being well-prepared','excitement about learning new lessons'], correct:0, explain:'Worried and overwhelmed by assignments and a quiz &mdash; that is <b>stress</b> from the pressure of responsibilities.'},
+      {q:'After getting a low score on a test, Sofia feels disappointed. Which action demonstrates a healthy way of coping with stress?', options:['creating a plan to improve her study habits','avoiding her classmates','blaming others for the result instead of reflecting on her mistakes','staying away from school until she feels better about the test result'], correct:0, explain:'A plan faces the problem and fixes it. Avoiding, blaming and staying away only make it worse.'},
+      {q:'Paolo feels nervous before presenting in front of the class. Which action is most likely to help him manage his stress in a healthy way?', options:['practicing deep breathing and reviewing his presentation calmly','pretending to be sick so he can skip the presentation','playing online games until late at night to forget about it','comparing himself with classmates who speak better than he does'], correct:0, explain:'Deep breathing calms him, and reviewing prepares him. The other choices avoid the problem or make him feel worse.'},
+      {q:'After studying for several hours, Marco feels overwhelmed because he still has unfinished homework. What should Marco do <b>first</b> to cope with his stress in a healthy way?', options:['Take a short break, organize his tasks, and ask for help if needed.','Stay awake until midnight to finish everything at once.','Compare his work with his classmates and worry about finishing first.','Ignore all his homework and play online games for the rest of the day.'], correct:0, explain:'Rest a little, then make the work manageable. Staying up until midnight, comparing and ignoring the work all add stress.'},
+      {q:'Alyssa becomes upset after forgetting her lines during a class presentation. She still has another presentation next week. What is the <b>BEST</b> way for Alyssa to cope with her stress?', options:['Practice her presentation ahead of time and use deep breathing to stay calm.','Avoid volunteering for presentations again.','Blame her classmates for making her nervous.','Tell everyone she does not care about her grades.'], correct:0, explain:'Practising ahead fixes the cause (forgetting lines) and deep breathing handles the nerves.'},
+      {q:'True or False: Blaming others for a low score is a healthy way of coping with stress.', options:['True','False'], correct:1, explain:'False — blaming others stops you from <b>reflecting on your own mistakes</b>, so nothing improves.'},
+      {q:'True or False: Taking a short break and organizing your tasks can help when you feel overwhelmed.', options:['True','False'], correct:0, explain:'Correct — that is exactly what Marco should do first.'},
+      {q:'True or False: Pretending to be sick to skip a presentation is a healthy way to manage stress.', options:['True','False'], correct:1, explain:'False — it avoids the problem, and the presentation is still waiting. Practising and deep breathing are the healthy choices.'},
+      {q:'True or False: Feeling tense and having difficulty concentrating can be signs of stress.', options:['True','False'], correct:0, explain:'Correct — Joshua on your test felt exactly this after a long day of schoolwork.'},
+      {q:'Which of these is an example of <b>positive thinking</b>?', options:['&ldquo;Mistakes are part of learning. I can improve with practice.&rdquo;','&ldquo;I always fail at this, so there is no point in trying.&rdquo;','&ldquo;It is all my classmates&rsquo; fault that our team lost the game.&rdquo;','&ldquo;I will never play this game again after losing it today.&rdquo;'], correct:0, explain:'Positive thinking reminds you that mistakes help you learn and that you can get better.'},
+      {q:'Which of these is an <b>unhealthy</b> way to cope with stress?', options:['Comparing yourself with classmates who do better','Asking your teacher for help with the hard lesson','Making a plan to improve all your study habits','Taking a few slow, deep breaths before you begin'], correct:0, explain:'Comparing yourself with others only makes you feel worse. The other three are healthy ways to cope.'}
+    ]
+  },
+  {
+    id:'movestress',
+    icon:'🚴',
+    title:'Moving to Beat Stress',
+    subtitle:'Physical activities that calm you down',
+    cards:[
+      {front:'Why Move?', back:'<b>Physical activity</b> is a healthy way to reduce stress &mdash; it helps you feel calmer and clears your mind.'},
+      {front:'Mentally Tired? Take a Brisk Walk', back:'Ella felt mentally tired and stressed after hours of studying. Recommended: <b>a brisk walk around the neighborhood</b>.'},
+      {front:'Frustrated? Play With Others', back:'Nathan was frustrated after mistakes in practice. Healthy: <b>a friendly game of badminton with classmates</b>.'},
+      {front:'Anxious or Nervous? Stretch and Breathe', back:'Lara before a school event: <b>simple stretching and breathing exercises</b>. Samantha before dodgeball: <b>light stretching and deep breathing</b>, then join the game confidently.'},
+      {front:'Tense? Move, Then Go Back', back:'Joshua felt tense and could not concentrate. Healthiest: <b>ride his bicycle or play outside for a while, then return to his homework</b>.'},
+      {front:'These Are NOT the Answer', back:'Sleeping the whole afternoon without moving &middot; staying in bed &middot; hours of TV and junk food &middot; scrolling social media &middot; skipping P.E. &middot; studying with no breaks &middot; sitting alone and refusing to join.'},
+      {front:'The BEST-Answer Test', back:'The best choice <b>moves your body</b> and still <b>faces the situation</b> &mdash; you still join the game, still do the homework.'}
+    ],
+    quiz:[
+      {q:'After spending hours studying, Ella feels mentally tired and stressed. Which physical activity is commonly recommended to help reduce stress?', options:['taking a brisk walk around the neighborhood','sleeping the entire afternoon without moving','reading another textbook chapter immediately','watching videos on her phone for several hours'], correct:0, explain:'A brisk walk is <b>physical activity</b>. Sleeping all afternoon, more reading and hours of videos keep her sitting still.'},
+      {q:'Nathan becomes frustrated after making mistakes during practice. Which physical activity can help him cope with stress in a healthy way?', options:['playing a friendly game of badminton with classmates','sitting alone and refusing to join any activity','staying indoors and worrying about his mistakes','avoiding physical activity for the rest of the week'], correct:0, explain:'A friendly game gets him moving and back with his classmates. The rest avoid activity or keep him worrying.'},
+      {q:'Lara feels anxious before an important school event. Which activity is most likely to help her calm down <b>through movement</b>?', options:['doing simple stretching and breathing exercises','skipping Physical Education class to rest','finishing all her homework without taking breaks','spending the whole day scrolling through social media'], correct:0, explain:'Stretching gets her body moving and breathing exercises calm her down. The question says <i>through movement</i>, so pick the only choice where she actually moves.'},
+      {q:'Samantha feels nervous before participating in the school dodgeball game. Which action <b>BEST</b> demonstrates using physical activity to manage her stress?', options:['do light stretching and deep breathing before joining the game confidently','remain seated on the bench and avoid taking part in the activity','spend the entire break scrolling through social media to distract herself','tell her teammates she will not participate because she may make mistakes'], correct:0, explain:'She moves, calms down, <b>and still joins the game</b> &mdash; that is what makes it the best answer.'},
+      {q:'After a long day of schoolwork, Joshua notices that he is feeling tense and has difficulty concentrating. Which activity is the healthiest way to reduce his stress?', options:['He should ride his bicycle or play outside for a while before returning to his homework.','He should stay in bed all afternoon and skip all physical activities.','He should watch television for several hours while eating junk food.','He should continue studying without taking any breaks until bedtime.'], correct:0, explain:'Moving outside for a while relaxes him, and then he <b>goes back</b> to his homework.'},
+      {q:'True or False: Sleeping the entire afternoon without moving is a physical activity that reduces stress.', options:['True','False'], correct:1, explain:'False — sleeping without moving is not a physical activity. A brisk walk would be.'},
+      {q:'True or False: Riding a bicycle or playing outside for a while can help you feel less tense before going back to homework.', options:['True','False'], correct:0, explain:'Correct — that was the healthiest choice for Joshua on your test.'},
+      {q:'True or False: Skipping P.E. class to rest is a good way to calm down through movement.', options:['True','False'], correct:1, explain:'False — skipping P.E. means <b>less</b> movement. Stretching and breathing exercises are the healthy choice.'},
+      {q:'True or False: Light stretching and deep breathing before a game can help you join it confidently.', options:['True','False'], correct:0, explain:'Correct — that is exactly how Samantha handled her nerves before dodgeball.'},
+      {q:'Which of these is <b>NOT</b> a physical activity?', options:['Scrolling on your phone for hours','Taking a brisk walk around the block','Playing a friendly game of badminton','Riding your bicycle outside for a while'], correct:0, explain:'Scrolling keeps you sitting still. Walking, badminton and cycling all move your body.'}
+    ]
+  },
+  {
+    id:'stresswords',
+    icon:'🔤',
+    title:'Stress Word Bank',
+    subtitle:'Identification: stress, phobia, stretching & more',
+    cards:[
+      {front:'STRESS', back:'Feeling <b>overwhelmed</b> and <b>worried</b>, and finding it hard to focus &mdash; like Carlos during examination week.'},
+      {front:'POSITIVE THINKING', back:'Reminding yourself that <b>mistakes are part of learning</b> and you can improve with practice &mdash; like Anna after losing a game.'},
+      {front:'DEEP BREATHING', back:'Pausing and <b>slowly inhaling and exhaling</b> to feel calmer &mdash; like Miguel before his speech.'},
+      {front:'PHOBIA', back:'An <b>intense fear</b> of something that makes a person <b>panic</b> &mdash; like Bea&rsquo;s fear of heights.'},
+      {front:'STRETCHING', back:'<b>Gentle arm swings and leg movements</b> that prepare the muscles and <b>reduce the chance of injury</b> &mdash; like Ethan before volleyball.'},
+      {front:'INSOMNIA', back:'Having <b>trouble falling asleep or staying asleep</b>. On your test it was the extra word in the bank that no item needed.'},
+      {front:'Identification Rules', back:'Each word may be used <b>only once</b>, and answers go in <b>CAPITAL LETTERS</b>. Ticking each word as you use it, like you did, stops you using one twice.'}
+    ],
+    quiz:[
+      {q:'During examination week, Carlos feels overwhelmed by the number of tests he has to take. He finds it difficult to focus and feels worried most of the day.', options:['STRESS','PHOBIA','INSOMNIA','STRETCHING'], correct:0, explain:'Overwhelmed, worried and unable to focus &mdash; that is <b>STRESS</b>.'},
+      {q:'After losing a game, Anna reminds herself that mistakes are part of learning and that she can improve with more practice.', options:['POSITIVE THINKING','DEEP BREATHING','STRESS','PHOBIA'], correct:0, explain:'Telling herself she can learn and improve is <b>POSITIVE THINKING</b>.'},
+      {q:'Before delivering a speech, Miguel pauses for a moment and slowly inhales and exhales to help himself feel calmer.', options:['DEEP BREATHING','STRETCHING','POSITIVE THINKING','INSOMNIA'], correct:0, explain:'Slowly inhaling and exhaling is <b>DEEP BREATHING</b>.'},
+      {q:'Bea refuses to join a hiking activity because her intense fear of heights makes her panic whenever she is in high places.', options:['PHOBIA','STRESS','INSOMNIA','DEEP BREATHING'], correct:0, explain:'An intense fear that causes panic is a <b>PHOBIA</b>.'},
+      {q:'Before starting a volleyball game, Ethan performs gentle arm swings and leg movements to prepare his muscles and reduce the chance of injury.', options:['STRETCHING','DEEP BREATHING','POSITIVE THINKING','PHOBIA'], correct:0, explain:'Gentle arm and leg movements that prepare the muscles are <b>STRETCHING</b>.'},
+      {q:'Night after night, Mark has trouble falling asleep and staying asleep.', options:['INSOMNIA','PHOBIA','STRETCHING','POSITIVE THINKING'], correct:0, explain:'Trouble falling or staying asleep is <b>INSOMNIA</b>.'},
+      {q:'True or False: A phobia is an intense fear that can make a person panic.', options:['True','False'], correct:0, explain:'Correct — like Bea, who panics in high places.'},
+      {q:'True or False: Stretching means sitting still to rest your muscles before a game.', options:['True','False'], correct:1, explain:'False — stretching is <b>gentle movement</b>, like arm swings and leg movements, that prepares your muscles.'},
+      {q:'True or False: Deep breathing means slowly inhaling and exhaling to feel calmer.', options:['True','False'], correct:0, explain:'Correct — that is what Miguel did before his speech.'},
+      {q:'True or False: If each word in the word bank may be used only once, you may write the same word for two different items.', options:['True','False'], correct:1, explain:'False — <b>only once</b> means each word fits one item. If you want to use a word twice, one of those answers is wrong.'}
+    ]
   }
 ];
-const FINAL_EXAM_PER_LESSON = 5;
+const FINAL_EXAM_PER_LESSON = 4;
 const STORAGE_KEY = 'rallyready_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'rallyready_points_v1';
@@ -555,6 +638,8 @@ const STRATEGY = [
   {kicker:'P.E. Tip #2', title:'Match the clue word to the ABC skill', body:'"Change direction" &rarr; <b>agility</b>. "Stay steady" or "keep stable" &rarr; <b>balance</b>. "Hands, eyes and feet together" &rarr; <b>coordination</b>. "How fast" or "react quickly" &rarr; <b>speed</b>. The question almost always hides one of these clues.'},
   {kicker:'P.E. Tip #3', title:'Attack is low and fast, defence is high and safe', body:'If the answer talks about hitting into open space, low and fast, it is <b>attacking</b>. If it talks about a high, safe return that buys you time, it is <b>defending</b>.'},
   {kicker:'P.E. Tip #4', title:'The kitchen trap', body:'The kitchen only bans <b>volleys</b> &mdash; hitting the ball before it bounces. You may step in and play a ball that has already bounced. Questions are often written to make you forget that.'},
+  {kicker:'Stress Tip', title:'The BEST answer faces the problem calmly', body:'In a stress situation, cross out anything that <b>avoids</b> (skipping, staying away, pretending to be sick), <b>blames</b>, <b>compares</b>, or spends hours on <b>screens</b> or in bed. The answer left usually calms you down <b>and</b> still gets the job done &mdash; breathe, stretch, plan, practise, then go back.'},
+  {kicker:'Identification Tip', title:'Tick the word bank as you go', body:'Each word is used <b>only once</b>, so tick it off after you use it &mdash; exactly what you did on your summative test. Write every answer in <b>CAPITAL LETTERS</b>. One word is often left over (INSOMNIA was the extra one last time).'},
   {kicker:'Situational Tip', title:'Pick the safest, most controlled action', body:'In situational questions, the right answer is usually the one that is controlled, balanced and ready &mdash; not the wildest or hardest hit.'},
   {kicker:'General Tip', title:'Reread before you finalize', body:'Read the question one more time with your answer in mind. If it still matches what the lesson actually said, you have got it.'}
 ];

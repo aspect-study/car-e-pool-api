@@ -273,9 +273,9 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
   <div id="home" class="screen active">
     <div class="hero">
-      <span class="badge">Science · Grade 5 · Lessons 5, 6 &amp; 7</span>
+      <span class="badge">Science · Grade 5 · First Term</span>
       <h1>Life Lab 🔬</h1>
-      <p>Grow your plant one correct answer at a time! Study microorganisms and fungi, the major groups of plants and animals, and the plant organ systems &mdash; then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
+      <p>Grow your plant one correct answer at a time! Study the states of matter, measuring and changes of state, microorganisms and fungi, the major groups of plants and animals, and the plant organ systems &mdash; then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
       <div class="points-total" id="points-total-badge"></div>
     </div>
     <div class="card-list" id="homeList"></div>
@@ -448,7 +448,7 @@ const LESSONS = [
       {front:'Mammals', back:'<b>Warm-blooded</b> animals of the class <b>Mammalia</b>. They are named after their <b>mammary glands</b>, and they give birth to <b>live young</b>.'},
       {front:'Birds', back:'Animals that have <b>feathers</b>. There are two types: <b>flight</b> and <b>flightless</b> birds.'},
       {front:'Amphibians', back:'Animals that can live <b>both in water and on land</b>. They are found in diverse habitats including ponds, forests, and even deserts.'},
-      {front:'Reptiles', back:'<b>Cold-blooded</b> animals of the class <b>Reptilia</b>, characterized by their <b>scaly skins</b>.'},
+      {front:'Reptiles', back:'<b>Cold-blooded</b> animals of the class <b>Reptilia</b>, characterized by their <b>scaly skins</b>. Most reptiles <b>lay eggs</b>. Examples: snakes and turtles.'},
       {front:'Fishes', back:'Animals that live in water and have <b>gills</b> for breathing underwater.'},
       {front:'The Fins of a Fish', back:'The <b>dorsal fin</b> provides stability. The <b>pectoral and pelvic fins</b> help with steering and maneuverability. The <b>caudal fin</b> is also known as the <b>tail fin</b>.'}
     ],
@@ -571,9 +571,147 @@ const LESSONS = [
       {q:'True or False: Thorns are found only on roses.', options:['True','False'], correct:1, explain:'False — the lesson gives <b>roses and cacti</b> as examples of plants with thorns.'},
       {q:'Which plants often have aerial roots?', options:['Epiphytic plants such as orchids and tropical ferns','Potatoes and onions','Ginger and bamboo','Roses and cacti'], correct:0, explain:'Epiphytic plants like orchids and tropical ferns often have aerial roots.'}
     ]
+  },
+  {
+    id:'matter',
+    icon:'🧊',
+    title:'States of Matter',
+    subtitle:'Solids, liquids & gases',
+    cards:[
+      {front:'Solid', back:'Has a <b>definite shape and a definite volume</b>. Examples: a table, a pencil, a rock, a stone, a sandwich, a metal spoon, ice.'},
+      {front:'Liquid', back:'Has <b>no definite shape but a definite volume</b> &mdash; it takes the shape of its container but stays the same amount. Examples: water, milk, orange juice, honey.'},
+      {front:'Gas', back:'Has <b>no definite shape and no definite volume</b>. It <b>spreads out and fills the space</b> of its container. Examples: steam, the air inside a balloon, the smell of perfume.'},
+      {front:'Same Matter, Different States', back:'Water and ice are both matter, but in <b>different states</b>: <b>ice is a solid</b>, <b>water is a liquid</b>, and steam is a gas.'},
+      {front:'Clues From Your Test', back:'Spoon moved to a drawer keeps its shape &rarr; <b>solid</b>. Honey changes shape but stays the same amount &rarr; <b>liquid</b>. Perfume spreads through the room, a balloon grows when filled with air &rarr; <b>gas</b>.'},
+      {front:'Quick Sort', back:'milk &rarr; liquid &middot; stone &rarr; solid &middot; steam &rarr; gas'}
+    ],
+    quiz:[
+      {q:'Which state of matter includes objects such as a table, a pencil, and a rock?', options:['solid','gas','liquid','plasma'], correct:0, explain:'They keep their own shape and volume &mdash; <b>solids</b>.'},
+      {q:'Ben is packing for a picnic. Which item should he place in the solid group?', options:['sandwich','water','orange juice','air inside the balloon'], correct:0, explain:'A sandwich keeps its shape. Water and juice are liquids; the air is a gas.'},
+      {q:'Which state of matter has no definite shape but has a definite volume?', options:['liquid','ice','gas','solid'], correct:0, explain:'A <b>liquid</b> takes the shape of its container but keeps the same amount.'},
+      {q:'Carlo transferred a metal spoon from the kitchen table to a drawer. What property of solids does the spoon show?', options:['it has a definite shape and definite volume','it has no definite shape and no definite volume','it changes its shape depending on the container','it has no definite shape but has a definite volume'], correct:0, explain:'The spoon stays the same shape and size wherever it goes &mdash; a solid.'},
+      {q:'Vivian says that both water and ice are forms of matter, but they are different states. Which statement BEST explains why?', options:['ice is a solid, while water is a liquid','ice and water are both gases','ice is a gas, while water is a solid','ice and water are not forms of matter'], correct:0, explain:'<b>Ice is a solid</b> and <b>water is a liquid</b> &mdash; same matter, different states.'},
+      {q:'Which state of matter can spread out and fill the space inside a container?', options:['gas','solid','liquid','None of the choices is correct.'], correct:0, explain:'A <b>gas</b> spreads out to fill all the space it is given.'},
+      {q:'Carlo sprays perfume inside a room. After a few minutes, the smell spreads throughout the room. What property of gases does this show?', options:['Gases can spread out and fill the available space.','Gases have a fixed shape like solids.','Gases cannot move from one place to another.','Gases have a definite shape and definite volume.'], correct:0, explain:'The perfume&rsquo;s gas <b>spreads out and fills the room</b>.'},
+      {q:'Your teacher asks you to sort the following materials into their correct states of matter: milk, stone, and steam. Which answer is CORRECT?', options:['milk&ndash;liquid, stone&ndash;solid, steam&ndash;gas','milk&ndash;solid, stone&ndash;liquid, steam&ndash;gas','milk&ndash;gas, stone&ndash;solid, steam&ndash;liquid','milk&ndash;liquid, stone&ndash;gas, steam&ndash;solid'], correct:0, explain:'Milk flows (liquid), a stone keeps its shape (solid), steam spreads out (gas).'},
+      {q:'A balloon becomes bigger after it is filled with air. What does this show about gases?', options:['Gases do not have a definite shape and volume, and fill the available space.','Gases have a definite shape only.','Gases always stay inside one small area.','Gases have a definite shape and volume.'], correct:0, explain:'The air spreads out and <b>fills the balloon</b>, so the balloon grows.'},
+      {q:'Joshua places honey into different containers. He notices that the honey changes its shape but stays the same amount. What property of liquids does this show?', options:['liquids have no definite shape but have a definite volume','liquids have a definite shape and volume','liquids cannot take the shape of their container','liquids have no definite shape and no definite volume'], correct:0, explain:'Shape changes, amount stays the same &mdash; that is a <b>liquid</b>.'},
+      {q:'True or False: A gas has a definite shape and a definite volume.', options:['True','False'], correct:1, explain:'False — that describes a <b>solid</b>. A gas has no definite shape and no definite volume.'},
+      {q:'True or False: A liquid takes the shape of its container but keeps the same amount.', options:['True','False'], correct:0, explain:'Correct — like the honey in different containers.'}
+    ]
+  },
+  {
+    id:'measure',
+    icon:'📏',
+    title:'Measuring Matter',
+    subtitle:'kg, g, mg, mL & &deg;C',
+    cards:[
+      {front:'Mass: kilogram (kg)', back:'For <b>heavy</b> things, like a <b>bag of rice</b>.'},
+      {front:'Mass: gram (g)', back:'For <b>small</b> amounts, like a <b>small powder sample</b>. Smallest to biggest: <b>mg &lt; g &lt; kg</b>.'},
+      {front:'Mass: milligram (mg)', back:'For <b>very light</b> things. On your test the key used milligrams for a <b>paper clip</b>.'},
+      {front:'Liquid: milliliter (mL)', back:'For the <b>amount of liquid</b>, like the water in a small container.'},
+      {front:'Temperature: degree Celsius (&deg;C)', back:'For how <b>hot or cold</b> an object or place is, like water or a room.'},
+      {front:'Match the Unit to the Job', back:'kg, g and mg measure <b>mass</b>. mL measures <b>liquid amount</b>. &deg;C measures <b>temperature</b>. A unit from the wrong group is always wrong: never grams for temperature, never &deg;C for mass.'}
+    ],
+    quiz:[
+      {q:'During a classroom activity, Carla measures the amount of water in a small container. Which unit should she use?', options:['milliliter (mL)','gram (g)','kilogram (kg)','degree celsius (&deg;C)'], correct:0, explain:'An amount of liquid is measured in <b>milliliters (mL)</b>.'},
+      {q:'Ana plans to use kilograms (kg) to measure a paper clip, grams (g) to measure a bag of rice, and degree celsius (&deg;C) to measure temperature. Which evaluation is CORRECT?', options:['Ana should use milligrams (mg) for the paper clip and kilogram (kg) for the bag of rice.','Ana used all units correctly.','Ana should use grams (g) for measuring temperature.','Ana should use degrees celsius (&deg;C) for measuring the mass of objects.'], correct:0, explain:'She swapped them: the light paper clip needs a small unit (mg) and the heavy rice needs <b>kilograms</b>. Her &deg;C for temperature was right.'},
+      {q:'A scientist measures the amount of a very small powder sample for an experiment. Which unit is the most suitable to use?', options:['gram (g)','kilogram (kg)','milliliter (mL)','degree celsius (&deg;C)'], correct:0, explain:'Powder needs a <b>mass</b> unit. Milligrams were <b>not one of the choices</b>, so the best answer is <b>grams</b> &mdash; kilograms are for heavy things, mL is for liquids and &deg;C is for temperature.'},
+      {q:'Which unit is used to measure the temperature of an object or place?', options:['degree celsius (&deg;C)','grams (g)','kilogram (kg)','milligram (mg)'], correct:0, explain:'Temperature is measured in <b>degrees Celsius (&deg;C)</b>.'},
+      {q:'Which situation shows the CORRECT use of a unit of measurement?', options:['measuring the temperature of water using degree celsius (&deg;C)','measuring the mass of a pencil using kilograms (kg)','measuring the temperature of a room using grams (g)','measuring the mass of a bag of rice using milligrams (mg)'], correct:0, explain:'&deg;C for temperature is correct. A pencil is too light for kg, grams cannot measure temperature, and rice is too heavy for mg.'},
+      {q:'True or False: Grams (g) can be used to measure the temperature of a room.', options:['True','False'], correct:1, explain:'False — grams measure <b>mass</b>. Temperature uses <b>&deg;C</b>.'},
+      {q:'True or False: A bag of rice is best measured in kilograms (kg).', options:['True','False'], correct:0, explain:'Correct — kilograms are for heavy things.'},
+      {q:'True or False: Milliliters (mL) are used to measure the amount of a liquid.', options:['True','False'], correct:0, explain:'Correct — like Carla measuring water in a container.'},
+      {q:'True or False: Degree Celsius (&deg;C) is used to measure the mass of objects.', options:['True','False'], correct:1, explain:'False — &deg;C measures <b>temperature</b>. Mass uses kg, g or mg.'},
+      {q:'Which unit would you use to measure a glass of juice?', options:['milliliter (mL)','kilogram (kg)','degree celsius (&deg;C)','milligram (mg)'], correct:0, explain:'Juice is a liquid, so use <b>milliliters</b>.'}
+    ]
+  },
+  {
+    id:'changes',
+    icon:'♨️',
+    title:'Changes of State',
+    subtitle:'Melting, freezing, evaporation, condensation & sublimation',
+    cards:[
+      {front:'Heat Causes Changes', back:'When the <b>temperature increases</b> or <b>decreases</b>, matter can change from one state to another. The matter does not disappear.'},
+      {front:'Melting (solid &rarr; liquid)', back:'Heat makes a solid turn into a liquid: an ice cube in the sun, a candle giving liquid wax when heated.'},
+      {front:'Freezing (liquid &rarr; solid)', back:'When the <b>temperature decreases</b>, a liquid freezes into a solid.'},
+      {front:'Evaporation (liquid &rarr; gas)', back:'<b>Heat</b> turns a liquid into water vapor: a puddle disappearing on a hot day, steam from a boiling kettle.'},
+      {front:'Condensation (gas &rarr; liquid)', back:'The reverse of evaporation: a gas turns back into a liquid.'},
+      {front:'Sublimation (solid &rarr; gas)', back:'A solid changes <b>directly into a gas</b> without becoming a liquid first, like <b>dry ice</b>.'}
+    ],
+    quiz:[
+      {q:'Ella leaves an ice cube on a plate under the sun. After some time, the ice becomes water. What caused this change?', options:['The temperature increased, causing the solid to melt into a liquid.','The ice lost its mass and disappeared.','The ice changed into a gas without heat.','The temperature decreased, causing the liquid to freeze.'], correct:0, explain:'The sun&rsquo;s heat raised the temperature, so the solid <b>melted</b> into a liquid.'},
+      {q:'Carlo boils water in a kettle. After several minutes, steam comes out of the kettle. What change of state happened?', options:['liquid to gas','solid to gas','gas to liquid','solid to liquid'], correct:0, explain:'Water (liquid) became steam (gas).'},
+      {q:'During a hot day, Mark noticed that a puddle of water on the ground disappeared after several hours. He said that the heat from the sun caused the water to change into water vapor. Why is Mark&rsquo;s explanation CORRECT?', options:['because heat from the sun causes evaporation','because cold causes evaporation','because water changes into a solid','because water cannot change its state'], correct:0, explain:'Heat turns liquid water into water vapor: <b>evaporation</b>.'},
+      {q:'A student places a piece of dry ice in an open container. After some time, the dry ice disappears and changes directly into a gas. What process occurs?', options:['sublimation','melting','evaporation','condensation'], correct:0, explain:'Solid straight to gas, skipping liquid &mdash; <b>sublimation</b>.'},
+      {q:'A student observes that a candle becomes soft and produces liquid wax when heated. What process is shown?', options:['melting','freezing','evaporation','condensation'], correct:0, explain:'Solid wax turns into liquid wax &mdash; <b>melting</b>.'},
+      {q:'True or False: Freezing happens when the temperature decreases and a liquid turns into a solid.', options:['True','False'], correct:0, explain:'Correct — freezing is liquid &rarr; solid.'},
+      {q:'True or False: When ice melts, it loses its mass and disappears.', options:['True','False'], correct:1, explain:'False — the ice does not disappear. It changes into <b>liquid water</b>.'},
+      {q:'True or False: Evaporation is caused by cold.', options:['True','False'], correct:1, explain:'False — evaporation is caused by <b>heat</b>, like the sun drying a puddle.'},
+      {q:'True or False: In sublimation, a solid changes directly into a gas.', options:['True','False'], correct:0, explain:'Correct — like dry ice.'},
+      {q:'Which change of state goes from gas to liquid?', options:['condensation','evaporation','melting','sublimation'], correct:0, explain:'Gas &rarr; liquid is <b>condensation</b>, the reverse of evaporation.'}
+    ]
+  },
+  {
+    id:'classify',
+    icon:'🗂️',
+    title:'Classifying Living Things',
+    subtitle:'Your second summative test: animals, microbes & plants',
+    cards:[
+      {front:'Backbone or Not', back:'<b>With a backbone</b>: dog, frog, fish, eagle. <b>Without</b>: snail, butterfly, worm, spider.'},
+      {front:'Reptiles', back:'Animals that have <b>scales</b> and <b>usually lay eggs</b>, such as <b>snakes and turtles</b>. You left this item blank on your test.'},
+      {front:'Insects', back:'A butterfly has <b>six legs and no backbone</b> &mdash; an <b>insect</b>.'},
+      {front:'Crustaceans', back:'A shrimp has a <b>hard outer covering</b>, so it is a <b>crustacean</b> &mdash; not a fish, even though it lives in water.'},
+      {front:'Flightless Birds', back:'<b>Ostrich, penguin and emu</b> have wings, but they cannot fly. Their wings are adapted for other activities.'},
+      {front:'Microorganisms', back:'Living things <b>too small to be seen clearly with the naked eye</b>; they usually need a <b>microscope</b>. Bacteria are single-celled. Fungi can be single-celled (like yeast) or grow as <b>thread-like</b> mold on bread or old fruit.'},
+      {front:'Flowering Plants', back:'<b>Roses, mangoes and sunflowers</b> produce flowers. Ferns and mosses do not; mushrooms and molds are fungi, not plants.'}
+    ],
+    quiz:[
+      {q:'A student sorts animals into two groups based on whether they have a backbone. Which group contains only animals with backbones?', options:['dog, frog, fish, and eagle','snail, dog, butterfly, and fish','butterfly, fish, frog, and eagle','worm, butterfly, snail, and spider'], correct:0, explain:'Only the first group has no snail, butterfly, worm or spider in it.'},
+      {q:'Which group of animals includes animals that have scales and usually lay eggs?', options:['reptiles such as snake and turtles','birds such as eagles and chickens','mammals such as dogs and rabbits','amphibians such as frogs and toads'], correct:0, explain:'Scales + eggs &rarr; <b>reptiles</b>. Birds lay eggs but have feathers, not scales.'},
+      {q:'A butterfly has six legs and no backbone. Which group should the student choose?', options:['insects','birds','reptiles','mammals'], correct:0, explain:'Six legs, no backbone &rarr; <b>insect</b>.'},
+      {q:'A classification table has groups for insects, crustaceans, fish, and amphibians. Where should a shrimp be placed and why?', options:['crustaceans because it has a hard outer covering','amphibians because it lives near water','fish because it lives and moves in water','insects because it has several jointed legs'], correct:0, explain:'Its <b>hard outer covering</b> makes a shrimp a crustacean.'},
+      {q:'Which group correctly classifies birds that cannot fly but have wings adapted for other activities?', options:['ostrich, penguin, and emu','eagle, parrot, and sparrow','flamingo, eagle, and ostrich','parrot, penguin, and sparrow'], correct:0, explain:'All three are flightless birds. The other groups each include a bird that flies.'},
+      {q:'A student observes two microorganisms. Organism A is a single-celled organism, while Organism B grows as thread-like structures on bread. Which classification is correct?', options:['A is bacteria, while B is fungi.','A is fungi, while B is an animal.','A is fungi, while B is bacteria.','A is bacteria, while B is a plant.'], correct:0, explain:'Thread-like growth on bread is <b>mold</b>, a fungus &mdash; so B is the fungi, and the single-celled A is the <b>bacteria</b>. Some fungi, like yeast, are single-celled too &mdash; but once B is the mold, the only choice that fits is A = bacteria, B = fungi.'},
+      {q:'A student finds mold growing on an old piece of fruit. Which group should the student classify the mold into?', options:['fungi','virus','animal','bacteria'], correct:0, explain:'Mold is a <b>fungus</b>.'},
+      {q:'What are living things that are too small to be seen clearly with the naked eye called?', options:['microorganisms','vertebrates','mammals','insects'], correct:0, explain:'Too small to see clearly &rarr; <b>microorganisms</b>.'},
+      {q:'A student places a sunflower, fern, mango tree, and moss in a classification table. Which pair belongs in the same plant group?', options:['sunflower and mango because both produce flowers','fern and mango because both produce flowers','fern and sunflower because both produce seeds','sunflower and moss because both cannot produce flowers'], correct:0, explain:'Sunflowers and mangoes are flowering plants. Ferns and mosses do not flower.'},
+      {q:'When classifying plants based on their characteristics, which group includes plants that produce flowers as part of their life cycle?', options:['roses and mangoes','mushrooms and molds','ferns and mosses','mushrooms and mosses'], correct:0, explain:'Roses and mangoes flower. Mushrooms and molds are fungi.'},
+      {q:'True or False: Reptiles, such as snakes and turtles, have scales and usually lay eggs.', options:['True','False'], correct:0, explain:'Correct — scales + eggs &rarr; reptiles. This is the item you left blank on your test.'},
+      {q:'True or False: A penguin cannot fly, so it is not a bird.', options:['True','False'], correct:1, explain:'False — penguins are <b>flightless birds</b>. They still have wings and feathers.'}
+    ]
+  },
+  {
+    id:'adapt',
+    icon:'🌵',
+    title:'Plant Adaptations & Helpful Microbes',
+    subtitle:'Drought, floods, special structures, soap & penicillin',
+    cards:[
+      {front:'Hard Conditions', back:'A <b>lack of rain</b> can make it difficult for some plants to survive.'},
+      {front:'Dry Places', back:'Plants that often go long periods without rain survive by <b>storing water in their parts</b>.'},
+      {front:'Flooded Places', back:'Plants in areas that often flood survive by <b>developing roots above the soil</b>.'},
+      {front:'Aerial Roots', back:'Roots that grow <b>above the ground</b> help <b>support</b> the plant and <b>absorb moisture</b> from the air.'},
+      {front:'Bulb vs Tuber', back:'<b>Bulb</b>: a short underground stem surrounded by <b>thick, fleshy leaves</b> that store food. <b>Tuber</b>: stores food <b>underground</b>.'},
+      {front:'Antibacterial Soap', back:'Its main purpose is to <b>reduce harmful bacteria</b>, like Mia washing her hands before eating.'},
+      {front:'Helpful Microorganisms', back:'Alexander Fleming saw a mold stop bacteria from growing and discovered <b>penicillin</b>: some microorganisms can <b>help treat bacterial infections</b>.'}
+    ],
+    quiz:[
+      {q:'Which environmental condition can be difficult for some plants to survive?', options:['lack of rain','bright sunlight','fresh air','rich soil'], correct:0, explain:'Plants need water, so a <b>lack of rain</b> is hard on them.'},
+      {q:'A plant grows in an area that often experiences long periods without rain. Which adaptation would help the plant survive?', options:['storing water in its parts','growing taller stems','growing wider flowers','producing more colorful leaves'], correct:0, explain:'With little rain, <b>storing water</b> is what keeps it alive.'},
+      {q:'A plant grows in an area that is often flooded. Which adaptation would BEST help it survive?', options:['developing roots above the soil','producing smaller flowers','growing shorter leaves','having thinner stems'], correct:0, explain:'Roots above the soil stay out of the flood water.'},
+      {q:'A plant has roots that grow above the ground and help support the plant while taking in moisture from the air. What can you conclude about the purpose of these roots?', options:['They absorb moisture and provide support.','They store food for the plant.','They protect the plant from animals.','They help the plant produce flowers.'], correct:0, explain:'The question already names both jobs: <b>support</b> and taking in <b>moisture</b>.'},
+      {q:'A plant has a short underground stem surrounded by thick, fleshy leaves that store food. Which specialized structure is being described?', options:['bulb','tuber','thorn','rhizome'], correct:0, explain:'Thick, fleshy leaves around a short stem &rarr; <b>bulb</b>.'},
+      {q:'Which specialized plant structure helps store food underground?', options:['tuber','thorn','rhizome','aerial root'], correct:0, explain:'A <b>tuber</b> is an underground food store, like a potato.'},
+      {q:'Mia washes her hands with antibacterial soap before eating. What is the main purpose of the antibacterial soap?', options:['to help reduce harmful bacteria','to help increase useful bacteria','to help make bacteria grow faster','to help make bacteria easier to see'], correct:0, explain:'Antibacterial soap <b>reduces harmful bacteria</b>.'},
+      {q:'Alexander Fleming discovered penicillin after observing that a type of mold stopped bacteria from growing. What does this discovery show about some microorganisms?', options:['Some microorganisms can help treat bacterial infections.','Some microorganisms can cause serious human diseases.','Some microorganisms can grow on different types of food.','Some microorganisms can survive in different environments.'], correct:0, explain:'The mold <b>stopped bacteria</b>, so it can help <b>treat infections</b>. The other choices are true facts, but not what this discovery shows.'},
+      {q:'What makes bacteria different from many living things we can see?', options:['They are too small to see clearly','They are too large to move quickly.','They are too colorful to see clearly.','They are too strong to study easily.'], correct:0, explain:'Bacteria are <b>too small</b> to see clearly without a microscope.'},
+      {q:'Why are fungi and bacteria classified as microorganisms?', options:['They are very small and usually require a microscope to observe.','They are always harmful.','They can only live in water.','They can be seen easily without tools.'], correct:0, explain:'Their <b>small size</b> is what makes them microorganisms. They are not always harmful &mdash; penicillin came from a mold.'},
+      {q:'True or False: Antibacterial soap helps make bacteria grow faster.', options:['True','False'], correct:1, explain:'False — it helps <b>reduce harmful bacteria</b>.'},
+      {q:'True or False: Aerial roots help support a plant and absorb moisture from the air.', options:['True','False'], correct:0, explain:'Correct — both jobs at once.'}
+    ]
   }
 ];
-const FINAL_EXAM_PER_LESSON = 3;
+const FINAL_EXAM_PER_LESSON = 2;
 const STORAGE_KEY = 'lifelab_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'lifelab_points_v1';
@@ -665,6 +803,8 @@ const STRATEGY = [
   {kicker:'Science Tip #4', title:'Flowering or not', body:'<b>Angiosperm</b> = flowering, and it makes fruits. Everything else in the lesson is non-flowering: gymnosperms (seeds in cones), bryophytes (no true roots, stems or leaves), and pteridophytes (ferns, which use spores).'},
   {kicker:'Science Tip #5', title:'Nodes vs internodes, axillary vs terminal', body:'A <b>node</b> is where something attaches; an <b>internode</b> is the gap between. An <b>axillary</b> bud sits in a leaf axil; a <b>terminal</b> bud sits at the tip. Both pairs are classic swap-the-words traps.'},
   {kicker:'Science Tip #6', title:'Name the job, name the structure', body:'"Stores food underground" &rarr; <b>tuber</b>. "Underground stem growing sideways" &rarr; <b>rhizome</b>. "Layers of fleshy scale leaves" &rarr; <b>bulb</b>. "Protects from animals" &rarr; <b>thorn</b>. "Grows above ground for support" &rarr; <b>aerial root</b>.'},
+  {kicker:'Lost Mark', title:'Never leave an item blank', body:'On your second summative test the reptiles question was left <b>blank</b> &mdash; that was your only lost point. A blank is always zero. If unsure, cross out what you know is wrong and pick from what is left.'},
+  {kicker:'Science Tip', title:'Match the unit to what you measure', body:'<b>Mass</b> &rarr; kg (heavy), g (small), mg (very light). <b>Liquid</b> &rarr; mL. <b>Temperature</b> &rarr; &deg;C. A unit from the wrong group is always wrong.'},
   {kicker:'General Tip', title:'Reread before you finalize', body:'Read the question once more with your answer in mind. If it still matches what the lesson actually said, you have got it.'}
 ];
 
