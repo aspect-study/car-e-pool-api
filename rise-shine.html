@@ -215,6 +215,10 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
   padding:20px;box-shadow:var(--shadow);margin-bottom:16px;
 }
 .q-card h3{margin:0 0 16px;font-size:1.1rem;line-height:1.5;}
+.q-art{text-align:center;margin:0 0 12px;}
+.q-art svg.sign{width:130px;height:130px;}
+.sign-art{display:block;margin:0 auto 10px;}
+.sign-art svg.sign{width:120px;height:120px;display:block;margin:0 auto;}
 .option{
   display:block;width:100%;text-align:left;
   background:var(--bg);border:2px solid var(--border);border-radius:14px;
@@ -275,7 +279,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
     <div class="hero">
       <span class="badge">GMRC · Grade 5 Practice</span>
       <h1>Rise & Shine 🏅</h1>
-      <p>Build your Champion Medal one correct answer at a time! Study Knowing Yourself, Saving & Spending, Valuing Human Dignity, and Faith — then take the Mock Exam and check the Exam Strategy guide so you're ready to ace your teacher's test.</p>
+      <p>Build your Champion Medal one correct answer at a time! Study Knowing Yourself, Saving & Spending, Human Dignity, Faith, Traffic Signs & Rules, Good Manners, Sacred Books, Gratitude to Parents, E-waste and Using Devices — then take the Mock Exam and check the Exam Strategy guide so you're ready to ace your teacher's test.</p>
       <div class="points-total" id="points-total-badge"></div>
     </div>
     <div class="card-list" id="homeList"></div>
@@ -318,6 +322,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
     </div>
     <div id="passageBox"></div>
     <div class="q-card">
+      <div class="q-art" id="qArt" style="display:none;"></div>
       <h3 id="qText"></h3>
       <div id="optionsBox"></div>
       <div class="explain" id="explainBox" style="display:none;"></div>
@@ -355,6 +360,56 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 </div>
 
 <script>
+/* Traffic signs drawn as inline SVG, keyed by name. Must stay above LESSONS,
+   which calls sign() while the array literal is built. */
+const SIGN_ART = {
+  turnright:{label:'Turn right sign', svg:
+    '<circle cx="50" cy="50" r="44" fill="#fff" stroke="#D71920" stroke-width="9"/>'+
+    '<path d="M38 76 V50 Q38 40 48 40 H60" stroke="#111" stroke-width="9" fill="none"/>'+
+    '<polygon points="58,27 77,40 58,53" fill="#111"/>'},
+  stop:{label:'Stop sign', svg:
+    '<polygon points="67.6,7.5 92.5,32.4 92.5,67.6 67.6,92.5 32.4,92.5 7.5,67.6 7.5,32.4 32.4,7.5" fill="#E11D2A" stroke="#fff" stroke-width="3"/>'+
+    '<g fill="#fff"><rect x="36" y="46" width="29" height="28" rx="9"/>'+
+    '<rect x="36" y="27" width="6.5" height="28" rx="3.2"/><rect x="43.5" y="22" width="6.5" height="32" rx="3.2"/>'+
+    '<rect x="51" y="23" width="6.5" height="31" rx="3.2"/><rect x="58.5" y="28" width="6.5" height="27" rx="3.2"/>'+
+    '<rect x="27" y="50" width="7" height="20" rx="3.5" transform="rotate(-35 30 60)"/></g>'},
+  pedcross:{label:'Pedestrian crossing sign', svg:
+    '<polygon points="50,4 96,50 50,96 4,50" fill="#F2C230" stroke="#111" stroke-width="3" stroke-linejoin="round"/>'+
+    '<g stroke="#111" stroke-width="5" stroke-linecap="round" fill="none"><path d="M51 37 L47 55 L39 67 M47 55 L57 65 M50 42 L41 50 M50 42 L59 48"/></g>'+
+    '<circle cx="53" cy="30" r="5" fill="#111"/>'+
+    '<g fill="#111"><rect x="33" y="71" width="6" height="7"/><rect x="43" y="71" width="6" height="7"/><rect x="53" y="71" width="6" height="7"/><rect x="63" y="71" width="6" height="7"/></g>'},
+  noovertake:{label:'No overtaking sign', svg:
+    '<circle cx="50" cy="50" r="44" fill="#fff" stroke="#D71920" stroke-width="9"/>'+
+    '<g fill="#D71920"><rect x="22" y="40" width="24" height="20" rx="5"/><rect x="24" y="58" width="5" height="7"/><rect x="39" y="58" width="5" height="7"/></g>'+
+    '<g fill="#111"><rect x="54" y="40" width="24" height="20" rx="5"/><rect x="56" y="58" width="5" height="7"/><rect x="71" y="58" width="5" height="7"/></g>'+
+    '<rect x="27" y="43" width="14" height="6" rx="1.5" fill="#fff"/><rect x="59" y="43" width="14" height="6" rx="1.5" fill="#fff"/>'},
+  lights:{label:'Traffic lights', svg:
+    '<rect x="32" y="5" width="36" height="90" rx="9" fill="#222"/>'+
+    '<circle cx="50" cy="24" r="11" fill="#E53935"/><circle cx="50" cy="50" r="11" fill="#FBC02D"/><circle cx="50" cy="76" r="11" fill="#43A047"/>'},
+  school:{label:'School zone sign', svg:
+    '<polygon points="50,5 94,40 94,94 6,94 6,40" fill="#D4E02C" stroke="#111" stroke-width="3" stroke-linejoin="round"/>'+
+    '<g stroke="#111" stroke-width="6" stroke-linecap="round" fill="none"><path d="M38 50 V70 M38 70 L33 84 M38 70 L43 84 M38 55 L48 58"/><path d="M60 43 V71 M60 71 L54 86 M60 71 L67 86 M60 50 L49 58"/></g>'+
+    '<circle cx="38" cy="42" r="5.5" fill="#111"/><circle cx="60" cy="34" r="6.5" fill="#111"/>'},
+  noentry:{label:'No entry sign', svg:
+    '<circle cx="50" cy="50" r="45" fill="#E11D2A"/><rect x="17" y="42" width="66" height="16" rx="2" fill="#fff"/>'},
+  noped:{label:'No pedestrian sign', svg:
+    '<circle cx="50" cy="50" r="44" fill="#fff" stroke="#D71920" stroke-width="9"/>'+
+    '<g stroke="#111" stroke-width="5" stroke-linecap="round" fill="none"><path d="M51 36 L47 56 L39 72 M47 56 L58 70 M50 42 L40 51 M50 42 L60 49"/></g>'+
+    '<circle cx="53" cy="28" r="5.5" fill="#111"/>'+
+    '<line x1="19" y1="19" x2="81" y2="81" stroke="#D71920" stroke-width="9"/>'},
+  roadwork:{label:'Roadwork ahead sign', svg:
+    '<polygon points="50,9 93,87 7,87" fill="#fff" stroke="#C80000" stroke-width="9" stroke-linejoin="round"/>'+
+    '<g stroke="#111" stroke-width="4.5" stroke-linecap="round" fill="none"><path d="M47 48 L42 64 L35 77 M42 64 L48 77 M46 52 L58 62 L63 70"/></g>'+
+    '<circle cx="50" cy="42" r="4.5" fill="#111"/><polygon points="58,79 68,68 80,79" fill="#111"/>'}
+};
+function sign(key){
+  const s = SIGN_ART[key];
+  return `<svg class="sign" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${s.label}">${s.svg}</svg>`;
+}
+function signCard(key){
+  return `<span class="sign-art">${sign(key)}</span>What sign is this?`;
+}
+
 const LESSONS = [
   {
     id:'myself',
@@ -514,10 +569,221 @@ const LESSONS = [
       {q:'True or False: Having clean water, enough food, and a safe home is called lack of access to basic necessities.', options:['True','False'], correct:1, explain:'False — lack of access means <b>NOT</b> having clean water, enough food, or a safe place to live.'},
       {q:'You read a surprising post online. What should you do before sharing it?', options:['Check reliable sources to see if it is true','Share it right away with all of your friends','Add your own details to make it more exciting','Believe it because so many people have liked it'], correct:0, explain:'Checking reliable sources is how you discover <b>fake news</b> before it spreads.'}
     ]
+  },
+  {
+    id:'signs',
+    icon:'🚦',
+    title:'Traffic Signs',
+    subtitle:'Name the sign from its picture (Week 8)',
+    cards:[
+      {front:signCard('turnright'), back:'<b>TURN RIGHT</b> &mdash; a red circle with an arrow bending to the right. Vehicles must turn right here.'},
+      {front:signCard('stop'), back:'<b>STOP</b> &mdash; a red sign with <b>8 sides</b> (octagon). Come to a full stop and look before you go.'},
+      {front:signCard('pedcross'), back:'<b>PEDESTRIAN CROSSING</b> &mdash; a yellow diamond with a person walking on stripes. People cross here, so drivers slow down and let them pass.'},
+      {front:signCard('noovertake'), back:'<b>NO OVERTAKING</b> &mdash; two cars side by side in a red circle. Do not pass the vehicle in front of you.'},
+      {front:signCard('lights'), back:'<b>TRAFFIC LIGHTS</b> &mdash; <b>Red</b> = stop. <b>Yellow</b> = slow down, get ready to stop. <b>Green</b> = go, but still look.'},
+      {front:signCard('school'), back:'<b>SCHOOL ZONE</b> &mdash; two children walking on a yellow-green sign. A school is near: slow down and watch out for students.'},
+      {front:signCard('noentry'), back:'<b>NO ENTRY</b> &mdash; a red circle with a white bar across it. Vehicles must not enter this road.'},
+      {front:signCard('noped'), back:'<b>NO PEDESTRIAN</b> &mdash; a walking person crossed out with a red line. People must not walk or cross here.'},
+      {front:signCard('roadwork'), back:'<b>ROADWORK AHEAD</b> &mdash; a red triangle with a worker digging. The road ahead is being repaired: slow down and be careful.'},
+      {front:'Shape &amp; Color Clues', back:'<b>Red circle</b> = a rule you must obey. <b>8-sided red sign</b> = stop. <b>Triangle or diamond</b> = warning, be careful. Then look at the picture inside to name it.'}
+    ],
+    quiz:[
+      {art:sign('turnright'), q:'Which traffic sign is this?', options:['Turn right','Turn left','No entry','Stop'], correct:0, explain:'The arrow bends to the right &rarr; <b>TURN RIGHT</b>.'},
+      {art:sign('stop'), q:'Which traffic sign is this?', options:['Stop','No entry','Traffic lights','No overtaking'], correct:0, explain:'A red 8-sided sign with a raised hand &rarr; <b>STOP</b>.'},
+      {art:sign('pedcross'), q:'Which traffic sign is this?', options:['Pedestrian crossing','No pedestrian','School zone','Roadwork ahead'], correct:0, explain:'A person walking on stripes, with no red line through it &rarr; <b>PEDESTRIAN CROSSING</b>.'},
+      {art:sign('noovertake'), q:'Which traffic sign is this?', options:['No overtaking','No entry','Turn right','Pedestrian crossing'], correct:0, explain:'Two cars side by side in a red circle &rarr; <b>NO OVERTAKING</b>.'},
+      {art:sign('lights'), q:'What is this?', options:['Traffic lights','Stop','School zone','No entry'], correct:0, explain:'Red, yellow and green lights &rarr; <b>TRAFFIC LIGHTS</b>.'},
+      {art:sign('school'), q:'Which traffic sign is this?', options:['School zone','Pedestrian crossing','No pedestrian','Roadwork ahead'], correct:0, explain:'Two children walking with their bags &rarr; <b>SCHOOL ZONE</b>.'},
+      {art:sign('noentry'), q:'Which traffic sign is this?', options:['No entry','Stop','No overtaking','No pedestrian'], correct:0, explain:'A white bar across a red circle &rarr; <b>NO ENTRY</b>.'},
+      {art:sign('noped'), q:'Which traffic sign is this?', options:['No pedestrian','Pedestrian crossing','School zone','No entry'], correct:0, explain:'The walking person is crossed out with a red line &rarr; <b>NO PEDESTRIAN</b>.'},
+      {art:sign('roadwork'), q:'Which traffic sign is this?', options:['Roadwork ahead','School zone','No pedestrian','Stop'], correct:0, explain:'A worker digging inside a red triangle &rarr; <b>ROADWORK AHEAD</b>.'},
+      {art:sign('noentry'), q:'True or False: This sign means NO OVERTAKING.', options:['True','False'], correct:1, explain:'False &mdash; a white bar on a red circle is <b>NO ENTRY</b>. No overtaking shows two cars.'},
+      {art:sign('pedcross'), q:'True or False: This sign tells drivers that people may be crossing the road here.', options:['True','False'], correct:0, explain:'Correct &mdash; it is <b>PEDESTRIAN CROSSING</b>, so drivers slow down and let people cross.'},
+      {art:sign('noped'), q:'True or False: This sign shows a safe place for people to cross the road.', options:['True','False'], correct:1, explain:'False &mdash; the red line means <b>NO PEDESTRIAN</b>: people must not walk or cross here.'},
+      {q:'True or False: On a traffic light, the RED light means go.', options:['True','False'], correct:1, explain:'False &mdash; <b>red means stop</b>. Green means go.'},
+      {art:sign('roadwork'), q:'True or False: This sign warns that the road ahead is being repaired, so drivers should slow down.', options:['True','False'], correct:0, explain:'Correct &mdash; it is <b>ROADWORK AHEAD</b>.'},
+      {art:sign('school'), q:'Your tito is driving you to school when you pass this sign. What should he do?', options:['Slow down and watch out for students crossing','Speed up so that you will not be late for class','Honk loudly so the students move out of the way','Overtake the slow jeepney that is in front of him'], correct:0, explain:'<b>SCHOOL ZONE</b> means students are near, so drivers slow down and watch carefully.'},
+      {q:'The traffic light turns YELLOW as your family&rsquo;s car nears the corner. What does yellow tell the driver?', options:['Slow down and get ready to stop','Speed up to pass before it turns red','Stop the car and turn off the engine','Turn right at the corner right away'], correct:0, explain:'<b>Yellow</b> means slow down and get ready to stop &mdash; red is coming next.'},
+      {art:sign('noovertake'), q:'A bus is moving slowly in front of your dad&rsquo;s car, and he sees this sign. What should your dad do?', options:['Stay behind the bus and do not pass it','Pass the bus quickly while no car is coming','Honk again and again until the bus moves aside','Turn around and drive back the other way'], correct:0, explain:'<b>NO OVERTAKING</b> means do not pass the vehicle in front, even if it is slow.'}
+    ]
+  },
+  {
+    id:'trafficrules',
+    icon:'🚸',
+    title:'Following Traffic Rules',
+    subtitle:'Why rules matter &amp; how to help others follow them',
+    cards:[
+      {front:'Traffic Rules', back:'Rules that <b>pedestrians, passengers and drivers</b> follow so that everyone on the road stays safe.'},
+      {front:'Why Follow Traffic Rules?', back:'They <b>keep us safe</b>, <b>prevent accidents and injuries</b>, keep traffic in order, and show <b>respect for the lives of others</b>.'},
+      {front:'A Safe Pedestrian&hellip;', back:'Walks on the sidewalk &middot; crosses only at the <b>pedestrian crossing</b> &middot; <b>stops and looks left and right</b> before crossing &middot; waits for the signal &middot; never plays or runs on the road.'},
+      {front:'A Safe Passenger&hellip;', back:'Wears a <b>seatbelt</b> (or a helmet on a motorcycle) &middot; stays seated &middot; keeps hands and head <b>inside</b> &middot; does not distract the driver &middot; gets on or off only when the vehicle has <b>fully stopped</b>.'},
+      {front:'Traffic Light Colors', back:'<b>Red</b> = stop &middot; <b>Yellow</b> = slow down, get ready to stop &middot; <b>Green</b> = go, but still look for cars.'},
+      {front:'How a Student Can Promote Traffic Rules', back:'<b>Be a good example</b> &middot; <b>kindly remind</b> friends and family &middot; make posters and slogans &middot; join school safety activities &middot; obey traffic enforcers and school guards.'}
+    ],
+    quiz:[
+      {q:'Why is it important to follow traffic rules?', options:['They keep everyone safe and help prevent accidents.','They help us reach places faster than other people.','They keep us from being scolded by the police.','They make walking on the road more fun for kids.'], correct:0, explain:'Traffic rules <b>keep everyone safe</b> and <b>prevent accidents</b>.'},
+      {q:'Mia is in a hurry, and the pedestrian crossing is a few steps away. What should she do?', options:['Walk to the pedestrian crossing and cross there','Run across the road right where she is standing','Squeeze between the parked cars and cross there','Follow a friend who is crossing in the middle'], correct:0, explain:'Even in a hurry, a safe pedestrian crosses at the <b>pedestrian crossing</b>.'},
+      {q:'You are at the pedestrian crossing. What should you do FIRST?', options:['Stop, then look left and right for cars','Close your eyes and walk quickly across','Look at your phone while you cross','Run fast so that no car can hit you'], correct:0, explain:'Always <b>stop and look left and right</b> before crossing.'},
+      {q:'Your classmates are playing tag near the busy road outside the school. What is the BEST thing to do?', options:['Kindly remind them to play somewhere away from the road','Join them, because the game looks like a lot of fun','Ignore them, because it is not really your problem','Shout at them and call them names so they stop'], correct:0, explain:'<b>Kindly reminding</b> others is how a student helps others follow traffic rules.'},
+      {q:'On the way to the mall, your little brother refuses to wear his seatbelt. What should you do?', options:['Help him buckle it and explain that it keeps him safe','Let him skip it since the trip is short anyway','Take off your own seatbelt so he will not feel alone','Laugh at him and tell your parents about it later'], correct:0, explain:'A safe passenger <b>wears a seatbelt</b> &mdash; and helping him is kind, too.'},
+      {q:'You are riding a jeepney and want to see the view outside. What should you do?', options:['Stay seated and keep your hands and head inside','Stick your arm out of the window to feel the wind','Stand on the back step so you can see better','Lean out of the window to wave at your friends'], correct:0, explain:'Passengers keep their <b>hands and head inside</b> the vehicle.'},
+      {q:'As a student, how can you help encourage others to follow traffic rules in your school and community?', options:['Be a good example and kindly remind others to follow them','Follow traffic rules only when a teacher is watching you','Make fun of classmates who always wait at the crossing','Cross anywhere you like as long as no guard is looking'], correct:0, explain:'The best way to promote traffic rules is to <b>be a good example</b> and <b>kindly remind</b> others.'},
+      {q:'The school guard signals students to wait at the crossing while cars pass. What should you do?', options:['Wait patiently and cross only when the guard signals','Cross anyway, since you are already late for class','Argue with the guard because you want to go first','Walk behind the guard and sneak across the road'], correct:0, explain:'Obeying the <b>school guard</b> and traffic enforcers is part of following traffic rules.'},
+      {q:'Your friend makes a poster that says &ldquo;Stop, Look and Listen before you cross!&rdquo; What is she doing?', options:['Encouraging others to follow traffic rules','Wasting her time on an art project','Breaking one of the school&rsquo;s rules','Showing others she is better than them'], correct:0, explain:'Posters and slogans are a way to <b>promote traffic rules</b>.'},
+      {q:'You see a lola about to cross the street where there is no pedestrian crossing. What is the BEST thing to do?', options:['Politely show her the crossing or ask an adult to help','Laugh because she is walking so slowly across the road','Pull her by the arm and run across the road together','Pretend you did not see her and keep on walking'], correct:0, explain:'Helping others cross <b>safely and respectfully</b> is good manners and right conduct.'},
+      {q:'True or False: It is okay to cross the road anywhere as long as you run fast.', options:['True','False'], correct:1, explain:'False &mdash; cross only at the <b>pedestrian crossing</b>, after you stop and look.'},
+      {q:'True or False: Following traffic rules shows respect for our own life and for the lives of others.', options:['True','False'], correct:0, explain:'Correct &mdash; traffic rules protect <b>everyone</b> on the road.'},
+      {q:'True or False: A passenger should get off a jeepney only when it has fully stopped.', options:['True','False'], correct:0, explain:'Correct &mdash; getting off a moving vehicle can cause accidents.'},
+      {q:'True or False: Traffic rules are only for drivers, so pedestrians do not need to follow them.', options:['True','False'], correct:1, explain:'False &mdash; traffic rules are for <b>pedestrians, passengers and drivers</b>.'},
+      {q:'True or False: A green light means go, but you should still look for cars before moving.', options:['True','False'], correct:0, explain:'Correct &mdash; always look first, even on green.'}
+    ]
+  },
+  {
+    id:'manners',
+    icon:'🎩',
+    title:'Good Manners & Right Conduct',
+    subtitle:'Kindness, honesty &amp; respect in everyday situations',
+    cards:[
+      {front:'Good Manners', back:'<b>Polite and respectful ways</b> we speak and act toward other people.'},
+      {front:'Right Conduct', back:'Choosing to do what is <b>right, honest and good</b> &mdash; even when no one is watching.'},
+      {front:'Magic Words', back:'&ldquo;<b>Please</b>,&rdquo; &ldquo;<b>Thank you</b>,&rdquo; &ldquo;<b>Sorry</b>,&rdquo; &ldquo;<b>Excuse me</b>&rdquo; &mdash; and <b>po</b> and <b>opo</b> when talking to elders.'},
+      {front:'Comfort Others', back:'When someone is hurt or sad, <b>stay with them</b>, ask if they are okay, and help them get help.'},
+      {front:'Be Honest', back:'If you find something that is not yours, <b>return it</b> to the owner or bring it to the <b>Lost and Found</b>.'},
+      {front:'Show Thanks', back:'Say <b>thank you</b> when someone gives you a gift, lends you something, or helps you.'},
+      {front:'Respect Elders', back:'Greet them politely, do the <b>mano</b>, <b>offer your seat</b>, and help them &mdash; like pushing a lola&rsquo;s wheelchair.'},
+      {front:'Respect During Prayer', back:'Stay <b>quiet</b>, bow your head, and pray or listen respectfully. Talk only after the prayer.'}
+    ],
+    quiz:[
+      {q:'During a game, a classmate falls and starts to cry. What shows right conduct?', options:['Help him up, check on him, and tell the teacher','Laugh, because the way he fell looked really funny','Keep on playing so your team will not lose','Grab the ball and go play somewhere else'], correct:0, explain:'Comforting someone who is hurt and <b>helping him get help</b> is right conduct.'},
+      {q:'You find a wallet in the school hallway. What should you do?', options:['Bring it to the Lost and Found or give it to a teacher','Keep the money and throw the empty wallet away','Keep it all, because &ldquo;finders, keepers&rdquo;','Leave it on the floor for someone else to deal with'], correct:0, explain:'Returning what is not yours shows <b>honesty</b>.'},
+      {q:'Your tita gives you a birthday gift that you do not really like. What should you do?', options:['Smile and say &ldquo;Thank you po&rdquo;','Tell her you do not like it at all','Give it back and ask for money','Put it down without saying anything'], correct:0, explain:'We <b>say thank you</b> to show appreciation for the thought and effort behind a gift.'},
+      {q:'A lola gets on the crowded jeepney and there is no seat left for her. What should you do?', options:['Politely offer her your seat','Pretend to be asleep so she won&rsquo;t ask','Tell her to wait for the next jeepney','Put your bag on the seat next to you'], correct:0, explain:'<b>Offering your seat</b> is a way of respecting elders.'},
+      {q:'Your class is praying before lunch, but your seatmate keeps whispering to you. What should you do?', options:['Stay quiet and pray; talk after the prayer','Whisper back so she will not feel ignored','Laugh out loud at what she is saying','Start eating your lunch while they pray'], correct:0, explain:'During prayer we stay <b>quiet and respectful</b>.'},
+      {q:'You accidentally bump a classmate, and his books fall on the floor. What should you do?', options:['Say &ldquo;Sorry&rdquo; and help him pick up the books','Walk away quickly before anyone notices it','Blame him for standing in your way','Laugh and tell him to be more careful'], correct:0, explain:'Saying <b>sorry</b> and helping fix the mistake is good manners.'},
+      {q:'You need to pass between two teachers who are talking in the hallway. What should you do?', options:['Say &ldquo;Excuse me po&rdquo; and pass politely','Run between them without saying a word','Push between them because you are in a hurry','Interrupt loudly and ask them to move aside'], correct:0, explain:'&ldquo;<b>Excuse me</b>&rdquo; plus <b>po</b> is the polite and respectful way.'},
+      {q:'A classmate lends you a pencil during a quiz. What shows good manners?', options:['Say thank you and return it in good condition','Keep it because she has many other pencils','Return it broken without saying a word','Lend it to someone else without asking her'], correct:0, explain:'<b>Thank</b> the person and <b>take care</b> of what you borrow.'},
+      {q:'During a quiz, you see your friend copying answers. Later she asks you to keep it a secret. What is the right thing to do?', options:['Kindly tell her cheating is wrong; urge her to tell the teacher','Help her copy again on the next quiz so she will like you','Tell the whole class so everyone will laugh at her','Copy answers too, since she did not get caught'], correct:0, explain:'Right conduct means choosing <b>honesty</b> &mdash; and helping a friend be honest with the teacher too.'},
+      {q:'True or False: Good manners are only needed when a teacher or a parent is watching.', options:['True','False'], correct:1, explain:'False &mdash; right conduct means doing good <b>even when no one is watching</b>.'},
+      {q:'True or False: Saying &ldquo;po&rdquo; and &ldquo;opo&rdquo; when talking to elders is a sign of respect.', options:['True','False'], correct:0, explain:'Correct &mdash; <b>po</b> and <b>opo</b> show respect to older people.'},
+      {q:'True or False: Returning a lost item to its owner shows honesty and right conduct.', options:['True','False'], correct:0, explain:'Correct &mdash; that is why schools have a <b>Lost and Found</b>.'},
+      {q:'True or False: If someone gives you something you did not ask for, you do not need to say thank you.', options:['True','False'], correct:1, explain:'False &mdash; we <b>always</b> say thank you to show appreciation.'}
+    ]
+  },
+  {
+    id:'sacred',
+    icon:'📖',
+    title:'Respecting Sacred Books',
+    subtitle:'Handling holy books and respecting every faith',
+    cards:[
+      {front:'Sacred Book', back:'A <b>holy book</b> that a religion treats with great respect, because it holds <b>God&rsquo;s word</b> or the religion&rsquo;s teachings.'},
+      {front:'Examples', back:'The <b>Bible</b> is the sacred book of <b>Christians</b>. The <b>Qur&rsquo;an</b> is the sacred book of <b>Muslims</b>.'},
+      {front:'Handle It with Care', back:'Hold it with <b>clean hands</b> &middot; keep it in a <b>clean, proper place</b> &middot; <b>never</b> put it on the floor, step on it, or sit on it.'},
+      {front:'Respect Every Faith', back:'Even if a sacred book is <b>not from your religion</b>, treat it with respect and <b>never make fun of it</b>.'},
+      {front:'Reading It', back:'Read it with a <b>quiet, respectful attitude</b>. Its teachings guide us to do what is good.'}
+    ],
+    quiz:[
+      {q:'What is a sacred book?', options:['A holy book that a religion treats with great respect','Any storybook that you can borrow from the library','A notebook where you write your daily homework','A comic book about heroes and their adventures'], correct:0, explain:'A sacred book is a <b>holy book</b> treated with great respect.'},
+      {q:'Which is the sacred book of Christians?', options:['The Bible','The Qur&rsquo;an','A dictionary','An atlas'], correct:0, explain:'Christians read the <b>Bible</b>.'},
+      {q:'Which is the sacred book of Muslims?', options:['The Qur&rsquo;an','The Bible','A dictionary','An atlas'], correct:0, explain:'Muslims read the <b>Qur&rsquo;an</b>.'},
+      {q:'Your little brother stands on the Bible to reach a high shelf. What should you do?', options:['Gently stop him and put the Bible back where it belongs','Let him, since it helps him reach the shelf faster','Laugh and take a video of him to show your friends','Give him more books to stand on so he gets higher'], correct:0, explain:'We <b>never step on</b> a sacred book &mdash; it belongs in a <b>proper place</b>.'},
+      {q:'Your Muslim classmate brings her Qur&rsquo;an to school, and some classmates make jokes about it. What should you do?', options:['Kindly tell them to respect it; it is her sacred book','Join in the jokes so that the others will like you too','Hide her Qur&rsquo;an in your bag while she is not looking','Say nothing and laugh quietly along with the others'], correct:0, explain:'We <b>respect every faith</b>, even when the sacred book is not ours.'},
+      {q:'You want to read the Bible right after playing outside with muddy hands. What should you do first?', options:['Wash and dry your hands','Wipe your hands on the pages','Put the Bible on the floor','Read it fast before the mud dries'], correct:0, explain:'Hold a sacred book with <b>clean hands</b>.'},
+      {q:'During Bible reading in class, your seatmate keeps folding and crumpling the pages. What should you do?', options:['Politely remind him to handle it with care','Crumple the pages of your own Bible too','Tear out a page and throw it at him','Tell the whole class to look and laugh'], correct:0, explain:'A sacred book is handled <b>with care and respect</b>.'},
+      {q:'True or False: It is okay to put a sacred book on the floor.', options:['True','False'], correct:1, explain:'False &mdash; keep it in a <b>clean, proper place</b>, never on the floor.'},
+      {q:'True or False: We should respect the sacred books of other religions, even if they are not ours.', options:['True','False'], correct:0, explain:'Correct &mdash; respecting every faith is good manners and right conduct.'},
+      {q:'True or False: A sacred book should be kept in a clean and proper place.', options:['True','False'], correct:0, explain:'Correct &mdash; that shows respect for it.'},
+      {q:'True or False: It is fine to make fun of a sacred book if it is not from your religion.', options:['True','False'], correct:1, explain:'False &mdash; we <b>never make fun</b> of any sacred book.'}
+    ]
+  },
+  {
+    id:'gratitude',
+    icon:'💝',
+    title:'Gratitude to Parents',
+    subtitle:'Saying and showing thanks at home',
+    cards:[
+      {front:'Gratitude', back:'Being <b>thankful</b> and <b>showing appreciation</b> for what others do for us.'},
+      {front:'What Our Parents Give Us', back:'Love and care, food, clothes, a home, and the chance to <b>go to school</b>.'},
+      {front:'Say It', back:'Tell your parents &ldquo;<b>Thank you</b>&rdquo; and &ldquo;<b>I love you</b>&rdquo; often &mdash; not only on special days.'},
+      {front:'Show It', back:'<b>Obey</b> them &middot; <b>help with chores</b> without being asked &middot; <b>study hard</b> &middot; take care of the things they buy you.'},
+      {front:'Respect Them', back:'Use <b>po</b> and <b>opo</b>, do the <b>mano</b>, and <b>listen to their advice</b>.'},
+      {front:'Remember Them', back:'<b>Pray for them</b>, make a card or letter, and <b>take care of them</b> when they are sick or old.'}
+    ],
+    quiz:[
+      {q:'How do we express our gratitude to our parents?', options:['By obeying, helping at home, and saying thank you','By asking them to buy more toys and new gadgets','By doing chores only when they pay us to do them','By listening to them only when we feel like it'], correct:0, explain:'We <b>say</b> thanks and <b>show</b> it by obeying and helping.'},
+      {q:'Your mom comes home tired from work. What is the BEST way to show gratitude?', options:['Greet her, do the mano, and offer to help','Ask her to cook your favorite food right away','Keep playing your game and wait for dinner','Complain to her that dinner is late again'], correct:0, explain:'A warm greeting and <b>offering help</b> show that you appreciate her hard work.'},
+      {q:'Your father worked extra hours to buy your new school shoes. How can you show your thanks?', options:['Thank him and take good care of the shoes','Wear them to play in the mud after class','Tell him you wanted a different brand','Lose them and ask him for a new pair'], correct:0, explain:'<b>Taking care of the things they buy</b> shows gratitude.'},
+      {q:'Your parents remind you to finish your homework before watching TV. What should you do?', options:['Say &ldquo;Opo&rdquo; and do your homework first','Argue that you will do it later tonight','Pretend to do it while watching TV','Wait until they leave, then watch TV'], correct:0, explain:'<b>Obeying</b> with respect is a way to show gratitude.'},
+      {q:'Your dad is sick in bed. What should you do?', options:['Bring him water, keep quiet, and help take care of him','Play loud music in the room to help him feel better','Ask him to drive you to the mall like he promised','Stay away from home and play at a friend&rsquo;s house'], correct:0, explain:'We <b>take care of our parents</b> when they are sick, just as they care for us.'},
+      {q:'It is your mom&rsquo;s birthday, but you have no money for a gift. What can you do?', options:['Make a handmade card or letter thanking her','Say nothing, since you cannot buy a present','Borrow money from a classmate to buy a gift','Remind her to buy you something on her birthday'], correct:0, explain:'A <b>card or letter</b> from the heart is a meaningful way to say thank you.'},
+      {q:'Your parents see your low grade and give you advice. What should you do?', options:['Listen respectfully and try to improve','Walk out of the room while they talk','Blame your teacher for the low grade','Hide your next report card from them'], correct:0, explain:'<b>Listening to their advice</b> shows respect and gratitude.'},
+      {q:'Before you sleep, you pray. How can you remember your parents in your prayer?', options:['Thank God for them and ask Him to bless them','Pray only for a new phone and nothing else at all','Skip your prayer because you are already sleepy','Ask God to make them buy you more toys'], correct:0, explain:'<b>Praying for our parents</b> is a way to remember and thank them.'},
+      {q:'True or False: Studying hard is one way to show gratitude to our parents.', options:['True','False'], correct:0, explain:'Correct &mdash; they work hard to send us to school.'},
+      {q:'True or False: We only need to thank our parents on their birthday.', options:['True','False'], correct:1, explain:'False &mdash; say thank you <b>often</b>, not only on special days.'},
+      {q:'True or False: Helping with household chores without being asked shows gratitude.', options:['True','False'], correct:0, explain:'Correct &mdash; it shows you appreciate all they do.'},
+      {q:'True or False: It is okay to answer our parents rudely when we are tired.', options:['True','False'], correct:1, explain:'False &mdash; we always speak to them with <b>respect</b>, using po and opo.'}
+    ]
+  },
+  {
+    id:'ewaste',
+    icon:'♻️',
+    title:'E-waste',
+    subtitle:'What to do with old and broken gadgets',
+    cards:[
+      {front:'E-waste', back:'<b>Old, broken or unwanted electronic devices</b> &mdash; like cellphones, chargers, earphones, computers, TVs and batteries.'},
+      {front:'Why Is It Dangerous?', back:'It contains <b>harmful substances</b> (like lead and mercury) that can harm <b>people, animals, soil and water</b> if thrown away the wrong way.'},
+      {front:'DON&rsquo;T', back:'<b>Don&rsquo;t</b> throw e-waste in the regular trash, <b>don&rsquo;t burn it</b>, and <b>don&rsquo;t dump it</b> in rivers, canals or empty lots.'},
+      {front:'DO', back:'Bring it to an <b>e-waste collection or drop-off point</b>, or give it to a <b>proper recycler</b>.'},
+      {front:'Repair &amp; Reuse', back:'<b>Repair</b> a broken device if you can. <b>Donate</b> or pass on devices that still work.'},
+      {front:'Reduce', back:'<b>Take good care of your devices</b> so they last longer, and avoid buying new gadgets you do not need.'}
+    ],
+    quiz:[
+      {q:'What do we need to do with e-waste?', options:['Bring it to an e-waste collection point for proper recycling','Throw it in the regular trash bin with the other garbage','Burn it in the backyard so that it quickly disappears','Throw it into the river so it gets carried far away'], correct:0, explain:'E-waste goes to an <b>e-waste collection point</b> or a <b>proper recycler</b>.'},
+      {q:'Which of these is e-waste?', options:['An old, broken cellphone','A pile of banana peels','Used paper plates','Dry leaves from the yard'], correct:0, explain:'E-waste is <b>electronic</b> &mdash; a broken cellphone.'},
+      {q:'Your old tablet still works, but you got a new one. What is the BEST thing to do with the old one?', options:['Donate it or give it to someone who can use it','Throw it in the trash since you do not need it','Smash it so that nobody else can ever use it','Bury it in the garden behind your house'], correct:0, explain:'Devices that still work can be <b>reused</b> by someone else.'},
+      {q:'Your family&rsquo;s old TV is broken. A neighbor says to burn it with the garbage. What should you say?', options:['Burning it is harmful; bring it to an e-waste drop-off','That is a good idea, because it will be gone very quickly','Throw it in the canal instead so it will not make smoke','Just leave it out on the street for someone to take'], correct:0, explain:'<b>Never burn e-waste</b> &mdash; its harmful substances go into the air.'},
+      {q:'You find old used batteries in a drawer. What should you do with them?', options:['Set them aside for an e-waste collection point','Throw them in the bin together with the food scraps','Toss them into the fire so they burn away','Give them to your baby brother to play with'], correct:0, explain:'Batteries are <b>e-waste</b> and go to a collection point.'},
+      {q:'Your charger broke because you always bent the cord. How can you reduce e-waste next time?', options:['Handle your new charger gently so it lasts longer','Bend the cord of the new charger even harder','Buy three chargers at once so you have extras','Leave the charger plugged in out in the rain'], correct:0, explain:'<b>Taking good care of devices</b> means less e-waste.'},
+      {q:'Your school holds an e-waste collection drive. How can your family help?', options:['Bring your old, broken gadgets to the drive','Ignore it, since it is only for the teachers','Bring your leftover food scraps to the drive','Keep the broken gadgets hidden at home forever'], correct:0, explain:'A <b>collection drive</b> is the right place for e-waste.'},
+      {q:'Why should e-waste NOT be thrown into rivers?', options:['Its harmful substances can pollute the water and harm fish and people','It will float on the water and look very ugly to people passing by','The river belongs to someone else, so you need their permission first','It will make the water in the river taste much sweeter than before'], correct:0, explain:'E-waste can <b>harm water, animals and people</b>.'},
+      {q:'True or False: E-waste can harm people and the environment if it is thrown away the wrong way.', options:['True','False'], correct:0, explain:'Correct &mdash; that is why it needs <b>proper disposal</b>.'},
+      {q:'True or False: Burning old gadgets is a safe way to get rid of e-waste.', options:['True','False'], correct:1, explain:'False &mdash; burning releases <b>harmful substances</b> into the air.'},
+      {q:'True or False: Repairing a broken device instead of throwing it away helps reduce e-waste.', options:['True','False'], correct:0, explain:'Correct &mdash; <b>repair and reuse</b> means less e-waste.'},
+      {q:'True or False: E-waste can be thrown in the same bin as food scraps.', options:['True','False'], correct:1, explain:'False &mdash; e-waste is kept apart and brought to a <b>collection point</b>.'}
+    ]
+  },
+  {
+    id:'devices',
+    icon:'📱',
+    title:'Using Devices Properly',
+    subtitle:'Screen time, online safety &amp; being kind online',
+    cards:[
+      {front:'Devices', back:'Gadgets like <b>cellphones, tablets, laptops and computers</b> that help us learn and communicate.'},
+      {front:'Use Them for Good', back:'For <b>learning and research</b>, and for keeping in touch with family.'},
+      {front:'Balance Your Screen Time', back:'Follow the <b>time limit your parents set</b> &middot; take <b>breaks</b> to rest your eyes &middot; leave time for study, play, chores, family and sleep.'},
+      {front:'Ask Permission', back:'Ask your parents <b>before</b> using a device, downloading an app, or going online.'},
+      {front:'Stay Safe Online', back:'<b>Never share</b> your password, address or personal information &middot; don&rsquo;t chat with or meet strangers &middot; <b>tell a parent or teacher</b> if something online makes you uncomfortable.'},
+      {front:'Be Kind Online', back:'<b>Think before you post</b> &middot; never bully, tease or spread rumors &middot; <b>ask permission</b> before posting someone&rsquo;s photo.'},
+      {front:'Device Manners', back:'Put devices away during <b>meals, class and prayer</b> unless allowed. Keep them away from water and handle them with clean hands.'}
+    ],
+    quiz:[
+      {q:'How do we use our devices properly?', options:['For learning, with our parents&rsquo; permission and a time limit','For playing games all night long until we fall asleep','During class whenever we want, even without permission','By sharing our password with everyone we chat with'], correct:0, explain:'Use devices <b>for good</b>, with <b>permission</b> and a <b>time limit</b>.'},
+      {q:'Your screen time is over, but you are in the middle of a game. What should you do?', options:['Stop the game and follow the time limit','Hide in your room and keep on playing','Cry until your parents give you more time','Borrow a friend&rsquo;s phone and keep playing'], correct:0, explain:'Following the <b>time limit</b> your parents set is proper device use.'},
+      {q:'Someone you do not know online asks for your home address and school. What should you do?', options:['Do not answer, and tell a parent or teacher','Give it, because they seem really friendly','Give only the name of your school to them','Ask for their address first, then give yours'], correct:0, explain:'<b>Never share personal information</b> with strangers, and tell a trusted adult.'},
+      {q:'A classmate posts an embarrassing photo of another classmate, and others laugh at it. What should you do?', options:['Do not share or laugh at it, and tell a teacher','Share it to your group chat to spread the fun','Write a funny comment under the photo','Click like so your classmate feels happy'], correct:0, explain:'<b>Be kind online</b> &mdash; never join in teasing, and tell a trusted adult.'},
+      {q:'Your phone keeps buzzing during family dinner. What should you do?', options:['Put it away, enjoy dinner, and check it later','Answer every message quickly while you keep eating','Watch videos while eating so dinner is more fun','Keep it on the table and ignore your family'], correct:0, explain:'Put devices away during <b>meals</b> &mdash; family time comes first.'},
+      {q:'You want to download a new game app. What should you do first?', options:['Ask your parents for permission','Download it secretly at night','Use mom&rsquo;s password without asking','Download many games all at once'], correct:0, explain:'Always <b>ask permission</b> before downloading apps.'},
+      {q:'Your friend asks for your password so he can &ldquo;help&rdquo; level up your game. What should you do?', options:['Politely say no and keep your password private','Give it, because he is your good friend','Post your password in your group chat','Write your password on the classroom board'], correct:0, explain:'<b>Never share your password</b>, even with friends.'},
+      {q:'You get a message online that makes you feel scared and uncomfortable. What should you do?', options:['Tell a parent or teacher right away','Keep it a secret from everyone','Reply with an angry message','Forward it to all your friends'], correct:0, explain:'<b>Tell a trusted adult</b> whenever something online makes you uncomfortable.'},
+      {q:'You want to post a picture of your classmate online. What should you do first?', options:['Ask her permission before posting it','Post it right away without asking her','Take the picture secretly so she won&rsquo;t know','Edit it to make her look funny, then post it'], correct:0, explain:'<b>Ask permission</b> before posting someone else&rsquo;s photo.'},
+      {q:'True or False: Taking short breaks from the screen to rest your eyes is a good habit.', options:['True','False'], correct:0, explain:'Correct &mdash; <b>breaks</b> are part of balancing screen time.'},
+      {q:'True or False: Posting a friend&rsquo;s photo without her permission is okay if she looks nice in it.', options:['True','False'], correct:1, explain:'False &mdash; always <b>ask permission</b> first.'},
+      {q:'True or False: Devices can be used for learning, like researching a school project.', options:['True','False'], correct:0, explain:'Correct &mdash; that is using devices <b>for good</b>.'},
+      {q:'True or False: It is okay to use your phone during class whenever you feel bored.', options:['True','False'], correct:1, explain:'False &mdash; put devices away during <b>class</b> unless your teacher allows it.'}
+    ]
   }
 ];
 
-const FINAL_EXAM_PER_LESSON = 4;
+const FINAL_EXAM_PER_LESSON = 3;
 const STORAGE_KEY = 'riseshine_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'riseshine_points_v1';
@@ -552,7 +818,7 @@ function prepareQuestion(q){
   const order = shuffle(q.options.map((_,i)=>i));
   const options = order.map(i=>q.options[i]);
   const correct = order.indexOf(q.correct);
-  return {q:q.q, options, correct, explain:q.explain};
+  return {q:q.q, art:q.art, options, correct, explain:q.explain};
 }
 function starsFor(pct){
   if(pct >= 1) return 3;
@@ -592,6 +858,8 @@ const STRATEGY = [
   {kicker:'Situational Tip #1', title:'Name the value being tested first', body:'Before choosing an answer, ask: "Is this about respect? Honesty? Saving money? Self-control? Human dignity?" Naming the value points you straight to the correct choice.'},
   {kicker:'Situational Tip #2', title:'Pick the BEST answer, not just a good one', body:'Teachers often include an option that is "good but not the best." Choose the most responsible, most caring, or most complete action — not just any nice-sounding one.'},
   {kicker:'Situational Tip #3', title:'Connect it to a lesson example', body:'Ask yourself which lesson this reminds you of — Needs vs Wants? The 5 Ways to Value Yourself? The 3 Ways to Respect Human Life? Matching it to what you studied makes the answer obvious.'},
+  {kicker:'Traffic Sign Tip', title:'Read the shape and color first', body:'A <b>red circle</b> is a rule you must obey, an <b>8-sided red sign</b> is STOP, and a <b>triangle or diamond</b> is a warning. Then check the picture inside: a <b>red line through it</b> means NO (like No Pedestrian).'},
+  {kicker:'Situational Tip #4', title:'Safety and respect win', body:'For traffic, e-waste and device questions, the right answer is the one that keeps <b>everyone safe</b> and asks a <b>parent or teacher</b> when unsure. For manners and gratitude, it is the one that is <b>polite, honest and helpful</b>.'},
   {kicker:'Identification Tip', title:'Copy the word bank exactly', body:'Write the answer <b>exactly as the word bank prints it</b>, in <b>CAPITAL LETTERS</b>. Do not add, drop or change words &mdash; the computer checks letter by letter, even when your teacher later fixes it.'},
   {kicker:'General Tip', title:'Reread before you finalize', body:'After choosing an answer, read the question one more time with your answer in mind. If it still makes sense and feels responsible and kind, you’ve got it right.'},
   {kicker:'General Tip', title:'Eliminate the "unkind" options first', body:'In situational questions, cross out any choice that is unkind, disrespectful, dishonest, or wasteful right away — the real answer is almost never one of those.'},
@@ -741,6 +1009,9 @@ function renderQuestion(){
   updatePointsLive();
   document.getElementById('quizFill').style.width = `${(quizIdx/total)*100}%`;
   document.getElementById('medalSvg').innerHTML = medalMarkup(Math.round((quizScore/total)*8));
+  const art = document.getElementById('qArt');
+  art.innerHTML = q.art || '';
+  art.style.display = q.art ? 'block' : 'none';
   document.getElementById('qText').innerHTML = q.q;
   document.getElementById('explainBox').style.display = 'none';
   document.getElementById('nextBtn').style.display = 'none';
