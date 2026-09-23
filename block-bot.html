@@ -360,6 +360,50 @@ function moneyGroup(items, opt){
 function allBills(w){ return `<div class="money-group">` + Object.keys(BILL_SPECS).map(k=>billSvg(k, w||96)).join('') + `</div>`; }
 function allCoins(pxPerMm){ return `<div class="money-group">` + Object.keys(COIN_SPECS).map(k=>coinSvg(k, pxPerMm||3.4)).join('') + `</div>`; }
 
+/* Base-ten blocks: a unit is 1 tiny square, a flat is a 10x10 grid of units (1 hundred),
+   and the thousand cube is a flat drawn with a pseudo-3D top/side so it reads as stacked flats. */
+function unitSvg(px){
+  px = px || 16;
+  return `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}"><rect x="1" y="1" width="${px-2}" height="${px-2}" fill="var(--accent)" stroke="var(--ink)" stroke-width="1"/></svg>`;
+}
+function flatSvg(px){
+  px = px || 64;
+  const cell = px/10;
+  let rects = '';
+  for (let r=0;r<10;r++){
+    for (let c=0;c<10;c++){
+      rects += `<rect x="${(c*cell).toFixed(2)}" y="${(r*cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="var(--surface2)" stroke="var(--accent)" stroke-width="0.6"/>`;
+    }
+  }
+  return `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}">${rects}</svg>`;
+}
+function thousandCubeSvg(px){
+  px = px || 84;
+  const depth = px*0.22, cell = px/10;
+  let rects = '';
+  for (let r=0;r<10;r++){
+    for (let c=0;c<10;c++){
+      rects += `<rect x="${(c*cell).toFixed(2)}" y="${(r*cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="var(--surface2)" stroke="var(--accent)" stroke-width="0.5"/>`;
+    }
+  }
+  const w = px + depth, h = px + depth;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <polygon points="${depth},0 ${w},0 ${px},${depth} 0,${depth}" fill="var(--accent)" opacity="0.85"/>
+    <polygon points="${w},0 ${w},${px} ${px},${h} ${px},${depth}" fill="var(--accent)" opacity="0.6"/>
+    <g transform="translate(0,${depth})">${rects}</g>
+  </svg>`;
+}
+function blockGroup(flats, units){
+  let out = '<div class="money-group">';
+  for (let i=0;i<flats;i++) out += flatSvg(64);
+  if (units > 0){
+    out += '<div style="display:grid;grid-template-columns:repeat(3,16px);gap:2px;">';
+    for (let j=0;j<units;j++) out += unitSvg(16);
+    out += '</div>';
+  }
+  return out + '</div>';
+}
+
 
 const LESSONS = [
   {
@@ -384,6 +428,8 @@ const LESSONS = [
       {q:'What number is made of 2 thousands, 3 hundreds, 0 tens, 4 ones?', options:['2304','2034','2340','3204'], correct:0, explain:'2 thousands + 3 hundreds + 0 tens + 4 ones = 2304.'},
       {q:'True or False: A thousand block is made of 10 hundred flats stacked together.', options:['True','False'], correct:0, explain:'Yes — 10 flats (hundreds) stacked make 1 thousand block.'},
       {q:'Which is bigger: 1 flat (hundred) or 15 rods (tens)?', options:['1 flat','15 rods','They are equal'], correct:1, explain:'1 flat = 10 rods (100), but 15 rods = 150, which is more than 100.'},
+      {q:'How many are there in total?', art:blockGroup(3,6), options:['6','30','306','603'], correct:2, explain:'3 flats (hundreds) = 300, plus 6 loose units (ones) = 306.'},
+      {q:'What is represented by the base-ten block below?', art:thousandCubeSvg(84), options:['Ones','Tens','Hundreds','Thousands'], correct:3, explain:'This big block is made of 10 flats (hundreds) stacked together, so it represents a Thousand.'},
     ]
   },
   {
@@ -503,6 +549,8 @@ const LESSONS = [
       {q:'What is the ordinal word for 12th?', options:['twelveth','twelfth','twelth','twelfeth'], correct:1, explain:'12th is written as "twelfth" in words.'},
       {q:'True or False: 11th is written as "eleventh."', options:['True','False'], correct:0, explain:'Correct — 11th = eleventh, even though it ends in "th" like the regular rule.'},
       {q:'What is 18 in ordinal form?', options:['18st','18th','18nd','eighteenst'], correct:1, explain:'18 becomes "18th," following the "th" rule.'},
+      {q:'In a race, Jay finished 1st and Lim finished 2nd. Who finished first?', options:['Jay','Lim','Both of them','None of them'], correct:0, explain:'1st place means Jay finished first.'},
+      {q:'Four children lined up: 1st - Ana, 2nd - Ben, 3rd - Cara, 4th - Dan. Who is after Ben?', options:['Ana','Ben','Cara','Dan'], correct:2, explain:'Ben is 2nd, so the position right after him is 3rd, which is Cara.'},
     ]
   },
   {
@@ -527,6 +575,8 @@ const LESSONS = [
       {q:'Write the number: 7 hundreds, 0 tens, 4 ones', options:['704','740','407','470'], correct:0, explain:'7 hundreds + 0 tens + 4 ones = 704.'},
       {q:'What is 200 + 60 + 1 in expanded form?', options:['261','216','621','126'], correct:0, explain:'2 hundreds + 6 tens + 1 one = 261.'},
       {q:'True or False: In the number 555, all three digits have the same value.', options:['True','False'], correct:1, explain:'Even though the digits look the same, each 5 has a different value: 500, 50, and 5.'},
+      {q:'Which of the following numbers has 5 in the tens place?', options:['152','325','415','542'], correct:0, explain:'152 has 1 hundred, 5 tens, 2 ones — the 5 is in the tens place.'},
+      {q:'Which of the following numbers has the same ones digit as 526?', options:['365','428','542','716'], correct:3, explain:'526 ends in 6. 716 also ends in 6, so they share the same ones digit.'},
     ]
   },
   {

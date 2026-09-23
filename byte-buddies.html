@@ -197,6 +197,7 @@
   .flash-dots span{width:8px; height:8px; border-radius:50%; background:var(--border);}
   .flash-dots span.on{background:var(--indigo);}
   .flash-icon{width:76px; height:76px; margin:0 auto 14px; display:block;}
+  .q-pic{width:96px; height:96px; margin:0 auto 12px; display:none;}
   .flash-lesson-label{text-align:center; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px;}
   .flash-title{font-size:1.25rem; font-family:'Righteous',sans-serif; color:var(--indigo-deep); text-align:center;}
   .flash-text{font-size:1.1rem; line-height:1.55; text-align:center; margin-top:12px; color:var(--ink);}
@@ -370,6 +371,7 @@
         </div>
       </div>
       <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
+      <div class="q-pic" id="q-pic"></div>
       <div class="q-text" id="q-text"></div>
       <div id="q-options"></div>
       <div class="feedback" id="q-feedback"></div>
@@ -414,14 +416,14 @@
     }
     return a;
   }
-  function mc(q, opts, good, bad){
-    return { type:'mc', q:q, options: opts.map(function(o){ return {text:o[0], correct:o[1]}; }), good:good, bad:bad };
+  function mc(q, opts, good, bad, pic){
+    return { type:'mc', q:q, options: opts.map(function(o){ return {text:o[0], correct:o[1]}; }), good:good, bad:bad, pic:pic };
   }
   function tf(q, answer, good, bad){
     return { type:'tf', q:q, answer:answer, good:good, bad:bad };
   }
   function prepareQuestion(item){
-    if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad };
+    if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad, pic:item.pic };
     return item;
   }
   function buildQuizSet(lesson){
@@ -465,7 +467,11 @@
         { title:'KEYBOARD &amp; MOUSE POSITION', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><rect x="16" y="34" width="36" height="12" rx="2" fill="var(--good)"/><ellipse cx="58" cy="40" rx="6" ry="8" fill="var(--good)"/>', text:'Bring your chair close to the keyboard, and keep the mouse near it so your arms don’t stretch too far.' },
         { title:'TAKE SHORT BREAKS', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="38" cy="38" r="16" fill="none" stroke="var(--amber-deep)" stroke-width="3"/><line x1="38" y1="38" x2="38" y2="26" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/><line x1="38" y1="38" x2="47" y2="44" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/>', text:'Rest your eyes and stretch every 30 minutes to keep your body relaxed.' },
         { title:'CLEAN &amp; DRY HANDS', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 16c8 12 14 20 14 28a14 14 0 1 1-28 0c0-8 6-16 14-28z" fill="var(--accent)"/>', text:'Make sure your hands are clean and dry before using the computer, and keep food and drinks away.' },
-        { title:'HANDLE WITH CARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Press keys softly, don’t touch the screen, and cover the computer when not in use.' }
+        { title:'HANDLE WITH CARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Press keys softly, don’t touch the screen, and cover the computer when not in use.' },
+        { title:'DON&rsquo;T STACK HEAVY THINGS', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><rect x="22" y="36" width="32" height="22" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="2"/><rect x="28" y="20" width="20" height="14" rx="2" fill="var(--bad)"/><line x1="18" y1="22" x2="58" y2="54" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"/>', text:'Never place anything heavy on top of any part of your computer.' },
+        { title:'LET AN ADULT HANDLE PLUGS', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><rect x="30" y="40" width="16" height="10" rx="2" fill="var(--amber-deep)"/><line x1="34" y1="40" x2="34" y2="28" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/><line x1="42" y1="40" x2="42" y2="28" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/><circle cx="38" cy="20" r="7" fill="var(--amber-deep)"/><path d="M22 58c2-10 8-14 12-14" fill="none" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/>', text:'Ask an adult to help plug accessory devices into their proper slots &mdash; only adults may touch the electrical parts.' },
+        { title:'KEEP IT COOL &amp; DRY', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M18 32l20-14 20 14" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="22" y="32" width="32" height="22" rx="3" fill="var(--good)"/><rect x="30" y="38" width="16" height="3" fill="var(--card)"/><rect x="30" y="45" width="16" height="3" fill="var(--card)"/>', text:'Place your computer in a clean, cool, dry spot, away from direct heat, sunlight, or damp areas.' },
+        { title:'WIPE IT CLEAN', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="20" y="24" width="36" height="26" rx="3" fill="var(--accent)"/><rect x="26" y="30" width="24" height="14" fill="var(--card)"/><rect x="44" y="48" width="14" height="10" rx="2" fill="var(--amber-soft)" stroke="var(--amber-deep)" stroke-width="1.5"/>', text:'Clean your computer regularly with a soft, dry cloth.' }
       ],
       quiz: [
         mc('What should your feet be like when sitting at the computer?', [['Flat on the floor',true],['Crossed',false],['Off the chair',false]], 'That’s right! Your feet should be flat on the floor.', 'The correct answer is Flat on the floor — this helps you sit properly.'),
@@ -479,7 +485,12 @@
         mc('How should you sit in the chair while using the computer?', [['With your back against the backrest',true],['Leaning far forward',false],['Standing up',false]], 'That&rsquo;s right! Sitting with your back against the backrest is correct.', 'You should sit With your back against the backrest, knees at a right angle, feet flat on the floor.'),
         tf('The monitor should be placed slightly below your eye level.', true, 'Correct! That is the proper monitor height.', 'The answer should be True &mdash; place the monitor slightly below your eye level.'),
         mc('Why should you bring your chair close to the keyboard?', [['So your arms don&rsquo;t stretch too far',true],['So you can reach the door',false],['So you can see better',false]], 'Yes! This protects your arms and posture.', 'You bring your chair close so your arms don&rsquo;t stretch too far.'),
-        tf('Pressing the keys as hard as you can is the best way to type.', false, 'That&rsquo;s right! You should press keys softly instead.', 'The answer should be False &mdash; press keys softly, not hard.')
+        tf('Pressing the keys as hard as you can is the best way to type.', false, 'That&rsquo;s right! You should press keys softly instead.', 'The answer should be False &mdash; press keys softly, not hard.'),
+        mc('Before using the computer, what should you do first?', [['Wash your hands',true],['Eat snacks',false],['Play games',false],['Turn off the monitor',false]], 'That&rsquo;s right! Wash your hands before touching the computer.', 'You should Wash your hands before using the computer.'),
+        tf('It is okay to place heavy books or bags on top of the computer.', false, 'Correct! Never place anything heavy on top of any part of your computer.', 'The answer should be False &mdash; never place anything heavy on top of any part of your computer.'),
+        mc('Who should plug accessory devices into the computer&rsquo;s slots?', [['An adult should help',true],['Any student alone',false],['No one, ever',false]], 'That&rsquo;s right! Only adults may touch the electrical parts.', 'An adult should help &mdash; only adults may touch the electrical parts of the computer.'),
+        mc('Where should we place our computer?', [['In a clean, cool, and dry place',true],['Near a sunny window',false],['In a damp bathroom',false]], 'Yes! Keep it away from heat, sunlight, and damp areas.', 'We should place our computer In a clean, cool, and dry place.'),
+        tf('We should clean our computer regularly with a soft, dry cloth.', true, 'Correct! Regular cleaning keeps it free from dust and dirt.', 'The answer should be True &mdash; clean your computer regularly with a soft, dry cloth.')
       ]
     },
     {
@@ -492,7 +503,9 @@
         { title:'WAIT FOR INSTRUCTIONS', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="18" y="20" width="40" height="28" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><circle cx="38" cy="34" r="7" fill="var(--accent)"/>', text:'Sit at your assigned seat and wait for your teacher’s instructions before touching the computer.' },
         { title:'RAISE YOUR HAND', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><path d="M30 54V32a4 4 0 0 1 8 0v10M38 42v-16a4 4 0 0 1 8 0v16M46 42v-8a4 4 0 0 1 8 0v14c0 10-6 16-14 16s-14-6-14-14" fill="none" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Raise your hand if you need help or have a question.' },
         { title:'USE ONLY WHAT YOU’RE TOLD', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><rect x="20" y="24" width="36" height="26" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="2"/><line x1="24" y1="28" x2="52" y2="46" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"/>', text:'Open only the programs your teacher tells you to use — no games or random websites.' },
-        { title:'SAVE YOUR WORK', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M22 22h26l8 8v24H22z" fill="var(--good)"/><rect x="28" y="22" width="14" height="10" fill="var(--card)"/><rect x="27" y="40" width="22" height="12" fill="var(--card)"/>', text:'Always remember to save your work and keep your files organized.' }
+        { title:'SAVE YOUR WORK', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M22 22h26l8 8v24H22z" fill="var(--good)"/><rect x="28" y="22" width="14" height="10" fill="var(--card)"/><rect x="27" y="40" width="22" height="12" fill="var(--card)"/>', text:'Always remember to save your work and keep your files organized.' },
+        { title:'LISTEN &amp; WORK QUIETLY', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><circle cx="38" cy="26" r="8" fill="var(--indigo)"/><path d="M22 58c2-12 10-18 16-18s14 6 16 18" fill="none" stroke="var(--indigo)" stroke-width="4" stroke-linecap="round"/><path d="M50 30c4 2 6 6 4 10" fill="none" stroke="var(--indigo-deep)" stroke-width="2.5" stroke-linecap="round"/>', text:'Listen while your teacher gives instructions, work quietly, and respect others.' },
+        { title:'BE GENTLE WITH THE MOUSE', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><ellipse cx="38" cy="42" rx="14" ry="18" fill="var(--good)"/><line x1="38" y1="24" x2="38" y2="36" stroke="var(--card)" stroke-width="2"/><path d="M20 20c-4 4-4 8 0 8" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round"/>', text:'Be gentle with the computers &mdash; don&rsquo;t touch the screen or pound the keyboard, and use the mouse gently.' }
       ],
       quiz: [
         mc('What should you do when lining up to enter the computer laboratory?', [['Line up quietly',true],['Push and run',false],['Scream loudly',false]], 'That’s right! We line up quietly.', 'You should Line up quietly — no pushing, screaming, or running.'),
@@ -506,7 +519,11 @@
         mc('What should you do while lining up outside the computer laboratory?', [['Stay quiet and orderly',true],['Push your classmates',false],['Run inside',false]], 'That&rsquo;s right! Staying quiet and orderly is correct.', 'You should Stay quiet and orderly while lining up.'),
         tf('You should wait for your teacher&rsquo;s instructions before touching the computer.', true, 'Correct! Always wait for instructions first.', 'The answer should be True &mdash; wait for your teacher&rsquo;s instructions first.'),
         mc('What should you use during computer class?', [['Only the programs your teacher tells you to use',true],['Any game you like',false],['Any website you find',false]], 'Yes! Stick to what your teacher assigns.', 'You should use Only the programs your teacher tells you to use.'),
-        tf('It doesn&rsquo;t matter if you forget to save your work.', false, 'That&rsquo;s right! Saving your work is important.', 'The answer should be False &mdash; always remember to save your work.')
+        tf('It doesn&rsquo;t matter if you forget to save your work.', false, 'That&rsquo;s right! Saving your work is important.', 'The answer should be False &mdash; always remember to save your work.'),
+        mc('Which rule should you follow inside the computer laboratory?', [['Listen to your teacher&rsquo;s instructions',true],['Run to your seat',false],['Open any game you like',false],['Turn off the computer anytime',false]], 'That&rsquo;s right! Always listen to your teacher&rsquo;s instructions.', 'You should Listen to your teacher&rsquo;s instructions.'),
+        mc('Your teacher is still explaining the activity. What should you do?', [['Wait for instructions before touching the computer',true],['Open Paint',false],['Open games',false],['Turn off the computer',false]], 'Yes! Wait until your teacher finishes explaining.', 'You should Wait for instructions before touching the computer.'),
+        mc('What should you do while your teacher gives instructions?', [['Listen quietly and respect others',true],['Talk to your seatmate',false],['Play with the mouse',false]], 'That&rsquo;s right! Listen quietly and respect others.', 'You should Listen quietly and respect others while your teacher gives instructions.'),
+        tf('You should be gentle with the computers and use the mouse gently.', true, 'That&rsquo;s right! Always be gentle with the computers.', 'The answer should be True &mdash; be gentle with the computers, and use the mouse gently.')
       ]
     },
     {
@@ -515,11 +532,11 @@
       stars: 0,
       icon: '<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="24" y="18" width="28" height="40" rx="3" fill="var(--indigo)"/><circle cx="38" cy="28" r="4" fill="var(--card)"/><rect x="30" y="38" width="16" height="3" fill="var(--card)"/><rect x="30" y="45" width="16" height="3" fill="var(--card)"/>',
       flashcards: [
-        { title:'HARDWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="24" y="18" width="28" height="40" rx="3" fill="var(--indigo)"/><circle cx="38" cy="28" r="4" fill="var(--card)"/><rect x="30" y="38" width="16" height="3" fill="var(--card)"/><rect x="30" y="45" width="16" height="3" fill="var(--card)"/>', text:'The physical parts of a computer that we can see and touch, like the monitor, keyboard, and mouse.' },
-        { title:'SOFTWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="18" y="24" width="40" height="28" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><polygon points="32,32 32,44 44,38" fill="var(--accent)"/>', text:'The programs in our computer that tell the hardware what to do, like Windows or Microsoft Word.' },
+        { title:'HARDWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="24" y="18" width="28" height="40" rx="3" fill="var(--indigo)"/><circle cx="38" cy="28" r="4" fill="var(--card)"/><rect x="30" y="38" width="16" height="3" fill="var(--card)"/><rect x="30" y="45" width="16" height="3" fill="var(--card)"/>', text:'The physical parts of a computer that we can see and touch, like the monitor, keyboard, mouse, computer case, CPU, and printer.' },
+        { title:'SOFTWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><rect x="18" y="24" width="40" height="28" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><polygon points="32,32 32,44 44,38" fill="var(--accent)"/>', text:'The programs in our computer that tell the hardware what to do, like Windows, Microsoft Word, or computer games.' },
         { title:'PEOPLEWARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--amber-soft)"/><circle cx="28" cy="30" r="7" fill="var(--amber-deep)"/><circle cx="48" cy="30" r="7" fill="var(--amber-deep)"/><path d="M16 56c2-10 9-14 12-14s10 4 12 14M40 56c2-10 9-14 12-14s6 2 8 6" fill="none" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/>', text:'The people who use the computer, like our teachers, classmates, and ourselves.' },
         { title:'WORKING TOGETHER', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><circle cx="26" cy="38" r="9" fill="var(--good)"/><circle cx="50" cy="38" r="9" fill="var(--indigo)"/><circle cx="38" cy="24" r="9" fill="var(--amber)"/>', text:'Hardware, software, and peopleware all work together to make a computer system useful.' },
-        { title:'PARTS OF A COMPUTER', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="38" y="32" width="52" height="38" rx="4" fill="var(--indigo)" transform="translate(-19,-11) scale(0.7)"/><rect x="16" y="20" width="44" height="32" rx="3" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><rect x="24" y="28" width="28" height="16" fill="var(--indigo-soft)"/>', text:'The monitor, keyboard, mouse, hard disk, RAM, speakers, motherboard, and fan are all parts of a computer.' }
+        { title:'PARTS OF A COMPUTER', icon:'<circle cx="38" cy="38" r="34" fill="var(--indigo-soft)"/><rect x="38" y="32" width="52" height="38" rx="4" fill="var(--indigo)" transform="translate(-19,-11) scale(0.7)"/><rect x="16" y="20" width="44" height="32" rx="3" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><rect x="24" y="28" width="28" height="16" fill="var(--indigo-soft)"/>', text:'The monitor, keyboard, mouse, computer case, CPU, hard disk, RAM, speakers, motherboard, and fan are all parts of a computer.' }
       ],
       quiz: [
         mc('What do we call the physical parts of a computer that we can see and touch?', [['Hardware',true],['Software',false],['Peopleware',false]], 'That’s right! Those are hardware.', 'The physical parts we can see and touch are called Hardware.'),
@@ -533,7 +550,16 @@
         mc('Which of these is an example of hardware?', [['Keyboard',true],['Microsoft Word',false],['A computer teacher',false]], 'That&rsquo;s right! The keyboard is a physical part, so it&rsquo;s hardware.', 'The Keyboard is an example of hardware.'),
         tf('Peopleware refers to the programs installed in a computer.', false, 'Correct! Peopleware refers to the people who use the computer, not programs.', 'The answer should be False &mdash; peopleware refers to the people who use the computer.'),
         mc('What do we call it when hardware, software, and peopleware all work together?', [['A computer system',true],['A computer virus',false],['A computer game',false]], 'Yes! Together they make a computer system.', 'When these three work together, it is called A computer system.'),
-        tf('The speakers and RAM are parts of a computer.', true, 'That&rsquo;s right! Both are parts of a computer.', 'The answer should be True &mdash; speakers and RAM are parts of a computer.')
+        tf('The speakers and RAM are parts of a computer.', true, 'That&rsquo;s right! Both are parts of a computer.', 'The answer should be True &mdash; speakers and RAM are parts of a computer.'),
+        tf('Software is something we can touch with our hands.', false, 'Correct! We can only touch hardware, not software.', 'The answer should be False &mdash; software cannot be touched, only hardware can.'),
+        mc('Anna wants to draw a picture using the computer. Which element of the computer system will she use?', [['All of the choices are correct',true],['Software only',false],['Hardware only',false],['Peopleware only',false]], 'That&rsquo;s right! She needs hardware, software, and herself (peopleware) working together.', 'The answer is All of the choices are correct &mdash; hardware, software, and peopleware all work together.'),
+        mc('Look at the picture. What is it?', [['Hardware',true],['Software',false],['Peopleware',false]], 'Yes! A keyboard is a physical part you can touch, so it&rsquo;s Hardware.', 'This is a Hardware &mdash; a keyboard is a physical part you can touch, even though it plugs into the computer.', '<rect x="14" y="30" width="48" height="24" rx="3" fill="var(--indigo)"/><rect x="20" y="36" width="6" height="4" fill="var(--card)"/><rect x="30" y="36" width="6" height="4" fill="var(--card)"/><rect x="40" y="36" width="6" height="4" fill="var(--card)"/><rect x="50" y="36" width="6" height="4" fill="var(--card)"/><rect x="20" y="44" width="6" height="4" fill="var(--card)"/><rect x="30" y="44" width="6" height="4" fill="var(--card)"/><rect x="40" y="44" width="6" height="4" fill="var(--card)"/><rect x="50" y="44" width="6" height="4" fill="var(--card)"/>'),
+        mc('Look at the picture. What is it?', [['Software',true],['Hardware',false],['Peopleware',false]], 'That&rsquo;s right! Even though you see it on the screen, the drawing program is Software.', 'This is Software &mdash; a program like Microsoft Paint is not a physical thing, even though it shows on the screen. The screen itself is hardware, but the program running on it is software.', '<rect x="14" y="18" width="48" height="34" rx="3" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><rect x="18" y="22" width="40" height="26" fill="#fff"/><polygon points="30,44 30,34 38,28 46,34 46,44" fill="var(--amber-soft)" stroke="var(--amber-deep)" stroke-width="1.5"/><circle cx="52" cy="36" r="5" fill="var(--good)"/><rect x="50" y="40" width="3" height="6" fill="var(--case-dark)"/><rect x="30" y="52" width="16" height="6" fill="var(--indigo-deep)"/>'),
+        mc('Look at the picture. What is it?', [['Peopleware',true],['Hardware',false],['Software',false]], 'Yes! A student using the computer is Peopleware.', 'This is Peopleware &mdash; the people who use the computer, like this student, are peopleware.', '<circle cx="38" cy="24" r="8" fill="var(--amber-deep)"/><path d="M22 58c2-12 10-18 16-18s14 6 16 18" fill="none" stroke="var(--amber-deep)" stroke-width="4" stroke-linecap="round"/><rect x="46" y="36" width="20" height="14" rx="2" fill="var(--indigo-soft)" stroke="var(--indigo)" stroke-width="1.5"/>'),
+        mc('Look at the picture. What is it?', [['Hardware',true],['Software',false],['Peopleware',false]], 'That&rsquo;s right! Headphones are a physical part you can touch, so they&rsquo;re Hardware.', 'This is Hardware &mdash; headphones are a physical part you can touch, even though they don&rsquo;t look like the rest of the computer.', '<path d="M20 42a18 18 0 0 1 36 0" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><rect x="14" y="40" width="12" height="18" rx="5" fill="var(--accent)"/><rect x="50" y="40" width="12" height="18" rx="5" fill="var(--accent)"/>'),
+        mc('Look at the picture. What is it?', [['Peopleware',true],['Hardware',false],['Software',false]], 'Yes! A teacher helping a student is Peopleware.', 'This is Peopleware &mdash; teachers and classmates who use or help with the computer are peopleware.', '<circle cx="28" cy="30" r="7" fill="var(--amber-deep)"/><circle cx="48" cy="30" r="7" fill="var(--amber-deep)"/><path d="M16 56c2-10 9-14 12-14s10 4 12 14M40 56c2-10 9-14 12-14s6 2 8 6" fill="none" stroke="var(--amber-deep)" stroke-width="3" stroke-linecap="round"/>'),
+        mc('Which of these is an example of hardware?', [['Printer',true],['Microsoft Word',false],['A classmate',false]], 'That&rsquo;s right! A printer is a physical part you can touch, so it&rsquo;s hardware.', 'The Printer is an example of hardware.'),
+        mc('Which of these is an example of software?', [['A computer game',true],['Speaker',false],['Printer',false]], 'Correct! A computer game is a program, so it&rsquo;s software.', 'A computer game is an example of Software.')
       ]
     }
   ];
@@ -712,6 +738,9 @@
     document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     updatePointsLive();
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
+    var picEl = document.getElementById('q-pic');
+    if (item.pic){ picEl.innerHTML = '<svg viewBox="0 0 76 76">' + item.pic + '</svg>'; picEl.style.display = 'block'; }
+    else { picEl.innerHTML = ''; picEl.style.display = 'none'; }
     document.getElementById('q-text').textContent = decode(item.q);
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback'; fb.innerHTML = '';

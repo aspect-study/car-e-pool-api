@@ -463,6 +463,28 @@
   /* ================= LESSONS ================= */
   var lessons = [
     {
+      tag: 'Week 1',
+      title: 'I Know Who I Am',
+      stars: 0,
+      icon: '<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="38" cy="28" r="10" fill="var(--accent)"/><path d="M18 58c2-14 12-20 20-20s18 6 20 20" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>',
+      flashcards: [
+        { title:'MY NAME &amp; BIRTHDAY', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><circle cx="38" cy="28" r="10" fill="var(--accent)"/><rect x="24" y="46" width="28" height="10" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><line x1="30" y1="51" x2="46" y2="51" stroke="var(--accent)" stroke-width="2"/>', text:'Knowing your name, birthday, and the names of your family members helps you understand who you are.' },
+        { title:'MY FAMILY BACKGROUND', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><circle cx="26" cy="28" r="7" fill="var(--lav)"/><circle cx="50" cy="28" r="7" fill="var(--lav-deep)"/><path d="M14 56c2-10 9-14 12-14s10 4 12 14M40 56c2-10 9-14 12-14s6 2 8 6" fill="none" stroke="var(--lav)" stroke-width="3" stroke-linecap="round"/>', text:'Learning about your family background and your own characteristics helps you understand your identity and appreciate your family.' },
+        { title:'FAMILIES ARE DIFFERENT', icon:'<circle cx="38" cy="38" r="34" fill="var(--green-soft)"/><circle cx="24" cy="42" r="8" fill="var(--green)"/><circle cx="42" cy="34" r="11" fill="var(--green)"/><circle cx="56" cy="44" r="6" fill="var(--green)"/>', text:'Families come in different forms, sizes, and types, but all families are equally important.' },
+        { title:'VALUE WHO YOU ARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 54c-11-9-20-17-20-27a12 12 0 0 1 20-9 12 12 0 0 1 20 9c0 10-9 18-20 27z" fill="var(--accent)"/>', text:'You should value your name, your family, and your characteristics, because they are all part of your identity.' }
+      ],
+      quiz: [
+        mc('Kassie knows her name, birthday, and the names of her family members. Why is this important information about her?', [['They help her understand who she is',true],['They help her buy things',false],['They make her the most popular',false],['They make her different from everyone',false]], 'That&rsquo;s right! Knowing these things helps her understand who she is.', 'The correct answer is They help her understand who she is.'),
+        mc('Why is it important to know your family background and your own characteristics?', [['To understand your identity and appreciate your family',true],['To hide your differences',false],['To become better than others',false],['To compete with other people',false]], 'Yes! It helps you understand your identity and appreciate your family.', 'The correct answer is To understand your identity and appreciate your family.'),
+        tf('Families come in different forms, sizes, and types, but all are equally important.', true, 'That&rsquo;s right! Every family is equally important.', 'The answer should be True &mdash; families come in different forms, sizes, and types, but all are equally important.'),
+        tf('I should value my name, family, and characteristics because they are part of my identity.', true, 'Correct! They are all part of who you are.', 'The answer should be True &mdash; you should value your name, family, and characteristics because they are part of your identity.'),
+        mc('What helps you understand who you are?', [['Your name, birthday, and family',true],['Your favorite toy',false],['Your favorite color',false]], 'Yes! Your name, birthday, and family help you understand who you are.', 'Your name, birthday, and family help you understand who you are.'),
+        tf('Every family must look and act exactly the same to be a real family.', false, 'That&rsquo;s right! Families can be different and still be real, important families.', 'The answer should be False &mdash; families come in different forms, sizes, and types, but all are equally important.'),
+        mc('What should you do with your name, family, and characteristics?', [['Value them, because they are part of your identity',true],['Hide them from others',false],['Wish they were different',false]], 'Correct! You should value them.', 'You should value your name, family, and characteristics because they are part of your identity.'),
+        tf('Knowing about your family background has nothing to do with your identity.', false, 'That&rsquo;s right! It actually helps you understand your identity.', 'The answer should be False &mdash; learning about your family background helps you understand your identity.')
+      ]
+    },
+    {
       tag: 'Lesson 3',
       title: 'I Got This Feeling',
       stars: 0,
@@ -473,7 +495,8 @@
         { title:'SADNESS', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><circle cx="38" cy="36" r="16" fill="var(--lav)"/><path d="M30 44c3-4 15-4 18 0" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round"/>', text:'The opposite of happiness. It is normal and okay to feel sad sometimes.' },
         { title:'ANGER', icon:'<circle cx="38" cy="38" r="34" fill="var(--bad-soft)"/><circle cx="38" cy="36" r="16" fill="var(--bad)"/><path d="M28 30l8 4M48 30l-8 4" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round"/>', text:'A feeling often related to irritability, tension, and anxiety.' },
         { title:'FEAR &amp; DISGUST', icon:'<circle cx="38" cy="38" r="34" fill="var(--lav-soft)"/><circle cx="30" cy="38" r="10" fill="var(--lav)"/><circle cx="50" cy="38" r="10" fill="var(--green)"/>', text:'Fear is being scared of danger. Disgust is a strong dislike of something unpleasant.' },
-        { title:'CATCH YOUR FEELINGS', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Be Calm (C), Accept your feelings (A), Try doing something (T), and Call for Help (C &amp; H) &mdash; CATCH helps you handle strong feelings the right way.' }
+        { title:'CATCH YOUR FEELINGS', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><polyline points="30,38 36,44 47,31" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>', text:'Be Calm (C), Accept your feelings (A), Try doing something (T), and Call for Help (C &amp; H) &mdash; CATCH helps you handle strong feelings the right way.' },
+        { title:'SELF-DISCIPLINE &amp; SELF-CONTROL', icon:'<circle cx="38" cy="38" r="34" fill="var(--good-soft)"/><path d="M38 16l16 6v12c0 12-7 20-16 24-9-4-16-12-16-24V22z" fill="var(--good)"/><path d="M28 36c4 4 12 4 16 0" fill="none" stroke="var(--card)" stroke-width="3" stroke-linecap="round"/>', text:'Calming down and talking politely instead of shouting shows self-discipline and self-control. Children who learn to manage their emotions well develop self-discipline.' }
       ],
       quiz: [
         mc('What do we call the feelings we have inside that help us understand how we react to situations?', [['Emotions',true],['Opinions',false],['Rules',false]], 'That’s right! Those are our emotions.', 'The correct answer is Emotions &mdash; the feelings we have inside.'),
@@ -487,7 +510,12 @@
         mc('Which emotion is the opposite of happiness?', [['Sadness',true],['Excitement',false],['Joy',false]], 'That’s right! Sadness is the opposite of happiness.', 'Sadness is the emotion that is the opposite of happiness.'),
         tf('Fear and disgust are the same emotion.', false, 'That’s right! Fear and disgust are two different emotions.', 'The answer should be False &mdash; fear is being scared of danger, while disgust is a strong dislike of something unpleasant.'),
         mc('In the CATCH plan, what does the &ldquo;A&rdquo; stand for?', [['Accept your feelings',true],['Argue with others',false],['Avoid everyone',false]], 'Yes! A stands for Accept your feelings.', 'In CATCH, the &ldquo;A&rdquo; stands for Accept your feelings.'),
-        tf('Emotions help us understand how we feel and react to situations.', true, 'Correct! That is exactly what emotions do.', 'The answer should be True &mdash; emotions help us understand how we feel and react to situations.')
+        tf('Emotions help us understand how we feel and react to situations.', true, 'Correct! That is exactly what emotions do.', 'The answer should be True &mdash; emotions help us understand how we feel and react to situations.'),
+        mc('Sammy feels angry because his friend accidentally broke his pencil. What should he do to show self-discipline?', [['Calm down and talk politely with his friend',true],['Shout at his friend',false],['Break his friend&rsquo;s things',false],['Stop talking to everyone',false]], 'That&rsquo;s right! Calming down and talking politely shows self-discipline.', 'The correct answer is Calm down and talk politely with his friend.'),
+        mc('Dannie is angry but chooses to talk politely instead. What does this show?', [['Self-control',true],['Disrespect',false],['Carelessness',false]], 'Yes! Choosing to stay calm and polite shows self-control.', 'Choosing to talk politely while angry shows Self-control.'),
+        tf('Children who learn to manage their emotions effectively develop self-discipline.', true, 'That&rsquo;s right! Managing your emotions well builds self-discipline.', 'The answer should be True &mdash; managing your emotions effectively helps you develop self-discipline.'),
+        tf('Shouting at your friend is a good way to show self-discipline.', false, 'That&rsquo;s right! Shouting is not self-discipline &mdash; calming down and talking politely is.', 'The answer should be False &mdash; self-discipline means calming down and talking politely, not shouting.'),
+        tf('Breaking or damaging things when you are angry shows self-control.', false, 'Correct! Breaking things shows a lack of self-control, not self-control.', 'The answer should be False &mdash; breaking or damaging things when angry shows a lack of self-control.')
       ]
     },
     {
@@ -514,7 +542,8 @@
         mc('What does religion teach us to do?', [['Pray, be kind, and do what is right',true],['Ignore others',false],['Avoid praying',false]], 'That’s right! Religion teaches us to pray, be kind, and do what is right.', 'Religion teaches us to pray, be kind, and do what is right.'),
         tf('We only pray inside a church.', false, 'Correct! We can pray anytime and anywhere.', 'The answer should be False &mdash; we can pray anytime and anywhere, not only inside a church.'),
         mc('Which of these is a reason we pray, besides giving thanks?', [['To praise God’s goodness',true],['To avoid God',false],['To ignore our blessings',false]], 'Yes! We also pray to praise God’s goodness.', 'One reason we pray is To praise God’s goodness.'),
-        tf('Church is a special place where people worship God and learn about His love.', true, 'That’s right! Church is a place of worship and learning.', 'The answer should be True &mdash; church is where people worship God and learn about His love.')
+        tf('Church is a special place where people worship God and learn about His love.', true, 'That’s right! Church is a place of worship and learning.', 'The answer should be True &mdash; church is where people worship God and learn about His love.'),
+        tf('God provides us with all our needs even though we do not know how or why.', true, 'That&rsquo;s right! We can trust God to provide for us.', 'The answer should be True &mdash; God provides us with all our needs even though we do not know how or why.')
       ]
     },
     {
@@ -542,7 +571,11 @@
         mc('When should you wash your hands?', [['After playing and before you eat',true],['Only once a week',false],['Only before sleeping',false]], 'That’s right! Wash your hands after playing and before you eat.', 'You should wash your hands After playing and before you eat.'),
         tf('Physical fitness only means playing sports competitively.', false, 'Correct! Physical fitness means being active, like exercise and play.', 'The answer should be False &mdash; physical fitness means being active for at least an hour a day, not just competitive sports.'),
         mc('What do we call eating healthy, nutritious food instead of junk food?', [['Adequate Nutrition',true],['Physical Fitness',false],['Quality Sleep',false]], 'Yes! That is Adequate Nutrition.', 'Eating healthy food instead of junk food is called Adequate Nutrition.'),
-        tf('Taking care of your feelings has nothing to do with staying healthy.', false, 'That’s right! Taking care of your feelings is part of staying healthy too.', 'The answer should be False &mdash; taking care of your feelings (mental health) is also part of staying healthy.')
+        tf('Taking care of your feelings has nothing to do with staying healthy.', false, 'That’s right! Taking care of your feelings is part of staying healthy too.', 'The answer should be False &mdash; taking care of your feelings (mental health) is also part of staying healthy.'),
+        mc('Carlo&rsquo;s daddy teaches him to take a bath every day. Why should Carlo follow this habit?', [['To keep his body clean and feel confident',true],['To avoid helping at home',false],['To make others do his tasks',false],['To become better than his friends',false]], 'That&rsquo;s right! Bathing daily keeps you clean and confident.', 'The correct answer is To keep his body clean and feel confident.'),
+        mc('Ben forgot to wash his hands before eating, and his mother reminds him about proper hygiene. What should Ben do?', [['Wash his hands and remember the reminder next time',true],['Blame someone else',false],['Get angry at his mother',false],['Continue eating without washing',false]], 'Yes! Ben should wash his hands and remember for next time.', 'The correct answer is Ben should wash his hands and remember the reminder next time.'),
+        mc('Mark washes his hands only when they look dirty. What should he understand about handwashing?', [['Hands should be washed regularly to remove germs',true],['Hands do not carry germs',false],['Handwashing is only needed at school',false],['Soap is not needed when washing hands',false]], 'That&rsquo;s right! Hands should be washed regularly, not just when they look dirty.', 'The correct answer is Hands should be washed regularly to remove germs.'),
+        tf('Taking care of yourself makes you weak.', false, 'That&rsquo;s right! Taking care of yourself keeps you strong and healthy, not weak.', 'The answer should be False &mdash; taking care of yourself keeps you strong and healthy.')
       ]
     }
   ];
