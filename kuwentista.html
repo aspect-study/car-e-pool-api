@@ -94,6 +94,15 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .card-icon{font-size:2.6rem;}
 .card-term{font-family:'Chewy',cursive; font-size:1.5rem; color:var(--accent);}
 .card-def{font-size:1.02rem; color:var(--ink-soft); line-height:1.5; white-space:pre-line;}
+.card-en{font-size:0.92rem; color:var(--ink); line-height:1.45; white-space:pre-line; text-align:left; width:100%;
+  background:color-mix(in srgb, var(--navy) 10%, var(--surface)); border-left:4px solid var(--navy); border-radius:10px; padding:10px 14px;}
+.en-label{display:block; font-weight:800; font-size:0.75rem; letter-spacing:0.04em; color:var(--navy); margin-bottom:2px;}
+.card.tip{border:3px solid var(--gold); background:color-mix(in srgb, var(--gold) 10%, var(--surface));}
+.card.tip .card-term{color:var(--ink);}
+.card.tip .card-def{color:var(--ink); text-align:left;}
+.q-help{background:none; border:1px dashed var(--navy); color:var(--navy); border-radius:10px; padding:6px 12px; font-weight:700; font-size:0.85rem; margin:-8px 0 14px;}
+.q-en{font-size:0.92rem; color:var(--ink); background:color-mix(in srgb, var(--navy) 10%, var(--surface)); border-left:4px solid var(--navy); border-radius:10px; padding:8px 12px; margin:-8px 0 14px;}
+.fb-en{margin-top:8px; font-size:0.88rem; color:var(--ink-soft);}
 .card-nav{display:flex; justify-content:space-between; align-items:center; margin-top:16px; gap:10px;}
 .nav-btn{
   background:var(--surface2); color:var(--ink); border:1px solid var(--border); border-radius:12px;
@@ -202,6 +211,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <div class="card-icon" id="card-icon"></div>
       <div class="card-term" id="card-term"></div>
       <div class="card-def" id="card-def"></div>
+      <div class="card-en hidden" id="card-en"></div>
     </div>
     <div class="card-nav">
       <button class="nav-btn" id="card-prev" onclick="cardStep(-1)">&larr; Balik</button>
@@ -224,6 +234,8 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
     </div>
     <div id="q-passage"></div>
     <div class="q-text" id="q-text"></div>
+    <button class="q-help" id="q-help" onclick="showQuestionEnglish()">🤔 Hindi maintindihan? Tingnan sa English</button>
+    <div class="q-en hidden" id="q-en"></div>
     <div class="q-sentence hidden" id="q-sentence"></div>
     <div class="options" id="q-options"></div>
     <div id="q-feedback"></div>
@@ -255,329 +267,341 @@ const LESSONS = [
   {
     id:'alpabeto', emoji:'🔤', title:'Alpabetong Pilipino', subtitle:'Ang mga Titik ng Wikang Filipino',
     flashcards:[
-      {icon:'🔡', term:'Alpabetong Filipino', def:'Binubuo ng 28 na titik: 20 mula sa Abakada, at 8 dagdag mula sa Ingles at Espanyol.'},
-      {icon:'🅰️', term:'Patinig (Vowels)', def:'A, E, I, O, U — limang patinig sa Filipino.'},
-      {icon:'🔠', term:'Katinig (Consonants)', def:'Ang mga letrang hindi patinig, tulad ng B, K, D, G, at marami pang iba.'},
-      {icon:'✨', term:'Ñ at NG', def:'Dalawang natatanging titik. Ang Ñ ay binibigkas nang pa-Espanyol.'},
-      {icon:'📜', term:'Mga Dagdag na Letra', def:'C, F, J, Ñ, Q, V, X, Z — walo silang dagdag na letra mula sa Ingles at Espanyol, hindi bahagi ng dating Abakada.'},
-      {icon:'🔡', term:'Malaki at Maliit na Titik', def:'Kailangan malaman kung paano isulat at basahin ang malaking titik (uppercase) at maliit na titik (lowercase).'},
+      {icon:'🔡', term:'Alpabetong Filipino', def:'May 28 na titik (letra) ang Alpabetong Filipino.\n20 ay galing sa dating Abakada.\n8 ay dagdag mula sa Ingles at Espanyol.', en:'The Filipino alphabet has 28 letters.\n20 from the old Abakada + 8 added letters = 28.'},
+      {icon:'🅰️', term:'Patinig', def:'LIMA (5) lang ang patinig:\nA, E, I, O, U', en:'Patinig = vowels. There are only 5: A, E, I, O, U.'},
+      {icon:'🔠', term:'Katinig', def:'Lahat ng titik na HINDI patinig ay katinig.\nHal: B, K, D, G, M, S, T', en:'Katinig = consonants. If it is not A, E, I, O, U, it is a katinig.'},
+      {icon:'✨', term:'Ñ at NG', def:'Kasama ang Ñ at NG sa 28 na titik.\nPa-Ingles ang bigkas ng mga titik, MALIBAN sa Ñ.\nAng Ñ ay pa-Espanyol ang bigkas.', en:'Ñ and NG are letters too.\nWe say the letters the English way, EXCEPT Ñ. We say Ñ the Spanish way.'},
+      {icon:'📜', term:'Ang 8 Dagdag na Letra', def:'C, F, J, Ñ, Q, V, X, Z\nWala sila sa dating Abakada. Dagdag sila mula sa Ingles at Espanyol.', en:'The 8 added letters: C, F, J, Ñ, Q, V, X, Z. They were not in the old Abakada.'},
+      {icon:'🔡', term:'Malaki at Maliit na Titik', def:'A = malaking titik\na = maliit na titik\nDapat alam mong isulat at basahin ang dalawa.', en:'Malaking titik = uppercase (A).\nMaliit na titik = lowercase (a).'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Patinig ba? Tingnan kung A, E, I, O, o U.\nKung hindi — KATINIG iyan!\n\nPara magbilang sa isang salita, ituro isa-isa ang bawat titik.\nHal: g-U-r-O → 2 patinig', en:'Is it A, E, I, O, U? Then it is a vowel (patinig). If not, it is a consonant (katinig).\nTo count, point at each letter one by one.'},
     ],
     quiz:[
-      {q:'Ilang titik mayroon ang Alpabetong Filipino?', options:['26','28','20','30'], correct:1, explain:'May 28 na titik ang Alpabetong Filipino.'},
-      {q:'Ilan ang patinig sa Filipino?', options:['5','6','4','7'], correct:0, explain:'May limang patinig: A, E, I, O, U.'},
-      {q:'Alin dito ang HINDI patinig?', options:['A','E','M','O'], correct:2, explain:'Ang M ay katinig, hindi patinig.'},
-      {q:'Alin dito ang katinig?', options:['I','U','S','A'], correct:2, explain:'Ang S ay katinig, hindi isa sa limang patinig.'},
-      {q:'Ano ang sumusunod na letra pagkatapos ng "F" sa alpabeto?', options:['E','G','H','D'], correct:1, explain:'Sa pagkakasunod-sunod ng alpabeto, ang G ang kasunod ng F.'},
-      {q:'Tama o Mali: Ang Ñ ay binibigkas nang pa-Ingles.', options:['Tama','Mali'], correct:1, explain:'Mali — ang Ñ ay binibigkas nang pa-Espanyol, hindi pa-Ingles.'},
-      {q:'Ilang letra ang dagdag mula sa Ingles at Espanyol sa Abakada?', options:['8','10','5','20'], correct:0, explain:'May 8 dagdag na letra: C, F, J, Ñ, Q, V, X, Z.'},
-      {q:'Sa salitang "guro," ilan ang patinig?', options:['1','2','3','0'], correct:1, explain:'Ang "guro" ay may dalawang patinig: u at o.'},
-      {q:'Sa salitang "aklat," ilan ang katinig?', options:['2','3','4','1'], correct:1, explain:'Ang "aklat" ay may tatlong katinig: k, l, t.'},
-      {q:'Alin sa mga titik ang binibigkas nang pa-Espanyol?', options:['NG','Ñ','K','W'], correct:1, explain:'Ang Ñ lamang ang binibigkas nang pa-Espanyol.'},
-      {q:'Tama o Mali: May 20 letra mula sa dating Abakada ang Alpabetong Filipino.', options:['Tama','Mali'], correct:0, explain:'Tama — 20 letra mula sa Abakada, dagdagan ng 8 mula sa Ingles/Espanyol para maging 28.'},
-      {q:'Alin sa mga sumusunod ang ISA sa mga dagdag na letra mula sa Ingles at Espanyol (hindi bahagi ng dating Abakada)?', options:['B','C','K','P'], correct:1, explain:'Ang C ay hindi bahagi ng orihinal na Abakada — dagdag ito mula sa Ingles/Espanyol.'},
+      {q:'Ilang titik mayroon ang Alpabetong Filipino?', qen:'How many letters are in the Filipino alphabet?', options:['26','28','20','30'], correct:1, explain:'28 ang titik: 20 mula sa Abakada + 8 na dagdag.', en:'28 letters (20 + 8).'},
+      {q:'Ilan ang patinig sa Filipino?', qen:'How many vowels are there in Filipino?', options:['5','6','4','7'], correct:0, explain:'Lima (5) ang patinig: A, E, I, O, U.', en:'5 vowels: A, E, I, O, U.'},
+      {q:'Alin dito ang HINDI patinig?', qen:'Which one is NOT a vowel?', options:['A','E','M','O'], correct:2, explain:'Ang M ay katinig. Ang A, E, at O ay patinig.', en:'M is a consonant. A, E, O are vowels.'},
+      {q:'Alin dito ang katinig?', qen:'Which one is a consonant?', options:['I','U','S','A'], correct:2, explain:'Ang S ay katinig — hindi ito A, E, I, O, o U.', en:'S is a consonant because it is not A, E, I, O, U.'},
+      {q:'Ano ang kasunod na titik pagkatapos ng "F"?', qen:'Which letter comes right after F?', options:['E','G','H','D'], correct:1, explain:'...E, F, G, H... — ang G ang kasunod ng F.', en:'After F comes G.'},
+      {q:'Tama o Mali: Ang Ñ ay binibigkas nang pa-Ingles.', qen:'True or False: We say Ñ the English way.', options:['Tama','Mali'], correct:1, explain:'Mali — pa-Espanyol ang bigkas ng Ñ. Ang ibang titik ang pa-Ingles.', en:'False. Ñ is said the Spanish way.'},
+      {q:'Ilang letra ang idinagdag mula sa Ingles at Espanyol?', qen:'How many letters were added from English and Spanish?', options:['8','10','5','20'], correct:0, explain:'8 ang dagdag: C, F, J, Ñ, Q, V, X, Z.', en:'8 added letters.'},
+      {q:'Ilan ang patinig sa salitang ito?\n"guro"', qen:'How many vowels are in this word?', options:['1','2','3','0'], correct:1, explain:'g-U-r-O → 2 patinig: u at o.', en:'g-u-r-o: the vowels are u and o. That is 2.'},
+      {q:'Ilan ang katinig sa salitang ito?\n"aklat"', qen:'How many consonants are in this word?', options:['2','3','4','1'], correct:1, explain:'a-K-L-a-T → 3 katinig: k, l, t.', en:'a-k-l-a-t: the consonants are k, l, t. That is 3.'},
+      {q:'Aling titik ang binibigkas nang pa-Espanyol?', qen:'Which letter is said the Spanish way?', options:['NG','Ñ','K','W'], correct:1, explain:'Ñ lang ang pa-Espanyol ang bigkas.', en:'Only Ñ is said the Spanish way.'},
+      {q:'Tama o Mali: May 20 letra mula sa dating Abakada ang Alpabetong Filipino.', qen:'True or False: 20 letters of the Filipino alphabet came from the old Abakada.', options:['Tama','Mali'], correct:0, explain:'Tama — 20 mula sa Abakada + 8 dagdag = 28.', en:'True. 20 + 8 = 28.'},
+      {q:'Alin ang isa sa 8 DAGDAG na letra (wala sa dating Abakada)?', qen:'Which one is one of the 8 ADDED letters (not in the old Abakada)?', options:['B','C','K','P'], correct:1, explain:'Ang C ay isa sa 8 dagdag na letra. Ang B, K, at P ay nasa dating Abakada.', en:'C is an added letter. B, K, P were already in the Abakada.'},
     ]
   },
   {
     id:'pangngalan', emoji:'🏷️', title:'Uri ng Pangngalan', subtitle:'Pambalana at Pantangi',
     flashcards:[
-      {icon:'🏷️', term:'Pangngalan', def:'Bahagi ng pananalita na tumutukoy sa pangalan ng tao, hayop, bagay, lugar, o pangyayari.'},
-      {icon:'🔡', term:'Pambalana', def:'Karaniwang ngalan; nagsisimula sa maliit na titik. Hal: guro, aso, paaralan.'},
-      {icon:'🔠', term:'Pantangi', def:'Tiyak o espesipikong ngalan; laging nagsisimula sa malaking titik. Hal: Maynila, Bantay.'},
-      {icon:'🧑', term:'Halimbawa: Jose Rizal', def:'Ito ay Pantangi dahil tiyak na pangalan ng isang tao.'},
-      {icon:'🏫', term:'Halimbawa: paaralan', def:'Ito ay Pambalana dahil karaniwang ngalan ng isang lugar.'},
-      {icon:'🎉', term:'Tip: Pangyayari', def:'Kahit karaniwang pangyayari (kaarawan), Pambalana ito. Pero kung tiyak na pangalan ng piyesta o araw (Pasko, Enero), Pantangi.'},
+      {icon:'🏷️', term:'Pangngalan', def:'PANGALAN ng tao, hayop, bagay, lugar, o pangyayari.', en:'Pangngalan = noun. The name of a person, animal, thing, place, or event.'},
+      {icon:'🐶', term:'Mga Halimbawa', def:'Tao: guro, bata, Ana\nHayop: aso, pusa, daga\nBagay: libro, mesa, upuan\nLugar: paaralan, palengke, Luneta\nPangyayari: kasal, piyesta, kaarawan', en:'Person, animal, thing, place, event.'},
+      {icon:'🔡', term:'Pambalana', def:'KARANIWANG pangalan.\nMaliit na titik ang simula.\nHal: guro, aso, paaralan', en:'Pambalana = a common name (not one special one). It starts with a small letter.\nLike: teacher, dog, school.'},
+      {icon:'🔠', term:'Pantangi', def:'TIYAK na pangalan.\nLaging malaking titik ang simula.\nHal: Maynila, Ginoong Santos, Bantay (pangalan ng aso)', en:'Pantangi = the special name of ONE person, animal, thing, or place. It always starts with a capital letter.\nLike: Manila, Mr. Santos, Bantay (a dog name).'},
+      {icon:'⚖️', term:'Paghambingin', def:'guro → Pambalana (kahit sinong guro)\nJose Rizal → Pantangi (isang tiyak na tao)\n\npaaralan → Pambalana\nMaynila → Pantangi', en:'"guro" can be any teacher, so it is Pambalana.\n"Jose Rizal" is one specific person, so it is Pantangi.'},
+      {icon:'⚠️', term:'Tandaan', def:'Ang Pambalana ay malaking titik LANG kapag ito ang unang salita ng pangungusap.\nPambalana pa rin ito!', en:'A Pambalana word gets a capital letter only when it is the first word of a sentence. It is still Pambalana.'},
+      {icon:'🎉', term:'Pangyayari', def:'kaarawan, kasal, piyesta → Pambalana (karaniwan)\nPasko, Enero → Pantangi (tiyak na pangalan)', en:'Birthday, wedding, fiesta = common, so Pambalana.\nChristmas (Pasko), January (Enero) = special names, so Pantangi.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Itanong: KAHIT ANO ba ito, o ISANG TIYAK lang?\n\nKahit ano / kahit sino → PAMBALANA\nIsang tiyak (may sariling pangalan) → PANTANGI\n\nClue: Ang Pantangi ay laging may malaking titik.', en:'Ask: can it be ANY one, or is it ONE special one?\nAny one = Pambalana. One special one with its own name = Pantangi.\nClue: Pantangi always starts with a capital letter.'},
     ],
     quiz:[
-      {q:'Ano ang uri ng "Jollibee"?\n"Kumain kami sa Jollibee kahapon."', options:['Pambalana','Pantangi'], correct:1, explain:'"Jollibee" ay tiyak na pangalan ng isang tindahan kaya ito ay Pantangi.'},
-      {q:'Ano ang uri ng "ibon"?\n"Maraming ibon sa puno."', options:['Pambalana','Pantangi'], correct:0, explain:'"ibon" ay karaniwang ngalan ng hayop kaya ito ay Pambalana.'},
-      {q:'Ilan ang pangngalang Pantangi dito?\n"Si Maria ay nag-aral sa Unibersidad ng Pilipinas."', options:['1','2','3','0'], correct:1, explain:'May dalawang Pantangi: "Maria" at "Unibersidad ng Pilipinas."'},
-      {q:'Alin sa mga sumusunod ang Pantangi?', options:['lungsod','Cebu','bata','paaralan'], correct:1, explain:'"Cebu" ay tiyak na pangalan ng isang lugar kaya ito ay Pantangi.'},
-      {q:'Alin sa mga sumusunod ang Pambalana?', options:['Pasko','tindahan','Rizal','Enero'], correct:1, explain:'"tindahan" ay karaniwang ngalan kaya ito ay Pambalana.'},
-      {q:'Ilan ang salitang Pantangi sa pangungusap?\n"Pumunta kami sa Baguio noong Disyembre."', options:['1','2','3','0'], correct:1, explain:'"Baguio" at "Disyembre" ay pareho ng Pantangi — dalawa silang tiyak na pangalan.'},
-      {q:'Tama o Mali: Ang "kaarawan" ay palaging isinusulat sa malaking titik.', options:['Tama','Mali'], correct:1, explain:'Mali — ang "kaarawan" ay karaniwang salita (Pambalana), kaya maliit na titik ang gamit.'},
-      {q:'Alin ang wastong pagsulat ng pangalan ng bansa?', options:['pilipinas','Pilipinas'], correct:1, explain:'Dahil tiyak na pangalan ng bansa, dapat malaking titik ang unang letra.'},
-      {q:'Alin ang pangngalang Pantangi?\n"Naglalaro ang mga bata sa Luneta Park."', options:['bata','Luneta Park','naglalaro','mga'], correct:1, explain:'"Luneta Park" ay tiyak na pangalan ng isang lugar kaya ito ay Pantangi.'},
-      {q:'Alin sa mga ito ang tiyak na pangalan ng isang alagang aso?', options:['aso','Bantay','pusa','ibon'], correct:1, explain:'"Bantay" ay tiyak na pangalan ng isang partikular na aso kaya ito ay Pantangi.'},
-      {q:'Alin ang Pambalana sa pangungusap?\n"Ang guro namin ay si Bb. Reyes."', options:['Bb. Reyes','guro'], correct:1, explain:'"guro" ay karaniwang ngalan ng trabaho kaya ito ay Pambalana.'},
-      {q:'Tama o Mali: Ang Pambalana ay nagsisimula sa malaking titik kapag ito ang unang salita ng pangungusap.', options:['Tama','Mali'], correct:0, explain:'Tama — kahit Pambalana, kapag unang salita ito ng pangungusap, malaking titik ang gamit.'},
+      {q:'Ano ang uri ng "Jollibee"?\n"Kumain kami sa Jollibee kahapon."', qen:'What kind of noun is "Jollibee"?', options:['Pambalana','Pantangi'], correct:1, explain:'"Jollibee" ay tiyak na pangalan — Pantangi. May malaking titik pa!', en:'Jollibee is a special name, so it is Pantangi.'},
+      {q:'Ano ang uri ng "ibon"?\n"Maraming ibon sa puno."', qen:'What kind of noun is "ibon" (bird)?', options:['Pambalana','Pantangi'], correct:0, explain:'"ibon" — kahit anong ibon. Karaniwang pangalan, kaya Pambalana.', en:'It can be any bird, so it is Pambalana.'},
+      {q:'Ilan ang Pantangi sa pangungusap?\n"Si Maria ay nag-aral sa Unibersidad ng Pilipinas."', qen:'How many Pantangi (special names) are in this sentence?', options:['1','2','3','0'], correct:1, explain:'Dalawa: "Maria" at "Unibersidad ng Pilipinas." Parehong tiyak na pangalan.', en:'Two special names: Maria and Unibersidad ng Pilipinas.'},
+      {q:'Alin ang Pantangi?', qen:'Which one is Pantangi (a special name)?', options:['lungsod','Cebu','bata','paaralan'], correct:1, explain:'"Cebu" ay tiyak na pangalan ng lugar — Pantangi.', en:'Cebu is the name of one special place.'},
+      {q:'Alin ang Pambalana?', qen:'Which one is Pambalana (a common name)?', options:['Pasko','tindahan','Jose Rizal','Enero'], correct:1, explain:'"tindahan" — kahit anong tindahan. Karaniwan, kaya Pambalana.', en:'tindahan (store) can be any store, so it is Pambalana.'},
+      {q:'Ilan ang Pantangi sa pangungusap?\n"Pumunta kami sa Baguio noong Disyembre."', qen:'How many Pantangi words are in this sentence?', options:['1','2','3','0'], correct:1, explain:'Dalawa: "Baguio" (tiyak na lugar) at "Disyembre" (tiyak na buwan).', en:'Two: Baguio and Disyembre.'},
+      {q:'Tama o Mali: Ang "kaarawan" ay laging isinusulat sa malaking titik.', qen:'True or False: "kaarawan" (birthday) is always written with a capital letter.', options:['Tama','Mali'], correct:1, explain:'Mali — ang "kaarawan" ay Pambalana, kaya maliit na titik.', en:'False. kaarawan is a common word, so it uses a small letter.'},
+      {q:'Alin ang tamang pagsulat ng pangalan ng bansa?', qen:'Which is the correct way to write the name of the country?', options:['pilipinas','Pilipinas'], correct:1, explain:'Tiyak na pangalan ng bansa, kaya malaking titik: Pilipinas.', en:'A country name is special, so it starts with a capital letter.'},
+      {q:'Alin ang Pantangi?\n"Naglalaro ang mga bata sa Luneta Park."', qen:'Which word is Pantangi?', options:['bata','Luneta Park','naglalaro','mga'], correct:1, explain:'"Luneta Park" ay tiyak na pangalan ng lugar — Pantangi.', en:'Luneta Park is the name of one special place.'},
+      {q:'Alin ang tiyak na pangalan ng isang alagang aso?', qen:'Which one is the special name of a pet dog?', options:['aso','Bantay','pusa','kalabaw'], correct:1, explain:'"Bantay" ang pangalan ng aso — Pantangi. Ang "aso" ay Pambalana.', en:'Bantay is the dog name (Pantangi). "aso" just means dog (Pambalana).'},
+      {q:'Alin ang Pambalana?\n"Ang guro namin ay si Bb. Reyes."', qen:'Which word is Pambalana?', options:['Bb. Reyes','guro'], correct:1, explain:'"guro" — kahit sinong guro, kaya Pambalana. Ang "Bb. Reyes" ay Pantangi.', en:'guro (teacher) is common. Bb. Reyes is a special name.'},
+      {q:'Tama o Mali: Nagsisimula sa malaking titik ang Pambalana kapag ito ang unang salita ng pangungusap.', qen:'True or False: A Pambalana word starts with a capital letter when it is the first word of the sentence.', options:['Tama','Mali'], correct:0, explain:'Tama — sa simula ng pangungusap, laging malaking titik. Pambalana pa rin ito.', en:'True. The first word of a sentence always gets a capital letter.'},
     ]
   },
   {
-    id:'panghalip', emoji:'🙋', title:'Panghalip Panao at mga Salitang Pananong', subtitle:'Ako, Ikaw, Siya... Sino? Ano?',
+    id:'panghalip', emoji:'🙋', title:'Panghalip Panao at Pananong', subtitle:'Ako, Ikaw, Siya... Sino? Ano?',
     flashcards:[
-      {icon:'🔁', term:'Panghalip', def:'Salitang ipinapalit sa pangngalan upang maiwasan ang paulit-ulit na paggamit ng salita.'},
-      {icon:'🙋', term:'Panghalip Panao', def:'Panghalili sa ngalan ng tao. Hal: ako, ikaw, siya, tayo, sila.'},
-      {icon:'1️⃣', term:'Unang Panauhan', def:'Tumutukoy sa nagsasalita: ako, ko, akin, tayo, kami.'},
-      {icon:'2️⃣', term:'Ikalawang Panauhan', def:'Tumutukoy sa kinakausap: ikaw, ka, mo, kayo, inyo.'},
-      {icon:'3️⃣', term:'Ikatlong Panauhan', def:'Tumutukoy sa pinag-uusapan: siya, niya, sila, kanila.'},
-      {icon:'❓', term:'Mga Salitang Pananong', def:'Mga salitang ginagamit sa pagtatanong: sino, ano, saan, kailan, ilan, bakit, paano. Laging may (?) sa dulo.'},
+      {icon:'🔁', term:'Panghalip', def:'Salitang IPINAPALIT sa pangngalan, para hindi paulit-ulit ang pangalan.\nHal: siya, ako, ito, tayo\n"SIYA ang aking Nanay."', en:'Panghalip = pronoun. A word we use INSTEAD of a name, so we do not repeat the name.'},
+      {icon:'🙋', term:'Panghalip Panao', def:'Pamalit sa pangalan ng TAO.\nHal: ako, ikaw, siya, kami, tayo, sila', en:'Panao = replaces the name of a PERSON.\nLike: I, you, he/she, we, they.'},
+      {icon:'1️⃣', term:'Unang Panauhan', def:'Ang NAGSASALITA.\nako, ko, akin, tayo, kami\n"AKO ay aalis mamayang gabi."', en:'1st person = the one SPEAKING. I, me, my, we.'},
+      {icon:'2️⃣', term:'Ikalawang Panauhan', def:'Ang KINAKAUSAP.\nikaw, ka, mo, kayo, inyo\n"Kumusta KA?"', en:'2nd person = the one you are TALKING TO. You.'},
+      {icon:'3️⃣', term:'Ikatlong Panauhan', def:'Ang PINAG-UUSAPAN.\nsiya, niya, sila, kanila\n"SILA ay naglalaro sa parke."', en:'3rd person = the one being TALKED ABOUT. He, she, they.'},
+      {icon:'❓', term:'Panghalip na Pananong', def:'Ginagamit kapag NAGTATANONG.\nsino, ano, saan, kailan, ilan, bakit, paano\nLaging may tandang pananong (?) sa dulo.', en:'Question words. The sentence always ends with a question mark (?).'},
+      {icon:'🗝️', term:'Ano ang Tinatanong?', def:'Sino → tao\nAno → bagay\nSaan → lugar\nKailan → araw o oras\nIlan → bilang\nBakit → dahilan\nPaano → paraan', en:'Sino = who. Ano = what. Saan = where. Kailan = when.\nIlan = how many. Bakit = why. Paano = how.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Tandaan ni Teacher:\nKung NAGTATANONG → Pananong\nKung pamalit sa pangalan ng TAO → Panao\n\nPara sa panauhan, itanong:\nNagsasalita? → Una\nKinakausap? → Ikalawa\nPinag-uusapan? → Ikatlo', en:'Asking a question = Pananong. Replacing a person name = Panao.\nThe speaker = 1st. The one you talk to = 2nd. The one you talk about = 3rd.'},
     ],
     quiz:[
-      {q:'Anong panauhan ang "Kami"?\n"Kami ay maglalaro sa hardin."', options:['Una','Ikalawa','Ikatlo'], correct:0, explain:'"Kami" ay tumutukoy sa nagsasalita (kasama ang iba), kaya ito ay Unang Panauhan.'},
-      {q:'Anong panauhan ang "kayo"?\n"Kumusta kayo?"', options:['Una','Ikalawa','Ikatlo'], correct:1, explain:'"kayo" ay tumutukoy sa mga kinakausap, kaya ito ay Ikalawang Panauhan.'},
-      {q:'Anong panauhan ang "Niya"?\n"Niya ginawa ang proyekto."', options:['Una','Ikalawa','Ikatlo'], correct:2, explain:'"Niya" ay tumutukoy sa pinag-uusapan, kaya ito ay Ikatlong Panauhan.'},
-      {q:'Alin sa mga ito ang ginagamit kapag nagtatanong tungkol sa dahilan?', options:['Saan','Bakit','Sino','Ilan'], correct:1, explain:'"Bakit" ang ginagamit kapag nagtatanong tungkol sa dahilan.'},
-      {q:'Alin sa mga ito ang ginagamit kapag nagtatanong tungkol sa lugar?', options:['Kailan','Saan','Ano','Bakit'], correct:1, explain:'"Saan" ang ginagamit kapag nagtatanong tungkol sa lugar.'},
-      {q:'Anong salitang pananong ang bagay?\n"___ ka pupunta bukas?"', options:['Sino','Saan','Ilan','Ano'], correct:1, explain:'"Saan" ang bagay dito dahil tanong ito tungkol sa lugar na pupuntahan.'},
-      {q:'Tama o Mali: Ang "tayo" ay panghalip na tumutukoy sa unang panauhan.', options:['Tama','Mali'], correct:0, explain:'Tama — "tayo" ay isa sa mga panghalip ng unang panauhan.'},
-      {q:'Alin ang panghalip na tumutukoy sa ikatlong panauhan?\n"Ibinigay ko sa kanila ang regalo."', options:['ko','kanila'], correct:1, explain:'"kanila" ay tumutukoy sa pinag-uusapan, kaya ito ay Ikatlong Panauhan.'},
-      {q:'Ilang uri ng panghalip panao ang natutunan (ayon sa panauhan)?', options:['2','3','4','5'], correct:1, explain:'May tatlong uri: Unang Panauhan, Ikalawang Panauhan, at Ikatlong Panauhan.'},
-      {q:'Alin ang HINDI salitang pananong?', options:['Paano','Ilan','tayo','Kailan'], correct:2, explain:'"tayo" ay panghalip panao (hindi ginagamit sa pagtatanong), habang ang "Paano," "Ilan," at "Kailan" ay lahat salitang pananong.'},
-      {q:'Anong salitang pananong ang bagay dito?\n"___ ang gusto mong laruin?"', options:['Ano','Saan','Kailan','Bakit'], correct:0, explain:'"Ano" ang bagay dito dahil tanong ito tungkol sa isang bagay.'},
-      {q:'Tama o Mali: Ang salitang pananong ay ginagamit bilang panghalili sa pangalan ng tao.', options:['Tama','Mali'], correct:1, explain:'Mali — iyon ang gawain ng panghalip panao. Ang salitang pananong ay ginagamit sa pagtatanong.'},
+      {q:'Anong panauhan ang "Kami"?\n"Kami ay maglalaro sa hardin."', qen:'Which person (panauhan) is "Kami"?', options:['Una','Ikalawa','Ikatlo'], correct:0, explain:'"Kami" — kasama ang nagsasalita. Unang Panauhan.', en:'Kami (we) includes the speaker, so it is 1st person.'},
+      {q:'Anong panauhan ang "kayo"?\n"Kumusta kayo?"', qen:'Which person (panauhan) is "kayo"?', options:['Una','Ikalawa','Ikatlo'], correct:1, explain:'"kayo" — ang mga kinakausap. Ikalawang Panauhan.', en:'kayo (you, more than one) are the ones being talked to. 2nd person.'},
+      {q:'Anong panauhan ang "niya"?\n"Ginawa niya ang proyekto."', qen:'Which person (panauhan) is "niya"?', options:['Una','Ikalawa','Ikatlo'], correct:2, explain:'"niya" — ang pinag-uusapan. Ikatlong Panauhan.', en:'niya (he/she) is the one being talked about. 3rd person.'},
+      {q:'Alin ang ginagamit kapag nagtatanong ng DAHILAN?', qen:'Which word do we use to ask for a REASON?', options:['Saan','Bakit','Sino','Kailan'], correct:1, explain:'"Bakit" ang tanong para sa dahilan.', en:'Bakit = why (reason).'},
+      {q:'Alin ang ginagamit kapag nagtatanong ng LUGAR?', qen:'Which word do we use to ask about a PLACE?', options:['Kailan','Saan','Ano','Bakit'], correct:1, explain:'"Saan" ang tanong para sa lugar.', en:'Saan = where (place).'},
+      {q:'Anong panghalip na pananong ang bagay?\n"___ ka pupunta bukas?"', qen:'Which question word fits in the blank?', options:['Sino','Saan','Ilan','Ano'], correct:1, explain:'"Saan ka pupunta bukas?" — lugar ang tinatanong, kaya "Saan."', en:'It asks about a place, so Saan (where).'},
+      {q:'Tama o Mali: Ang "tayo" ay Unang Panauhan.', qen:'True or False: "tayo" is 1st person.', options:['Tama','Mali'], correct:0, explain:'Tama — kasama ang nagsasalita sa "tayo," kaya Unang Panauhan.', en:'True. tayo (we) includes the speaker.'},
+      {q:'Alin ang Ikatlong Panauhan?\n"Ibinigay ko sa kanila ang regalo."', qen:'Which word is 3rd person?', options:['ko','kanila'], correct:1, explain:'"kanila" — ang pinag-uusapan. Ang "ko" ay Unang Panauhan.', en:'kanila (them) = 3rd person. ko (I/my) = 1st person.'},
+      {q:'Ilan ang uri ng panghalip panao (ayon sa panauhan)?', qen:'How many kinds of panghalip panao did we learn (by panauhan)?', options:['2','3','4','5'], correct:1, explain:'Tatlo: Una, Ikalawa, at Ikatlong Panauhan.', en:'Three: 1st, 2nd, and 3rd person.'},
+      {q:'Alin ang HINDI panghalip na pananong?', qen:'Which one is NOT a question word?', options:['Paano','Ilan','tayo','Kailan'], correct:2, explain:'"tayo" ay panghalip panao. Ang "Paano," "Ilan," at "Kailan" ay pananong.', en:'tayo (we) is not a question word.'},
+      {q:'Anong panghalip na pananong ang bagay?\n"___ ang gusto mong laruin?"', qen:'Which question word fits in the blank?', options:['Ano','Saan','Kailan','Bakit'], correct:0, explain:'"Ano ang gusto mong laruin?" — bagay ang tinatanong, kaya "Ano."', en:'It asks about a thing, so Ano (what).'},
+      {q:'Tama o Mali: Ang panghalip na pananong ay pamalit sa pangalan ng tao.', qen:'True or False: A question word replaces the name of a person.', options:['Tama','Mali'], correct:1, explain:'Mali — iyan ang PANAO. Ang PANANONG ay para sa pagtatanong.', en:'False. That is Panao. Pananong is for asking questions.'},
     ]
   },
   {
     id:'magkatugma', emoji:'🎵', title:'Salitang Magkatugma', subtitle:'Rhyming Words',
     flashcards:[
-      {icon:'🎵', term:'Salitang Magkatugma', def:'Mga salitang magkapareho o halos magkaparehong tunog sa hulihan.'},
-      {icon:'🐶', term:'Halimbawa', def:'"aso - oso" at "araw - ilaw" ay magkatugmang mga salita.'},
-      {icon:'📖', term:'Saan Ginagamit', def:'Sa tula, awit, bugtong, at salawikain, para maging masaya at madaling tandaan.'},
-      {icon:'🏠', term:'Higit pang Halimbawa', def:'"bahay - anay" at "ilog - talbog" ay magkatugma rin.'},
-      {icon:'✅', term:'Tandaan', def:'Kapag pareho ang tunog sa dulo ng salita, magkatugma ang mga ito — kahit hindi mo pa nakikita ang salita, kaya mong hanapin ang katugma nito!'},
+      {icon:'🎵', term:'Salitang Magkatugma', def:'Mga salitang PAREHO (o halos pareho) ang TUNOG SA DULO.', en:'Rhyming words: words that sound the same at the END.'},
+      {icon:'🐶', term:'Mga Halimbawa', def:'aso – oso\naraw – ilaw\nbahay – anay\nilog – talbog\nbangin – hangin\nlata – binata', en:'Say each pair out loud. Listen to the end sound.'},
+      {icon:'🐢', term:'Halimbawa mula sa Klase', def:'pagong – gulong\nmais – walis\npatatas – gatas\nsapatos – kubyertos\nmata – bata', en:'More rhyming pairs from class.'},
+      {icon:'📖', term:'Saan Ginagamit?', def:'Sa TULA at AWIT — para masaya at maganda pakinggan.\nSa BUGTONG at SALAWIKAIN — para madaling tandaan.', en:'Poems and songs: to make them fun to hear.\nRiddles and sayings: to make them easy to remember.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'1. Sabihin nang MALAKAS ang salita.\n2. Pakinggan ang DULO.\n3. Hanapin ang salitang pareho ang tunog sa dulo.\n\nHal: pata-TAS → ga-TAS ✔', en:'Say the word out loud. Listen to the END.\nFind the word with the same ending sound.\npatatas and gatas both end in "-tas".'},
     ],
     quiz:[
-      {q:'Alin ang katugma ng "buto"?', options:['kuto','mesa','bola','sanga'], correct:0, explain:'"buto" at "kuto" ay magkatugma dahil parehong nagtatapos sa tunog na "-uto."'},
-      {q:'Alin ang katugma ng "bangin"?', options:['bundok','hangin','ilog','dagat'], correct:1, explain:'"bangin" at "hangin" ay magkatugma sa tunog.'},
-      {q:'Alin ang katugma ng "araw"?', options:['puno','ilaw','bahay','tubig'], correct:1, explain:'"araw" at "ilaw" ay magkatugma dahil pareho itong nagtatapos sa tunog na "-aw."'},
-      {q:'Alin ang katugma ng "lata"?', options:['bakal','binata','yero','garapon'], correct:1, explain:'"lata" at "binata" ay magkatugma sa tunog.'},
-      {q:'Alin ang katugma ng "tubig"?', options:['ilog','umiibig','dagat','bundok'], correct:1, explain:'"tubig" at "umiibig" ay magkatugma sa tunog.'},
-      {q:'Alin sa mga salita ang HINDI katugma ng iba?\nbahay, anay, palay, kalabaw', options:['bahay','anay','palay','kalabaw'], correct:3, explain:'Ang "bahay," "anay," at "palay" ay magkatugma sa tunog na "-ay." Ang "kalabaw" ay may ibang tunog kaya ito ang HINDI katugma.'},
-      {q:'Alin sa mga salita ang HINDI katugma ng iba?\nilog, talbog, sunog, kahoy', options:['ilog','talbog','sunog','kahoy'], correct:3, explain:'Ang "ilog," "talbog," at "sunog" ay magkatugma sa tunog na "-og." Ang "kahoy" ay may ibang tunog kaya ito ang HINDI katugma.'},
-      {q:'Tama o Mali: Magkatugma ang "aso" at "oso" dahil magkatunog ang huling bahagi nito.', options:['Tama','Mali'], correct:0, explain:'Tama — pareho silang nagtatapos sa tunog na "-oso" o "-so."'},
-      {q:'Saan karaniwang ginagamit ang mga salitang magkatugma?', options:['Sa tula at awit','Sa listahan ng gamit','Sa talaan ng petsa','Sa mapa'], correct:0, explain:'Ginagamit ang tugma sa tula, awit, bugtong, at salawikain.'},
-      {q:'Ano ang layunin ng paggamit ng tugma sa bugtong?', options:['Upang maging madaling tandaan','Upang maging mahirap unawain','Upang maging mahaba ang bugtong','Upang maiwasan ang mga salita'], correct:0, explain:'Ang tugma ay nagpapadali sa pagtandaan ng bugtong o salawikain.'},
-      {q:'Alin sa mga sumusunod ang magkatugmang pares?', options:['lata-binata','lata-mesa','lata-bola','lata-tubig'], correct:0, explain:'"lata" at "binata" ay magkatugma sa huling tunog.'},
-      {q:'Tama o Mali: Magkatugma ang dalawang salita kapag magkapareho ang UNANG pantig nito.', options:['Tama','Mali'], correct:1, explain:'Mali — ang HULING bahagi o tunog ng salita ang dapat magkapareho, hindi ang una.'},
+      {q:'Alin ang katugma ng "pagong"?', qen:'Which word rhymes with "pagong"?', options:['bato','gulong','bilang','mesa'], correct:1, explain:'pa-GONG, gu-LONG — parehong "-ong" ang dulo.', en:'Both end with the "-ong" sound.'},
+      {q:'Alin ang katugma ng "bangin"?', qen:'Which word rhymes with "bangin"?', options:['bundok','hangin','ilog','dagat'], correct:1, explain:'ba-NGIN, ha-NGIN — parehong "-ngin" ang dulo.', en:'Both end with "-ngin".'},
+      {q:'Alin ang katugma ng "araw"?', qen:'Which word rhymes with "araw"?', options:['puno','ilaw','bahay','tubig'], correct:1, explain:'a-RAW, i-LAW — parehong "-aw" ang dulo.', en:'Both end with "-aw".'},
+      {q:'Alin ang katugma ng "lata"?', qen:'Which word rhymes with "lata"?', options:['bakal','binata','yero','garapon'], correct:1, explain:'L-ATA, bin-ATA — parehong "-ata" ang dulo.', en:'Both end with "-ata".'},
+      {q:'Alin ang katugma ng "tubig"?', qen:'Which word rhymes with "tubig"?', options:['ilog','umiibig','karagatan','bundok'], correct:1, explain:'tu-BIG, umii-BIG — parehong "-ig" ang dulo.', en:'Both end with "-ig".'},
+      {q:'Alin ang HINDI katugma ng iba?\nbahay, anay, palay, kalabaw', qen:'Which word does NOT rhyme with the others?', options:['bahay','anay','palay','kalabaw'], correct:3, explain:'"-ay" ang dulo ng bahay, anay, at palay. Ang "kalabaw" ay "-aw" — iba ang tunog.', en:'kalabaw ends in "-aw". The others end in "-ay".'},
+      {q:'Alin ang HINDI katugma ng iba?\nilog, talbog, sunog, kahoy', qen:'Which word does NOT rhyme with the others?', options:['ilog','talbog','sunog','kahoy'], correct:3, explain:'"-og" ang dulo ng ilog, talbog, at sunog. Ang "kahoy" ay "-oy" — iba ang tunog.', en:'kahoy ends in "-oy". The others end in "-og".'},
+      {q:'Tama o Mali: Magkatugma ang "aso" at "oso" dahil magkatunog ang dulo nila.', qen:'True or False: "aso" and "oso" rhyme because their endings sound the same.', options:['Tama','Mali'], correct:0, explain:'Tama — parehong "-so" ang dulo.', en:'True. Both end with "-so".'},
+      {q:'Saan karaniwang ginagamit ang mga salitang magkatugma?', qen:'Where are rhyming words usually used?', options:['Sa tula at awit','Sa listahan ng gamit','Sa talaan ng petsa','Sa mapa'], correct:0, explain:'Ginagamit ang tugma sa tula, awit, bugtong, at salawikain.', en:'In poems, songs, riddles, and sayings.'},
+      {q:'Bakit may tugma ang bugtong at salawikain?', qen:'Why do riddles and sayings use rhymes?', options:['Para madaling tandaan','Para mahirap unawain','Para humaba ang tula at awit','Para walang salita'], correct:0, explain:'Ang tugma ay nagpapadali sa pagtanda ng bugtong at salawikain.', en:'Rhymes make them easy to remember.'},
+      {q:'Alin ang magkatugmang pares?', qen:'Which pair rhymes?', options:['patatas – gatas','patatas – mesa','patatas – bola','patatas – tubig'], correct:0, explain:'pata-TAS, ga-TAS — parehong "-tas" ang dulo.', en:'Both end with "-tas".'},
+      {q:'Tama o Mali: Magkatugma ang dalawang salita kapag pareho ang UNANG pantig nila.', qen:'True or False: Two words rhyme when their FIRST syllable is the same.', options:['Tama','Mali'], correct:1, explain:'Mali — ang DULO ang dapat magkatunog, hindi ang simula.', en:'False. The END must sound the same, not the beginning.'},
     ]
   },
   {
     id:'panguri', emoji:'🎨', title:'Pang-uri at Pangungusap na Paturol', subtitle:'Mga Salitang Naglalarawan',
     flashcards:[
-      {icon:'🎨', term:'Pang-uri', def:'Salitang naglalarawan o nagbibigay-katangian sa pangngalan o panghalip.'},
-      {icon:'🌈', term:'Mga Uri ng Pang-uri', def:'Kulay (pula), Hugis (bilog), Laki (malaki), Bilang (dalawa), Katangian (mabait), Lasa (matamis), Amoy (mabango).'},
-      {icon:'📝', term:'Pangungusap na Paturol', def:'Nagsasabi ng impormasyon o katotohanan; nagtatapos sa tuldok (.).'},
-      {icon:'✅', term:'Halimbawa: Paturol', def:'"Malinis ang aming silid-aralan." — Ito ay pangungusap na paturol.'},
-      {icon:'🍬', term:'Halimbawa: Pang-uri', def:'"Matamis ang manggang hinog." — "matamis" ang pang-uri (lasa).'},
-      {icon:'🔎', term:'Tip', def:'Para malaman ang uri ng pang-uri, itanong: anong kulay/hugis/laki/bilang/katangian/lasa/amoy ang inilalarawan?'},
+      {icon:'🎨', term:'Pang-uri', def:'Salitang NAGLALARAWAN sa tao, hayop, bagay, o lugar.\nHal: "MATAMIS ang saging."', en:'Pang-uri = adjective. A describing word.'},
+      {icon:'🌈', term:'Mga Uri ng Pang-uri (1)', def:'KULAY — pula, asul, dilaw, berde\nHUGIS — bilog, parisukat, tatsulok, pahaba\nLAKI — malaki, maliit, matangkad, pandak\nBILANG — isa, dalawa, tatlo, sampu', en:'Kulay = color. Hugis = shape. Laki = size. Bilang = number.'},
+      {icon:'🍬', term:'Mga Uri ng Pang-uri (2)', def:'KATANGIAN — mabait, masipag, matalino, malinis\nLASA — matamis, maasim, maalat, mapait\nAMOY — mabango, mabaho', en:'Katangian = trait (how a person or thing is). Lasa = taste. Amoy = smell.'},
+      {icon:'📝', term:'Pangungusap na Paturol', def:'NAGSASABI ng impormasyon o katotohanan.\nLaging nagtatapos sa TULDOK (.)\nHal: "Masarap ang mangga."', en:'A telling sentence. It gives information and ends with a period (.).'},
+      {icon:'🚫', term:'HINDI Paturol', def:'"Saan ka pupunta?" — nagtatanong (?)\n"Isara mo ang bintana." — nag-uutos\n"Ang ganda!" — may (!)', en:'These are NOT paturol: asking a question, giving a command, or a sentence with (!).'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Uri ng pang-uri — itanong:\nAnong KULAY? HUGIS? LAKI? ILAN?\nAnong UGALI? LASA? AMOY?\n\nPaturol ba? Nagsasabi lang at may TULDOK (.)? → Paturol!', en:'Ask: What color? shape? size? how many? what trait? what taste? what smell?\nPaturol: it just tells something and ends with a period.'},
     ],
     quiz:[
-      {q:'Anong uri ng pang-uri ang "Bilog"?\n"Bilog ang bola."', options:['Kulay','Hugis','Laki','Bilang'], correct:1, explain:'"Bilog" ay naglalarawan ng hugis, kaya ito ay pang-uring Hugis.'},
-      {q:'Anong uri ng pang-uri ang "Matangkad"?\n"Matangkad ang puno sa likod-bahay."', options:['Laki','Kulay','Lasa','Amoy'], correct:0, explain:'"Matangkad" ay naglalarawan ng laki (taas), kaya ito ay pang-uring Laki.'},
-      {q:'Anong uri ng pang-uri ang "Maalat"?\n"Maalat ang sabaw ng sinigang."', options:['Amoy','Lasa','Katangian','Hugis'], correct:1, explain:'"Maalat" ay naglalarawan ng lasa, kaya ito ay pang-uring Lasa.'},
-      {q:'Anong uri ng pang-uri ang "Tatlong"?\n"Tatlong pusa ang natutulog sa sopa."', options:['Bilang','Laki','Kulay','Hugis'], correct:0, explain:'"Tatlong" ay naglalarawan ng bilang, kaya ito ay pang-uring Bilang.'},
-      {q:'Anong uri ng pang-uri ang "Masipag"?\n"Masipag mag-aral ang mga estudyante."', options:['Katangian','Bilang','Lasa','Hugis'], correct:0, explain:'"Masipag" ay naglalarawan ng katangian o ugali, kaya ito ay pang-uring Katangian.'},
-      {q:'Anong uri ng pang-uri ang "Mabaho"?\n"Mabaho ang basura sa labas."', options:['Amoy','Lasa','Kulay','Bilang'], correct:0, explain:'"Mabaho" ay naglalarawan ng amoy, kaya ito ay pang-uring Amoy.'},
-      {q:'Alin sa mga sumusunod ang pangungusap na PATUROL?', options:['"Ilan ang bola mo?"','"Isara mo ang pinto."','"Malinis ang paaralan namin."','"Sino ang guro mo?"'], correct:2, explain:'"Malinis ang paaralan namin." ay nagsasaad ng impormasyon at nagtatapos sa tuldok — pangungusap na paturol ito.'},
-      {q:'Alin sa mga sumusunod ang HINDI pangungusap na paturol?', options:['"Maganda ang bulaklak."','"Nagluto si Nanay ng ulam."','"Saan ka nakatira?"','"Malamig ang tubig sa gripo."'], correct:2, explain:'"Saan ka nakatira?" ay pangungusap na patanong, hindi paturol.'},
-      {q:'Anong uri ng pang-uri ang "Dilaw"?\n"Dilaw ang saging na hinog."', options:['Kulay','Hugis','Laki','Amoy'], correct:0, explain:'"Dilaw" ay naglalarawan ng kulay, kaya ito ay pang-uring Kulay.'},
-      {q:'Tama o Mali: Ang pang-uri ay maaaring maglarawan ng kulay, hugis, laki, bilang, katangian, lasa, at amoy.', options:['Tama','Mali'], correct:0, explain:'Tama — pitong uri ng pang-uri ang natutunan.'},
-      {q:'Alin ang bagay na pang-uri para sa HUGIS?\n"___ ang tela na binili ni Nanay."', options:['Pahaba','Matamis','Pula','Isa'], correct:0, explain:'"Pahaba" ay naglalarawan ng hugis ng tela.'},
-      {q:'Tama o Mali: Ang pangungusap na paturol ay nagtatapos sa tandang padamdam (!).', options:['Tama','Mali'], correct:1, explain:'Mali — tuldok (.) ang ginagamit sa pangungusap na paturol, hindi tandang padamdam.'},
+      {q:'Anong uri ng pang-uri ang "Bilog"?\n"Bilog ang bola."', qen:'What kind of describing word is "Bilog" (round)?', options:['Kulay','Hugis','Laki','Bilang'], correct:1, explain:'"Bilog" — hugis iyan. Pang-uring Hugis.', en:'Round is a shape.'},
+      {q:'Anong uri ng pang-uri ang "Matangkad"?\n"Matangkad ang puno sa likod-bahay."', qen:'What kind of describing word is "Matangkad" (tall)?', options:['Laki','Kulay','Lasa','Amoy'], correct:0, explain:'"Matangkad" — laki iyan. Pang-uring Laki.', en:'Tall is about size.'},
+      {q:'Anong uri ng pang-uri ang "Maalat"?\n"Maalat ang sabaw ng sinigang."', qen:'What kind of describing word is "Maalat" (salty)?', options:['Amoy','Lasa','Katangian','Hugis'], correct:1, explain:'"Maalat" — lasa iyan. Pang-uring Lasa.', en:'Salty is a taste.'},
+      {q:'Anong uri ng pang-uri ang "Tatlong"?\n"Tatlong pusa ang natutulog sa sopa."', qen:'What kind of describing word is "Tatlong" (three)?', options:['Bilang','Laki','Kulay','Hugis'], correct:0, explain:'"Tatlong" — ilan? Tatlo. Pang-uring Bilang.', en:'Three is a number.'},
+      {q:'Anong uri ng pang-uri ang "Masipag"?\n"Masipag mag-aral ang mga estudyante."', qen:'What kind of describing word is "Masipag" (hardworking)?', options:['Katangian','Bilang','Lasa','Hugis'], correct:0, explain:'"Masipag" — ugali iyan. Pang-uring Katangian.', en:'Hardworking is a trait (how a person is).'},
+      {q:'Anong uri ng pang-uri ang "Mabaho"?\n"Mabaho ang basura sa labas."', qen:'What kind of describing word is "Mabaho" (smelly)?', options:['Amoy','Lasa','Kulay','Bilang'], correct:0, explain:'"Mabaho" — amoy iyan. Pang-uring Amoy.', en:'Smelly is about smell.'},
+      {q:'Alin ang pangungusap na PATUROL?', qen:'Which one is a TELLING sentence (paturol)?', options:['"Ilan ang bola mo?"','"Pakisara mo ang pinto ng silid."','"Malinis ang paaralan namin."','"Sino ang guro mo?"'], correct:2, explain:'"Malinis ang paaralan namin." — nagsasabi at may tuldok (.). Paturol!', en:'It tells information and ends with a period.'},
+      {q:'Alin ang HINDI pangungusap na paturol?', qen:'Which one is NOT a telling sentence?', options:['"Maganda ang bulaklak."','"Nagluto si Nanay ng ulam."','"Saan ka nakatira?"','"Malamig ang tubig sa gripo."'], correct:2, explain:'"Saan ka nakatira?" ay nagtatanong (may ?), kaya hindi paturol.', en:'It asks a question, so it is not paturol.'},
+      {q:'Anong uri ng pang-uri ang "Dilaw"?\n"Dilaw ang saging na hinog."', qen:'What kind of describing word is "Dilaw" (yellow)?', options:['Kulay','Hugis','Laki','Amoy'], correct:0, explain:'"Dilaw" — kulay iyan. Pang-uring Kulay.', en:'Yellow is a color.'},
+      {q:'Tama o Mali: Ang pang-uri ay naglalarawan ng kulay, hugis, laki, bilang, katangian, lasa, at amoy.', qen:'True or False: A pang-uri can describe color, shape, size, number, trait, taste, and smell.', options:['Tama','Mali'], correct:0, explain:'Tama — pitong uri ang natutunan natin.', en:'True. We learned 7 kinds.'},
+      {q:'Alin ang pang-uri para sa HUGIS?\n"___ ang tela na binili ni Nanay."', qen:'Which describing word tells the SHAPE?', options:['Pahaba','Matamis','Pula','Isa'], correct:0, explain:'"Pahaba" — hugis iyan. Ang matamis ay lasa, pula ay kulay, isa ay bilang.', en:'Pahaba (long shape) is a shape.'},
+      {q:'Tama o Mali: Ang pangungusap na paturol ay nagtatapos sa tandang padamdam (!).', qen:'True or False: A telling sentence ends with an exclamation point (!).', options:['Tama','Mali'], correct:1, explain:'Mali — TULDOK (.) ang dulo ng paturol.', en:'False. It ends with a period (.).'},
     ]
   },
   {
     id:'pandiwa', emoji:'🏃', title:'Pandiwa', subtitle:'Mga Salitang Kumikilos',
     flashcards:[
-      {icon:'🏃', term:'Pandiwa', def:'Salitang nagsasaad ng kilos, galaw, o estado. Katumbas sa Ingles: verb.'},
-      {icon:'🍽️', term:'Halimbawa', def:'"Kumakain", "Tumatakbo", "Naglalaro" ay mga pandiwa.'},
-      {icon:'❓', term:'Tanong na Sinasagot', def:'Ang pandiwa ay sumasagot sa tanong na "Ano ang ginagawa?"'},
-      {icon:'🔤', term:'Mga Panlapi', def:'Karaniwang makikita ang mga panlaping nag-, um-, ma-, -in sa pandiwa.'},
-      {icon:'🏞️', term:'Halimbawa sa Pangungusap', def:'"Tumatakbo si Ben sa palaruan." — "Tumatakbo" ang pandiwa.'},
+      {icon:'🏃', term:'Pandiwa', def:'Salitang nagsasabi ng KILOS o GALAW — ang GINAGAWA.\nSa Ingles: verb.', en:'Pandiwa = verb. An action word. It tells what someone is DOING.'},
+      {icon:'🍽️', term:'Mga Halimbawa', def:'kumakain, tumatakbo, tumatalon, naglalakad, naglilinis', en:'eating, running, jumping, walking, cleaning'},
+      {icon:'🏞️', term:'Sa Pangungusap', def:'"TUMATAKBO si Ben sa palaruan."\n"KUMAKAIN ng almusal ang mga bata."\n"NAGBABASA si Liza ng aklat."', en:'The word in BIG letters is the action word (pandiwa).'},
+      {icon:'❓', term:'Tanong na Sinasagot', def:'Sinasagot ng pandiwa ang tanong:\n"ANO ANG GINAGAWA?"', en:'A verb answers the question: "What is someone doing?"'},
+      {icon:'🔤', term:'Mga Panlapi', def:'Madalas may nag-, um-, ma-, o -in ang pandiwa.\nHal: NAG-lalaro, t-UM-atakbo', en:'Many verbs have these word parts: nag-, um-, ma-, -in.'},
+      {icon:'🌧️', term:'Kilos, Galaw, o Estado', def:'Ang pandiwa ay nagsasabi ng kilos, galaw, o ESTADO — hindi lang kilos.', en:'A verb can tell an action, a movement, or a state (something happening).'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Laro ni Teacher: "Stand up, Sit down!"\nKaya mo bang GAWIN ang salita?\n\nOO → PANDIWA (kumakain, tumatakbo, umaawit)\nHINDI → hindi pandiwa (lapis, bola, ulam, kahon)', en:'Can you DO or act out the word?\nYes = verb. No = not a verb (pencil, ball, food, box).'},
     ],
     quiz:[
-      {q:'Alin ang pandiwa?\n"Naglilinis si Ate ng bahay."', options:['Ate','bahay','Naglilinis'], correct:2, explain:'"Naglilinis" ang salitang nagsasaad ng kilos sa pangungusap.'},
-      {q:'Alin ang pandiwa?\n"Sumasayaw ang mga bata sa entablado."', options:['bata','Sumasayaw','entablado'], correct:1, explain:'"Sumasayaw" ang salitang nagsasaad ng kilos.'},
-      {q:'Anong tanong ang sinasagot ng pandiwa?', options:['Sino?','Ano ang ginagawa?','Ilan?','Saan?'], correct:1, explain:'Ang pandiwa ay sumasagot sa tanong na "Ano ang ginagawa?"'},
-      {q:'Alin sa mga ito ang pandiwa?', options:['masaya','umiiyak','payong','maganda'], correct:1, explain:'"umiiyak" ay nagsasaad ng kilos, kaya ito ay pandiwa.'},
-      {q:'Alin sa mga ito ang HINDI pandiwa?', options:['lumalangoy','tumutugtog','aklat','sumusulat'], correct:2, explain:'"aklat" ay pangngalan — walang kilos na ipinahihiwatig.'},
-      {q:'Alin ang bagay na pandiwa?\n"___ ng tubig ang halaman tuwing umaga."', options:['Dinidiligan','Malago','Halaman','Umaga'], correct:0, explain:'"Dinidiligan" ang nagsasaad ng kilos sa pangungusap.'},
-      {q:'Tama o Mali: Ang pandiwa ay maaaring magsaad ng estado o kalagayan, hindi lang kilos.', options:['Tama','Mali'], correct:0, explain:'Tama — ang pandiwa ay nagsasaad ng kilos, galaw, o estado ng isang paksa.'},
-      {q:'Alin sa mga panlaping ito ang KADALASANG ginagamit sa pandiwa?', options:['ma-','nag-','pang-','ika-'], correct:1, explain:'Ang "nag-" ay isang panlaping karaniwang ginagamit sa pandiwa.'},
-      {q:'Alin ang pandiwa?\n"Umuulan nang malakas kagabi."', options:['Umuulan','malakas','kagabi'], correct:0, explain:'"Umuulan" ang nagsasaad ng kilos o pangyayari.'},
-      {q:'Ilang pandiwa ang nasa pangungusap?\n"Kumakain at umiinom ang mga bata."', options:['1','2','3','0'], correct:1, explain:'May dalawang pandiwa: "Kumakain" at "umiinom."'},
-      {q:'Alin ang tamang pandiwa para mabuo ang pangungusap?\n"___ si Tatay ng bagong sasakyan."', options:['Bumili','Malaki','Masaya','Sasakyan'], correct:0, explain:'"Bumili" ang nagsasaad ng kilos na ginawa ni Tatay.'},
-      {q:'Tama o Mali: Ang mga salitang "tumatakbo," "kumakain," at "naglalaro" ay lahat pandiwa.', options:['Tama','Mali'], correct:0, explain:'Tama — lahat sila ay nagsasaad ng kilos.'},
+      {q:'Alin ang pandiwa?\n"Naglilinis si Ate ng bahay."', qen:'Which word is the verb (action word)?', options:['Ate','bahay','Naglilinis'], correct:2, explain:'"Naglilinis" — iyan ang ginagawa ni Ate. Pandiwa!', en:'Naglilinis (cleaning) is the action.'},
+      {q:'Alin ang pandiwa?\n"Sumasayaw ang mga bata sa entablado."', qen:'Which word is the verb (action word)?', options:['bata','Sumasayaw','entablado'], correct:1, explain:'"Sumasayaw" — iyan ang ginagawa ng mga bata.', en:'Sumasayaw (dancing) is the action.'},
+      {q:'Anong tanong ang sinasagot ng pandiwa?', qen:'What question does a verb answer?', options:['Sino?','Ano ang ginagawa?','Ilan?','Ano ang kulay nito?'], correct:1, explain:'Sinasagot ng pandiwa ang "Ano ang ginagawa?"', en:'"What is someone doing?"'},
+      {q:'Alin ang pandiwa?', qen:'Which one is a verb?', options:['masaya','umiiyak','payong','maganda'], correct:1, explain:'"umiiyak" — kaya mong gawin iyan. Kilos, kaya pandiwa.', en:'umiiyak (crying) is an action.'},
+      {q:'Alin ang HINDI pandiwa?', qen:'Which one is NOT a verb?', options:['lumalangoy','tumutugtog','aklat','sumusulat'], correct:2, explain:'"aklat" ay bagay (pangngalan). Hindi mo ito magagawa — hindi kilos.', en:'aklat (book) is a thing, not an action.'},
+      {q:'Alin ang pandiwang bagay sa patlang?\n"___ ng tubig ang halaman tuwing umaga."', qen:'Which verb fits in the blank?', options:['Dinidiligan','Pinakamalago','Halaman','Umaga'], correct:0, explain:'"Dinidiligan" — iyan ang ginagawa sa halaman.', en:'Dinidiligan (watering) is the action.'},
+      {q:'Tama o Mali: Ang pandiwa ay maaari ring magsabi ng estado, hindi lang kilos.', qen:'True or False: A verb can also tell a state, not only an action.', options:['Tama','Mali'], correct:0, explain:'Tama — kilos, galaw, o estado.', en:'True.'},
+      {q:'Aling panlapi ang MADALAS makita sa pandiwa?', qen:'Which word part is OFTEN found in verbs?', options:['taga-','nag-','pang-','ika-'], correct:1, explain:'"nag-" ay isa sa mga panlapi ng pandiwa (nag-, um-, ma-, -in). Hal: naglalaro.', en:'nag- is often in verbs, like naglalaro (playing).'},
+      {q:'Alin ang pandiwa?\n"Umuulan nang malakas kagabi."', qen:'Which word is the verb?', options:['Umuulan','malakas','kagabi'], correct:0, explain:'"Umuulan" — iyan ang nangyayari. Pandiwa.', en:'Umuulan (raining) is what is happening.'},
+      {q:'Ilan ang pandiwa sa pangungusap?\n"Kumakain at umiinom ang mga bata."', qen:'How many verbs are in the sentence?', options:['1','2','3','0'], correct:1, explain:'Dalawa: "Kumakain" at "umiinom."', en:'Two: kumakain (eating) and umiinom (drinking).'},
+      {q:'Alin ang pandiwang bubuo sa pangungusap?\n"___ si Tatay ng bagong sasakyan."', qen:'Which verb completes the sentence?', options:['Bumili','Malaki','Masaya','Sasakyan'], correct:0, explain:'"Bumili" — iyan ang ginawa ni Tatay.', en:'Bumili (bought) is the action.'},
+      {q:'Tama o Mali: Pandiwa lahat ang "tumatakbo," "kumakain," at "naglalaro."', qen:'True or False: "tumatakbo," "kumakain," and "naglalaro" are all verbs.', options:['Tama','Mali'], correct:0, explain:'Tama — lahat sila ay kilos.', en:'True. They are all actions.'},
     ]
   },
   {
     id:'intonasyon', emoji:'🎤', title:'Wastong Intonasyon at Diin', subtitle:'Tinig, Bigkas, at Damdamin',
     flashcards:[
-      {icon:'📈', term:'Intonasyon', def:'Ang pagtaas at pagbaba ng boses kapag tayo ay nagsasalita.'},
-      {icon:'🔊', term:'Diin', def:'Ang pagbibigay-lakas o bigat sa pagbigkas ng isang pantig o salita.'},
-      {icon:'🐢', term:'Malumay', def:'Binibigkas nang dahan-dahan, walang tuldik. Hal: bahay, aso, guro.'},
-      {icon:'⚡', term:'Mabilis', def:'Binibigkas nang mabilis, may tuldik na pahilis (´). Hal: banál, takbó.'},
-      {icon:'😮', term:'Malumi', def:'May diin sa unang pantig at may impit (maikling hinto) sa hulihan, may tuldik na paiwa (`). Hal: "batà" (may impit) kumpara sa payak na "bata."'},
-      {icon:'🌙', term:'Maragsa', def:'May diin at impit sa huling pantig, may tuldik na pakupya (ˆ). Hal: "gabî" (gabing madilim) kumpara sa "gabi" (gulay).'},
-      {icon:'😊', term:'Ekspresyon', def:'Ang pagpapahayag ng damdamin gaya ng tuwa, lungkot, galit, o takot.'},
+      {icon:'📈', term:'Intonasyon', def:'Ang PAGTAAS at PAGBABA ng boses kapag nagsasalita.\nIba ang tunog ng boses kapag nagtatanong, nagsasabi, o nag-uutos.', en:'Intonation = your voice going UP and DOWN when you talk.'},
+      {icon:'🗣️', term:'Mga Halimbawa sa Klase', def:'"Magandang umaga!" → masigla, masaya\n"Ikaw ba ay kakain na?" → nagtatanong, PABABA ang boses sa dulo\n"Tumigil ka!" → galit, PATAAS ang boses', en:'Happy greeting = lively voice.\nAsking a question = voice goes DOWN at the end (as taught in class).\nAngry = voice goes UP.'},
+      {icon:'🔊', term:'Diin', def:'Ang LAKAS o BIGAT sa pagbigkas ng isang pantig o salita.\nKapag mali ang diin, maaaring MAG-IBA ang kahulugan!', en:'Diin = stress. Saying one part of the word stronger.\nWrong stress can change the meaning!'},
+      {icon:'🐢', term:'Malumay', def:'Dahan-dahan ang bigkas.\nWALANG tuldik.\nHal: bahay, aso, guro', en:'Pronounced slowly and gently. No accent mark.'},
+      {icon:'⚡', term:'Mabilis', def:'Mabilis ang bigkas.\nMay tuldik na PAHILIS ( ´ )\nHal: banál, takbó', en:'Pronounced quickly, with an acute accent ( ´ ).'},
+      {icon:'🌙', term:'Maragsa', def:'Mabilis ang bigkas at may IMPIT sa huling pantig.\nMay tuldik na PAKUPYA ( ˆ )\nHal: sabî', en:'Pronounced quickly with a glottal stop (a quick stop in the throat) on the last syllable.\nIt has a circumflex accent ( ˆ ), like a little roof.'},
+      {icon:'😊', term:'Ekspresyon', def:'Pagpapakita ng DAMDAMIN:\ntuwa, lungkot, galit, takot', en:'Expression = showing feelings: happy, sad, angry, scared.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Tingnan ang tuldik:\nWalang tuldik → MALUMAY\n´ (pahilis) → MABILIS\nˆ (pakupya, parang bubong) → MARAGSA\n\nEkspresyon: Kung ikaw iyan, ano ang mararamdaman mo?', en:'No mark = Malumay. ´ = Mabilis. ˆ (like a roof) = Maragsa.\nFor feelings: imagine it happened to you. How would you feel?'},
     ],
     quiz:[
-      {q:'Anong nangyayari sa boses kapag nagtatanong ng tanong na "oo" o "hindi" lang ang sagot (hal. "Kumain ka na ba?")?', options:['Pataas ito sa dulo','Pababa ito sa dulo','Nananatiling patag','Nawawala ang tunog'], correct:0, explain:'Sa mga tanong na ang sagot ay oo o hindi, karaniwang pataas ang tono ng boses sa dulo.'},
-      {q:'Anong klaseng bigkas ang may tuldik na pahilis (´)?', options:['Malumay','Mabilis','Maragsa','Ekspresyon'], correct:1, explain:'Ang Mabilis ay may tuldik na pahilis (´), gaya sa "takbó."'},
-      {q:'Anong klaseng bigkas ang may impit sa huling pantig at tuldik na pakupya (ˆ)?', options:['Malumay','Mabilis','Maragsa','Ekspresyon'], correct:2, explain:'Ang Maragsa ay may impit sa huling pantig at tuldik na pakupya (ˆ).'},
-      {q:'Anong uri ng tono karaniwang ginagamit dito?\n"Tumigil ka!"', options:['Pataas dahil sa galit o diin','Pababa at mahina','Walang tunog','Palaging malumanay'], correct:0, explain:'Kapag galit o nag-uutos nang mariin, karaniwang pataas at malakas ang tono.'},
-      {q:'Alin ang halimbawa ng salitang binibigkas nang MABILIS (may tuldik na pahilis)?', options:['bahay','takbó','guro','aso'], correct:1, explain:'"takbó" ay may tuldik na pahilis (´), kaya ito ay Mabilis.'},
-      {q:'Ano ang mangyayari kung magkamali ng diin sa pagbigkas ng salita?', options:['Wala itong epekto','Maaaring mag-iba ang kahulugan','Mas magiging malakas ang tinig','Mas bibilis ang pagbasa'], correct:1, explain:'Kapag nagkamali ng diin, maaaring mag-iba ang kahulugan ng salita.'},
-      {q:'Anong ekspresyon ang bagay dito?\n"Nawalan ako ng paborito kong laruan."', options:['Tuwa','Lungkot','Galit','Takot'], correct:1, explain:'Lungkot ang karaniwang nararamdaman kapag may nawalang mahalagang bagay.'},
-      {q:'Anong ekspresyon ang bagay dito?\n"Nanalo kami sa laro!"', options:['Tuwa','Lungkot','Galit','Takot'], correct:0, explain:'Tuwa ang nararamdaman kapag may tagumpay o panalo.'},
-      {q:'Tama o Mali: Ang ekspresyon ay tumutukoy sa pagbibigay-bigat sa isang pantig ng salita.', options:['Tama','Mali'], correct:1, explain:'Mali — iyon ay ang kahulugan ng diin, hindi ekspresyon.'},
-      {q:'Alin sa mga ito ang kahulugan ng "intonasyon"?', options:['Pagtaas at pagbaba ng boses','Bilang ng pantig sa salita','Uri ng pangngalan','Kahulugan ng salita'], correct:0, explain:'Ang intonasyon ay ang pagtaas at pagbaba ng boses kapag nagsasalita.'},
-      {q:'Anong ekspresyon ang bagay dito?\n"May multo sa sulok ng silid!"', options:['Tuwa','Lungkot','Galit','Takot'], correct:3, explain:'Takot ang karaniwang nararamdaman sa ganitong biglaang sitwasyon.'},
-      {q:'Tama o Mali: Malumay ang tawag sa salitang binibigkas nang dahan-dahan at walang tuldik.', options:['Tama','Mali'], correct:0, explain:'Tama — ito ang kahulugan ng Malumay.'},
+      {q:'Ayon sa aralin, ano ang boses sa dulo ng tanong na ito?\n"Ikaw ba ay kakain na?"', qen:'According to the lesson, what does the voice do at the end of this question?', options:['Pababa sa dulo','Pataas dahil galit','Walang tunog','Pabulong'], correct:0, explain:'Ayon sa aralin ni Teacher, kapag nagtatanong, PABABA ang boses sa dulo.', en:'In class: when asking a question, the voice goes DOWN at the end.'},
+      {q:'Anong bigkas ang may tuldik na pahilis ( ´ )?', qen:'Which kind has the ´ mark (pahilis)?', options:['Malumay','Mabilis','Maragsa','Ekspresyon'], correct:1, explain:'MABILIS — may tuldik na pahilis ( ´ ), gaya ng "takbó."', en:'Mabilis has the ´ mark.'},
+      {q:'Anong bigkas ang may impit sa huling pantig at tuldik na pakupya ( ˆ )?', qen:'Which kind has a glottal stop on the last syllable and the ˆ mark (pakupya)?', options:['Malumay','Mabilis','Maragsa','Ekspresyon'], correct:2, explain:'MARAGSA — may impit sa huling pantig at tuldik na pakupya ( ˆ ).', en:'Maragsa has the ˆ mark.'},
+      {q:'Anong boses ang karaniwang ginagamit dito?\n"Tumigil ka!"', qen:'What kind of voice is usually used here?', options:['Pataas dahil sa galit','Pababa at mahina','Walang tunog','Laging malumanay at pabulong'], correct:0, explain:'Galit ang "Tumigil ka!" kaya PATAAS ang boses.', en:'Angry = the voice goes up.'},
+      {q:'Aling salita ang binibigkas nang MABILIS (may ´)?', qen:'Which word is said the MABILIS way (has ´)?', options:['bahay','takbó','guro','aso'], correct:1, explain:'"takbó" — may ´, kaya Mabilis. Ang bahay, guro, at aso ay walang tuldik (Malumay).', en:'takbó has the ´ mark.'},
+      {q:'Ano ang maaaring mangyari kapag mali ang diin?', qen:'What can happen if the stress (diin) is wrong?', options:['Wala itong anumang epekto sa salita','Maaaring mag-iba ang kahulugan','Lalakas ang boses','Bibilis ang pagbasa'], correct:1, explain:'Kapag mali ang diin, maaaring mag-iba ang kahulugan ng salita.', en:'The meaning of the word can change.'},
+      {q:'Anong ekspresyon ang bagay?\n"Wala na ang aking alagang aso."', qen:'Which feeling fits?', options:['Tuwa','Lungkot','Galit','Takot'], correct:1, explain:'Nawala ang alagang aso — LUNGKOT.', en:'Losing a pet dog = sad.'},
+      {q:'Anong ekspresyon ang bagay?\n"Binilhan ako ni ate ng bagong laruan."', qen:'Which feeling fits?', options:['Tuwa','Lungkot','Galit','Takot'], correct:0, explain:'May bagong laruan — TUWA.', en:'Getting a new toy = happy.'},
+      {q:'Tama o Mali: Ang ekspresyon ay ang pagbibigay-lakas sa isang pantig ng salita.', qen:'True or False: "Ekspresyon" means saying one part of a word stronger.', options:['Tama','Mali'], correct:1, explain:'Mali — iyan ang DIIN. Ang ekspresyon ay pagpapakita ng damdamin.', en:'False. That is diin (stress). Ekspresyon = showing feelings.'},
+      {q:'Ano ang kahulugan ng "intonasyon"?', qen:'What does "intonasyon" mean?', options:['Pagtaas at pagbaba ng boses','Bilang ng mga pantig sa isang salita','Uri ng pangngalan','Kahulugan ng salita'], correct:0, explain:'Ang intonasyon ay ang pagtaas at pagbaba ng boses kapag nagsasalita.', en:'Your voice going up and down.'},
+      {q:'Anong ekspresyon ang bagay?\n"Ay! May daga sa ilalim ng mesa!"', qen:'Which feeling fits?', options:['Tuwa','Lungkot','Galit','Takot'], correct:3, explain:'Biglang may daga — TAKOT.', en:'A sudden mouse = scared.'},
+      {q:'Tama o Mali: Malumay ang salitang binibigkas nang dahan-dahan at walang tuldik.', qen:'True or False: Malumay is said slowly and has no accent mark.', options:['Tama','Mali'], correct:0, explain:'Tama — iyan ang Malumay. Hal: bahay, aso, guro.', en:'True.'},
     ]
   },
   {
     id:'kwento', emoji:'📖', title:'Maikling Kwento at Tampok na Akda', subtitle:'Tauhan, Tagpuan, Pangyayari',
     flashcards:[
-      {icon:'📖', term:'Maikling Kwento', def:'Maikli, may simula, gitna, at wakas, may suliranin, at may tauhan.'},
-      {icon:'🧑', term:'Tauhan', def:'Ang mga gumaganap sa kuwento.'},
-      {icon:'🗺️', term:'Tagpuan', def:'Nagsasabi kung saan at kailan nangyari ang kuwento.'},
-      {icon:'🔁', term:'Simula, Gitna, Wakas', def:'Simula: ipinakikilala ang tauhan/tagpuan. Gitna: ang suliranin. Wakas: nalulutas ang suliranin.'},
-      {icon:'📜', term:'Akda', def:'Likhang-sulat na naglalaman ng kaisipan, karanasan, o aral; maaaring alamat, kuwento, o tula.'},
-      {icon:'🐜', term:'Pabula', def:'Isang uri ng maikling kwento kung saan ang mga tauhan ay hayop na kumikilos at nagsasalita tulad ng tao; may aral sa dulo.'},
-      {icon:'🍍', term:'Aral ng Alamat ng Pinya', def:'Huwag agad umasa sa iba; maging masipag at matiyaga.'},
-      {icon:'🧠', term:'Tip sa Pagsusulit', def:'May bagong kuwento sa tunay na exam. Gamitin ang parehong mga tanong: Sino? Saan? Ano ang suliranin? Paano ito nalutas? Ano ang aral?'},
+      {icon:'📖', term:'Maikling Kwento', def:'• Maikli at mabilis basahin\n• May SIMULA, GITNA, at WAKAS\n• May isang SULIRANIN (problema)\n• May mga TAUHAN', en:'A short story: it is short, has a beginning, middle, and end, one problem, and characters.'},
+      {icon:'🧑', term:'Tauhan', def:'Ang mga GUMAGANAP sa kuwento. Sagot sa "SINO?"\n"Si Ana ay isang masipag at mabait na mag-aaral."\nTauhan: Si Ana', en:'Tauhan = characters. The people or animals in the story. Answers "Who?"'},
+      {icon:'🗺️', term:'Tagpuan', def:'Kung SAAN at KAILAN nangyari ang kuwento.\n"Tuwing umaga, pumapasok si Ben sa paaralan."\nSaan? Sa paaralan. Kailan? Tuwing umaga.', en:'Tagpuan = setting. WHERE and WHEN the story happened.'},
+      {icon:'🔁', term:'Simula, Gitna, Wakas', def:'SIMULA — makikilala ang tauhan at tagpuan.\n"Pumasok si Lito sa paaralan kasama ang ina."\nGITNA — ang suliranin.\n"Naiwan ni Lito ang baunan sa bahay."\nWAKAS — nalulutas ang suliranin.\n"Dinala ng ina ang baunan sa paaralan."', en:'Beginning = meet the characters and place.\nMiddle = the problem.\nEnd = the problem is solved.'},
+      {icon:'🦁', term:'Ang Leon at ang Daga', def:'Tauhan: ang leon at ang daga.\nKinagat ng daga ang lubid para mapalaya ang leon.\nAral: Huwag maliitin ang iba — kahit maliit ay makatutulong.', en:'The mouse bit the rope to free the lion.\nLesson: do not look down on others. Even small ones can help.'},
+      {icon:'📜', term:'Akda', def:'Isinulat o inisip ng isang tao. May kaisipan, pangyayari, o aral.\nMaaaring: ALAMAT, KUWENTO, o TULA.', en:'Akda = a written work. It can be a legend (alamat), a story (kuwento), or a poem (tula).'},
+      {icon:'🌱', term:'Alamat', def:'Nagsasabi kung PAANO NAGSIMULA ang isang bagay, halaman, hayop, lugar, o pangalan.\nHal: Ang Alamat ng Pinya', en:'Alamat = legend. It tells HOW something began.'},
+      {icon:'🍍', term:'Ang Alamat ng Pinya', def:'Laging nagpapahanap si Pina sa kaniyang ina. Nainis ang ina at nasabing sana magkaroon si Pina ng maraming mata. Nawala si Pina, at may lumitaw na halamang maraming "mata" — ang pinya.\nAral: Maging masipag at huwag agad umasa sa iba.', en:'Pina always asked her mother to find things. Her mother wished Pina had many eyes. The pineapple has many "eyes."\nLesson: work hard and do not depend on others right away.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Sa bawat kuwento, hanapin:\nSINO? → tauhan\nSAAN / KAILAN? → tagpuan\nANO ang problema? → gitna\nPAANO nalutas? → wakas\nANO ang natutunan? → aral', en:'For any story, ask: Who? Where and when? What is the problem? How was it solved? What is the lesson?'},
     ],
     quiz:[
-      {q:'Sino-sino ang mga tauhan sa bagong kuwento?', options:['Ang langgam at ang tipaklong','Ang pagong at ang liyebre','Ang leon at ang daga','Ang ina at ang anak'], correct:0, explain:'Ang tauhan sa kuwento ay ang langgam at ang tipaklong.', passage:true},
-      {q:'Saan naganap ang kuwento?', options:['Sa ilalim ng punong-kahoy','Sa ilog','Sa paaralan','Sa bahay'], correct:0, explain:'Naganap ang kuwento sa ilalim ng punong-kahoy.', passage:true},
-      {q:'Ano ang ginawa ng langgam habang mainit ang panahon?', options:['Umawit','Nagtipon ng pagkain','Natulog','Naglaro'], correct:1, explain:'Patuloy na nagtipon ang langgam ng pagkain para sa tag-ulan.', passage:true},
-      {q:'Ano ang suliranin ng tipaklong nang dumating ang tag-ulan?', options:['Wala itong pagkain','Nawalan ito ng bahay','Nasaktan ito','Naligaw ito'], correct:0, explain:'Nang dumating ang tag-ulan, wala nang pagkain ang tipaklong.', passage:true},
-      {q:'Paano nalutas ang suliranin sa wakas ng kuwento?', options:['Ibinahagi ng langgam ang pagkain sa tipaklong','Umalis ang tipaklong','Umiyak ang langgam','Walang nangyari'], correct:0, explain:'Kusang-loob na ibinahagi ng langgam ang kaniyang pagkain sa tipaklong.', passage:true},
-      {q:'Anong bahagi ng kuwento ang tumutukoy sa "pagtitipon ng pagkain ng langgam bago ang tag-ulan"?', options:['Simula','Gitna','Wakas'], correct:1, explain:'Ang pagtitipon ng pagkain habang may suliranin pang darating ay bahagi ng Gitna ng kuwento.', passage:true},
-      {q:'Ano ang aral ng kuwentong ito?', options:['Mahalaga ang paghahanda at pagiging masipag','Huwag kumain ng marami','Laging matulog sa umaga','Huwag magtiwala sa kaibigan'], correct:0, explain:'Ang kuwento ay nagtuturo ng kahalagahan ng paghahanda at pagiging masipag.', passage:true},
-      {q:'Anong uri ng akda ang bagong kuwentong ito?', options:['Alamat','Pabula','Tula','Awit'], correct:1, explain:'Ito ay pabula — mga hayop ang tauhan na kumikilos at nagsasalita tulad ng tao, at may aral sa dulo.'},
-      {q:'Tama o Mali: Sa Simula ng kuwento, doon karaniwang ipinakikilala ang mga tauhan at tagpuan.', options:['Tama','Mali'], correct:0, explain:'Tama — sa Simula ipinakikilala ang mga tauhan at tagpuan.'},
-      {q:'Sa "Alamat ng Pinya," bakit sinasabing marami itong "mata"?', options:['Dahil ito ang naging bunga ng sinabi ng ina ni Pina','Dahil mahilig itong tumingin','Dahil ito ay puno','Dahil kulay dilaw ito'], correct:0, explain:'Ang "mata" ng pinya ay naging bunga ng sinabi ng ina ni Pina sa kuwento.'},
-      {q:'Ano ang pangunahing katangian ng maikling kwento?', options:['Napakahaba','May simula, gitna, at wakas','Walang tauhan','Walang aral'], correct:1, explain:'Ang maikling kwento ay may simula, gitna, at wakas, at may tauhan at aral.'},
-      {q:'Tama o Mali: Ang alamat ay nagsasalaysay kung paano nagsimula o nagkaroon ng isang bagay, hayop, o lugar.', options:['Tama','Mali'], correct:0, explain:'Tama — iyon ang layunin ng alamat bilang isang uri ng akda.'},
+      {q:'Sino-sino ang mga tauhan sa kuwento?', qen:'Who are the characters in the story?', options:['Ang langgam at ang tipaklong','Ang pagong at ang liyebre','Ang leon at ang daga','Ang magsasaka at ang kaniyang kalabaw'], correct:0, explain:'Ang mga tauhan ay ang langgam at ang tipaklong.', en:'The ant and the grasshopper.', passage:true},
+      {q:'Saan nangyari ang kuwento?', qen:'Where did the story happen?', options:['Sa ilalim ng punong-kahoy','Sa ilog','Sa loob ng isang malaking paaralan','Sa bahay'], correct:0, explain:'Nangyari ang kuwento sa ilalim ng punong-kahoy.', en:'Under a tree.', passage:true},
+      {q:'Ano ang suliranin ng tipaklong nang dumating ang tag-ulan?', qen:'What problem did the grasshopper have when the rainy season came?', options:['Wala itong pagkain','Nawalan ito ng bahay','Nasaktan ito','Naligaw ito'], correct:0, explain:'Nang dumating ang tag-ulan, wala nang pagkain ang tipaklong.', en:'It had no food.', passage:true},
+      {q:'Paano nalutas ang suliranin sa wakas?', qen:'How was the problem solved at the end?', options:['Ibinahagi ng langgam ang pagkain sa tipaklong','Umalis ang tipaklong at naghanap ng ibang punong-kahoy','Umiyak ang langgam','Walang nangyari'], correct:0, explain:'Ibinahagi ng langgam ang kaniyang pagkain sa tipaklong.', en:'The ant shared its food.', passage:true},
+      {q:'Ano ang aral ng kuwento?', qen:'What is the lesson of the story?', options:['Mahalaga ang paghahanda at pagiging masipag','Huwag kumain nang marami','Laging matulog sa umaga','Huwag magtiwala sa sinumang kaibigan o kapitbahay'], correct:0, explain:'Natuto ang tipaklong na maging masipag. Mahalaga ang paghahanda at pagiging masipag.', en:'Be ready and work hard.', passage:true},
+      {q:'Anong bahagi ng kuwento ito?\n"Napansin ni Lito na naiwan niya ang kaniyang baunan sa bahay."', qen:'Which part of the story is this?', options:['Simula','Gitna','Wakas'], correct:1, explain:'Ito ang suliranin (problema), kaya GITNA.', en:'This is the problem, so it is the Middle.'},
+      {q:'Anong bahagi ng kuwento ito?\n"Dinala ng kaniyang ina ang baunan niya sa paaralan."', qen:'Which part of the story is this?', options:['Simula','Gitna','Wakas'], correct:2, explain:'Nalutas na ang problema, kaya WAKAS.', en:'The problem is solved, so it is the End.'},
+      {q:'Tama o Mali: Sa SIMULA ng kuwento, ipinakikilala ang mga tauhan at tagpuan.', qen:'True or False: At the BEGINNING, we meet the characters and the setting.', options:['Tama','Mali'], correct:0, explain:'Tama — sa Simula makikilala ang tauhan at tagpuan.', en:'True.'},
+      {q:'Sa "Ang Leon at ang Daga," ano ang ginawa ng daga para matulungan ang leon?', qen:'In "The Lion and the Mouse," what did the mouse do to help the lion?', options:['Kinagat ang lubid','Tumakbo palayo','Umawit','Natulog sa tabi ng leon buong araw'], correct:0, explain:'Kinagat ng daga ang lubid para mapalaya ang leon.', en:'The mouse bit the rope to free the lion.'},
+      {q:'Ano ang aral ng "Ang Leon at ang Daga"?', qen:'What is the lesson of "The Lion and the Mouse"?', options:['Huwag maliitin ang iba — kahit maliit ay makatutulong','Laging matulog nang maaga','Huwag tumulong sa iba','Ang malalaki at malalakas lang ang may kakayahang tumulong'], correct:0, explain:'Huwag maliitin ang iba, dahil kahit maliit ay maaaring makatulong.', en:'Do not look down on others. Even small ones can help.'},
+      {q:'Sa "Alamat ng Pinya," bakit marami raw "mata" ang pinya?', qen:'In "The Legend of the Pineapple," why does the pineapple have many "eyes"?', options:['Dahil ito ang naging bunga ng sinabi ng ina ni Pina','Dahil mahilig itong tumingin sa lahat ng dumaraan sa hardin','Dahil ito ay puno','Dahil kulay dilaw ito'], correct:0, explain:'Nasabi ng ina na sana magkaroon si Pina ng maraming mata — at ito ang naging pinya.', en:'Her mother wished Pina had many eyes.'},
+      {q:'Ano ang aral ng "Alamat ng Pinya"?', qen:'What is the lesson of "The Legend of the Pineapple"?', options:['Maging masipag at huwag agad umasa sa iba','Laging magpahanap ng mga nawawalang gamit sa nanay','Huwag kumain ng prutas','Matulog nang maaga'], correct:0, explain:'Maging masipag at huwag agad umasa sa iba.', en:'Work hard and do not depend on others right away.'},
+      {q:'Ano ang katangian ng maikling kwento?', qen:'What is a feature of a short story?', options:['Napakahaba','May simula, gitna, at wakas','Walang tauhan','Walang suliranin at walang nangyayari sa kuwento'], correct:1, explain:'Ang maikling kwento ay may simula, gitna, at wakas, may suliranin, at may tauhan.', en:'It has a beginning, middle, and end.'},
+      {q:'Tama o Mali: Ang alamat ay nagsasabi kung paano nagsimula ang isang bagay, hayop, o lugar.', qen:'True or False: A legend (alamat) tells how something, an animal, or a place began.', options:['Tama','Mali'], correct:0, explain:'Tama — iyan ang alamat. Hal: Alamat ng Pinya.', en:'True.'},
     ]
   },
   {
     id:'kayarian', emoji:'🧩', title:'Kayarian ng Pang-uri', subtitle:'Payak at Maylapi',
     flashcards:[
-      {icon:'🎨', term:'Pang-uri', def:'Salitang naglalarawan sa katangian ng pangngalan — ng tao, hayop, bagay, o lugar. Tandaan: Pang-uri = salitang naglalarawan.'},
-      {icon:'💖', term:'Halimbawa: Pang-uri', def:'"Busilak ang kalooban ng bata." "Malusog ang pangangatawan ng atleta." — "busilak" at "malusog" ang mga pang-uri.'},
-      {icon:'✌️', term:'Dalawang Kayarian', def:'May dalawang kayarian ang pang-uri: 1. Payak  2. Maylapi.'},
-      {icon:'🌱', term:'Payak', def:'Binubuo lamang ng salitang-ugat — isang salita lamang. Halimbawa: luma, itim, bulok, hinog.'},
-      {icon:'👟', term:'Halimbawa: Payak', def:'"Itim ang kulay ng kaniyang buhok." "Luma ang aking sapatos." — "itim" at "luma" ay payak.'},
-      {icon:'🔗', term:'Panlapi', def:'Letra o mga letrang ikinakabit sa salitang-ugat. Halimbawa: ma- (maganda) at maka- (makakalikasan).'},
-      {icon:'➕', term:'Maylapi', def:'Salitang-ugat + panlapi. Halimbawa: ma + ganda = maganda, ma + laki = malaki, ma + ulap = maulap.'},
-      {icon:'🌸', term:'Iba pang Maylapi', def:'madami, marunong, mabango, magaling, maasim, malinis, malamig, makakalikasan (maka + kalikasan).'},
-      {icon:'📘', term:'Pagsasanay sa Aklat (p. 99)', def:'"Bumili siya ng hinog na mangga." (hinog — payak)\n"Libre ang matrikula sa kanilang paaralan." (libre — payak)\n"Pinaghanda niya ng malamig na inumin ang panauhin." (malamig — maylapi)\n"Maulap ang kalangitan." (maulap — maylapi)'},
+      {icon:'🎨', term:'Pang-uri', def:'Salitang NAGLALARAWAN sa tao, hayop, bagay, o lugar.\n"BUSILAK ang kalooban ng bata."\n"MALUSOG ang pangangatawan ng atleta."', en:'Pang-uri = a describing word.\nbusilak = pure (heart). malusog = healthy.'},
+      {icon:'✌️', term:'Dalawang Kayarian', def:'Dalawa ang kayarian ng pang-uri:\n1. PAYAK\n2. MAYLAPI', en:'A describing word can be built 2 ways: Payak or Maylapi.'},
+      {icon:'🌱', term:'Payak', def:'SALITANG-UGAT LANG. Isang salita lang, walang dagdag.\nHal: luma, itim, bulok, hinog\n"ITIM ang kulay ng kaniyang buhok."\n"LUMA ang aking sapatos."', en:'Payak = just the root word. Nothing is added.\nold, black, rotten, ripe.'},
+      {icon:'🔗', term:'Panlapi', def:'Letra o mga letrang IKINAKABIT sa salitang-ugat.\nHal: ma- (maganda), maka- (makakalikasan)', en:'Panlapi = a word part we attach to the root word, like ma- or maka-.'},
+      {icon:'➕', term:'Maylapi', def:'SALITANG-UGAT + PANLAPI\nma + ganda = maganda\nma + laki = malaki\nma + ulap = maulap', en:'Maylapi = root word + added part.\nma + ganda = maganda (beautiful).'},
+      {icon:'🌸', term:'Iba pang Maylapi', def:'madami, marunong, mabango, magaling, maasim, malinis, malamig, makakalikasan (maka + kalikasan)', en:'All of these have an added part (ma- or maka-).'},
+      {icon:'📘', term:'Pagsasanay sa Aklat (p. 99)', def:'"Bumili siya ng hinog na mangga." (hinog — payak)\n"Libre ang matrikula sa kanilang paaralan." (libre — payak)\n"Pinaghanda niya ng malamig na inumin ang panauhin." (malamig — maylapi)\n"Maulap ang kalangitan." (maulap — maylapi)', en:'Practice from your book, page 99.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Tingnan ang SIMULA ng salita.\nMay "ma-" o "maka-" na ikinabit? → MAYLAPI\nSalitang-ugat lang? → PAYAK\n\nSubukang tanggalin ang "ma-":\nmaganda → ganda ✔ kaya MAYLAPI', en:'Look at the start of the word. Is ma- or maka- added? Maylapi. Only the root word? Payak.\nTry taking off ma-: maganda becomes ganda.'},
     ],
     quiz:[
-      {q:'Ano ang pang-uri?', options:['Salitang naglalarawan','Salitang kumikilos','Pangalan ng tao','Salitang pananong'], correct:0, explain:'Ang pang-uri ay salitang naglalarawan sa katangian ng pangngalan.'},
-      {q:'Alin ang pang-uri?\n"Itim ang kulay ng kaniyang buhok."', options:['kulay','Itim','buhok'], correct:1, explain:'"Itim" ang naglalarawan sa kulay ng buhok, kaya ito ang pang-uri.'},
-      {q:'Ano ang inilalarawan ng "busilak"?\n"Busilak ang kalooban ng bata."', options:['bata','kalooban','ang'], correct:1, explain:'Ang "busilak" ay naglalarawan sa kalooban ng bata.'},
-      {q:'Payak o maylapi ang salita?\n"maganda"', options:['Payak','Maylapi'], correct:1, explain:'Maylapi — ma + ganda = maganda. May panlaping idinagdag sa salitang-ugat.'},
-      {q:'Payak o maylapi ang salita?\n"luma"', options:['Payak','Maylapi'], correct:0, explain:'Payak — ang "luma" ay salitang-ugat lamang.'},
-      {q:'Payak o maylapi ang salita?\n"bulok"', options:['Payak','Maylapi'], correct:0, explain:'Payak — ang "bulok" ay binubuo lamang ng salitang-ugat.'},
-      {q:'Payak o maylapi ang salita?\n"malaki"', options:['Payak','Maylapi'], correct:1, explain:'Maylapi — ma + laki = malaki.'},
-      {q:'Ano ang salitang-ugat ng "maulap"?', options:['ma','ulap','maul','lap'], correct:1, explain:'ma + ulap = maulap, kaya "ulap" ang salitang-ugat.'},
-      {q:'Ano ang panlapi sa salitang "mabango"?', options:['ma-','bango','-go','ban-'], correct:0, explain:'ma + bango = mabango. Ang "ma-" ang panlapi.'},
-      {q:'Anong salita ang mabubuo?\nma + linis = ?', options:['linisin','malinis','linis','naglinis'], correct:1, explain:'Kapag ikinabit ang "ma-" sa "linis," nagiging "malinis."'},
-      {q:'Alin ang PAYAK na pang-uri?', options:['marunong','hinog','maasim','magaling'], correct:1, explain:'Ang "hinog" ay salitang-ugat lamang kaya payak. Ang iba ay may panlaping "ma-."'},
-      {q:'Alin ang MAYLAPING pang-uri?', options:['itim','luma','magaling','bulok'], correct:2, explain:'Ang "magaling" ay may panlaping "ma-," kaya maylapi. Ang iba ay payak.'},
-      {q:'Tama o Mali: Ang payak na pang-uri ay binubuo ng salitang-ugat at panlapi.', options:['Tama','Mali'], correct:1, explain:'Mali — ang payak ay salitang-ugat LAMANG. Ang maylapi ang may salitang-ugat at panlapi.'},
-      {q:'Tama o Mali: Ang panlapi ay letra o mga letrang ikinakabit sa salitang-ugat.', options:['Tama','Mali'], correct:0, explain:'Tama — iyan ang kahulugan ng panlapi.'},
-      {q:'Payak o maylapi ang salita?\n"makakalikasan"', options:['Payak','Maylapi'], correct:1, explain:'Maylapi — maka + kalikasan = makakalikasan. May panlaping idinagdag sa salitang-ugat.'},
-      {q:'Ano ang pang-uri at ang kayarian nito?\n"Bumili siya ng hinog na mangga."', options:['hinog — payak','hinog — maylapi','mangga — payak','Bumili — maylapi'], correct:0, explain:'"hinog" ang naglalarawan sa mangga. Salitang-ugat lamang ito, kaya payak.'},
-      {q:'Ano ang pang-uri at ang kayarian nito?\n"Pinaghanda niya ng malamig na inumin ang panauhin."', options:['inumin — payak','malamig — payak','malamig — maylapi','panauhin — maylapi'], correct:2, explain:'"malamig" ang naglalarawan sa inumin. ma + lamig = malamig, kaya maylapi.'},
-      {q:'Ano ang pang-uri at ang kayarian nito?\n"Libre ang matrikula sa kanilang paaralan."', options:['Libre — maylapi','matrikula — payak','paaralan — maylapi','Libre — payak'], correct:3, explain:'"Libre" ang naglalarawan sa matrikula. Salitang-ugat lamang ito, kaya payak.'},
-      {q:'Ano ang pang-uri at ang kayarian nito?\n"Maulap ang kalangitan."', options:['Maulap — maylapi','Maulap — payak','kalangitan — payak','kalangitan — maylapi'], correct:0, explain:'"Maulap" ang naglalarawan sa kalangitan. ma + ulap = maulap, kaya maylapi.'},
+      {q:'Ano ang pang-uri?', qen:'What is a pang-uri?', options:['Salitang naglalarawan','Salitang nagsasabi ng kilos o galaw','Pangalan ng tao','Salitang pananong'], correct:0, explain:'Ang pang-uri ay salitang naglalarawan.', en:'A describing word.'},
+      {q:'Alin ang pang-uri?\n"Itim ang kulay ng kaniyang buhok."', qen:'Which word is the describing word?', options:['kulay','Itim','buhok'], correct:1, explain:'"Itim" ang naglalarawan sa kulay ng buhok.', en:'Itim (black) describes the hair.'},
+      {q:'Ano ang inilalarawan ng "busilak"?\n"Busilak ang kalooban ng bata."', qen:'What does "busilak" describe?', options:['bata','kalooban','ang'], correct:1, explain:'Ang "busilak" ay naglalarawan sa kalooban ng bata.', en:'busilak (pure) describes the kalooban (heart).'},
+      {q:'Payak o maylapi?\n"maganda"', qen:'Payak (root word only) or maylapi (has an added part)?', options:['Payak','Maylapi'], correct:1, explain:'Maylapi — ma + ganda = maganda.', en:'ma + ganda. It has an added part.'},
+      {q:'Payak o maylapi?\n"luma"', qen:'Payak (root word only) or maylapi (has an added part)?', options:['Payak','Maylapi'], correct:0, explain:'Payak — salitang-ugat lang ang "luma."', en:'luma is only the root word.'},
+      {q:'Payak o maylapi?\n"bulok"', qen:'Payak (root word only) or maylapi (has an added part)?', options:['Payak','Maylapi'], correct:0, explain:'Payak — salitang-ugat lang ang "bulok."', en:'bulok is only the root word.'},
+      {q:'Payak o maylapi?\n"malaki"', qen:'Payak (root word only) or maylapi (has an added part)?', options:['Payak','Maylapi'], correct:1, explain:'Maylapi — ma + laki = malaki.', en:'ma + laki. It has an added part.'},
+      {q:'Ano ang salitang-ugat ng "maulap"?', qen:'What is the root word of "maulap"?', options:['ma','ulap','maul','lap'], correct:1, explain:'ma + ulap = maulap. Ang salitang-ugat ay "ulap."', en:'Take off ma- and you get ulap (cloud).'},
+      {q:'Ano ang panlapi sa "mabango"?', qen:'What is the added part in "mabango"?', options:['ma-','bango','-go','ban-'], correct:0, explain:'ma + bango = mabango. Ang "ma-" ang panlapi.', en:'ma- is the added part.'},
+      {q:'Anong salita ang mabubuo?\nma + linis = ?', qen:'What word do you get?', options:['linisin','malinis','linis','naglinis'], correct:1, explain:'ma + linis = malinis.', en:'ma + linis = malinis (clean).'},
+      {q:'Alin ang PAYAK na pang-uri?', qen:'Which describing word is PAYAK (root word only)?', options:['marunong','hinog','maasim','magaling'], correct:1, explain:'"hinog" ay salitang-ugat lang, kaya payak. Ang iba ay may "ma-."', en:'hinog has nothing added. The others start with ma-.'},
+      {q:'Alin ang MAYLAPING pang-uri?', qen:'Which describing word is MAYLAPI (has an added part)?', options:['itim','luma','magaling','bulok'], correct:2, explain:'"magaling" ay may "ma-," kaya maylapi. Ang iba ay payak.', en:'magaling has ma- added.'},
+      {q:'Tama o Mali: Ang payak na pang-uri ay binubuo ng salitang-ugat at panlapi.', qen:'True or False: A payak word is made of a root word + an added part.', options:['Tama','Mali'], correct:1, explain:'Mali — ang payak ay salitang-ugat LANG. Ang maylapi ang may panlapi.', en:'False. Payak is the root word only. Maylapi has the added part.'},
+      {q:'Tama o Mali: Ang panlapi ay letra o mga letrang ikinakabit sa salitang-ugat.', qen:'True or False: A panlapi is a letter or letters attached to the root word.', options:['Tama','Mali'], correct:0, explain:'Tama — iyan ang panlapi.', en:'True.'},
+      {q:'Payak o maylapi?\n"makakalikasan"', qen:'Payak (root word only) or maylapi (has an added part)?', options:['Payak','Maylapi'], correct:1, explain:'Maylapi — maka + kalikasan = makakalikasan.', en:'maka + kalikasan. It has an added part.'},
+      {q:'Ano ang pang-uri at ang kayarian nito?\n"Bumili siya ng hinog na mangga."', qen:'What is the describing word, and is it payak or maylapi?', options:['hinog — payak','hinog — maylapi','mangga — payak','Bumili — maylapi'], correct:0, explain:'"hinog" ang naglalarawan sa mangga. Salitang-ugat lang, kaya payak.', en:'hinog (ripe) describes the mango. Nothing added, so payak.'},
+      {q:'Ano ang pang-uri at ang kayarian nito?\n"Pinaghanda niya ng malamig na inumin ang panauhin."', qen:'What is the describing word, and is it payak or maylapi?', options:['inumin — payak','malamig — payak','malamig — maylapi','panauhin — maylapi'], correct:2, explain:'"malamig" ang naglalarawan sa inumin. ma + lamig, kaya maylapi.', en:'malamig (cold) describes the drink. ma + lamig, so maylapi.'},
+      {q:'Ano ang pang-uri at ang kayarian nito?\n"Libre ang matrikula sa kanilang paaralan."', qen:'What is the describing word, and is it payak or maylapi?', options:['Libre — maylapi','matrikula — payak','paaralan — maylapi','Libre — payak'], correct:3, explain:'"Libre" ang naglalarawan sa matrikula. Salitang-ugat lang, kaya payak.', en:'Libre (free) describes the tuition. Nothing added, so payak.'},
+      {q:'Ano ang pang-uri at ang kayarian nito?\n"Maulap ang kalangitan."', qen:'What is the describing word, and is it payak or maylapi?', options:['Maulap — maylapi','Maulap — payak','kalangitan — payak','kalangitan — maylapi'], correct:0, explain:'"Maulap" ang naglalarawan sa kalangitan. ma + ulap, kaya maylapi.', en:'Maulap (cloudy) describes the sky. ma + ulap, so maylapi.'},
     ]
   },
   {
     id:'reaksyon', emoji:'💬', title:'Payak na Pangungusap sa Reaksyon', subtitle:'Ano ang Naramdaman Mo sa Tauhan?',
     flashcards:[
-      {icon:'📝', term:'Payak na Pangungusap', def:'Pangungusap na nagpapahayag ng iisang buong kaisipan.'},
-      {icon:'💭', term:'Reaksiyon', def:'Damdamin o saloobin tungkol sa ating nabasa o narinig — gaya ng saya, lungkot, awa, galak, o paghanga.'},
-      {icon:'🗣️', term:'Mga Halimbawa', def:'"Naaawa ako sa bata."\n"Natutuwa ako kay Ana."\n"Humahanga ako kay Pedro."\n— mga payak na pangungusap na nagpapahayag ng reaksiyon.'},
-      {icon:'😊', term:'Mga Panimulang Salita', def:'Ako ay... natutuwa, nalulungkot, naaawa, humahanga, naiinis.'},
-      {icon:'❓', term:'Gabay na Tanong', def:'1. Sino ang tauhan?\n2. Ano ang nangyari sa tauhan?\n3. Ano ang naramdaman mo?\n4. Ano ang iyong reaksiyon sa tauhan?\n5. Paano mo ito maipapahayag sa isang payak na pangungusap?'},
-      {icon:'🍍', term:'Ang Alamat ng Pinya', def:'"Si Pinang ay hindi nakinig sa payo ng kanyang ina." "Hinahanap ni Nanay ang kanyang anak." — Ano ang reaksiyon mo sa mga tauhan?'},
-      {icon:'🎯', term:'Tandaan', def:'Mahalaga ang paggamit ng angkop na salita upang malinaw na maipahayag ang ating damdamin.'},
+      {icon:'💭', term:'Reaksiyon', def:'Ang NARARAMDAMAN mo tungkol sa nabasa o narinig mo.\nHal: saya, lungkot, awa, galak, paghanga', en:'Reaction = how you FEEL about what you read or heard.'},
+      {icon:'📝', term:'Payak na Pangungusap', def:'Pangungusap na may ISANG buong kaisipan.', en:'A simple sentence with ONE complete idea.'},
+      {icon:'🗣️', term:'Mga Halimbawa', def:'"Naaawa ako sa bata."\n"Natutuwa ako kay Ana."\n"Humahanga ako kay Pedro."', en:'I feel sorry for the child.\nI am happy for Ana.\nI admire Pedro.'},
+      {icon:'😊', term:'Mga Panimulang Salita', def:'Ako ay...\nnatutuwa\nnalulungkot\nnaaawa\nhumahanga\nnaiinis', en:'natutuwa = happy\nnalulungkot = sad\nnaaawa = feel sorry for\nhumahanga = admire\nnaiinis = annoyed'},
+      {icon:'❓', term:'Gabay na Tanong', def:'1. Sino ang tauhan?\n2. Ano ang nangyari sa tauhan?\n3. Ano ang naramdaman mo?\n4. Ano ang iyong reaksiyon sa tauhan?\n5. Paano mo ito sasabihin sa isang payak na pangungusap?', en:'1. Who is the character? 2. What happened? 3. How did you feel? 4. What is your reaction? 5. Say it in one simple sentence.'},
+      {icon:'🍍', term:'Ang Alamat ng Pinya', def:'"Si Pinang ay hindi nakinig sa payo ng kanyang ina."\n"Hinahanap ni Nanay ang kanyang anak."\nAno ang reaksiyon mo sa mga tauhan?', en:'Practice from class: what is your reaction to the characters?'},
+      {icon:'🎯', term:'Tandaan', def:'Gumamit ng ANGKOP na salita para malinaw ang iyong damdamin.', en:'Use the RIGHT feeling word so your feeling is clear.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Itanong: MABUTI ba o HINDI MABUTI ang nangyari?\n\nMagaling o mabuting ginawa → HUMAHANGA\nMagandang balita → NATUTUWA\nMalungkot na nangyari → NAAAWA o NALULUNGKOT\nMaling ginawa → NAIINIS', en:'Good deed = admire (humahanga). Good news = happy (natutuwa).\nSad thing happened = feel sorry or sad. Bad behavior = annoyed (naiinis).'},
     ],
     quiz:[
-      {q:'Ano ang reaksiyon?', options:['Damdamin o saloobin tungkol sa nabasa o narinig','Pangalan ng tauhan sa kuwento','Lugar kung saan nangyari ang kuwento','Pamagat ng isang aklat'], correct:0, explain:'Ang reaksiyon ay damdamin o saloobin tungkol sa ating nabasa o narinig.'},
-      {q:'Ano ang ipinahahayag ng payak na pangungusap?', options:['Maraming magkakaibang kaisipan','Iisang buong kaisipan','Isang tanong lamang','Pangalan lamang'], correct:1, explain:'Ang payak na pangungusap ay nagpapahayag ng iisang buong kaisipan.'},
-      {q:'Alin ang payak na pangungusap na nagpapahayag ng REAKSIYON sa tauhan?', options:['Si Pedro ay may bag.','Saan pupunta si Pedro?','Humahanga ako kay Pedro.','Si Pedro ay nasa paaralan.'], correct:2, explain:'"Humahanga ako kay Pedro." ay nagsasabi ng damdamin (paghanga) sa tauhan.'},
-      {q:'Anong damdamin ang ipinahahayag?\n"Naaawa ako sa bata."', options:['awa','galak','inis','paghanga'], correct:0, explain:'Ang "naaawa" ay nagpapakita ng damdaming awa.'},
-      {q:'Sino ang tauhan dito?\n"Natutuwa ako kay Ana."', options:['ako','Ana','bata','Pedro'], correct:1, explain:'Si Ana ang tauhang pinatutungkulan ng reaksiyon.'},
-      {q:'Alin ang angkop na reaksiyon?\nTinulungan ni Pedro ang matandang tumawid sa kalsada.', options:['Naiinis ako kay Pedro.','Humahanga ako kay Pedro.','Nalulungkot ako kay Pedro.','Naaawa ako kay Pedro.'], correct:1, explain:'Magandang gawain ang pagtulong, kaya paghanga ang angkop na reaksiyon.'},
-      {q:'Alin ang angkop na reaksiyon?\nNawala ang aso ni Lito kaya siya ay umiiyak.', options:['Naaawa ako kay Lito.','Natutuwa ako kay Lito.','Humahanga ako kay Lito.','Naiinis ako kay Lito.'], correct:0, explain:'Nakalulungkot ang nangyari kay Lito, kaya awa ang angkop na reaksiyon.'},
-      {q:'Alin ang angkop na reaksiyon?\nNanalo si Ana sa paligsahan sa pagbasa.', options:['Naaawa ako kay Ana.','Naiinis ako kay Ana.','Natutuwa ako kay Ana.','Nalulungkot ako kay Ana.'], correct:2, explain:'Magandang balita ang pagkapanalo, kaya tuwa ang angkop na reaksiyon.'},
-      {q:'Alin ang angkop na salita?\n"______ ako kay Pedro dahil matapang siya."', options:['Naiinis','Humahanga','Naaawa','Nalulungkot'], correct:1, explain:'Kapag may magandang katangian ang tauhan, "humahanga" tayo sa kaniya.'},
-      {q:'Alin ang HINDI panimulang salita sa pagpapahayag ng reaksiyon?', options:['natutuwa','naaawa','naglalaro','humahanga'], correct:2, explain:'Ang "naglalaro" ay kilos, hindi damdamin. Ang iba ay mga salitang nagpapahayag ng reaksiyon.'},
-      {q:'Sa gabay na tanong, ano ang UNANG itinatanong bago magbigay ng reaksiyon?', options:['Sino ang tauhan?','Ano ang pamagat?','Ilan ang pahina?','Saan ka nakatira?'], correct:0, explain:'Una nating inaalam kung sino ang tauhan, saka kung ano ang nangyari sa kaniya.'},
-      {q:'Tama o Mali: Maaari tayong gumamit ng payak na pangungusap upang ipahayag ang ating reaksiyon sa tauhan.', options:['Tama','Mali'], correct:0, explain:'Tama — halimbawa: "Natutuwa ako kay Ana."'},
-      {q:'Tama o Mali: Hindi mahalaga ang paggamit ng angkop na salita sa pagpapahayag ng damdamin.', options:['Tama','Mali'], correct:1, explain:'Mali — mahalaga ang angkop na salita upang malinaw na maipahayag ang ating damdamin.'},
+      {q:'Ano ang reaksiyon?', qen:'What is a reaction (reaksiyon)?', options:['Damdamin o saloobin tungkol sa nabasa o narinig','Pangalan ng tauhan sa kuwento','Lugar at oras kung saan at kailan nangyari ang kuwento','Pamagat ng isang aklat'], correct:0, explain:'Ang reaksiyon ay ang nararamdaman natin tungkol sa nabasa o narinig.', en:'It is how you feel about what you read or heard.'},
+      {q:'Ano ang ipinahahayag ng payak na pangungusap?', qen:'What does a simple sentence (payak na pangungusap) tell?', options:['Maraming magkakaibang kaisipan','Iisang buong kaisipan','Isang tanong lamang','Pangalan lamang'], correct:1, explain:'Ang payak na pangungusap ay may iisang buong kaisipan.', en:'One complete idea.'},
+      {q:'Alin ang nagpapahayag ng REAKSIYON sa tauhan?', qen:'Which sentence shows a REACTION (feeling) about the character?', options:['Si Pedro ay may bag.','Saan pupunta si Pedro?','Humahanga ako kay Pedro.','Si Pedro ay nasa paaralan.'], correct:2, explain:'"Humahanga ako kay Pedro." — may damdamin (paghanga).', en:'"I admire Pedro" shows a feeling.'},
+      {q:'Anong damdamin ito?\n"Naaawa ako sa bata."', qen:'What feeling is this?', options:['awa','galak','inis','paghanga'], correct:0, explain:'"Naaawa" → awa.', en:'Naaawa = feeling sorry for someone.'},
+      {q:'Sino ang tauhan dito?\n"Natutuwa ako kay Ana."', qen:'Who is the character here?', options:['ako','Ana','bata','Pedro'], correct:1, explain:'Si Ana ang tauhan. "Ako" ang nagsasabi ng reaksiyon.', en:'Ana is the character. "ako" is the one reacting.'},
+      {q:'Alin ang angkop na reaksiyon?\nTinulungan ni Pedro ang matandang tumawid sa kalsada.', qen:'Which reaction fits?', options:['Naiinis ako kay Pedro.','Humahanga ako kay Pedro.','Nalulungkot ako kay Pedro.','Naaawa ako kay Pedro.'], correct:1, explain:'Mabuti ang ginawa ni Pedro — HUMAHANGA tayo.', en:'Pedro did a good deed, so we admire him.'},
+      {q:'Alin ang angkop na reaksiyon?\nNawala ang aso ni Lito kaya siya ay umiiyak.', qen:'Which reaction fits?', options:['Naaawa ako kay Lito.','Natutuwa ako kay Lito.','Humahanga ako kay Lito.','Naiinis ako kay Lito.'], correct:0, explain:'Malungkot ang nangyari kay Lito — NAAAWA tayo.', en:'Something sad happened to Lito, so we feel sorry for him.'},
+      {q:'Alin ang angkop na reaksiyon?\nNanalo si Ana sa paligsahan sa pagbasa.', qen:'Which reaction fits?', options:['Naaawa ako kay Ana.','Naiinis ako kay Ana.','Natutuwa ako kay Ana.','Nalulungkot ako kay Ana.'], correct:2, explain:'Magandang balita — NATUTUWA tayo.', en:'Good news, so we are happy for Ana.'},
+      {q:'Alin ang angkop na salita?\n"______ ako kay Pedro dahil matapang siya."', qen:'Which word fits in the blank?', options:['Naiinis','Humahanga','Naaawa','Nalulungkot'], correct:1, explain:'Magandang katangian ang pagiging matapang — HUMAHANGA tayo.', en:'Being brave is good, so we admire him.'},
+      {q:'Alin ang HINDI panimulang salita ng reaksiyon?', qen:'Which one is NOT a feeling word for a reaction?', options:['natutuwa','naaawa','naglalaro','humahanga'], correct:2, explain:'"naglalaro" ay kilos, hindi damdamin.', en:'naglalaro (playing) is an action, not a feeling.'},
+      {q:'Sa gabay na tanong, ano ang UNANG itinatanong?', qen:'In the guide questions, what do we ask FIRST?', options:['Sino ang tauhan?','Ano ang pamagat?','Ilan ang pahina?','Saan ka nakatira?'], correct:0, explain:'Una: "Sino ang tauhan?" Saka ang nangyari sa kaniya.', en:'First: Who is the character?'},
+      {q:'Tama o Mali: Maaari tayong gumamit ng payak na pangungusap para sabihin ang ating reaksiyon sa tauhan.', qen:'True or False: We can use a simple sentence to say our reaction to a character.', options:['Tama','Mali'], correct:0, explain:'Tama — hal: "Natutuwa ako kay Ana."', en:'True.'},
+      {q:'Tama o Mali: Hindi mahalaga ang paggamit ng angkop na salita sa pagpapahayag ng damdamin.', qen:'True or False: Using the right word for our feeling is NOT important.', options:['Tama','Mali'], correct:1, explain:'Mali — mahalaga ang angkop na salita para malinaw ang damdamin.', en:'False. The right word makes our feeling clear.'},
     ]
   },
   {
     id:'antas', emoji:'📊', title:'Antas ng Paglalarawan', subtitle:'Lantay, Pahambing, Pasukdol',
     flashcards:[
-      {icon:'🪜', term:'Tatlong Antas', def:'Lantay (isa lamang), Pahambing (dalawa), at Pasukdol (pinakamatindi).'},
-      {icon:'1️⃣', term:'Lantay', def:'Iisa lamang ang inilalarawan at walang inihahambing. Hal: "Mabait ang batang tumutulong sa kaniyang kapuwa."'},
-      {icon:'2️⃣', term:'Pahambing', def:'Dalawang tao, bagay, hayop, lugar, o pangyayari ang inihahambing. May dalawang uri: Magkatulad at Hindi Magkatulad.'},
-      {icon:'🟰', term:'Pahambing: Magkatulad', def:'Magkapantay ang katangian (pareho). Mga salita: sing-, magsing-, magkasing-, kapuwa, pareho, tulad, gaya. Hal: "Magsingbait sina Ana at Mia."'},
-      {icon:'⚖️', term:'Pahambing: Hindi Magkatulad', def:'Hindi magkapantay ang katangian (hindi pareho). Mga salita: mas, higit, lalo, kaysa, hindi gaano. Hal: "Mas mabilis tumulong si Ana kaysa kay Ben."'},
-      {icon:'🏆', term:'Pasukdol', def:'Pinakamataas o pinakamatinding katangian ng higit sa dalawa. Mga salita: pinaka-, napaka-, pagka-, walang katulad, walang kaparis. Hal: "Si Ana ang pinakamabait sa magkakaibigan."'},
-      {icon:'🔍', term:'Tip: Hanapin ang Pantulong na Salita', def:'May mas/kaysa → Hindi Magkatulad.\nMay sing-/magsing-/magkasing-/pareho → Magkatulad.\nMay pinaka-/napaka- → Pasukdol.\nWalang pantulong na salita at walang inihahambing → Lantay.'},
-      {icon:'✏️', term:'Mga Titik sa Pagtataya', def:'L = Lantay\nPM = Pahambing-Magkatulad\nPHM = Pahambing-Hindi Magkatulad\nP = Pasukdol'},
-      {icon:'🎒', term:'Halimbawa: Bag at Lapis', def:'Lantay: Malaki ang aking bag.\nMagkatulad: Magkasinghaba ang dalawang lapis.\nHindi Magkatulad: Mas mahaba ang lapis ni Ana kaysa sa lapis ni Ben.\nPasukdol: Ang bag ni Ana ang pinakamalaki sa aming lahat.'},
+      {icon:'🪜', term:'Tatlong Antas', def:'LANTAY — isa lamang\nPAHAMBING — dalawa\nPASUKDOL — pinakamatindi', en:'3 levels of describing: one thing, comparing two, and the most.'},
+      {icon:'1️⃣', term:'Lantay', def:'ISA lang ang inilalarawan. Walang inihahambing.\n"Mabait ang batang tumutulong sa kaniyang kapuwa."', en:'Lantay = describing ONE only. No comparing.'},
+      {icon:'2️⃣', term:'Pahambing', def:'DALAWA ang inihahambing.\nMay dalawang uri: MAGKATULAD at HINDI MAGKATULAD.', en:'Pahambing = comparing TWO. Two kinds: the same, or not the same.'},
+      {icon:'🟰', term:'Pahambing: Magkatulad', def:'PAREHO ang katangian.\nMga salita: sing-, magsing-, magkasing-, kapuwa, pareho, tulad, gaya\n"Magsingbait sina Ana at Mia." (Pareho silang mabait.)', en:'Magkatulad = the SAME.'},
+      {icon:'⚖️', term:'Pahambing: Hindi Magkatulad', def:'HINDI PAREHO ang katangian.\nMga salita: mas, higit, lalo, kaysa, hindi gaano\n"Mas mabilis tumulong si Ana kaysa kay Ben."', en:'Hindi Magkatulad = NOT the same. One is more.'},
+      {icon:'🏆', term:'Pasukdol', def:'PINAKAMATAAS o PINAKAMATINDI (higit sa dalawa).\nMga salita: pinaka-, napaka-, pagka-, walang katulad, walang kaparis\n"Si Ana ang pinakamabait sa magkakaibigan."', en:'Pasukdol = the MOST. The highest of all.'},
+      {icon:'✏️', term:'Mga Titik sa Pagtataya', def:'L = Lantay\nPM = Pahambing-Magkatulad\nPHM = Pahambing-Hindi Magkatulad\nP = Pasukdol', en:'The letters you write in the test.'},
+      {icon:'🎒', term:'Halimbawa: Bag at Lapis', def:'Lantay: Malaki ang aking bag.\nMagkatulad: Magkasinghaba ang dalawang lapis.\nHindi Magkatulad: Mas mahaba ang lapis ni Ana kaysa sa lapis ni Ben.\nPasukdol: Ang bag ni Ana ang pinakamalaki sa aming lahat.', en:'One example for each level.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Hanapin ang PANTULONG NA SALITA:\nmas / kaysa → Hindi Magkatulad (PHM)\nsing- / magsing- / magkasing- / pareho → Magkatulad (PM)\npinaka- / napaka- → Pasukdol (P)\nWala sa mga ito at isa lang? → Lantay (L)', en:'Find the helper word.\nmas or kaysa = not the same (PHM).\nsing-, magsing-, magkasing-, pareho = the same (PM).\npinaka- or napaka- = the most (P).\nNone of these, only one thing = Lantay (L).'},
     ],
     quiz:[
-      {q:'Anong antas ng paglalarawan?\n"Mabango ang rosas."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:0, explain:'Lantay — iisa lamang ang inilalarawan (ang rosas) at walang inihahambing.'},
-      {q:'Anong antas ng paglalarawan?\n"Magkasingganda ang dalawang bulaklak."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:1, explain:'Pahambing - Magkatulad — "magkasing-" ang ginamit; pareho ang ganda ng dalawa.'},
-      {q:'Anong antas ng paglalarawan?\n"Mas mabango ang rosas kaysa sa sampaguita."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:2, explain:'Pahambing - Hindi Magkatulad — "mas" at "kaysa" ang ginamit; hindi pareho ang bango.'},
-      {q:'Anong antas ng paglalarawan?\n"Pinakamabango ang rosas sa lahat ng bulaklak."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:3, explain:'Pasukdol — "pinaka-" ang ginamit; ito ang pinakamatinding katangian sa lahat.'},
-      {q:'Anong antas ng paglalarawan?\n"Magsinglaki ang dalawang lobo."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:1, explain:'Pahambing - Magkatulad — "magsing-" ang ginamit; pareho ang laki ng dalawang lobo.'},
-      {q:'Anong antas ng paglalarawan?\n"Parehong malinis ang dalawang silid-aralan."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:1, explain:'Pahambing - Magkatulad — "pareho" ang ginamit; magkapantay ang kalinisan.'},
-      {q:'Anong antas ng paglalarawan?\n"Napakaganda ng hardin ng aming paaralan."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:3, explain:'Pasukdol — "napaka-" ang ginamit; pinakamatinding ganda ang ipinakikita.'},
-      {q:'Anong antas ng paglalarawan?\n"Mas mabilis tumakbo si Carlo kaysa kay Ben."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:2, explain:'Pahambing - Hindi Magkatulad — hindi pareho ang bilis nina Carlo at Ben.'},
-      {q:'Alin ang angkop na salita?\n"______ bait sina Ana at Mia."', options:['Mas','Magsing','Pinaka','Napaka'], correct:1, explain:'"Magsingbait sina Ana at Mia." — pareho silang mabait, kaya "magsing-" (magkatulad).'},
-      {q:'Alin ang angkop na salita?\n"______ mabait si Carlo kaysa kay Ben."', options:['Mas','Magsing','Pinaka','Napaka'], correct:0, explain:'"Mas mabait si Carlo kaysa kay Ben." — may "kaysa," kaya "mas" (hindi magkatulad).'},
-      {q:'Alin ang angkop na salita?\n"Si Liza ang ______ mabait sa magkakaibigan."', options:['mas','magsing','pinaka','magkasing'], correct:2, explain:'"Si Liza ang pinakamabait sa magkakaibigan." — siya ang may pinakamataas na katangian, kaya "pinaka-" (pasukdol).'},
-      {q:'Alin ang pantulong na salitang nagpapakita ng antas?\n"Mas mabait si Liza kaysa kay Ana."', options:['mabait','Liza','mas','Ana'], correct:2, explain:'Ang "mas" (kasama ang "kaysa") ang nagpapakitang Pahambing - Hindi Magkatulad ito.'},
-      {q:'Ilan ang inilalarawan sa antas na LANTAY?', options:['Isa lamang','Dalawa','Tatlo o higit pa','Wala'], correct:0, explain:'Lantay = isa lamang; walang inihahambing.'},
-      {q:'Tama o Mali: May dalawang uri ang pahambing — magkatulad at hindi magkatulad.', options:['Tama','Mali'], correct:0, explain:'Tama — Magkatulad (pareho) at Hindi Magkatulad (hindi pareho).'},
-      {q:'Anong antas ng paglalarawan?\n"Mabait si Ana sa kaniyang mga kaibigan."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:0, explain:'Lantay — si Ana lamang ang inilalarawan at walang inihahambing.'},
-      {q:'Anong antas ng paglalarawan?\n"Si Maria ang pinakamasipag sa kanilang pangkat."', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:3, explain:'Pasukdol — "pinaka-" ang ginamit; si Maria ang may pinakamataas na sipag sa pangkat.'},
-      {q:'Alin ang angkop na salita?\n"______ bait ng batang tumutulong sa kaniyang kapuwa."', options:['Mas','Magsing','Pinaka','Napaka'], correct:3, explain:'"Napakabait ng batang tumutulong sa kaniyang kapuwa." — "napaka-" (pasukdol).'},
-      {q:'Sa Pagtataya, anong titik ang isusulat para sa Pahambing-Hindi Magkatulad?', options:['L','PM','PHM','P'], correct:2, explain:'PHM = Pahambing-Hindi Magkatulad. (L = Lantay, PM = Pahambing-Magkatulad, P = Pasukdol.)'},
-      {q:'Alin ang pantulong na salita ng PASUKDOL?', options:['kaysa','walang katulad','magkasing-','pareho'], correct:1, explain:'Ang "walang katulad" ay ginagamit sa pasukdol, kasama ang pinaka-, napaka-, pagka-, at walang kaparis.'},
-      {q:'Alin ang pantulong na salita ng Pahambing - MAGKATULAD?', options:['kapuwa','higit','lalo','pinaka-'], correct:0, explain:'Ang "kapuwa" ay para sa magkatulad, kasama ang sing-, magsing-, magkasing-, pareho, tulad, at gaya.'},
-      {q:'Ano ang ipinakikita ng pasukdol?', options:['Karaniwang katangian ng iisa','Magkaparehong katangian ng dalawa','Pinakamatindi o pinakamataas na katangian','Walang katangian'], correct:2, explain:'Ang pasukdol ay nagpapakita ng pinakamatindi o pinakamataas na katangian.'},
-      {q:'Tama o Mali: Ginagamit ang lantay kapag dalawang bagay ang inihahambing.', options:['Tama','Mali'], correct:1, explain:'Mali — ang lantay ay para sa iisa lamang. Pahambing ang ginagamit kapag dalawa ang inihahambing.'},
+      {q:'Anong antas ng paglalarawan?\n"Mabango ang rosas."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:0, explain:'Lantay — isa lang (ang rosas) at walang inihahambing.', en:'Only one thing, no comparing.'},
+      {q:'Anong antas ng paglalarawan?\n"Magkasingganda ang dalawang bulaklak."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:1, explain:'May "magkasing-" — pareho ang ganda. Pahambing - Magkatulad.', en:'magkasing- means the same.'},
+      {q:'Anong antas ng paglalarawan?\n"Mas mabango ang rosas kaysa sa sampaguita."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:2, explain:'May "mas" at "kaysa" — hindi pareho. Pahambing - Hindi Magkatulad.', en:'mas and kaysa mean NOT the same.'},
+      {q:'Anong antas ng paglalarawan?\n"Pinakamabango ang rosas sa lahat ng bulaklak."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:3, explain:'May "pinaka-" — pinakamatindi. Pasukdol.', en:'pinaka- means the most.'},
+      {q:'Anong antas ng paglalarawan?\n"Magsinglaki ang dalawang lobo."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:1, explain:'May "magsing-" — pareho ang laki. Pahambing - Magkatulad.', en:'magsing- means the same.'},
+      {q:'Anong antas ng paglalarawan?\n"Parehong malinis ang dalawang silid-aralan."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:1, explain:'May "pareho" — Pahambing - Magkatulad.', en:'pareho means the same.'},
+      {q:'Anong antas ng paglalarawan?\n"Napakaganda ng hardin ng aming paaralan."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:3, explain:'May "napaka-" — Pasukdol.', en:'napaka- means the most.'},
+      {q:'Anong antas ng paglalarawan?\n"Mas mabilis tumakbo si Carlo kaysa kay Ben."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:2, explain:'May "mas" at "kaysa" — hindi pareho ang bilis. Pahambing - Hindi Magkatulad.', en:'mas and kaysa mean NOT the same.'},
+      {q:'Alin ang angkop na salita?\n"______ bait sina Ana at Mia."', qen:'Which word fits in the blank?', options:['Mas','Magsing','Pinaka','Napaka'], correct:1, explain:'"Magsingbait sina Ana at Mia." — pareho silang mabait.', en:'They are the same, so magsing-.'},
+      {q:'Alin ang angkop na salita?\n"______ mabait si Carlo kaysa kay Ben."', qen:'Which word fits in the blank?', options:['Mas','Magsing','Pinaka','Napaka'], correct:0, explain:'May "kaysa," kaya "Mas." — "Mas mabait si Carlo kaysa kay Ben."', en:'kaysa goes with mas.'},
+      {q:'Alin ang angkop na salita?\n"Si Liza ang ______ mabait sa magkakaibigan."', qen:'Which word fits in the blank?', options:['mas','magsing','pinaka','magkasing'], correct:2, explain:'Siya ang pinakamabait sa lahat — "pinaka."', en:'She is the kindest of all, so pinaka-.'},
+      {q:'Alin ang pantulong na salita?\n"Mas mabait si Liza kaysa kay Ana."', qen:'Which is the helper word that shows the level?', options:['mabait','Liza','mas','Ana'], correct:2, explain:'Ang "mas" (kasama ang "kaysa") ang nagsasabing Hindi Magkatulad ito.', en:'mas is the helper word.'},
+      {q:'Ilan ang inilalarawan sa LANTAY?', qen:'How many things are described in LANTAY?', options:['Isa lamang','Dalawa','Tatlo o higit pa','Wala'], correct:0, explain:'Lantay = isa lamang.', en:'Only one.'},
+      {q:'Tama o Mali: May dalawang uri ang pahambing — magkatulad at hindi magkatulad.', qen:'True or False: Pahambing has two kinds: the same, and not the same.', options:['Tama','Mali'], correct:0, explain:'Tama — Magkatulad (pareho) at Hindi Magkatulad (hindi pareho).', en:'True.'},
+      {q:'Anong antas ng paglalarawan?\n"Mabait si Ana sa kaniyang mga kaibigan."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:0, explain:'Lantay — si Ana lang ang inilalarawan. Walang inihahambing.', en:'Only Ana is described. No comparing.'},
+      {q:'Anong antas ng paglalarawan?\n"Si Maria ang pinakamasipag sa kanilang pangkat."', qen:'Which level of describing is this?', options:['Lantay','Pahambing - Magkatulad','Pahambing - Hindi Magkatulad','Pasukdol'], correct:3, explain:'May "pinaka-" — Pasukdol.', en:'pinaka- means the most.'},
+      {q:'Alin ang angkop na salita?\n"______ bait ng batang tumutulong sa kaniyang kapuwa."', qen:'Which word fits in the blank?', options:['Mas','Magsing','Pinaka','Napaka'], correct:3, explain:'"Napakabait ng batang tumutulong sa kaniyang kapuwa." — napaka- (pasukdol).', en:'napaka- fits here.'},
+      {q:'Sa Pagtataya, anong titik ang isusulat para sa Pahambing-Hindi Magkatulad?', qen:'In the test, which letters do you write for Pahambing-Hindi Magkatulad?', options:['L','PM','PHM','P'], correct:2, explain:'PHM = Pahambing-Hindi Magkatulad.', en:'PHM.'},
+      {q:'Alin ang pantulong na salita ng PASUKDOL?', qen:'Which helper word is used for PASUKDOL (the most)?', options:['kaysa','walang katulad','magkasing-','pareho'], correct:1, explain:'"walang katulad" ay pang-pasukdol, kasama ang pinaka-, napaka-, pagka-, at walang kaparis.', en:'walang katulad means "nothing like it", so it is the most.'},
+      {q:'Alin ang pantulong na salita ng Pahambing - MAGKATULAD?', qen:'Which helper word is used for MAGKATULAD (the same)?', options:['kapuwa','higit','lalo','pinaka-'], correct:0, explain:'"kapuwa" ay pang-magkatulad, kasama ang sing-, magsing-, magkasing-, pareho, tulad, at gaya.', en:'kapuwa means both are the same.'},
+      {q:'Ano ang ipinakikita ng pasukdol?', qen:'What does pasukdol show?', options:['Karaniwang katangian ng iisa','Magkaparehong katangian ng dalawang tao o bagay','Pinakamatindi o pinakamataas na katangian','Walang katangian'], correct:2, explain:'Ang pasukdol ay pinakamatindi o pinakamataas na katangian.', en:'The most, or the highest.'},
+      {q:'Tama o Mali: Ginagamit ang lantay kapag dalawa ang inihahambing.', qen:'True or False: Lantay is used when comparing two things.', options:['Tama','Mali'], correct:1, explain:'Mali — ang lantay ay para sa isa lang. Pahambing ang para sa dalawa.', en:'False. Lantay is for one only.'},
     ]
   },
   {
     id:'sightwords', emoji:'👀', title:'Sight Words sa Filipino', subtitle:'Mga Salitang Nakikita Agad',
     flashcards:[
-      {icon:'👀', term:'Sight Words', def:'Mga salitang madalas mabasa sa isang babasahin, tulad ng maikling kuwento. Kapag nakita mo ang mga ito, kaagad mo itong mababasa.'},
-      {icon:'🧠', term:'Ibang Tawag', def:'"Mga salitang nakikita agad" o "mga salitang dapat kabisado."'},
-      {icon:'⚡', term:'Bakit Mahalaga?', def:'Hindi na kailangang baybayin o isipin nang matagal, kaya makatutulong ito upang mabilis mabasa ang isang teksto.'},
-      {icon:'🔤', term:'Mga Halimbawa (1)', def:'sa, kayo, ko, mo, si'},
-      {icon:'🔡', term:'Mga Halimbawa (2)', def:'ano, sino, may, at, nang'},
-      {icon:'🆕', term:'Mga Halimbawa (3)', def:'bago, tayo, maganda, ng'},
-      {icon:'📚', term:'Tandaan', def:'Basahin araw-araw upang mas makilala ang mga salitang ito. Ang pagkatuto ng sight words ay unang hakbang sa pagiging mahusay na mambabasa.'},
+      {icon:'👀', term:'Sight Words', def:'Mga salitang MADALAS makita sa babasahin, tulad ng maikling kuwento.\nPagkakita mo, BASA MO NA AGAD!', en:'Sight words = words you see a lot when reading. You can read them right away.'},
+      {icon:'🧠', term:'Ibang Tawag', def:'"Mga salitang nakikita agad"\n"Mga salitang dapat kabisado"', en:'Other names: "words you see right away" and "words to memorize."'},
+      {icon:'⚡', term:'Bakit Mahalaga?', def:'Hindi na kailangang baybayin o isipin nang matagal.\nKaya MABILIS kang makabasa!', en:'You do not need to spell them out, so you read faster.'},
+      {icon:'🔤', term:'Mga Halimbawa (1)', def:'sa, kayo, ko, mo, si', en:'Read them out loud.'},
+      {icon:'🔡', term:'Mga Halimbawa (2)', def:'ano, sino, may, at, nang', en:'Read them out loud.'},
+      {icon:'🆕', term:'Mga Halimbawa (3)', def:'bago, tayo, maganda, ng', en:'Read them out loud.'},
+      {icon:'📚', term:'Tandaan', def:'Magbasa ARAW-ARAW para mas makilala ang mga salitang ito.\nAng sight words ay unang hakbang sa pagiging mahusay na mambabasa.', en:'Read every day. Sight words are the first step to becoming a good reader.'},
+      {icon:'🔑', tip:true, term:'Paano Sagutin?', def:'Sa "Punan ang patlang":\nBasahin nang MALAKAS ang pangungusap kasama ang bawat pagpipilian.\nAlin ang TUNOG TAMA? Iyon ang sagot!', en:'For fill in the blank: read the sentence out loud with each choice. Which one sounds right? That is the answer.'},
     ],
     quiz:[
-      {q:'Ano ang sight words?', options:['Mga salitang madalas mabasa sa babasahin','Mga salitang napakahaba at mahirap','Mga pangalan ng tao at lugar','Mga salitang galing sa ibang bansa'], correct:0, explain:'Ang sight words ay mga salitang madalas mabasa sa isang babasahin, tulad ng maikling kuwento.'},
-      {q:'Bakit mahalagang kabisaduhin ang sight words?', options:['Upang bumagal ang pagbasa','Upang mabilis mabasa ang teksto','Upang hindi na magbasa','Upang humaba ang kuwento'], correct:1, explain:'Nakatutulong ang sight words upang mabilis mabasa ang isang teksto.'},
-      {q:'Ano pa ang ibang tawag sa sight words?', options:['Mga salitang nakikita agad','Mga salitang magkatugma','Mga salitang kumikilos','Mga salitang pananong'], correct:0, explain:'Tinatawag din itong "mga salitang nakikita agad" o "mga salitang dapat kabisado."'},
-      {q:'Alin ang kabilang sa mga halimbawa ng sight words sa aralin?', options:['sampaguita','kayo','pangangatawan','silid-aralan'], correct:1, explain:'Ang "kayo" ay isa sa mga halimbawa ng sight words: sa, kayo, ko, mo, si.'},
-      {q:'Alin ang grupo ng sight words?', options:['rosas, lobo, lapis','sa, ko, mo','hardin, puno, bulaklak','atleta, guro, nanay'], correct:1, explain:'"sa, ko, mo" ay mga sight words na madalas makita sa babasahin.'},
-      {q:'Punan ang patlang ng wastong sight word.\n"______ ay masaya."', options:['Ako','ng','bagong','magandang'], correct:0, explain:'"Ako ay masaya." — "Ako" ang wastong salita.'},
-      {q:'Punan ang patlang ng wastong sight word.\n"Si Ana ay may ______ bag."', options:['tayo','ng','magandang','ako'], correct:2, explain:'"Si Ana ay may magandang bag."'},
-      {q:'Punan ang patlang ng wastong sight word.\n"Gusto ko ng ______ laruan."', options:['bagong','tayo','ng','ako'], correct:0, explain:'"Gusto ko ng bagong laruan."'},
-      {q:'Punan ang patlang ng wastong sight word.\n"Pupunta ______ sa paaralan."', options:['ng','tayo','bagong','magandang'], correct:1, explain:'"Pupunta tayo sa paaralan."'},
-      {q:'Punan ang patlang ng wastong sight word.\n"Wala ______ tubig sa baso."', options:['tayo','ako','ng','bagong'], correct:2, explain:'"Wala ng tubig sa baso." — "ng" ang wastong salita.'},
-      {q:'Ano ang dapat gawin upang mas makilala ang sight words?', options:['Basahin araw-araw','Huwag nang magbasa','Magbasa isang beses sa isang taon','Kabisaduhin lamang ang mahahabang salita'], correct:0, explain:'Sa araw-araw na pagbabasa, mas nakikilala natin ang mga salitang ito.'},
-      {q:'Tama o Mali: Kailangang baybayin nang matagal ang sight words bago ito mabasa.', options:['Tama','Mali'], correct:1, explain:'Mali — nakikita agad at kaagad nababasa ang sight words, kaya hindi na kailangang baybayin nang matagal.'},
-      {q:'Tama o Mali: Ang pagkatuto ng sight words ay unang hakbang sa pagiging mahusay na mambabasa.', options:['Tama','Mali'], correct:0, explain:'Tama — iyan ang sinasabi ng aralin.'},
+      {q:'Ano ang sight words?', qen:'What are sight words?', options:['Mga salitang madalas mabasa sa babasahin','Mga salitang napakahaba at mahirap basahin ng mga bata','Mga pangalan ng tao at lugar','Mga salitang galing sa ibang bansa'], correct:0, explain:'Ang sight words ay mga salitang madalas mabasa sa babasahin, tulad ng maikling kuwento.', en:'Words you see a lot when reading.'},
+      {q:'Bakit mahalagang kabisaduhin ang sight words?', qen:'Why is it important to memorize sight words?', options:['Para bumagal ang pagbasa','Para mabilis mabasa ang teksto','Para hindi na kailangang magbasa ng aklat','Para humaba ang kuwento'], correct:1, explain:'Nakatutulong ang sight words para mabilis mabasa ang teksto.', en:'So you can read faster.'},
+      {q:'Ano pa ang ibang tawag sa sight words?', qen:'What is another name for sight words?', options:['Mga salitang nakikita agad','Mga salitang magkatugma ang tunog sa dulo','Mga salitang kumikilos','Mga salitang pananong'], correct:0, explain:'Tinatawag din itong "mga salitang nakikita agad" o "mga salitang dapat kabisado."', en:'"Words you see right away."'},
+      {q:'Alin ang isa sa mga halimbawa ng sight words sa aralin?', qen:'Which one is a sight word from the lesson?', options:['sampaguita','kayo','pangangatawan','silid-aralan'], correct:1, explain:'Ang "kayo" ay sight word: sa, kayo, ko, mo, si.', en:'kayo is a sight word. It is short and used a lot.'},
+      {q:'Alin ang grupo ng sight words?', qen:'Which group is made of sight words?', options:['rosas, lobo, lapis','sa, ko, mo','hardin, puno, bulaklak','atleta, guro, nanay'], correct:1, explain:'"sa, ko, mo" ay mga sight words mula sa aralin.', en:'sa, ko, mo are sight words from the lesson.'},
+      {q:'Punan ang patlang ng wastong sight word.\n"______ ay masaya."', qen:'Fill in the blank with the correct sight word.', options:['Ako','ng','bagong','magandang'], correct:0, explain:'"Ako ay masaya."', en:'"Ako ay masaya" = I am happy.'},
+      {q:'Punan ang patlang ng wastong sight word.\n"Si Ana ay may ______ bag."', qen:'Fill in the blank with the correct sight word.', options:['tayo','ng','magandang','ako'], correct:2, explain:'"Si Ana ay may magandang bag."', en:'Ana has a beautiful bag.'},
+      {q:'Punan ang patlang ng wastong sight word.\n"Gusto ko ng ______ laruan."', qen:'Fill in the blank with the correct sight word.', options:['bagong','tayo','ng','ako'], correct:0, explain:'"Gusto ko ng bagong laruan."', en:'I want a new toy.'},
+      {q:'Punan ang patlang ng wastong sight word.\n"Pupunta ______ sa paaralan."', qen:'Fill in the blank with the correct sight word.', options:['ng','tayo','bagong','magandang'], correct:1, explain:'"Pupunta tayo sa paaralan."', en:'We will go to school.'},
+      {q:'Punan ang patlang ng wastong sight word.\n"Wala ______ tubig sa baso."', qen:'Fill in the blank with the correct sight word.', options:['tayo','ako','ng','bagong'], correct:2, explain:'"Wala ng tubig sa baso." — "ng" ang sagot ayon sa aralin.', en:'There is no more water in the glass.'},
+      {q:'Ano ang dapat gawin para mas makilala ang sight words?', qen:'What should you do to know sight words better?', options:['Magbasa araw-araw','Huwag nang magbasa','Magbasa isang beses sa isang taon','Kabisaduhin lang ang mahahabang salita'], correct:0, explain:'Magbasa araw-araw para mas makilala ang mga salitang ito.', en:'Read every day.'},
+      {q:'Tama o Mali: Kailangang baybayin nang matagal ang sight words bago ito mabasa.', qen:'True or False: You need to spell out sight words slowly before you can read them.', options:['Tama','Mali'], correct:1, explain:'Mali — nakikita agad at nababasa agad ang sight words.', en:'False. You can read them right away.'},
+      {q:'Tama o Mali: Ang pagkatuto ng sight words ay unang hakbang sa pagiging mahusay na mambabasa.', qen:'True or False: Learning sight words is the first step to becoming a good reader.', options:['Tama','Mali'], correct:0, explain:'Tama — iyan ang sabi ng aralin.', en:'True.'},
     ]
   },
 ];
@@ -610,7 +634,7 @@ function prepareQuestion(q){
   const order = shuffle(q.options.map((_,i)=>i));
   const options = order.map(i=>q.options[i]);
   const correct = order.indexOf(q.correct);
-  return { q:q.q, options, correct, explain:q.explain, passage:q.passage };
+  return { q:q.q, qen:q.qen, options, correct, explain:q.explain, en:q.en, passage:q.passage };
 }
 
 /* ---- Storybook SVG ---- */
@@ -761,6 +785,11 @@ function renderCard(){
   document.getElementById('card-icon').textContent = fc.icon;
   document.getElementById('card-term').textContent = fc.term;
   document.getElementById('card-def').textContent = fc.def;
+  const enEl = document.getElementById('card-en');
+  enEl.innerHTML = fc.en ? '<span class="en-label">SA ENGLISH</span>' : '';
+  enEl.appendChild(document.createTextNode(fc.en || ''));
+  enEl.classList.toggle('hidden', !fc.en);
+  document.querySelector('#screen-cards .card').classList.toggle('tip', !!fc.tip);
   document.getElementById('card-prev').disabled = cardIdx === 0;
   document.getElementById('card-next').disabled = cardIdx === lesson.flashcards.length - 1;
   const dots = document.getElementById('card-dots');
@@ -820,6 +849,10 @@ function renderQuestion(){
   const sentenceEl = document.getElementById('q-sentence');
   sentenceEl.textContent = sentence || '';
   sentenceEl.classList.toggle('hidden', !sentence);
+  const qEnEl = document.getElementById('q-en');
+  qEnEl.textContent = q.qen || '';
+  qEnEl.classList.add('hidden');
+  document.getElementById('q-help').classList.toggle('hidden', !q.qen);
   const opts = document.getElementById('q-options');
   opts.innerHTML = '';
   q.options.forEach((opt, idx)=>{
@@ -831,6 +864,11 @@ function renderQuestion(){
   });
   document.getElementById('q-feedback').innerHTML = '';
   document.getElementById('q-next-btn').classList.add('hidden');
+}
+
+function showQuestionEnglish(){
+  document.getElementById('q-help').classList.add('hidden');
+  document.getElementById('q-en').classList.remove('hidden');
 }
 
 function selectOption(idx){
@@ -854,12 +892,12 @@ function selectOption(idx){
     saveTotalPoints(totalPoints);
   } else {
     streak = 0;
-    missedQuestions.push({ q: q.q, explain: q.explain });
+    missedQuestions.push({ q: q.q, explain: q.explain, en: q.en });
   }
   updatePointsLive();
   renderBook(document.getElementById('quiz-book-svg'), Math.round((quizScore/currentQuizSet.length)*8));
   const fb = document.getElementById('q-feedback');
-  fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Tama! 🎉':'Hindi tama.'}</strong>${q.explain}</div>`;
+  fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Tama! 🎉':'Hindi tama.'}</strong>${q.explain}${q.en ? `<div class="fb-en"><b>Sa English:</b> ${q.en}</div>` : ''}</div>`;
   document.getElementById('q-next-btn').classList.remove('hidden');
 }
 
@@ -894,7 +932,7 @@ function renderResults(){
   const reviewEl = document.getElementById('missed-review');
   if(missedQuestions.length){
     reviewEl.innerHTML = '<h3>Mga Tanong na Dapat Balikan</h3><div class="missed-list">' +
-      missedQuestions.map(m => `<div class="missed-item"><p class="missed-q">${m.q}</p><p class="missed-explain">${m.explain}</p></div>`).join('') +
+      missedQuestions.map(m => `<div class="missed-item"><p class="missed-q">${m.q}</p><p class="missed-explain">${m.explain}</p>${m.en ? `<p class="missed-explain fb-en"><b>Sa English:</b> ${m.en}</p>` : ''}</div>`).join('') +
       '</div>';
   } else {
     reviewEl.innerHTML = '';
