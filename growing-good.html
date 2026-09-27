@@ -288,7 +288,7 @@
   .missed-list{max-height:340px; overflow-y:auto; padding-right:2px;}
   .missed-item{display:flex; gap:10px; align-items:flex-start; background:var(--bg-alt); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
   .missed-item svg{width:18px; height:18px; flex:none; margin-top:2px; color:var(--bad);}
-  .missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
+  .missed-item .missed-q{white-space:pre-line; font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
   .missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem; font-weight:500;}
 
   /* ---- Points & streak ---- */
@@ -314,6 +314,7 @@
   #home-list .lesson-card{margin-bottom:0; height:100%; display:flex; flex-direction:column;}
   #home-list .lesson-top{flex:1; align-items:flex-start;}
 }
+  .q-sentence{background:transparent; border:2px dashed color-mix(in srgb, var(--ink) 35%, transparent); border-radius:14px; padding:14px 16px; font-size:1.2rem; font-weight:700; line-height:1.5; text-align:center; margin:-4px 0 16px; color:var(--ink);}
 </style>
 
 <div class="app">
@@ -379,6 +380,7 @@
       </div>
       <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
       <div class="q-text" id="q-text"></div>
+      <div class="q-sentence" id="q-sentence" style="display:none"></div>
       <div id="q-options"></div>
       <div class="feedback" id="q-feedback"></div>
       <div class="next-wrap" id="next-wrap">
@@ -474,7 +476,7 @@
         { title:'VALUE WHO YOU ARE', icon:'<circle cx="38" cy="38" r="34" fill="var(--accent-soft)"/><path d="M38 54c-11-9-20-17-20-27a12 12 0 0 1 20-9 12 12 0 0 1 20 9c0 10-9 18-20 27z" fill="var(--accent)"/>', text:'You should value your name, your family, and your characteristics, because they are all part of your identity.' }
       ],
       quiz: [
-        mc('Kassie knows her name, birthday, and the names of her family members. Why is this important information about her?', [['They help her understand who she is',true],['They help her buy things',false],['They make her the most popular',false],['They make her different from everyone',false]], 'That&rsquo;s right! Knowing these things helps her understand who she is.', 'The correct answer is They help her understand who she is.'),
+        mc('Why is it important for Kassie to know these things?\nKassie knows her name, birthday, and the names of her family members.', [['They help her understand who she is',true],['They help her buy things',false],['They make her the most popular',false],['They make her different from everyone',false]], 'That&rsquo;s right! Knowing these things helps her understand who she is.', 'The correct answer is They help her understand who she is.'),
         mc('Why is it important to know your family background and your own characteristics?', [['To understand your identity and appreciate your family',true],['To hide your differences',false],['To become better than others',false],['To compete with other people',false]], 'Yes! It helps you understand your identity and appreciate your family.', 'The correct answer is To understand your identity and appreciate your family.'),
         tf('Families come in different forms, sizes, and types, but all are equally important.', true, 'That&rsquo;s right! Every family is equally important.', 'The answer should be True &mdash; families come in different forms, sizes, and types, but all are equally important.'),
         tf('I should value my name, family, and characteristics because they are part of my identity.', true, 'Correct! They are all part of who you are.', 'The answer should be True &mdash; you should value your name, family, and characteristics because they are part of your identity.'),
@@ -511,8 +513,8 @@
         tf('Fear and disgust are the same emotion.', false, 'That’s right! Fear and disgust are two different emotions.', 'The answer should be False &mdash; fear is being scared of danger, while disgust is a strong dislike of something unpleasant.'),
         mc('In the CATCH plan, what does the &ldquo;A&rdquo; stand for?', [['Accept your feelings',true],['Argue with others',false],['Avoid everyone',false]], 'Yes! A stands for Accept your feelings.', 'In CATCH, the &ldquo;A&rdquo; stands for Accept your feelings.'),
         tf('Emotions help us understand how we feel and react to situations.', true, 'Correct! That is exactly what emotions do.', 'The answer should be True &mdash; emotions help us understand how we feel and react to situations.'),
-        mc('Sammy feels angry because his friend accidentally broke his pencil. What should he do to show self-discipline?', [['Calm down and talk politely with his friend',true],['Shout at his friend',false],['Break his friend&rsquo;s things',false],['Stop talking to everyone',false]], 'That&rsquo;s right! Calming down and talking politely shows self-discipline.', 'The correct answer is Calm down and talk politely with his friend.'),
-        mc('Dannie is angry but chooses to talk politely instead. What does this show?', [['Self-control',true],['Disrespect',false],['Carelessness',false]], 'Yes! Choosing to stay calm and polite shows self-control.', 'Choosing to talk politely while angry shows Self-control.'),
+        mc('What should Sammy do to show self-discipline?\nSammy feels angry because his friend accidentally broke his pencil.', [['Calm down and talk politely with his friend',true],['Shout at his friend',false],['Break his friend&rsquo;s things',false],['Stop talking to everyone',false]], 'That&rsquo;s right! Calming down and talking politely shows self-discipline.', 'The correct answer is Calm down and talk politely with his friend.'),
+        mc('What does Dannie&rsquo;s choice show?\nDannie is angry but chooses to talk politely instead.', [['Self-control',true],['Disrespect',false],['Carelessness',false]], 'Yes! Choosing to stay calm and polite shows self-control.', 'Choosing to talk politely while angry shows Self-control.'),
         tf('Children who learn to manage their emotions effectively develop self-discipline.', true, 'That&rsquo;s right! Managing your emotions well builds self-discipline.', 'The answer should be True &mdash; managing your emotions effectively helps you develop self-discipline.'),
         tf('Shouting at your friend is a good way to show self-discipline.', false, 'That&rsquo;s right! Shouting is not self-discipline &mdash; calming down and talking politely is.', 'The answer should be False &mdash; self-discipline means calming down and talking politely, not shouting.'),
         tf('Breaking or damaging things when you are angry shows self-control.', false, 'Correct! Breaking things shows a lack of self-control, not self-control.', 'The answer should be False &mdash; breaking or damaging things when angry shows a lack of self-control.')
@@ -572,9 +574,9 @@
         tf('Physical fitness only means playing sports competitively.', false, 'Correct! Physical fitness means being active, like exercise and play.', 'The answer should be False &mdash; physical fitness means being active for at least an hour a day, not just competitive sports.'),
         mc('What do we call eating healthy, nutritious food instead of junk food?', [['Adequate Nutrition',true],['Physical Fitness',false],['Quality Sleep',false]], 'Yes! That is Adequate Nutrition.', 'Eating healthy food instead of junk food is called Adequate Nutrition.'),
         tf('Taking care of your feelings has nothing to do with staying healthy.', false, 'That’s right! Taking care of your feelings is part of staying healthy too.', 'The answer should be False &mdash; taking care of your feelings (mental health) is also part of staying healthy.'),
-        mc('Carlo&rsquo;s daddy teaches him to take a bath every day. Why should Carlo follow this habit?', [['To keep his body clean and feel confident',true],['To avoid helping at home',false],['To make others do his tasks',false],['To become better than his friends',false]], 'That&rsquo;s right! Bathing daily keeps you clean and confident.', 'The correct answer is To keep his body clean and feel confident.'),
-        mc('Ben forgot to wash his hands before eating, and his mother reminds him about proper hygiene. What should Ben do?', [['Wash his hands and remember the reminder next time',true],['Blame someone else',false],['Get angry at his mother',false],['Continue eating without washing',false]], 'Yes! Ben should wash his hands and remember for next time.', 'The correct answer is Ben should wash his hands and remember the reminder next time.'),
-        mc('Mark washes his hands only when they look dirty. What should he understand about handwashing?', [['Hands should be washed regularly to remove germs',true],['Hands do not carry germs',false],['Handwashing is only needed at school',false],['Soap is not needed when washing hands',false]], 'That&rsquo;s right! Hands should be washed regularly, not just when they look dirty.', 'The correct answer is Hands should be washed regularly to remove germs.'),
+        mc('Why should Carlo take a bath every day?\nCarlo&rsquo;s daddy teaches him to take a bath every day.', [['To keep his body clean and feel confident',true],['To avoid helping at home',false],['To make others do his tasks',false],['To become better than his friends',false]], 'That&rsquo;s right! Bathing daily keeps you clean and confident.', 'The correct answer is To keep his body clean and feel confident.'),
+        mc('What should Ben do?\nBen forgot to wash his hands before eating, and his mother reminds him about proper hygiene.', [['Wash his hands and remember the reminder next time',true],['Blame someone else',false],['Get angry at his mother',false],['Continue eating without washing',false]], 'Yes! Ben should wash his hands and remember for next time.', 'The correct answer is Ben should wash his hands and remember the reminder next time.'),
+        mc('What should Mark understand about handwashing?\nMark washes his hands only when they look dirty.', [['Hands should be washed regularly to remove germs',true],['Hands do not carry germs',false],['Handwashing is only needed at school',false],['Soap is not needed when washing hands',false]], 'That&rsquo;s right! Hands should be washed regularly, not just when they look dirty.', 'The correct answer is Hands should be washed regularly to remove germs.'),
         tf('Taking care of yourself makes you weak.', false, 'That&rsquo;s right! Taking care of yourself keeps you strong and healthy, not weak.', 'The answer should be False &mdash; taking care of yourself keeps you strong and healthy.')
       ]
     }
@@ -754,7 +756,11 @@
     document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     updatePointsLive();
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
-    document.getElementById('q-text').textContent = decode(item.q);
+    var parts = decode(item.q).split('\n');
+    document.getElementById('q-text').textContent = parts[0];
+    var sentenceEl = document.getElementById('q-sentence');
+    sentenceEl.textContent = parts[1] || '';
+    sentenceEl.style.display = parts[1] ? '' : 'none';
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback'; fb.innerHTML = '';
     document.getElementById('next-wrap').classList.remove('show');

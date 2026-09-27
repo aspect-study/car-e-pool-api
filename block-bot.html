@@ -137,7 +137,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .missed-review h3{font-size:1rem; font-family:'Lilita One',cursive; font-weight:400; color:var(--ink); margin:0 0 10px; text-align:center;}
 .missed-list{max-height:340px; overflow-y:auto; padding-right:2px;}
 .missed-item{background:var(--surface2); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
-.missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
+.missed-item .missed-q{white-space:pre-line; font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
 .missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem;}
 .results-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
 .secondary-btn{
@@ -182,6 +182,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
   #screen-home .lesson-info{flex:1;}
   #screen-home .go-btn{width:100%; text-align:center;}
 }
+  .q-sentence{background:var(--surface2); border:2px solid var(--border); border-radius:14px; padding:14px 16px; font-size:1.2rem; font-weight:700; line-height:1.5; text-align:center; margin:-4px 0 16px; color:var(--ink);}
 </style>
 
 <div class="app">
@@ -230,6 +231,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <svg class="quiz-bot" viewBox="0 0 200 240" id="quiz-bot-svg"></svg>
     </div>
     <div class="q-text" id="q-text"></div>
+      <div class="q-sentence" id="q-sentence" style="display:none"></div>
     <div class="q-art hidden" id="q-art"></div>
     <div class="options" id="q-options"></div>
     <div class="nline-box hidden" id="q-numberline">
@@ -444,14 +446,14 @@ const LESSONS = [
     quiz:[
       {q:'How do you write 954 in words?', options:['nine hundred fifty-four','nine hundred fifteen','ninety-five hundred four','nine hundred and forty'], correct:0, explain:'954 has 9 hundreds, 5 tens, 4 ones: nine hundred fifty-four.'},
       {q:'How do you write 1562 in words?', options:['one thousand five hundred sixty-two','one thousand five hundred twenty-six','one thousand fifty-two','five thousand one hundred sixty-two'], correct:0, explain:'1562 = one thousand five hundred sixty-two.'},
-      {q:'What numeral is "five thousand two hundred thirty-one"?', options:['5231','5321','2531','5213'], correct:0, explain:'Five thousand, two hundred, thirty-one = 5231.'},
-      {q:'What numeral is "nine thousand six hundred eighty-four"?', options:['9648','9684','6984','9864'], correct:1, explain:'Nine thousand, six hundred, eighty-four = 9684.'},
+      {q:'Which numeral is this?\nfive thousand two hundred thirty-one', options:['5231','5321','2531','5213'], correct:0, explain:'Five thousand, two hundred, thirty-one = 5231.'},
+      {q:'Which numeral is this?\nnine thousand six hundred eighty-four', options:['9648','9684','6984','9864'], correct:1, explain:'Nine thousand, six hundred, eighty-four = 9684.'},
       {q:'True or False: In writing numerals with 5 digits or more, we put a space between the thousands group and the rest of the number.', options:['True','False'], correct:0, explain:'That is the rule — for example, 12 345 has one space, right after the thousands group.'},
       {q:'How do you write 301 in words?', options:['three hundred and one','thirty-one','three hundred ten','three thousand one'], correct:0, explain:'301 = three hundred and one.'},
       {q:'How do you write 1705 in words?', options:['one thousand seven hundred and five','one thousand seven hundred fifty','one thousand seventy-five','seven thousand one hundred five'], correct:0, explain:'1705 = one thousand seven hundred and five.'},
       {q:'True or False: We write the period name first, then the digit, like "thousand-one".', options:['True','False'], correct:1, explain:'It is the other way around — we write the digit first, then the name of the period, like "one thousand".'},
       {q:'How do you write 2087 in words?', options:['two thousand eighty-seven','twenty thousand eighty-seven','two thousand and eight seven','two hundred eighty-seven'], correct:0, explain:'2087 = two thousand eighty-seven.'},
-      {q:'What numeral is "six thousand forty"?', options:['6040','6400','640','6004'], correct:0, explain:'Six thousand, forty = 6040 — there are 0 hundreds, so a 0 sits in the hundreds place.'},
+      {q:'Which numeral is this?\nsix thousand forty', options:['6040','6400','640','6004'], correct:0, explain:'Six thousand, forty = 6040 — there are 0 hundreds, so a 0 sits in the hundreds place.'},
       {q:'How do you write 830 in words?', options:['eight hundred thirty','eighty-three','eight hundred three','eight thousand thirty'], correct:0, explain:'830 = eight hundred thirty.'},
       {q:'True or False: The numeral for "four thousand five" is 4500.', options:['True','False'], correct:1, explain:'"Four thousand five" means 4005 — there are 0 hundreds and 0 tens, so 4500 is incorrect.'},
     ]
@@ -467,17 +469,17 @@ const LESSONS = [
       {icon:'➕', term:'The Big Rule', def:'Skip counting just means adding the SAME number every time to get the next one.'},
     ],
     quiz:[
-      {q:'Skip count by 2s: 2, 4, 6, __, 10', options:['7','8','9','12'], correct:1, explain:'Adding 2 each time: 6 + 2 = 8.'},
-      {q:'Skip count by 5s: 15, 20, __, 30', options:['22','24','25','26'], correct:2, explain:'Adding 5 each time: 20 + 5 = 25.'},
-      {q:'Skip count by 10s: 40, 50, __, 70', options:['55','60','65','61'], correct:1, explain:'Adding 10 each time: 50 + 10 = 60.'},
-      {q:'Skip count by 50s: 150, 200, __, 300', options:['225','240','250','260'], correct:2, explain:'Adding 50 each time: 200 + 50 = 250.'},
-      {q:'Skip count by 100s: 500, 600, __, 800', options:['650','700','750','710'], correct:1, explain:'Adding 100 each time: 600 + 100 = 700.'},
+      {q:'Skip count by 2s. Which number is missing?\n2, 4, 6, __, 10', options:['7','8','9','12'], correct:1, explain:'Adding 2 each time: 6 + 2 = 8.'},
+      {q:'Skip count by 5s. Which number is missing?\n15, 20, __, 30', options:['22','24','25','26'], correct:2, explain:'Adding 5 each time: 20 + 5 = 25.'},
+      {q:'Skip count by 10s. Which number is missing?\n40, 50, __, 70', options:['55','60','65','61'], correct:1, explain:'Adding 10 each time: 50 + 10 = 60.'},
+      {q:'Skip count by 50s. Which number is missing?\n150, 200, __, 300', options:['225','240','250','260'], correct:2, explain:'Adding 50 each time: 200 + 50 = 250.'},
+      {q:'Skip count by 100s. Which number is missing?\n500, 600, __, 800', options:['650','700','750','710'], correct:1, explain:'Adding 100 each time: 600 + 100 = 700.'},
       {q:'True or False: Skip counting means adding a different number each time.', options:['True','False'], correct:1, explain:'Skip counting always adds the SAME number every time — like always +2, or always +50.'},
-      {q:'Skip count by 10s: 70, 80, 90, __', options:['95','100','110','99'], correct:1, explain:'Adding 10 each time: 90 + 10 = 100.'},
-      {q:'Skip count by 5s: 40, 45, __', options:['48','50','55','46'], correct:1, explain:'Adding 5 each time: 45 + 5 = 50.'},
-      {q:'Skip count by 2s: 12, 14, __, 18', options:['15','16','17','20'], correct:1, explain:'Adding 2 each time: 14 + 2 = 16.'},
-      {q:'Skip count by 100s: 200, 300, __, 500', options:['350','400','450','410'], correct:1, explain:'Adding 100 each time: 300 + 100 = 400.'},
-      {q:'Skip count by 50s: 50, __, 150, 200', options:['75','100','125','90'], correct:1, explain:'Adding 50 each time: 50 + 50 = 100.'},
+      {q:'Skip count by 10s. Which number is missing?\n70, 80, 90, __', options:['95','100','110','99'], correct:1, explain:'Adding 10 each time: 90 + 10 = 100.'},
+      {q:'Skip count by 5s. Which number is missing?\n40, 45, __', options:['48','50','55','46'], correct:1, explain:'Adding 5 each time: 45 + 5 = 50.'},
+      {q:'Skip count by 2s. Which number is missing?\n12, 14, __, 18', options:['15','16','17','20'], correct:1, explain:'Adding 2 each time: 14 + 2 = 16.'},
+      {q:'Skip count by 100s. Which number is missing?\n200, 300, __, 500', options:['350','400','450','410'], correct:1, explain:'Adding 100 each time: 300 + 100 = 400.'},
+      {q:'Skip count by 50s. Which number is missing?\n50, __, 150, 200', options:['75','100','125','90'], correct:1, explain:'Adding 50 each time: 50 + 50 = 100.'},
       {q:'True or False: Skip counting by 5s from 5 gives 5, 10, 15, 20, 25.', options:['True','False'], correct:0, explain:'Correct — each step adds 5.'},
     ]
   },
@@ -492,16 +494,16 @@ const LESSONS = [
     ],
     quiz:[
       {q:'Which symbol means "greater than"?', options:['<','>','=','+'], correct:1, explain:'The > symbol opens toward the bigger number.'},
-      {q:'Compare: 443 ___ 210', options:['>','<','='], correct:0, explain:'443 has more hundreds (4) than 210 (2), so 443 is greater.'},
-      {q:'Compare: 443 ___ 470', options:['>','<','='], correct:1, explain:'The hundreds are equal (4=4), but tens: 4 is less than 7, so 443 < 470.'},
-      {q:'Compare: 470 ___ 470', options:['>','<','='], correct:2, explain:'Every digit matches, so the numbers are equal.'},
+      {q:'Which symbol goes in the blank?\n443 ___ 210', options:['>','<','='], correct:0, explain:'443 has more hundreds (4) than 210 (2), so 443 is greater.'},
+      {q:'Which symbol goes in the blank?\n443 ___ 470', options:['>','<','='], correct:1, explain:'The hundreds are equal (4=4), but tens: 4 is less than 7, so 443 < 470.'},
+      {q:'Which symbol goes in the blank?\n470 ___ 470', options:['>','<','='], correct:2, explain:'Every digit matches, so the numbers are equal.'},
       {q:'True or False: 136 is smaller than 225.', options:['True','False'], correct:0, explain:'136 has 1 hundred, 225 has 2 hundreds, so 136 is smaller.'},
-      {q:'Compare: 99 ___ 99', options:['>','<','='], correct:2, explain:'Same number on both sides means they are equal.'},
-      {q:'Compare: 56 ___ 75', options:['>','<','='], correct:1, explain:'56 has fewer tens (5) than 75 (7), so 56 is less than 75.'},
+      {q:'Which symbol goes in the blank?\n99 ___ 99', options:['>','<','='], correct:2, explain:'Same number on both sides means they are equal.'},
+      {q:'Which symbol goes in the blank?\n56 ___ 75', options:['>','<','='], correct:1, explain:'56 has fewer tens (5) than 75 (7), so 56 is less than 75.'},
       {q:'True or False: When comparing numbers, we look at the ones digit first.', options:['True','False'], correct:1, explain:'We always compare the biggest place value first — hundreds, then tens, then ones.'},
-      {q:'Compare: 308 ___ 380', options:['>','<','='], correct:1, explain:'Comparing tens: 0 is less than 8, so 308 < 380.'},
+      {q:'Which symbol goes in the blank?\n308 ___ 380', options:['>','<','='], correct:1, explain:'Comparing tens: 0 is less than 8, so 308 < 380.'},
       {q:'True or False: 712 is greater than 721.', options:['True','False'], correct:1, explain:'Comparing tens: 1 is less than 2, so 712 is actually less than 721.'},
-      {q:'Compare: 605 ___ 650', options:['>','<','='], correct:1, explain:'Comparing tens: 0 is less than 5, so 605 < 650.'},
+      {q:'Which symbol goes in the blank?\n605 ___ 650', options:['>','<','='], correct:1, explain:'Comparing tens: 0 is less than 5, so 605 < 650.'},
       {q:'Which symbol means "equal to"?', options:['>','<','='], correct:2, explain:'The = symbol means both numbers have the same value.'},
     ]
   },
@@ -516,16 +518,16 @@ const LESSONS = [
     quiz:[
       {q:'What does "ascending order" mean?', options:['Smallest to greatest','Greatest to smallest','Random order','Odd numbers only'], correct:0, explain:'Ascending means the numbers climb up from smallest to greatest.'},
       {q:'What does "descending order" mean?', options:['Smallest to greatest','Greatest to smallest','Random order','Even numbers only'], correct:1, explain:'Descending means the numbers go down from greatest to smallest.'},
-      {q:'Order 238, 170, 209 from smallest to greatest:', options:['170, 209, 238','238, 209, 170','209, 170, 238','170, 238, 209'], correct:0, explain:'Comparing hundreds and tens: 170 is smallest, then 209, then 238.'},
+      {q:'Order the numbers from smallest to greatest.\n238, 170, 209', options:['170, 209, 238','238, 209, 170','209, 170, 238','170, 238, 209'], correct:0, explain:'Comparing hundreds and tens: 170 is smallest, then 209, then 238.'},
       {q:'True or False: 935 is less than 943.', options:['True','False'], correct:0, explain:'Comparing tens: 3 is less than 4, so 935 < 943.'},
       {q:'True or False: 625 is less than 421.', options:['True','False'], correct:1, explain:'625 has more hundreds (6) than 421 (4), so 625 is greater, not less.'},
       {q:'To order numbers, what should you do first?', options:['Compare their place values','Guess','Add them together','Multiply them'], correct:0, explain:'You must compare place values (hundreds, then tens, then ones) before you can put numbers in order.'},
-      {q:'Which is the greatest: 529, 592, or 421?', options:['529','592','421'], correct:1, explain:'Comparing tens: 592 has 9 tens, more than 529 (2 tens) and 421 (2 tens).'},
-      {q:'Arrange 873, 730, 625 from greatest to smallest:', options:['873, 730, 625','625, 730, 873','730, 873, 625','625, 873, 730'], correct:0, explain:'Comparing hundreds: 873 (8) is greatest, then 730 (7), then 625 (6).'},
-      {q:'Order 512, 125, 251 from smallest to greatest:', options:['125, 251, 512','512, 251, 125','251, 125, 512','125, 512, 251'], correct:0, explain:'Comparing hundreds: 125 (1) is smallest, then 251 (2), then 512 (5).'},
-      {q:'Which is the smallest: 348, 384, or 438?', options:['348','384','438'], correct:0, explain:'Comparing hundreds and tens: 348 has the fewest tens among these hundreds.'},
+      {q:'Which is the greatest?\n529, 592, 421', options:['529','592','421'], correct:1, explain:'Comparing tens: 592 has 9 tens, more than 529 (2 tens) and 421 (2 tens).'},
+      {q:'Arrange the numbers from greatest to smallest.\n873, 730, 625', options:['873, 730, 625','625, 730, 873','730, 873, 625','625, 873, 730'], correct:0, explain:'Comparing hundreds: 873 (8) is greatest, then 730 (7), then 625 (6).'},
+      {q:'Order the numbers from smallest to greatest.\n512, 125, 251', options:['125, 251, 512','512, 251, 125','251, 125, 512','125, 512, 251'], correct:0, explain:'Comparing hundreds: 125 (1) is smallest, then 251 (2), then 512 (5).'},
+      {q:'Which is the smallest?\n348, 384, 438', options:['348','384','438'], correct:0, explain:'Comparing hundreds and tens: 348 has the fewest tens among these hundreds.'},
       {q:'True or False: Arranging numbers from greatest to smallest is called ascending order.', options:['True','False'], correct:1, explain:'That is actually descending order — ascending means smallest to greatest.'},
-      {q:'Arrange 96, 69, 609 from smallest to greatest:', options:['69, 96, 609','96, 69, 609','609, 96, 69','69, 609, 96'], correct:0, explain:'609 has a hundreds digit, so it is largest; between 69 and 96, 69 is smaller.'},
+      {q:'Arrange the numbers from smallest to greatest.\n96, 69, 609', options:['69, 96, 609','96, 69, 609','609, 96, 69','69, 609, 96'], correct:0, explain:'609 has a hundreds digit, so it is largest; between 69 and 96, 69 is smaller.'},
     ]
   },
   {
@@ -549,8 +551,8 @@ const LESSONS = [
       {q:'What is the ordinal word for 12th?', options:['twelveth','twelfth','twelth','twelfeth'], correct:1, explain:'12th is written as "twelfth" in words.'},
       {q:'True or False: 11th is written as "eleventh."', options:['True','False'], correct:0, explain:'Correct — 11th = eleventh, even though it ends in "th" like the regular rule.'},
       {q:'What is 18 in ordinal form?', options:['18st','18th','18nd','eighteenst'], correct:1, explain:'18 becomes "18th," following the "th" rule.'},
-      {q:'In a race, Jay finished 1st and Lim finished 2nd. Who finished first?', options:['Jay','Lim','Both of them','None of them'], correct:0, explain:'1st place means Jay finished first.'},
-      {q:'Four children lined up: 1st - Ana, 2nd - Ben, 3rd - Cara, 4th - Dan. Who is after Ben?', options:['Ana','Ben','Cara','Dan'], correct:2, explain:'Ben is 2nd, so the position right after him is 3rd, which is Cara.'},
+      {q:'Who finished first?\nIn a race, Jay finished 1st and Lim finished 2nd.', options:['Jay','Lim','Both of them','None of them'], correct:0, explain:'1st place means Jay finished first.'},
+      {q:'Who is after Ben?\nFour children lined up: 1st - Ana, 2nd - Ben, 3rd - Cara, 4th - Dan.', options:['Ana','Ben','Cara','Dan'], correct:2, explain:'Ben is 2nd, so the position right after him is 3rd, which is Cara.'},
     ]
   },
   {
@@ -618,7 +620,7 @@ const LESSONS = [
       {q:'Write 8000 + 600 + 3 in standard form.', options:['8603','8630','863','8063'], correct:0, explain:'There are 0 tens, so a 0 goes in the tens place: 8603.'},
       {q:'Write 6000 + 50 + 9 in standard form.', options:['6059','6590','6509','659'], correct:0, explain:'There are 0 hundreds, so a 0 goes in the hundreds place: 6059.'},
       {q:'Write 4000 + 800 + 70 + 1 in standard form.', options:['4871','4817','4781','48701'], correct:0, explain:'4000 + 800 + 70 + 1 = 4871.'},
-      {q:'Which form is "five thousand four hundred thirty-seven"?', options:['Word form','Standard form','Expanded form','Place value form'], correct:0, explain:'A number written using words is in word form. Its standard form is 5,437.'},
+      {q:'Which form is this number written in?\nfive thousand four hundred thirty-seven', options:['Word form','Standard form','Expanded form','Place value form'], correct:0, explain:'A number written using words is in word form. Its standard form is 5,437.'},
       {q:'True or False: In expanded form we write the value of each digit, not just the digit itself.', options:['True','False'], correct:0, explain:'Correct. In 2184 the 8 is worth 80, so we write 80 and not 8.'},
     ]
   },
@@ -1031,6 +1033,11 @@ function startFinalExam(){
   showScreen(quizScreen);
 }
 
+function showSentence(sentence){
+  const el = document.getElementById('q-sentence');
+  el.textContent = sentence || '';
+  el.style.display = sentence ? '' : 'none';
+}
 function renderQuestion(){
   answered = false;
   document.getElementById('quiz-title').textContent = currentQuizMeta.title;
@@ -1044,6 +1051,7 @@ function renderQuestion(){
 
   if(q.type === 'numberline'){
     document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: Find the sum.`;
+    showSentence('');
     document.getElementById('q-art').classList.add('hidden');
     document.getElementById('q-options').classList.add('hidden');
     document.getElementById('q-numberline').classList.remove('hidden');
@@ -1053,7 +1061,9 @@ function renderQuestion(){
 
   document.getElementById('q-numberline').classList.add('hidden');
   document.getElementById('q-options').classList.remove('hidden');
-  document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: ${q.q}`;
+  const [prompt, sentence] = q.q.split('\n');
+  document.getElementById('q-text').textContent = `Question ${quizIdx+1} of ${total}: ${prompt}`;
+  showSentence(sentence);
   const qArt = document.getElementById('q-art');
   if(q.art){ qArt.innerHTML = q.art; qArt.classList.remove('hidden'); }
   else { qArt.innerHTML = ''; qArt.classList.add('hidden'); }

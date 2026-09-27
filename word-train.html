@@ -275,7 +275,7 @@
   .missed-list{max-height:340px; overflow-y:auto; padding-right:2px;}
   .missed-item{display:flex; gap:10px; align-items:flex-start; background:var(--bg-alt); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
   .missed-item svg{width:18px; height:18px; flex:none; margin-top:2px; color:var(--bad);}
-  .missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
+  .missed-item .missed-q{white-space:pre-line; font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
   .missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem; font-weight:500;}
 
   /* ---- Points & streak ---- */
@@ -301,6 +301,7 @@
   #home-list .lesson-card{margin-bottom:0; height:100%; display:flex; flex-direction:column;}
   #home-list .lesson-top{flex:1; align-items:flex-start;}
 }
+  .q-sentence{background:transparent; border:2px dashed color-mix(in srgb, var(--ink) 35%, transparent); border-radius:14px; padding:14px 16px; font-size:1.2rem; font-weight:700; line-height:1.5; text-align:center; margin:-4px 0 16px; color:var(--ink);}
 </style>
 
 <div class="app">
@@ -371,6 +372,7 @@
       </div>
       <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
       <div class="q-text" id="q-text"></div>
+      <div class="q-sentence" id="q-sentence" style="display:none"></div>
       <div id="q-options"></div>
       <div class="feedback" id="q-feedback"></div>
       <div class="next-wrap" id="next-wrap">
@@ -522,13 +524,13 @@
         tf('"Cat" is an example of a CVC word.', true, 'Correct! "Cat" follows the consonant-vowel-consonant pattern.', 'The answer should be True — "cat" is a CVC word.'),
         mc('Which word below is a CVC word with the short a sound?', [['Map',true],['Dog',false],['Sun',false]], 'Yes! "Map" has the short a sound.', '"Map" is the CVC word with the short a sound.'),
         tf('"Dog" uses the short o sound.', true, 'That’s right! "Dog" has the short o sound.', 'The answer should be True — "dog" uses the short o sound.'),
-        mc('Which word matches: Ben has a red ___?', [['Cap',true],['Elephant',false],['Umbrella',false]], 'Correct! "Cap" fits the CVC pattern and the sentence.', 'The word that fits is "cap" — a short, CVC word.'),
+        mc('Which word completes the sentence?\nBen has a red ___.', [['Cap',true],['Elephant',false],['Umbrella',false]], 'Correct! "Cap" fits the CVC pattern and the sentence.', 'The word that fits is "cap" — a short, CVC word.'),
         mc('Which of these words has the short u sound?', [['Sun',true],['Pig',false],['Bed',false]], 'Yes! "Sun" has the short u sound.', '"Sun" is the word with the short u sound.'),
         tf('CVC words help us read and sound out simple words.', true, 'Correct! That’s exactly why CVC words matter.', 'The answer should be True — CVC words help us read and sound out simple words.'),
-        mc('Which word completes: "The ___ can hop."?', [['Dog',true],['Chair',false],['Book',false]], 'That’s right! "The dog can hop."', 'The word that completes the sentence is "dog".'),
+        mc('Which word completes the sentence?\n"The ___ can hop."', [['Dog',true],['Chair',false],['Book',false]], 'That’s right! "The dog can hop."', 'The word that completes the sentence is "dog".'),
         mc('Which word below is a CVC word with the short o sound?', [['Pot',true],['Sun',false],['Map',false]], 'Yes! "Pot" has the short o sound.', '"Pot" is the CVC word with the short o sound.'),
         tf('"Bit" follows the consonant-vowel-consonant pattern.', true, 'Correct! "Bit" is a CVC word.', 'The answer should be True — "bit" follows the consonant-vowel-consonant pattern.'),
-        mc('Which word matches: Tom sat on the ___?', [['Mat',true],['Elephant',false],['Umbrella',false]], 'That’s right! "Mat" fits the CVC pattern and the sentence.', 'The word that fits is "mat" — a short, CVC word.'),
+        mc('Which word completes the sentence?\nTom sat on the ___.', [['Mat',true],['Elephant',false],['Umbrella',false]], 'That’s right! "Mat" fits the CVC pattern and the sentence.', 'The word that fits is "mat" — a short, CVC word.'),
         tf('Reading CVC words does not help us read other simple words.', false, 'Correct! Reading CVC words actually helps us sound out many simple words.', 'The answer should be False — reading CVC words helps us sound out and read many simple words.')
       ]
     },
@@ -551,10 +553,10 @@
         mc('What does "add" mean in math?', [['To put numbers together',true],['To take away',false],['To read a word',false]], 'Correct! Add means to put numbers together.', '"Add" means to put numbers together.'),
         mc('What does "subtract" mean in math?', [['To take away',true],['To put together',false],['To spell',false]], 'Yes! Subtract means to take away.', '"Subtract" means to take away.'),
         tf('"Sum" is the answer to a subtraction problem.', false, 'Correct! "Sum" is the answer to an addition problem.', 'The answer should be False — "Sum" is the answer to an addition problem, not subtraction.'),
-        mc('In "8 &minus; 3 = 5", what math word describes the answer 5?', [['Difference',true],['Sum',false],['Equal',false]], 'That’s right! The answer to subtraction is called the difference.', 'The answer to a subtraction problem is called the Difference.'),
+        mc('What math word describes the answer 5?\n8 &minus; 3 = 5', [['Difference',true],['Sum',false],['Equal',false]], 'That’s right! The answer to subtraction is called the difference.', 'The answer to a subtraction problem is called the Difference.'),
         mc('Which of these is a high-frequency word?', [['You',true],['Dinosaur',false],['Umbrella',false]], 'Yes! "You" is a high-frequency word.', '"You" is a common high-frequency word.'),
         tf('Math-specific words are only used outside of math class.', false, 'Correct! Math-specific words are used to help us solve math problems.', 'The answer should be False — math-specific words help us solve problems in math.'),
-        mc('In "5 + 3 = 8", what math word describes the answer 8?', [['Sum',true],['Difference',false],['Subtract',false]], 'That’s right! The answer to addition is called the sum.', 'The answer to an addition problem is called the Sum.'),
+        mc('What math word describes the answer 8?\n5 + 3 = 8', [['Sum',true],['Difference',false],['Subtract',false]], 'That’s right! The answer to addition is called the sum.', 'The answer to an addition problem is called the Sum.'),
         tf('High-frequency words are words we rarely use in reading and writing.', false, 'Correct! High-frequency words are used very often, not rarely.', 'The answer should be False — high-frequency words are used very often in reading and writing.')
       ]
     },
@@ -626,13 +628,13 @@
         tf('"Run" is an example of an action verb.', true, 'Correct! "Run" is an action verb.', 'The answer should be True — "run" is an action verb.'),
         mc('Which word is an action verb?', [['Dancing',true],['Happy',false],['Table',false]], 'Yes! "Dancing" is an action verb.', '"Dancing" is the action verb — it tells us what someone is doing.'),
         tf('Action verbs tell us what someone or something is doing.', true, 'That’s right! That is exactly what action verbs do.', 'The answer should be True — action verbs tell us what someone or something is doing.'),
-        mc('In "Teacher Gayle is talking," what is the action verb?', [['Talking',true],['Teacher',false],['Gayle',false]], 'Correct! "Talking" is the action verb.', 'The action verb in that sentence is "talking".'),
+        mc('What is the action verb?\n"Teacher Gayle is talking."', [['Talking',true],['Teacher',false],['Gayle',false]], 'Correct! "Talking" is the action verb.', 'The action verb in that sentence is "talking".'),
         mc('Which of these words describes something flying or swimming?', [['Action verb',true],['Common noun',false],['Proper noun',false]], 'That’s right! Flying and swimming are action verbs.', 'Words like flying and swimming are Action verbs.'),
         tf('"Table" is an action verb.', false, 'Correct! "Table" is a noun, not an action verb.', 'The answer should be False — "table" is a noun, not an action verb.'),
-        mc('Which action verb best completes: "The dog is ___ in the yard."?', [['Running',true],['Table',false],['Happy',false]], 'Yes! "Running" is the action verb that fits.', 'The action verb that fits is "running".'),
+        mc('Which action verb best completes the sentence?\n"The dog is ___ in the yard."', [['Running',true],['Table',false],['Happy',false]], 'Yes! "Running" is the action verb that fits.', 'The action verb that fits is "running".'),
         mc('Which word is an action verb?', [['Swimming',true],['Chair',false],['Blue',false]], 'Yes! "Swimming" is an action verb.', '"Swimming" is the action verb — it tells us what someone is doing.'),
         tf('"Scream" can be used as an action verb in a story.', true, 'Correct! "Scream" is an action verb often used in stories.', 'The answer should be True — "scream" is an action verb used in stories.'),
-        mc('In "The bird is flying," what is the action verb?', [['Flying',true],['Bird',false],['The',false]], 'That’s right! "Flying" is the action verb.', 'The action verb in that sentence is "flying".'),
+        mc('What is the action verb?\n"The bird is flying."', [['Flying',true],['Bird',false],['The',false]], 'That’s right! "Flying" is the action verb.', 'The action verb in that sentence is "flying".'),
         tf('Action verbs tell us the color of something.', false, 'Correct! Action verbs tell us what someone or something is doing, not its color.', 'The answer should be False — action verbs tell us about action, not color.')
       ]
     },
@@ -652,13 +654,13 @@
         tf('"Beautiful" is an adjective that can describe a person.', true, 'Correct! "Beautiful" describes a person.', 'The answer should be True — "beautiful" can describe a person.'),
         mc('Which word is an adjective?', [['Kind',true],['Run',false],['School',false]], 'Yes! "Kind" is an adjective.', '"Kind" is the adjective — it describes a person.'),
         tf('"Peaceful" can be used to describe a place.', true, 'That’s right! "Peaceful" can describe a place.', 'The answer should be True — "peaceful" can describe a place.'),
-        mc('In "The lazy cat slept on the bed," which word is the adjective?', [['Lazy',true],['Cat',false],['Bed',false]], 'Correct! "Lazy" is the adjective.', 'The adjective in that sentence is "lazy" — it describes the cat.'),
+        mc('Which word is the adjective?\n"The lazy cat slept on the bed."', [['Lazy',true],['Cat',false],['Bed',false]], 'Correct! "Lazy" is the adjective.', 'The adjective in that sentence is "lazy" — it describes the cat.'),
         mc('Which adjective could describe jewels?', [['Sparkling',true],['Walk',false],['Teacher',false]], 'That’s right! "Sparkling" describes jewels.', '"Sparkling" is an adjective that could describe jewels.'),
         tf('Adjectives can only describe animals, not things or places.', false, 'Correct! Adjectives can describe people, places, animals, and things.', 'The answer should be False — adjectives describe people, places, animals, and things.'),
-        mc('In "I have a red ball," what does "red" describe?', [['The ball',true],['The action',false],['Nothing',false]], 'Yes! "Red" describes the ball.', '"Red" describes "the ball" in that sentence.'),
+        mc('What does "red" describe?\n"I have a red ball."', [['The ball',true],['The action',false],['Nothing',false]], 'Yes! "Red" describes the ball.', '"Red" describes "the ball" in that sentence.'),
         mc('Which word is an adjective that describes an animal?', [['Elegant',true],['Run',false],['Book',false]], 'Yes! "Elegant" can describe an animal.', '"Elegant" is an adjective — it can describe an animal.'),
         tf('Adjectives can describe how things look.', true, 'Correct! Adjectives like "red" or "new" describe how things look.', 'The answer should be True — adjectives can describe how things look.'),
-        mc('In "The peaceful garden was quiet," which word is the adjective?', [['Peaceful',true],['Garden',false],['Was',false]], 'That’s right! "Peaceful" is the adjective.', 'The adjective in that sentence is "peaceful" — it describes the garden.'),
+        mc('Which word is the adjective?\n"The peaceful garden was quiet."', [['Peaceful',true],['Garden',false],['Was',false]], 'That’s right! "Peaceful" is the adjective.', 'The adjective in that sentence is "peaceful" — it describes the garden.'),
         tf('"Fast" is an adjective that can describe how a person moves.', true, 'Correct! "Fast" describes how a person moves.', 'The answer should be True — "fast" is an adjective that can describe a person.')
       ]
     },
@@ -678,13 +680,13 @@
         tf('"I" and "you" are personal pronouns.', true, 'Correct! "I" and "you" are personal pronouns.', 'The answer should be True — "I" and "you" are personal pronouns.'),
         mc('Which pronoun refers to more than one person or thing?', [['They',true],['He',false],['It',false]], 'Yes! "They" refers to more than one.', '"They" is the pronoun that refers to more than one person or thing.'),
         tf('"She" is used to refer to a male person.', false, 'Correct! "She" refers to a female person.', 'The answer should be False — "she" refers to a female person, not male.'),
-        mc('"This is my dog. ___ is brown." Which pronoun completes the sentence?', [['It',true],['She',false],['You',false]], 'That’s right! "It" refers to the dog.', 'The pronoun that fits is "It" — it refers to the dog.'),
-        mc('"Ben and I are friends. ___ play together." Which pronoun fits?', [['We',true],['They',false],['He',false]], 'Correct! "We" refers to Ben and I.', 'The pronoun that fits is "We" — it refers to Ben and the speaker.'),
+        mc('Which pronoun completes the sentence?\n"This is my dog. ___ is brown."', [['It',true],['She',false],['You',false]], 'That’s right! "It" refers to the dog.', 'The pronoun that fits is "It" — it refers to the dog.'),
+        mc('Which pronoun fits?\n"Ben and I are friends. ___ play together."', [['We',true],['They',false],['He',false]], 'Correct! "We" refers to Ben and I.', 'The pronoun that fits is "We" — it refers to Ben and the speaker.'),
         tf('"We" refers to the speaker and other people.', true, 'Yes! "We" includes the speaker and others.', 'The answer should be True — "we" refers to the speaker and other people.'),
         mc('Which pronoun would you use to talk about yourself?', [['I',true],['He',false],['They',false]], 'That’s right! "I" is used to talk about yourself.', 'The pronoun used to talk about yourself is "I".'),
         mc('Which pronoun would you use to refer to a boy who was already mentioned?', [['He',true],['She',false],['They',false]], 'Yes! "He" refers to a male already mentioned.', '"He" is used to refer to a male person already mentioned.'),
         tf('"It" is used for a thing or animal already mentioned.', true, 'Correct! "It" refers to a thing or animal already mentioned.', 'The answer should be True — "it" is used for a thing or animal already mentioned.'),
-        mc('"The girls are playing. ___ are having fun." Which pronoun completes the sentence?', [['They',true],['He',false],['I',false]], 'That’s right! "They" refers to the girls.', 'The pronoun that fits is "They" — it refers to the girls.'),
+        mc('Which pronoun completes the sentence?\n"The girls are playing. ___ are having fun."', [['They',true],['He',false],['I',false]], 'That’s right! "They" refers to the girls.', 'The pronoun that fits is "They" — it refers to the girls.'),
         tf('Personal pronouns can only refer to people, never to things or animals.', false, 'Correct! Personal pronouns like "it" can refer to things and animals too.', 'The answer should be False — personal pronouns like "it" can refer to things and animals, not just people.')
       ]
     },
@@ -707,9 +709,9 @@
         tf('"That" is used for something near the speaker.', false, 'Correct! "That" is used for something far from the speaker, not near.', 'The answer should be False — "that" is used for something far from the speaker.'),
         mc('Which word do we use for MORE THAN ONE thing that is near you?', [['These',true],['This',false],['Those',false]], 'That’s right! "These" is used for more than one thing that is near.', '"These" is the word used for more than one thing that is near you.'),
         tf('"Those" is used for more than one thing that is far from the speaker.', true, 'Correct! "Those" points to more than one thing that is far.', 'The answer should be True — "those" is used for more than one thing that is far from the speaker.'),
-        mc('"___ dog is barking loudly," and the dog is far away. Which word fits?', [['That',true],['These',false],['This',false]], 'Yes! "That" fits because the dog is far away.', 'The word that fits is "That" — it is used for one thing that is far away.'),
+        mc('The dog is far away. Which word fits?\n"___ dog is barking loudly."', [['That',true],['These',false],['This',false]], 'Yes! "That" fits because the dog is far away.', 'The word that fits is "That" — it is used for one thing that is far away.'),
         tf('"This" and "these" point to things that are far from the speaker.', false, 'Correct! "This" and "these" point to things that are near the speaker, not far.', 'The answer should be False — "this" and "these" point to things that are near the speaker.'),
-        mc('"___ cookies are way too sweet," and the cookies are far away. Which word fits?', [['Those',true],['This',false],['That',false]], 'That’s right! "Those" fits because the cookies are far away and more than one.', 'The word that fits is "Those" — it is used for more than one thing that is far away.'),
+        mc('The cookies are far away. Which word fits?\n"___ cookies are way too sweet."', [['Those',true],['This',false],['That',false]], 'That’s right! "Those" fits because the cookies are far away and more than one.', 'The word that fits is "Those" — it is used for more than one thing that is far away.'),
         tf('"These" is used for just one thing.', false, 'Correct! "These" is used for more than one thing, not just one.', 'The answer should be False — "these" is used for more than one thing that is near the speaker.'),
         mc('Which word usually follows "these" or "those" in a sentence?', [['Are',true],['Is',false],['Was',false]], 'Yes! "These" and "those" are usually followed by "are."', '"Are" is the word that usually follows "these" or "those."'),
         tf('"That" and "those" point to things that are far from the speaker.', true, 'Correct! "That" and "those" point to things that are far from the speaker.', 'The answer should be True — "that" and "those" point to things that are far from the speaker.')
@@ -734,9 +736,9 @@
         tf('A sentence must begin with a capital letter.', true, 'Correct! Every sentence begins with a capital letter.', 'The answer should be True — a sentence must begin with a capital letter.'),
         mc('Which of these is a complete sentence?', [['Anna bought a bag yesterday.',true],['Under the table.',false],['Played in the sand.',false]], 'That’s right! That sentence expresses a complete thought.', '"Anna bought a bag yesterday." is a complete sentence — it expresses a complete thought.'),
         tf('A sentence can never end with an exclamation mark.', false, 'Correct! A sentence can end with a period, a question mark, or an exclamation mark.', 'The answer should be False — a sentence can end with a period, question mark, or exclamation mark.'),
-        mc('In "Claudia wants to be a flight attendant," what is the subject?', [['Claudia',true],['Wants',false],['Flight attendant',false]], 'Yes! "Claudia" is who the sentence is about.', 'The subject is "Claudia" — it tells us who the sentence is about.'),
+        mc('What is the subject?\n"Claudia wants to be a flight attendant."', [['Claudia',true],['Wants',false],['Flight attendant',false]], 'Yes! "Claudia" is who the sentence is about.', 'The subject is "Claudia" — it tells us who the sentence is about.'),
         tf('The predicate tells who or what the sentence is about.', false, 'Correct! That is the job of the subject, not the predicate.', 'The answer should be False — the SUBJECT tells who or what the sentence is about; the predicate tells something about the subject.'),
-        mc('In "Theodore is a good speaker," what is the predicate?', [['Is a good speaker',true],['Theodore',false],['Good',false]], 'That’s right! "Is a good speaker" tells us about Theodore.', 'The predicate is "is a good speaker" — it tells something about the subject.'),
+        mc('What is the predicate?\n"Theodore is a good speaker."', [['Is a good speaker',true],['Theodore',false],['Good',false]], 'That’s right! "Is a good speaker" tells us about Theodore.', 'The predicate is "is a good speaker" — it tells something about the subject.'),
         tf('"Under the table" is a non-sentence because it does not express a complete thought.', true, 'Correct! "Under the table" is a fragment, not a complete sentence.', 'The answer should be True — "under the table" does not express a complete thought, so it is a non-sentence.'),
         mc('What are the two important parts of a complete sentence?', [['Subject and predicate',true],['Noun and verb only',false],['Capital letter and period',false]], 'Yes! Every complete sentence has a subject and a predicate.', 'The two important parts of a complete sentence are the Subject and predicate.'),
         tf('Non-sentences are also called fragments.', true, 'Correct! A non-sentence is also called a fragment.', 'The answer should be True — non-sentences are also called fragments.')
@@ -950,7 +952,11 @@
     document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     updatePointsLive();
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
-    document.getElementById('q-text').textContent = decode(item.q);
+    var parts = decode(item.q).split('\n');
+    document.getElementById('q-text').textContent = parts[0];
+    var sentenceEl = document.getElementById('q-sentence');
+    sentenceEl.textContent = parts[1] || '';
+    sentenceEl.style.display = parts[1] ? '' : 'none';
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback'; fb.innerHTML = '';
     document.getElementById('next-wrap').classList.remove('show');

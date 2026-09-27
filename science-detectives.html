@@ -205,6 +205,7 @@
 
   .q-kicker{font-size:0.78rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--indigo-deep); margin-bottom:8px;}
   .q-text{font-size:1.3rem; font-family:'Righteous',sans-serif; line-height:1.35; margin-bottom:18px;}
+  .q-sentence{background:transparent; border:2px dashed color-mix(in srgb, var(--ink) 35%, transparent); border-radius:14px; padding:14px 16px; font-size:1.2rem; font-weight:700; line-height:1.5; text-align:center; margin:-4px 0 16px; color:var(--ink);}
 
   .opt{
     display:flex; align-items:center; gap:12px;
@@ -275,7 +276,7 @@
   .missed-list{max-height:340px; overflow-y:auto; padding-right:2px;}
   .missed-item{display:flex; gap:10px; align-items:flex-start; background:var(--bg-alt); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
   .missed-item svg{width:18px; height:18px; flex:none; margin-top:2px; color:var(--bad);}
-  .missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
+  .missed-item .missed-q{white-space:pre-line; font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
   .missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem; font-weight:500;}
 
   /* ---- Points & streak ---- */
@@ -361,6 +362,7 @@
       </div>
       <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
       <div class="q-text" id="q-text"></div>
+      <div class="q-sentence" id="q-sentence" style="display:none"></div>
       <div id="q-options"></div>
       <div class="feedback" id="q-feedback"></div>
       <div class="next-wrap" id="next-wrap">
@@ -744,7 +746,11 @@
     document.getElementById('track-fill').style.width = Math.round((qIdx / currentQuizSet.length) * 100) + '%';
     updatePointsLive();
     document.getElementById('q-kicker').textContent = item.type === 'tf' ? 'True or False?' : 'Choose the correct answer';
-    document.getElementById('q-text').textContent = decode(item.q);
+    var parts = decode(item.q).split('\n');
+    document.getElementById('q-text').textContent = parts[0];
+    var sentenceEl = document.getElementById('q-sentence');
+    sentenceEl.textContent = parts[1] || '';
+    sentenceEl.style.display = parts[1] ? '' : 'none';
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback'; fb.innerHTML = '';
     document.getElementById('next-wrap').classList.remove('show');

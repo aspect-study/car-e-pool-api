@@ -282,7 +282,7 @@
   .missed-list{max-height:340px; overflow-y:auto; padding-right:2px;}
   .missed-item{display:flex; gap:10px; align-items:flex-start; background:var(--bg-alt); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
   .missed-item svg{width:18px; height:18px; flex:none; margin-top:2px; color:var(--bad);}
-  .missed-item .missed-q{font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
+  .missed-item .missed-q{white-space:pre-line; font-weight:700; color:var(--ink); margin:0 0 4px; line-height:1.4; font-size:0.96rem;}
   .missed-item .missed-explain{color:var(--ink-soft); margin:0; line-height:1.4; font-size:0.9rem; font-weight:500;}
 
   /* ---- Points & streak ---- */
@@ -308,6 +308,7 @@
   #home-list .lesson-card{margin-bottom:0; height:100%; display:flex; flex-direction:column;}
   #home-list .lesson-top{flex:1; align-items:flex-start;}
 }
+  .q-sentence{background:transparent; border:2px dashed color-mix(in srgb, var(--ink) 35%, transparent); border-radius:14px; padding:14px 16px; font-size:1.2rem; font-weight:700; line-height:1.5; text-align:center; margin:-4px 0 16px; color:var(--ink);}
 </style>
 
 <div class="app">
@@ -373,6 +374,7 @@
       <div class="q-kicker" id="q-kicker">Choose the correct answer</div>
       <div class="q-pic" id="q-pic"></div>
       <div class="q-text" id="q-text"></div>
+      <div class="q-sentence" id="q-sentence" style="display:none"></div>
       <div id="q-options"></div>
       <div class="feedback" id="q-feedback"></div>
       <div class="next-wrap" id="next-wrap">
@@ -521,7 +523,7 @@
         mc('What should you use during computer class?', [['Only the programs your teacher tells you to use',true],['Any game you like',false],['Any website you find',false]], 'Yes! Stick to what your teacher assigns.', 'You should use Only the programs your teacher tells you to use.'),
         tf('It doesn&rsquo;t matter if you forget to save your work.', false, 'That&rsquo;s right! Saving your work is important.', 'The answer should be False &mdash; always remember to save your work.'),
         mc('Which rule should you follow inside the computer laboratory?', [['Listen to your teacher&rsquo;s instructions',true],['Run to your seat',false],['Open any game you like',false],['Turn off the computer anytime',false]], 'That&rsquo;s right! Always listen to your teacher&rsquo;s instructions.', 'You should Listen to your teacher&rsquo;s instructions.'),
-        mc('Your teacher is still explaining the activity. What should you do?', [['Wait for instructions before touching the computer',true],['Open Paint',false],['Open games',false],['Turn off the computer',false]], 'Yes! Wait until your teacher finishes explaining.', 'You should Wait for instructions before touching the computer.'),
+        mc('What should you do?\nYour teacher is still explaining the activity.', [['Wait for instructions before touching the computer',true],['Open Paint',false],['Open games',false],['Turn off the computer',false]], 'Yes! Wait until your teacher finishes explaining.', 'You should Wait for instructions before touching the computer.'),
         mc('What should you do while your teacher gives instructions?', [['Listen quietly and respect others',true],['Talk to your seatmate',false],['Play with the mouse',false]], 'That&rsquo;s right! Listen quietly and respect others.', 'You should Listen quietly and respect others while your teacher gives instructions.'),
         tf('You should be gentle with the computers and use the mouse gently.', true, 'That&rsquo;s right! Always be gentle with the computers.', 'The answer should be True &mdash; be gentle with the computers, and use the mouse gently.')
       ]
@@ -552,7 +554,7 @@
         mc('What do we call it when hardware, software, and peopleware all work together?', [['A computer system',true],['A computer virus',false],['A computer game',false]], 'Yes! Together they make a computer system.', 'When these three work together, it is called A computer system.'),
         tf('The speakers and RAM are parts of a computer.', true, 'That&rsquo;s right! Both are parts of a computer.', 'The answer should be True &mdash; speakers and RAM are parts of a computer.'),
         tf('Software is something we can touch with our hands.', false, 'Correct! We can only touch hardware, not software.', 'The answer should be False &mdash; software cannot be touched, only hardware can.'),
-        mc('Anna wants to draw a picture using the computer. Which element of the computer system will she use?', [['All of the choices are correct',true],['Software only',false],['Hardware only',false],['Peopleware only',false]], 'That&rsquo;s right! She needs hardware, software, and herself (peopleware) working together.', 'The answer is All of the choices are correct &mdash; hardware, software, and peopleware all work together.'),
+        mc('Which element of the computer system will Anna use?\nAnna wants to draw a picture using the computer.', [['All of the choices are correct',true],['Software only',false],['Hardware only',false],['Peopleware only',false]], 'That&rsquo;s right! She needs hardware, software, and herself (peopleware) working together.', 'The answer is All of the choices are correct &mdash; hardware, software, and peopleware all work together.'),
         mc('Look at the picture. What is it?', [['Hardware',true],['Software',false],['Peopleware',false]], 'Yes! A keyboard is a physical part you can touch, so it&rsquo;s Hardware.', 'This is a Hardware &mdash; a keyboard is a physical part you can touch, even though it plugs into the computer.', '<rect x="14" y="30" width="48" height="24" rx="3" fill="var(--indigo)"/><rect x="20" y="36" width="6" height="4" fill="var(--card)"/><rect x="30" y="36" width="6" height="4" fill="var(--card)"/><rect x="40" y="36" width="6" height="4" fill="var(--card)"/><rect x="50" y="36" width="6" height="4" fill="var(--card)"/><rect x="20" y="44" width="6" height="4" fill="var(--card)"/><rect x="30" y="44" width="6" height="4" fill="var(--card)"/><rect x="40" y="44" width="6" height="4" fill="var(--card)"/><rect x="50" y="44" width="6" height="4" fill="var(--card)"/>'),
         mc('Look at the picture. What is it?', [['Software',true],['Hardware',false],['Peopleware',false]], 'That&rsquo;s right! Even though you see it on the screen, the drawing program is Software.', 'This is Software &mdash; a program like Microsoft Paint is not a physical thing, even though it shows on the screen. The screen itself is hardware, but the program running on it is software.', '<rect x="14" y="18" width="48" height="34" rx="3" fill="var(--card)" stroke="var(--indigo)" stroke-width="2"/><rect x="18" y="22" width="40" height="26" fill="#fff"/><polygon points="30,44 30,34 38,28 46,34 46,44" fill="var(--amber-soft)" stroke="var(--amber-deep)" stroke-width="1.5"/><circle cx="52" cy="36" r="5" fill="var(--good)"/><rect x="50" y="40" width="3" height="6" fill="var(--case-dark)"/><rect x="30" y="52" width="16" height="6" fill="var(--indigo-deep)"/>'),
         mc('Look at the picture. What is it?', [['Peopleware',true],['Hardware',false],['Software',false]], 'Yes! A student using the computer is Peopleware.', 'This is Peopleware &mdash; the people who use the computer, like this student, are peopleware.', '<circle cx="38" cy="24" r="8" fill="var(--amber-deep)"/><path d="M22 58c2-12 10-18 16-18s14 6 16 18" fill="none" stroke="var(--amber-deep)" stroke-width="4" stroke-linecap="round"/><rect x="46" y="36" width="20" height="14" rx="2" fill="var(--indigo-soft)" stroke="var(--indigo)" stroke-width="1.5"/>'),
@@ -741,7 +743,11 @@
     var picEl = document.getElementById('q-pic');
     if (item.pic){ picEl.innerHTML = '<svg viewBox="0 0 76 76">' + item.pic + '</svg>'; picEl.style.display = 'block'; }
     else { picEl.innerHTML = ''; picEl.style.display = 'none'; }
-    document.getElementById('q-text').textContent = decode(item.q);
+    var parts = decode(item.q).split('\n');
+    document.getElementById('q-text').textContent = parts[0];
+    var sentenceEl = document.getElementById('q-sentence');
+    sentenceEl.textContent = parts[1] || '';
+    sentenceEl.style.display = parts[1] ? '' : 'none';
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback'; fb.innerHTML = '';
     document.getElementById('next-wrap').classList.remove('show');
