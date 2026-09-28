@@ -55,8 +55,10 @@
     return ai < bi ? -1 : ai > bi ? 1 : 0;
   }
 
-  function create(storage, now) {
-    var api = { plain: plain, dateKey: dateKey };
+  function create(storage, now, grade) {
+    var prefix = /^[a-z0-9]+$/.test(grade || '') ? grade : 'grade2';
+    var KEY = prefix + '_history_v1', ERROR_KEY = prefix + '_history_error_v1', CORRUPT_PREFIX = prefix + '_history_corrupt_v1_';
+    var api = { plain: plain, dateKey: dateKey, grade: prefix };
 
     // Pure read, never writes: [] for a missing or corrupt value, null only if storage cannot be read at all.
     function read() {
@@ -147,16 +149,22 @@
     };
 
     api.cardViewed = function (id, cardNumber) {
-      update(id, function (e) { if (cardNumber > e.cardsViewed) e.cardsViewed = cardNumber; });
+      update(id, function (e) {
+        if (!Array.isArray(e.seen)) e.seen = [];
+        if (e.seen.indexOf(cardNumber) < 0) e.seen.push(cardNumber);
+        e.cardsViewed = e.seen.length;
+      });
     };
 
-    api.quizStarted = function (app, appTitle, lessonId, lessonTitle, isFinal, total) {
-      return add({
+    api.quizStarted = function (app, appTitle, lessonId, lessonTitle, isFinal, total, kind) {
+      var fields = {
         type: 'quiz', app: app, appTitle: plain(appTitle),
         lessonId: String(lessonId), lessonTitle: plain(lessonTitle),
         final: !!isFinal, total: total, answered: 0, correct: 0, wrong: [],
         finished: false, stars: 0, points: 0, bestStreak: 0
-      });
+      };
+      if (kind === 'walkthrough' || kind === 'case') fields.kind = kind;
+      return add(fields);
     };
 
     api.quizAnswered = function (id, isCorrect, q, picked, answer) {
@@ -245,7 +253,7 @@
     };
 
     api.exportJson = function () {
-      return JSON.stringify({ v: 1, exportedAt: now(), entries: (read() || []).filter(validEntry) });
+      return JSON.stringify({ v: 1, grade: prefix, exportedAt: now(), entries: (read() || []).filter(validEntry) });
     };
 
     function csvCell(value) {
@@ -263,7 +271,8 @@
     // "8 of 10" rather than "8/10": spreadsheets turn 8/10 into a date.
     function csvRow(e) {
       var quiz = e.type === 'quiz';
-      var type = e.type === 'open' ? 'Opened app' : e.type === 'lesson' ? 'Lesson' : e.final ? 'Final exam' : 'Quiz';
+      var type = e.type === 'open' ? 'Opened app' : e.type === 'lesson' ? 'Lesson' :
+        e.kind === 'walkthrough' ? 'UPAC walkthrough' : e.kind === 'case' ? 'Case study' : e.final ? 'Final exam' : 'Quiz';
       var wrong = Array.isArray(e.wrong) ? e.wrong.filter(Boolean) : [];
       var updatedAt = typeof e.updatedAt === 'number' ? e.updatedAt : e.t;
       return [
@@ -271,7 +280,7 @@
         e.type === 'open' ? '' : (e.final ? 'Final Mock Exam' : e.lessonTitle),
         quiz ? numOr0(e.correct) + ' of ' + numOr0(e.total) : '',
         quiz ? numOr0(e.answered) : '',
-        quiz && e.finished ? numOr0(e.stars) : '',
+        quiz && e.finished && !e.kind ? numOr0(e.stars) : '',
         quiz && e.finished ? numOr0(e.points) : '',
         e.type === 'open' ? '' : Math.max(0, Math.round((updatedAt - e.t) / 60000)),
         e.type === 'lesson' ? numOr0(e.cardsViewed) + ' of ' + numOr0(e.cardsTotal) : '',
@@ -296,6 +305,9 @@
       try { data = JSON.parse(text); } catch (e) {}
       if (!data || data.v !== 1 || !Array.isArray(data.entries) || !data.entries.every(validEntry)) {
         throw new Error('This file is not a Study History backup.');
+      }
+      if (data.grade && data.grade !== prefix) {
+        throw new Error('This backup is from a different grade (' + data.grade + ').');
       }
       var result = { added: 0, skipped: 0 };
       var ok = mutate(function (entries) {
@@ -323,7 +335,10 @@
     return;
   }
   try {
-    root.localStorage.getItem(KEY);
-    root.StudyHistory = create(root.localStorage, Date.now);
+    var script = root.document && root.document.currentScript;
+    var grade = script ? script.getAttribute('data-grade') : null;
+    var sh = create(root.localStorage, Date.now, grade);
+    root.localStorage.getItem(sh.grade + '_history_v1');
+    root.StudyHistory = sh;
   } catch (e) {}
 })(this);

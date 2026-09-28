@@ -404,6 +404,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 
 </div>
 
+<script src="study-history.js" data-grade="grade5"></script>
 <script>
 /* ---- Helpers: randomness ---- */
 function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -1671,6 +1672,13 @@ const LESSONS = [
   },
 ];
 
+const SH = window.StudyHistory, SH_APP = 'math-mastery', SH_TITLE = 'Math Mastery';
+let historyLessonId = null, historyQuizId = null;
+function historyShort(html){
+  const t = SH ? SH.plain(html) : '';
+  const chars = Array.from(t);
+  return chars.length > 60 ? chars.slice(0, 57).join('') + '...' : t;
+}
 const STORAGE_KEY = 'mathmastery_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'mathmastery_points_v1';
@@ -1685,6 +1693,7 @@ let progress = loadProgress();
 if (/(^|[?&])reset=1(&|$)/.test(location.search)){
   progress = {};
   saveProgress(progress);
+  SH && SH.appOpened(SH_APP, SH_TITLE);
   if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
 }
 
@@ -1920,6 +1929,7 @@ function goHome(){ renderHome(); }
 function openLesson(i){
   currentLessonIdx = i;
   cardIdx = 0;
+  historyLessonId = SH ? SH.lessonOpened(SH_APP, SH_TITLE, LESSONS[i].id, LESSONS[i].title, LESSONS[i].flashcards.length) : null;
   renderCard();
   showScreen(cardsScreen);
 }
@@ -1928,6 +1938,7 @@ function renderCard(){
   const lesson = LESSONS[currentLessonIdx];
   document.getElementById('cards-title').innerHTML = lesson.title;
   const fc = lesson.flashcards[cardIdx];
+  SH && SH.cardViewed(historyLessonId, cardIdx + 1);
   document.getElementById('card-icon').textContent = fc.icon;
   document.getElementById('card-term').innerHTML = fc.term;
   document.getElementById('card-def').innerHTML = fc.def;
@@ -1952,6 +1963,7 @@ function startQuiz(){
   const lesson = LESSONS[currentLessonIdx];
   currentQuizSet = buildQuizSet(lesson);
   currentQuizMeta = {id: lesson.id, title: lesson.title};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, false, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   startRound();
@@ -1966,6 +1978,7 @@ function startFinalExam(){
   });
   currentQuizSet = shuffle(qs);
   currentQuizMeta = {id:'final', title:'Full Practice Test'};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, true, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   startRound();
@@ -2008,6 +2021,7 @@ function selectOption(idx){
     else if(i === idx) b.classList.add('incorrect');
   });
   const correct = idx === q.correct;
+  SH && SH.quizAnswered(historyQuizId, correct, q.q, q.options[idx], q.options[q.correct]);
   if(correct) quizScore++;
   awardPoint(correct);
   renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
@@ -2030,6 +2044,7 @@ function finishQuiz(){
   const best = Math.max(progress[currentQuizMeta.id] || 0, quizScore);
   progress[currentQuizMeta.id] = best;
   saveProgress(progress);
+  SH && SH.quizFinished(historyQuizId, starsFor(quizScore / total), sessionPoints, bestStreak);
   renderResults(total);
   showScreen(resultsScreen);
 }
@@ -2508,6 +2523,7 @@ function openWtProblem(){
   wtRecord = {};
   wtClean = true;
   startRound();
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, wtCurrent().id, historyShort(wtCurrent().text), false, WT_STAGES.length, 'walkthrough') : null;
   renderWalkthrough();
   showScreen(wtScreen);
 }
@@ -2605,6 +2621,7 @@ function wtChoiceStage(list, recordKey, nextLabel){
       });
       if(!ok) b.classList.add('incorrect');
       const right = list.find(z=>z.c);
+      SH && SH.quizAnswered(historyQuizId, ok, WT_STAGES[wtStage].title + ': ' + WT_STAGES[wtStage].prompt + ' [' + historyShort(wtCurrent().text) + ']', item.t, right.t);
       wtRecord[recordKey] = right.t;
       document.getElementById('wt-feedback').innerHTML =
         `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'Yes! 🎉':'Not quite.'}</strong>` +
@@ -2637,6 +2654,7 @@ function wtCheckGivens(){
   if(!ok) wtClean = false;
   awardPoint(ok);
   wtRecord.given = p.givens.filter(g=>g.is).map(g=>g.t).join('; ');
+  SH && SH.quizAnswered(historyQuizId, ok, WT_STAGES[0].title + ': ' + WT_STAGES[0].prompt + ' [' + historyShort(p.text) + ']', p.givens.filter((g, i)=>wtPicks.has(i)).map(g=>g.t).join('; ') || '(none picked)', wtRecord.given);
   document.getElementById('wt-feedback').innerHTML =
     `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'All of them! 🎉':'Almost.'}</strong>` +
     `The givens are: <b>${wtRecord.given}</b>.` +
@@ -2661,6 +2679,7 @@ function wtCheckAnswer(){
   const want = p.answer;
   const ok = parsed.num === want.num && parsed.den === want.den;
   const wantStr = fracToString(want.num, want.den);
+  SH && SH.quizAnswered(historyQuizId, ok, WT_STAGES[3].title + ': ' + WT_STAGES[3].prompt + ' [' + historyShort(p.text) + ']', document.getElementById('wt-answer').value.trim(), wantStr + ' ' + p.unit);
   if(!ok) wtClean = false;
   awardPoint(ok);
   const input = document.getElementById('wt-answer');
@@ -2679,6 +2698,7 @@ function wtCheckAnswer(){
 
 function wtShowSummary(){
   const p = wtCurrent();
+  SH && SH.quizFinished(historyQuizId, 0, sessionPoints, bestStreak);
   const done = progress.wtDone || [];
   if(!done.includes(p.id)){ done.push(p.id); progress.wtDone = done; saveProgress(progress); }
   document.getElementById('wt-steps').innerHTML =
@@ -3146,6 +3166,7 @@ function openCase(i){
   caseQ = 0;
   caseClean = true;
   startRound();
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, CASES[i].id, CASES[i].title, false, CASES[i].questions.length, 'case') : null;
   document.getElementById('case-picker').classList.add('hidden');
   document.getElementById('case-detail').classList.remove('hidden');
   renderCase();
@@ -3189,7 +3210,7 @@ function renderCase(){
       b.className = 'option';
       b.innerHTML = item.t;
       b.dataset.right = item.c ? '1' : '0';
-      b.onclick = ()=>caseCheckChoice(b, btns, item.c === true);
+      b.onclick = ()=>caseCheckChoice(b, btns, item.c === true, item.t);
       btns.push(b);
       opts.appendChild(b);
     });
@@ -3206,11 +3227,12 @@ function caseRevealNext(){
   act.onclick = more ? ()=>{ caseQ++; renderCase(); } : caseShowKey;
 }
 
-function caseCheckChoice(btn, btns, ok){
+function caseCheckChoice(btn, btns, ok, pickedText){
   if(caseAnswered) return;
   caseAnswered = true;
   const q = CASES[caseIdx].questions[caseQ];
   if(!ok) caseClean = false;
+  SH && SH.quizAnswered(historyQuizId, ok, q.q, pickedText, q.options.find(o=>o.c).t);
   awardPoint(ok);
   btns.forEach(x=>{ x.disabled = true; if(x.dataset.right === '1') x.classList.add('correct'); });
   if(!ok) btn.classList.add('incorrect');
@@ -3236,6 +3258,7 @@ function caseCheckNum(){
   if(!ok) caseClean = false;
   awardPoint(ok);
   const wantStr = fracToString(q.answer.num, q.answer.den);
+  SH && SH.quizAnswered(historyQuizId, ok, q.q, document.getElementById('case-answer').value.trim(), wantStr + ' ' + q.unit);
   const inp = document.getElementById('case-answer');
   inp.disabled = true;
   inp.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
@@ -3250,6 +3273,7 @@ function caseCheckNum(){
 
 function caseShowKey(){
   const cs = CASES[caseIdx];
+  SH && SH.quizFinished(historyQuizId, 0, sessionPoints, bestStreak);
   const done = progress.caseDone || [];
   if(!done.includes(cs.id)){ done.push(cs.id); progress.caseDone = done; saveProgress(progress); }
   const more = caseIdx < CASES.length - 1;

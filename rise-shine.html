@@ -359,6 +359,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
 </div>
 
+<script src="study-history.js" data-grade="grade5"></script>
 <script>
 /* Traffic signs drawn as inline SVG, keyed by name. Must stay above LESSONS,
    which calls sign() while the array literal is built. */
@@ -784,6 +785,8 @@ const LESSONS = [
 ];
 
 const FINAL_EXAM_PER_LESSON = 3;
+const SH = window.StudyHistory, SH_APP = 'rise-shine', SH_TITLE = 'Rise & Shine';
+let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'riseshine_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'riseshine_points_v1';
@@ -803,6 +806,7 @@ let progress = loadProgress();
 if (/(^|[?&])reset=1(&|$)/.test(location.search)){
   progress = {};
   saveProgress(progress);
+  SH && SH.appOpened(SH_APP, SH_TITLE);
   if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
 }
 
@@ -935,6 +939,7 @@ function renderHome(){
 function openLesson(i){
   currentLessonIdx = i;
   flashIdx = 0;
+  historyLessonId = SH ? SH.lessonOpened(SH_APP, SH_TITLE, LESSONS[i].id, LESSONS[i].title, LESSONS[i].cards.length) : null;
   document.getElementById('flashTitle').textContent = LESSONS[i].title;
   renderFlash();
   showScreen('flashScreen');
@@ -945,6 +950,7 @@ function openLesson(i){
 function renderFlash(){
   const l = LESSONS[currentLessonIdx];
   const c = l.cards[flashIdx];
+  SH && SH.cardViewed(historyLessonId, flashIdx + 1);
   document.getElementById('flashFront').innerHTML = c.front;
   document.getElementById('flashBack').innerHTML = c.back;
   document.getElementById('flashBack').style.display = 'none';
@@ -976,6 +982,7 @@ function startQuiz(){
   const l = LESSONS[currentLessonIdx];
   currentQuizSet = shuffle(l.quiz).map(prepareQuestion);
   currentQuizMeta = {id:l.id, title:l.title};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, false, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   sessionPoints = 0; streak = 0; bestStreak = 0;
@@ -992,6 +999,7 @@ function startFinalExam(){
   });
   currentQuizSet = shuffle(qs).map(prepareQuestion);
   currentQuizMeta = {id:'final', title:'Full Mock Exam'};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, true, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   sessionPoints = 0; streak = 0; bestStreak = 0;
@@ -1030,6 +1038,7 @@ function renderQuestion(){
 function selectOption(i){
   const q = currentQuizSet[quizIdx];
   const buttons = document.querySelectorAll('#optionsBox .option');
+  SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct]);
   buttons.forEach((b,idx)=>{
     b.disabled = true;
     if(idx === q.correct) b.classList.add('correct');
@@ -1069,6 +1078,7 @@ function finishQuiz(){
   const best = progress[currentQuizMeta.id] || 0;
   if(quizScore > best) progress[currentQuizMeta.id] = quizScore;
   saveProgress(progress);
+  SH && SH.quizFinished(historyQuizId, starsFor(quizScore / total), sessionPoints, bestStreak);
   renderResults(total);
   showScreen('resultsScreen');
 }
