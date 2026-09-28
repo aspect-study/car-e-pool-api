@@ -260,6 +260,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 
 </div>
 
+<script src="study-history.js"></script>
 <script>
 const STORY_PASSAGE = `Isang mainit na araw, nakita ng masipag na langgam ang isang tipaklong na umaawit sa ilalim ng punong-kahoy. Habang naglalakad, patuloy na nagtitipon ang langgam ng pagkain para sa paparating na tag-ulan. Nang dumating ang tag-ulan, wala nang pagkain ang tipaklong ngunit marami pa rin ang naitipon ng langgam. Kusang-loob na ibinahagi ng langgam ang kaniyang pagkain sa tipaklong. Mula noon, natutong maging masipag ang tipaklong.`;
 
@@ -607,6 +608,8 @@ const LESSONS = [
 ];
 
 const FINAL_EXAM_PER_LESSON = 3;
+const SH = window.StudyHistory, SH_APP = 'kuwentista', SH_TITLE = 'Kuwentista';
+let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'kuwentista_progress_v2';
 function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
 function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
@@ -614,6 +617,7 @@ let progress = loadProgress();
 if (/(^|[?&])reset=1(&|$)/.test(location.search)){
   progress = {};
   saveProgress(progress);
+  SH && SH.appOpened(SH_APP, SH_TITLE);
   if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
 }
 
@@ -774,6 +778,7 @@ function goHome(){ renderHome(); }
 function openLesson(i){
   currentLessonIdx = i;
   cardIdx = 0;
+  historyLessonId = SH ? SH.lessonOpened(SH_APP, SH_TITLE, LESSONS[i].id, LESSONS[i].title, LESSONS[i].flashcards.length) : null;
   renderCard();
   showScreen(cardsScreen);
 }
@@ -782,6 +787,7 @@ function renderCard(){
   const lesson = LESSONS[currentLessonIdx];
   document.getElementById('cards-title').textContent = lesson.title;
   const fc = lesson.flashcards[cardIdx];
+  SH && SH.cardViewed(historyLessonId, cardIdx + 1);
   document.getElementById('card-icon').textContent = fc.icon;
   document.getElementById('card-term').textContent = fc.term;
   document.getElementById('card-def').textContent = fc.def;
@@ -811,6 +817,7 @@ function startQuiz(){
   const lesson = LESSONS[currentLessonIdx];
   currentQuizSet = shuffle(lesson.quiz).map(prepareQuestion);
   currentQuizMeta = {id:lesson.id, title:lesson.title};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, false, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
@@ -826,6 +833,7 @@ function startFinalExam(){
   });
   currentQuizSet = shuffle(qs).map(prepareQuestion);
   currentQuizMeta = {id:'final', title:'Pangwakas na Pagsusulit'};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, true, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
@@ -882,6 +890,7 @@ function selectOption(idx){
     else if(i === idx) b.classList.add('incorrect');
   });
   const correct = idx === q.correct;
+  SH && SH.quizAnswered(historyQuizId, correct, q.q, q.options[idx], q.options[q.correct]);
   if(correct){
     quizScore++;
     streak++;
@@ -914,6 +923,7 @@ function finishQuiz(){
   const best = Math.max(progress[currentQuizMeta.id] || 0, quizScore);
   progress[currentQuizMeta.id] = best;
   saveProgress(progress);
+  SH && SH.quizFinished(historyQuizId, starsFor(quizScore / currentQuizSet.length), sessionPoints, bestStreak);
   renderResults();
   showScreen(resultsScreen);
 }

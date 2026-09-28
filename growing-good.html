@@ -409,6 +409,7 @@
   </section>
 </div>
 
+<script src="study-history.js"></script>
 <script>
 (function(){
   "use strict";
@@ -438,6 +439,8 @@
     return shuffle(lesson.quiz).map(prepareQuestion);
   }
 
+  var SH = window.StudyHistory, SH_APP = 'growing-good', SH_TITLE = 'Growing Good', SH_TRUE = 'True', SH_FALSE = 'False';
+  var historyLessonId = null, historyQuizId = null;
   var STORAGE_KEY = 'growinggood_progress_v1';
   function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
   function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
@@ -445,6 +448,7 @@
   if (/(^|[?&])reset=1(&|$)/.test(location.search)){
     progress = {};
     saveProgress(progress);
+    SH && SH.appOpened(SH_APP, SH_TITLE);
     if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
   }
 
@@ -663,6 +667,7 @@
       b.addEventListener('click', function(){
         currentLesson = parseInt(b.getAttribute('data-lesson'), 10);
         flashIdx = 0;
+        historyLessonId = SH ? SH.lessonOpened(SH_APP, SH_TITLE, currentLesson, lessons[currentLesson].title, lessons[currentLesson].flashcards.length) : null;
         renderFlash();
         showScreen('flash');
       });
@@ -679,6 +684,7 @@
   function renderFlash(){
     var lesson = lessons[currentLesson];
     var f = lesson.flashcards[flashIdx];
+    SH && SH.cardViewed(historyLessonId, flashIdx + 1);
     document.getElementById('flash-lesson-label').textContent = lesson.title;
     document.getElementById('flash-body').innerHTML =
       '<svg class="flash-icon" viewBox="0 0 76 76">' + f.icon + '</svg>' +
@@ -726,6 +732,7 @@
     var lesson = lessons[currentLesson];
     currentQuizSet = buildQuizSet(lesson);
     currentQuizMeta = { id: currentLesson, title: lesson.title };
+    historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, false, currentQuizSet.length) : null;
     qIdx = 0; score = 0; missedQuestions = []; sessionPoints = 0; streak = 0; bestStreak = 0; resetPlant();
     showScreen('quiz');
     renderQuestion();
@@ -738,6 +745,7 @@
     });
     currentQuizSet = shuffle(qs);
     currentQuizMeta = { id: 'final', title: 'Growing Good Review' };
+    historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, true, currentQuizSet.length) : null;
     qIdx = 0; score = 0; missedQuestions = []; sessionPoints = 0; streak = 0; bestStreak = 0; resetPlant();
     showScreen('quiz');
     renderQuestion();
@@ -794,8 +802,9 @@
     document.querySelectorAll('.opt, .tf-btn').forEach(function(el){ el.disabled = true; });
   }
 
-  function showFeedback(isCorrect){
+  function showFeedback(isCorrect, picked, answer){
     var item = currentQuizSet[qIdx];
+    SH && SH.quizAnswered(historyQuizId, isCorrect, item.q, picked, answer);
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     fb.innerHTML = (isCorrect ? CHECK_ICON : X_ICON) + '<span>' + decode(isCorrect ? item.good : item.bad) + '</span>';
@@ -826,7 +835,7 @@
       if (thisOpt.correct) el.classList.add('correct');
       else if (el === btnEl) el.classList.add('wrong');
     });
-    showFeedback(opt.correct);
+    showFeedback(opt.correct, opt.text, (item.options.filter(function(o){ return o.correct; })[0] || {}).text);
   }
 
   function handleTF(choice, chosenBtn){
@@ -840,7 +849,7 @@
       var rightBtn = (correct === true) ? chosenBtn.parentElement.children[0] : chosenBtn.parentElement.children[1];
       rightBtn.classList.add('correct');
     }
-    showFeedback(isRight);
+    showFeedback(isRight, choice ? SH_TRUE : SH_FALSE, correct ? SH_TRUE : SH_FALSE);
   }
 
   document.getElementById('btn-next').addEventListener('click', function(){
@@ -852,6 +861,7 @@
     document.getElementById('track-fill').style.width = '100%';
     var total = currentQuizSet.length;
     var starCount = starsFor(score / total);
+    SH && SH.quizFinished(historyQuizId, starCount, sessionPoints, bestStreak);
     var best = Math.max(progress[currentQuizMeta.id] || 0, score);
     progress[currentQuizMeta.id] = best;
     saveProgress(progress);

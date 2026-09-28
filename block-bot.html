@@ -265,6 +265,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 
 </div>
 
+<script src="study-history.js"></script>
 <script>
 /* ---- Philippine money art -------------------------------------------------
    Coins are drawn to true relative diameter (5 sentimo 16mm up to 20 piso
@@ -710,6 +711,8 @@ const LESSONS = [
   },
 ];
 
+const SH = window.StudyHistory, SH_APP = 'block-bot', SH_TITLE = 'Block Bot';
+let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'blockbot_progress_v2';
 function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
 function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
@@ -717,6 +720,7 @@ let progress = loadProgress();
 if (/(^|[?&])reset=1(&|$)/.test(location.search)){
   progress = {};
   saveProgress(progress);
+  SH && SH.appOpened(SH_APP, SH_TITLE);
   if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
 }
 
@@ -744,6 +748,10 @@ function prepareQuestion(q){
 function buildQuizSet(lesson){
   if(lesson.generate) return lesson.generate(8);
   return shuffle(lesson.quiz).map(prepareQuestion);
+}
+function historyQuestion(q){
+  const names = [...String(q.art || '').matchAll(/aria-label="([^"]*)"/g)].map(m => m[1]);
+  return names.length ? `${q.q} [${names.join(', ')}]` : q.q;
 }
 
 function numberlineExplain(start, jumps){
@@ -857,6 +865,7 @@ function checkNumberline(){
   const correctAns = q.start + q.jumps;
   answered = true;
   const correct = val === correctAns;
+  SH && SH.quizAnswered(historyQuizId, correct, `${q.start} + ${q.jumps} = ?`, isNaN(val) ? '(blank)' : String(val), String(correctAns));
   if(correct){
     quizScore++;
     streak++;
@@ -972,6 +981,7 @@ function goHome(){ renderHome(); }
 function openLesson(i){
   currentLessonIdx = i;
   cardIdx = 0;
+  historyLessonId = SH ? SH.lessonOpened(SH_APP, SH_TITLE, LESSONS[i].id, LESSONS[i].title, LESSONS[i].flashcards.length) : null;
   renderCard();
   showScreen(cardsScreen);
 }
@@ -980,6 +990,7 @@ function renderCard(){
   const lesson = LESSONS[currentLessonIdx];
   document.getElementById('cards-title').textContent = lesson.title;
   const fc = lesson.flashcards[cardIdx];
+  SH && SH.cardViewed(historyLessonId, cardIdx + 1);
   const cardIcon = document.getElementById('card-icon');
   if(fc.art){ cardIcon.innerHTML = fc.art; cardIcon.classList.add('has-art'); }
   else { cardIcon.textContent = fc.icon; cardIcon.classList.remove('has-art'); }
@@ -1006,6 +1017,7 @@ function startQuiz(){
   const lesson = LESSONS[currentLessonIdx];
   currentQuizSet = buildQuizSet(lesson);
   currentQuizMeta = {id: lesson.id, title: lesson.title};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, false, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
@@ -1025,6 +1037,7 @@ function startFinalExam(){
   });
   currentQuizSet = shuffle(qs);
   currentQuizMeta = {id:'final', title:'Final Mock Exam'};
+  historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, true, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
   missedQuestions = [];
@@ -1090,6 +1103,7 @@ function selectOption(idx){
     else if(i === idx) b.classList.add('incorrect');
   });
   const correct = idx === q.correct;
+  SH && SH.quizAnswered(historyQuizId, correct, historyQuestion(q), q.options[idx], q.options[q.correct]);
   if(correct){
     quizScore++;
     streak++;
@@ -1123,6 +1137,7 @@ function finishQuiz(){
   const best = Math.max(progress[currentQuizMeta.id] || 0, quizScore);
   progress[currentQuizMeta.id] = best;
   saveProgress(progress);
+  SH && SH.quizFinished(historyQuizId, starsFor(quizScore / currentQuizSet.length), sessionPoints, bestStreak);
   renderResults(total);
   showScreen(resultsScreen);
 }
