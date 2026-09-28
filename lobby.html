@@ -381,7 +381,7 @@
     </div>
 
     <div id="history-view" hidden>
-      <div class="p-warn" id="history-missing" hidden>History file missing — copy study-history.js into the grade 2 folder.</div>
+      <div class="p-warn" id="history-missing" hidden>History file missing — copy study-history-grade2.js into the grade 2 folder.</div>
       <div id="history-body">
         <div class="p-warn" id="history-full" hidden>History storage is full — export a backup, then delete old entries.</div>
 
@@ -434,7 +434,7 @@
   </div>
 </div>
 
-<script src="study-history.js"></script>
+<script src="study-history-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   function getPoints(key){
@@ -548,12 +548,16 @@
   function describe(e){
     if (e.type === 'open') return '📂 Opened ' + e.appTitle;
     if (e.type === 'lesson') return '📖 ' + e.appTitle + ' · ' + e.lessonTitle + ' — viewed ' + e.cardsViewed + ' of ' + e.cardsTotal + ' cards';
-    var name = e.appTitle + ' · ' + (e.final ? 'Final Mock Exam' : e.lessonTitle + ' quiz');
-    if (!e.finished) return '✏️ ' + name + ' — stopped at ' + e.answered + ' of ' + e.total + ', ' + e.correct + ' correct';
+    var icon = '✏️', name;
+    if (e.kind === 'walkthrough') { icon = '🧩'; name = e.appTitle + ' · UPAC Walkthrough: ' + e.lessonTitle; }
+    else if (e.kind === 'case') { icon = '📋'; name = e.appTitle + ' · Case Study: ' + e.lessonTitle; }
+    else name = e.appTitle + ' · ' + (e.final ? 'Final Mock Exam' : e.lessonTitle + ' quiz');
+    if (!e.finished) return icon + ' ' + name + ' — stopped at ' + e.answered + ' of ' + e.total + ', ' + e.correct + ' correct';
     var starCount = Math.min(3, Math.max(0, e.stars | 0));
     var stars = starCount > 0 ? ' ' + '⭐'.repeat(starCount) : '';
     var updatedAt = typeof e.updatedAt === 'number' ? e.updatedAt : e.t;
-    return '✏️ ' + name + ' — ' + e.correct + '/' + e.total + stars + ' +' + e.points + ' pts · ' + formatDuration(updatedAt - e.t);
+    var scoreText = e.kind === 'walkthrough' ? e.correct + '/' + e.total + ' steps' : e.correct + '/' + e.total;
+    return icon + ' ' + name + ' — ' + scoreText + stars + ' +' + e.points + ' pts · ' + formatDuration(updatedAt - e.t);
   }
 
   function wrongDetails(e){
@@ -679,10 +683,10 @@
   });
 
   $('export-json').addEventListener('click', function(){
-    download('study-history-' + today() + '.json', SH.exportJson(), 'application/json');
+    download('study-history-' + SH.grade + '-' + today() + '.json', SH.exportJson(), 'application/json');
   });
   $('export-csv').addEventListener('click', function(){
-    download('study-history-' + today() + '.csv', SH.exportCsv(), 'text/csv;charset=utf-8');
+    download('study-history-' + SH.grade + '-' + today() + '.csv', SH.exportCsv(), 'text/csv;charset=utf-8');
   });
   $('import-btn').addEventListener('click', function(){ picking = true; $('import-file').click(); });
   $('import-file').addEventListener('change', function(){
