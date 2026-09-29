@@ -577,13 +577,17 @@
 
   function wrongList(e){ return Array.isArray(e.wrong) ? e.wrong.filter(Boolean) : []; }
 
+  var subjectByApp = {};
+  function subjectOf(app, appTitle){ return subjectByApp[app] || appTitle; }
+
   function describe(e){
-    if (e.type === 'open') return '📂 Opened ' + e.appTitle;
-    if (e.type === 'lesson') return '📖 ' + e.appTitle + ' · ' + e.lessonTitle + ' — viewed ' + e.cardsViewed + ' of ' + e.cardsTotal + ' cards';
+    var subject = subjectOf(e.app, e.appTitle);
+    if (e.type === 'open') return '📂 Opened ' + subject;
+    if (e.type === 'lesson') return '📖 ' + subject + ' · ' + e.lessonTitle + ' — viewed ' + e.cardsViewed + ' of ' + e.cardsTotal + ' cards';
     var icon = '✏️', name;
-    if (e.kind === 'walkthrough') { icon = '🧩'; name = e.appTitle + ' · UPAC Walkthrough: ' + e.lessonTitle; }
-    else if (e.kind === 'case') { icon = '📋'; name = e.appTitle + ' · Case Study: ' + e.lessonTitle; }
-    else name = e.appTitle + ' · ' + (e.final ? 'Final Mock Exam' : e.lessonTitle + ' quiz');
+    if (e.kind === 'walkthrough') { icon = '🧩'; name = subject + ' · UPAC Walkthrough: ' + e.lessonTitle; }
+    else if (e.kind === 'case') { icon = '📋'; name = subject + ' · Case Study: ' + e.lessonTitle; }
+    else name = subject + ' · ' + (e.final ? 'Final Mock Exam' : e.lessonTitle + ' quiz');
     if (!e.finished) return icon + ' ' + name + ' — stopped at ' + e.answered + ' of ' + e.total + ', ' + e.correct + ' correct';
     var starCount = Math.min(3, Math.max(0, e.stars | 0));
     var stars = starCount > 0 ? ' ' + '⭐'.repeat(starCount) : '';
@@ -615,7 +619,7 @@
     box.appendChild(el('span', '', '✏️ Quizzes: ' + s.quizzes));
     box.appendChild(el('span', '', '🎯 Average: ' + (s.averagePct === null ? '—' : s.averagePct + '%')));
     if (s.mostMissed) {
-      box.appendChild(el('span', 'missed', 'Most missed: ' + s.mostMissed.appTitle + ' · “' + s.mostMissed.q + '” (' + s.mostMissed.count + '×)'));
+      box.appendChild(el('span', 'missed', 'Most missed: ' + subjectOf(s.mostMissed.app, s.mostMissed.appTitle) +' · “' + s.mostMissed.q + '” (' + s.mostMissed.count + '×)'));
     }
   }
 
@@ -638,7 +642,7 @@
       } catch (err) {
         var fallback = el('div', 'h-item');
         fallback.appendChild(el('div', 'h-time', new Date(e.t).toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' })));
-        fallback.appendChild(el('div', 'h-body', e.appTitle || 'Unknown'));
+        fallback.appendChild(el('div', 'h-body', subjectOf(e.app, e.appTitle) || 'Unknown'));
         box.appendChild(fallback);
       }
     });
@@ -677,8 +681,10 @@
   }
 
   document.querySelectorAll('.subject-card').forEach(function(card){
-    var opt = el('option', '', card.querySelector('.subject-app').textContent);
-    opt.value = card.getAttribute('href').split('.html')[0];
+    var app = card.getAttribute('href').split('.html')[0];
+    subjectByApp[app] = card.querySelector('.subject-title').textContent;
+    var opt = el('option', '', subjectByApp[app]);
+    opt.value = app;
     $('subject-filter').appendChild(opt);
   });
 
@@ -718,7 +724,7 @@
     download('study-history-' + SH.grade + '-' + today() + '.json', SH.exportJson(), 'application/json');
   });
   $('export-csv').addEventListener('click', function(){
-    download('study-history-' + SH.grade + '-' + today() + '.csv', SH.exportCsv(), 'text/csv;charset=utf-8');
+    download('study-history-' + SH.grade + '-' + today() + '.csv', SH.exportCsv(subjectOf), 'text/csv;charset=utf-8');
   });
   $('import-btn').addEventListener('click', function(){ picking = true; $('import-file').click(); });
   $('import-file').addEventListener('change', function(){

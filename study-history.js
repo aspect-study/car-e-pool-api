@@ -210,7 +210,7 @@
         (Array.isArray(e.wrong) ? e.wrong : []).forEach(function (w) {
           if (!w) return;
           var k = e.app + '\n' + w.q;
-          var m = missed[k] || (missed[k] = { appTitle: e.appTitle, q: w.q, count: 0 });
+          var m = missed[k] || (missed[k] = { app: e.app, appTitle: e.appTitle, q: w.q, count: 0 });
           m.count++;
           if (!top || m.count > top.count) top = m;
         });
@@ -269,14 +269,14 @@
     function numOr0(x) { return typeof x === 'number' ? x : 0; }
 
     // "8 of 10" rather than "8/10": spreadsheets turn 8/10 into a date.
-    function csvRow(e) {
+    function csvRow(e, nameOf) {
       var quiz = e.type === 'quiz';
       var type = e.type === 'open' ? 'Opened app' : e.type === 'lesson' ? 'Lesson' :
         e.kind === 'walkthrough' ? 'UPAC walkthrough' : e.kind === 'case' ? 'Case study' : e.final ? 'Final exam' : 'Quiz';
       var wrong = Array.isArray(e.wrong) ? e.wrong.filter(Boolean) : [];
       var updatedAt = typeof e.updatedAt === 'number' ? e.updatedAt : e.t;
       return [
-        dateKey(e.t), timeKey(e.t), e.appTitle, type,
+        dateKey(e.t), timeKey(e.t), nameOf ? nameOf(e.app, e.appTitle) : e.appTitle, type,
         e.type === 'open' ? '' : (e.final ? 'Final Mock Exam' : e.lessonTitle),
         quiz ? numOr0(e.correct) + ' of ' + numOr0(e.total) : '',
         quiz ? numOr0(e.answered) : '',
@@ -291,11 +291,11 @@
       ];
     }
 
-    api.exportCsv = function () {
+    api.exportCsv = function (nameOf) {
       var rows = [['Date', 'Time', 'Subject', 'Type', 'Lesson', 'Score', 'Answered', 'Stars', 'Points',
         'Minutes', 'Cards viewed', 'Finished', 'Wrong answers']];
       (read() || []).filter(validEntry).slice().sort(function (a, b) { return a.t - b.t || idCmp(a, b); }).forEach(function (e) {
-        rows.push(csvRow(e));
+        rows.push(csvRow(e, nameOf));
       });
       return '\uFEFF' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n';
     };
