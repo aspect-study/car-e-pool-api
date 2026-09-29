@@ -275,7 +275,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
     <div class="hero">
       <span class="badge">English · Grade 5 · First Term</span>
       <h1>Page Turners 📖</h1>
-      <p>Fill your storybook one correct answer at a time! Study summarizing, kinds of nouns, complement nouns, story elements, the plot, sound devices, figurative language, drawing conclusions and character traits &mdash; then take the Mock Exam and read the Exam Strategy guide before your next test.</p>
+      <p>Fill your storybook one correct answer at a time! Study story elements and plot, character traits, conclusions, figurative language, sound devices, predicting, main idea, summarizing, outlining, author&rsquo;s purpose, tone and mood, generalizations, word meanings, the dictionary, nouns and pronouns, fact vs opinion and visual elements &mdash; then take the Mock Exam and read the Exam Strategy guide before your next test.</p>
       <div class="points-total" id="points-total-badge"></div>
     </div>
     <div class="card-list" id="homeList"></div>
@@ -361,7 +361,341 @@ const LUNCHBOX_2 = '<strong>The Lost Lunchbox</strong><br>Lara remembered that s
 const CLASSROOM = 'The classroom was noisy during recess. Students laughed and talked while moving around their seats. The classroom was a zoo. The teacher smiled as she watched them enjoy their break.';
 const LIAM_SOFIA = 'Liam rushed into the classroom just as the bell rang, dropping his bag loudly on the floor. He quickly started his work but sighed whenever something seemed difficult.<br><br>Across the room, Sofia had already organized her materials before class began. When she noticed Liam struggling, she quietly offered to help and explained the instructions step by step. She listened carefully and stayed patient, even when Liam made mistakes.';
 
+const SEQ_SET_A = '<b>Set A</b><br>1. Ben planted a seed in the soil.<br>2. He watered the plant every day.<br>3. The seed grew into a small plant.<br>4. The plant produced flowers.';
+const SEQ_SET_B = '<b>Set B</b><br>1. Anna ate her lunch.<br>2. She woke up early in the morning.<br>3. She went to school.<br>4. She brushed her teeth.';
+const SEQ_SET_D = '<b>Set D</b><br>1. Carlo studied for his test.<br>2. He got a high score.<br>3. He took the test.<br>4. He felt proud of himself.';
+const TELESCOPE = '<b>Story Sequence Sort</b> (the event cards are shuffled)<br>&bull; Disregarding the warning, Ben’s curiosity got the best of him and he pressed the glowing green button.<br>&bull; He then pressed the purple button and watched giant dinosaurs stomping through a prehistoric jungle.<br>&bull; The attic spun wildly, and Ben fell through a portal, landing right on the dusty Old West street.<br>&bull; Startled by a loud dinosaur roar, Ben panicked and accidentally bumped the forbidden red button.<br>&bull; Ben found a strange telescope in his attic with a note warning him never to press the red button.<br>&bull; Trapped in the past, he clutched the telescope and frantically searched for a way to get back home.<br>&bull; Looking through the lens, he was amazed to see a busy Old West town of the past.';
+const LIZA = '“Liza walked home under the heavy rain. The wind was strong, and she felt scared as the trees swayed loudly.”';
+const LENA_ANIMALS = 'Lena loved helping animals. Every Saturday, she visited the local animal shelter. She fed the dogs, cleaned their cages, and played with the cats. She hoped to become a veterinarian someday.';
+const MARCO = 'Marco wanted to help his community. He collected canned food from his neighbors and brought it to a food bank. He also helped clean a nearby park and planted flowers along the sidewalk. Marco felt happy whenever he could make his community a better place.';
+const MIA_GARDEN = 'Mia noticed that the school garden was looking dry and neglected. She asked her classmates to help her take care of it. Together, they pulled out weeds, watered the plants, and planted new flowers. After several weeks, the garden was colorful and healthy again. Mia was proud that everyone had worked together to improve it.';
+const EARTH_OUTLINE = '<b>Taking Care of Earth</b><br>I. Segregate wastes properly.<br>&nbsp;&nbsp;&nbsp;A. Sort nonbiodegradable wastes from biodegradable.<br>&nbsp;&nbsp;&nbsp;B. Reduce, reuse, and recycle as much as possible.<br>II. Reduce paper consumption.<br>&nbsp;&nbsp;&nbsp;A. Use both sides of paper.<br>&nbsp;&nbsp;&nbsp;B. Recycle paper.<br>III. Join movements.<br>&nbsp;&nbsp;&nbsp;A. Donate to environmental nongovernment organizations.<br>&nbsp;&nbsp;&nbsp;B. Participate in the activities of environmental organizations.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. Plant trees.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. Initiate a Clean Up.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. Grow a community garden.';
+const PURPOSE_1 = 'Bees play an important role in helping plants reproduce. As bees move from one flower to another, they carry pollen with them. This allows many plants to produce fruits and seeds.';
+const PURPOSE_2 = 'Milo opened his lunchbox and gasped. His sandwich was gone! He looked under his chair and behind his bag. Suddenly, he heard a loud crunch. His puppy, Max, was sitting beside the table with the sandwich in his mouth.';
+const PURPOSE_3 = 'The old house stood at the end of a quiet road. Its wooden walls were covered with green vines, and its windows were dusty and cracked. A tall mango tree stretched its branches over the rusty roof.';
+const PURPOSE_4 = 'A volcano is an opening in Earth’s surface through which hot materials, such as lava, ash, and gases, may escape. Some volcanoes are active, while others have not erupted for thousands of years.';
+const PURPOSE_5 = 'Lena tiptoed into the kitchen to find the last piece of chocolate cake. Just as she reached for it, the lights suddenly went out. “Who turned off the lights?” she whispered. Then she heard footsteps behind her.';
+const STANZA = '“Come, you who have lived dreaming<br>Of future joy, yet tasted only sorrow,<br>Come, love your troubled country,<br>Embrace it with all your heart tomorrow!”';
+const WATER_SET = 'Ana drinks water every morning.<br>Ben drinks water after exercising.<br>Carlo drinks water during lunch.<br>Dana drinks water before going to bed.';
+const HEALTHY_SET = '<b>Set 1 – Healthy Habits</b><br>Mia eats fruits and vegetables every day.<br>Carlo drinks plenty of water.<br>Ana exercises for 30 minutes after school.<br>Ben makes sure to get enough sleep.';
+const READING_SET = '<b>Set 2 – Reading</b><br>Liza reads books before going to bed.<br>Mark visits the library every Friday.<br>Sofia enjoys reading stories during her free time.<br>Daniel keeps a book in his school bag.';
+const BOTANY = '<b>bot·a·ny</b> [pronunciation] <i>n.</i> the branch of biology dealing with plant life (from Greek <i>botane</i>, “plant”)';
+const FORGOTTEN_PROJECT = '<b>The Forgotten Project</b><br>Miguel was excited because his class was going to present their science projects. He carefully placed his project inside a large cardboard box. The box was blue and had a small sticker on the side.<br><br>The next morning, Miguel arrived at school and realized that he had left his project at home. He became worried because the presentation was only an hour away. He called his mother and asked her to bring the project to school.<br><br>Miguel’s mother arrived just before the presentation began. Miguel thanked her and was able to present his project to the class. He felt relieved and proud of himself.';
+const JORDAN = '“Jordan carefully folded the blanket around the shivering puppy and whispered, ‘It’s okay, you’re safe now.’ He gently stroked its fur and stayed beside it.”';
+const WATER_POSTER = 'A poster shows a boy turning off a kitchen tap. Big words say <b>SMALL ACTIONS, BIG IMPACT</b> and <b>SAVE WATER</b>. Blue, green and yellow water-drop shapes carry the lines “Every drop counts” and “Save today for a better tomorrow.”';
 const LESSONS = [
+  {
+    id:'elements',
+    icon:'📚',
+    title:'Elements of a Narrative',
+    subtitle:'Character, setting, plot & theme',
+    cards:[
+      {front:'Narrative', back:'A <b>story</b>. Every narrative has four elements: <b>character, setting, plot, and theme</b>.'},
+      {front:'Character', back:'<b>Who</b> the story is about. What they do shows what they are like.<br>&ldquo;Maria helped an old woman carry her bags, even though she was in a hurry.&rdquo; &rarr; shows Maria is kind &rarr; <b>Character</b>.'},
+      {front:'Setting', back:'<b>Where and when</b> the story happens.<br>&ldquo;Anna and her family went camping in the <b>mountains</b> during a <b>cold winter night</b>.&rdquo;'},
+      {front:'Plot', back:'The <b>events</b> of the story &mdash; what happens, from beginning to end.'},
+      {front:'Theme', back:'The <b>lesson or message</b> of the story.<br>&ldquo;Kindness should always be shared with others.&rdquo;'},
+      {front:'Plot vs Theme', back:'Plot = <b>what happens</b>.<br>Theme = <b>what the story teaches</b>.<br>&ldquo;The story shares a lesson about kindness&rdquo; is about the <b>theme</b>, not the plot.'},
+      {front:'Sequential Plot', back:'Events told <b>in time order</b>, one after another.<br>&ldquo;A boy loses his dog, searches around town, and finally finds it at the park.&rdquo;'},
+      {front:'Narrative Text', back:'A narrative text tells a <b>series of events in chronological order</b> &mdash; the order in which they happened.'},
+      {front:'Characters Can Be&hellip;', back:'Your teacher’s slide: characters are the <b>persons, animals, or things</b> the story is about. A talking cat or a brave little car can be a character too.'}
+    ],
+    quiz:[
+      {q:'&ldquo;<i>Maria helped an old woman carry her bags, even though she was in a hurry.</i>&rdquo; What element of a narrative does this show?', options:['Character','Plot','Theme','Setting'], correct:0, explain:'It shows <b>what Maria is like</b> &mdash; kind, even when busy. That is the character.'},
+      {q:'&ldquo;<i>Kindness should always be shared with others.</i>&rdquo; What element of a narrative is this?', options:['Theme','Plot','Setting','Character'], correct:0, explain:'It is a <b>lesson or message</b> &mdash; the theme.'},
+      {q:'&ldquo;<i>Anna and her family went camping in the mountains during a cold winter night.</i>&rdquo; Which element is mostly highlighted?', options:['Setting','Plot','Theme','Character'], correct:0, explain:'The mountains (<b>where</b>) and a cold winter night (<b>when</b>) &mdash; the setting.'},
+      {q:'Which statement <b>best</b> represents a sequential plot?', options:['A boy loses his dog, searches around town, and finally finds it at the park.','The story shares a lesson about kindness.','A boy is kind and helpful to everyone he meets.','The story takes place in a quiet village by the river.'], correct:0, explain:'Only this one tells <b>events in order</b>: loses &rarr; searches &rarr; finds. The others are theme, character and setting.'},
+      {q:'True or False: The setting tells where and when a story happens.', options:['True','False'], correct:0, explain:'Correct — place and time together make the setting.'},
+      {q:'True or False: The theme is the list of events that happen in the story.', options:['True','False'], correct:1, explain:'False — the events are the <b>plot</b>. The theme is the <b>lesson or message</b>.'},
+      {q:'True or False: &ldquo;The story takes place in a quiet village by the river&rdquo; describes the setting.', options:['True','False'], correct:0, explain:'Correct — a quiet village by the river is <b>where</b> the story happens.'},
+      {q:'True or False: &ldquo;A boy is kind and helpful to everyone he meets&rdquo; describes the plot.', options:['True','False'], correct:1, explain:'False — it tells what the boy is <b>like</b>, so it describes a <b>character</b>. No events happen in it.'},
+      {q:'Which element answers the question &ldquo;What lesson does the story teach?&rdquo;', options:['Theme','Setting','Character','Plot'], correct:0, explain:'The lesson or message is the <b>theme</b>.'},
+      {passage:LUNCHBOX_1, q:'The story happens at school, at lunchtime. Which element of the story is this?', options:['Setting','Theme','Plot','Character'], correct:0, explain:'School is <b>where</b> and lunchtime is <b>when</b> &mdash; the setting.'},
+      {q:'True or False: The characters in a story can only be people.', options:['True','False'], correct:1, explain:'False — characters are the <b>persons, animals, or things</b> the story is about.'},
+      {q:'The purpose of a narrative text is to tell a series of events&hellip;', options:['in chronological order','from the saddest to happiest','in alphabetical order','in any order the reader likes'], correct:0, explain:'A narrative tells events in <b>chronological order</b> &mdash; the order they happened.'}
+    ]
+  },
+  {
+    id:'plot',
+    icon:'⛰️',
+    title:'Parts of the Plot',
+    subtitle:'Exposition to resolution',
+    cards:[
+      {front:'The Plot Mountain', back:'<b>Exposition</b> &rarr; <b>Rising Action</b> &rarr; <b>Climax</b> &rarr; <b>Falling Action</b> &rarr; <b>Resolution</b>.<br>Climb up, reach the top, walk back down.'},
+      {front:'Exposition', back:'The <b>beginning</b>. It <b>introduces the characters and setting</b>.'},
+      {front:'Rising Action', back:'The <b>problem</b> appears and events <b>build up</b>, getting more exciting.'},
+      {front:'Climax', back:'The <b>top of the mountain</b> &mdash; the most exciting part, the turning point.'},
+      {front:'Falling Action', back:'Events <b>after the climax</b> that <b>lead to the ending</b>.'},
+      {front:'Resolution', back:'The <b>ending</b> of the story &mdash; everything is wrapped up. (The conflict is <i>being solved</i> in the falling action, just before it.)'},
+      {front:'Two From Your Test', back:'<b>Exposition</b> = introduces characters and setting (start).<br><b>Falling Action</b> = after the climax, leads to the ending.<br>Both were on your summative test.'},
+      {front:'Your Teacher’s Slides', back:'<b>Rising action</b> introduces the <b>conflict or problem</b>.<br><b>Climax</b> is the most exciting part.<br><b>Falling action</b> is where the conflict is <b>being solved</b>.<br><b>Resolution</b> is the <b>ending</b> of the story.'}
+    ],
+    quiz:[
+      {q:'What part of the plot introduces the characters and setting?', options:['Exposition','Climax','Rising Action','Falling Action'], correct:0, explain:'The <b>exposition</b> is the beginning &mdash; it introduces who and where.'},
+      {q:'Which part of the plot shows events after the climax and leads to the ending?', options:['Falling Action','Exposition','Climax','Rising Action'], correct:0, explain:'The <b>falling action</b> comes down the mountain after the climax.'},
+      {q:'Which part of the plot is the most exciting part, the turning point?', options:['Climax','Resolution','Exposition','Falling Action'], correct:0, explain:'The <b>climax</b> is the top of the plot mountain.'},
+      {q:'In which part of the plot does the problem appear and the events build up?', options:['Rising Action','Resolution','Falling Action','Exposition'], correct:0, explain:'The <b>rising action</b> climbs toward the climax as the problem grows.'},
+      {q:'True or False: The exposition comes at the beginning of the story.', options:['True','False'], correct:0, explain:'Correct — it opens the story by introducing the characters and setting.'},
+      {q:'True or False: The falling action happens before the climax.', options:['True','False'], correct:1, explain:'False — the falling action comes <b>after</b> the climax. The rising action is the part before it.'},
+      {q:'True or False: The climax is the turning point, the most exciting part of the story.', options:['True','False'], correct:0, explain:'Correct — it is the top of the plot mountain.'},
+      {q:'True or False: The resolution introduces the characters and the setting.', options:['True','False'], correct:1, explain:'False — that is the <b>exposition</b>. The resolution is the ending of the story.'},
+      {q:'Which shows the parts of the plot in the correct order?', options:['Exposition, Rising Action, Climax, Falling Action, Resolution','Exposition, Climax, Rising Action, Falling Action, Resolution','Rising Action, Exposition, Climax, Resolution, Falling Action','Climax, Exposition, Falling Action, Rising Action, Resolution'], correct:0, explain:'Start (exposition), climb (rising action), top (climax), come down (falling action), end (resolution).'},
+      {q:'&ldquo;Mia discovered that her puppy had escaped, so she asked her neighbors to help her search.&rdquo; Which part of the plot is this?', options:['Rising Action','Exposition','Resolution','Falling Action'], correct:0, explain:'The problem has appeared and the search is building up &mdash; <b>rising action</b>.'},
+      {q:'In which part of the plot is the conflict <b>being solved</b>?', options:['Falling Action','Exposition','Rising Action','Climax'], correct:0, explain:'Your teacher’s slide: the <b>falling action</b> is where the conflict is being solved. The resolution comes after it &mdash; the ending.'}
+    ]
+  },
+  {
+    id:'sequence',
+    icon:'🔢',
+    title:'Sequential Plot',
+    subtitle:'First, next, after that, last',
+    cards:[
+      {front:'Sequential Plot', back:'The events in a story are arranged <b>in the order in which they happen</b> &mdash; chronological order.'},
+      {front:'It Shows&hellip;', back:'what happened <b>first</b> &rarr; what happened <b>next</b> &rarr; what happened <b>after that</b> &rarr; what happened <b>last</b>.'},
+      {front:'Maria’s Morning', back:'1. Maria woke up late.<br>2. She hurried to get ready for school.<br>3. She missed the bus.<br>4. Her father drove her to school.<br>These follow the correct <b>order of time</b>.'},
+      {front:'Is It in Order?', back:'Ask: <b>could this event really happen before the next one?</b> A seed must be planted before it can grow. If an event comes too early, the set is <b>not</b> sequential.'},
+      {front:'Set B &mdash; NO', back:'Anna <b>ate her lunch</b> before she <b>woke up</b>, and brushed her teeth after going to school. The events are out of time order.'},
+      {front:'Set D &mdash; NO', back:'Carlo <b>got a high score</b> before he <b>took the test</b>. You cannot get a score before the test.'},
+      {front:'Ben’s Telescope', back:'In the group sort, the story <b>starts</b> when Ben finds a strange telescope with a note warning him never to press the red button, and <b>ends</b> with him trapped in the past, searching for a way home.'}
+    ],
+    quiz:[
+      {q:'True or False: A sequential plot tells events in the order in which they happen.', options:['True','False'], correct:0, explain:'Correct — that is chronological order.'},
+      {q:'True or False: In a sequential plot, the events can be told in any order.', options:['True','False'], correct:1, explain:'False — the events follow the <b>order of time</b>: first, next, after that, last.'},
+      {passage:SEQ_SET_A, q:'Are these events in sequential order?', options:['Yes','No'], correct:0, explain:'Yes — plant, water, grow, flower. Each step happens after the one before it.'},
+      {passage:SEQ_SET_B, q:'Are these events in sequential order?', options:['Yes','No'], correct:1, explain:'No — Anna cannot eat lunch <b>before</b> she wakes up in the morning.'},
+      {passage:SEQ_SET_D, q:'Are these events in sequential order?', options:['Yes','No'], correct:1, explain:'No — Carlo got a high score <b>before</b> he took the test. The test must come first.'},
+      {q:'Maria woke up late, hurried to get ready, and missed the bus. What happened <b>next</b>?', options:['Her father drove her to school.','She woke up late in the morning.','She hurried to get ready for school.','She went back to sleep in her bed.'], correct:0, explain:'After she missed the bus, <b>her father drove her to school</b> &mdash; the last event.'},
+      {q:'What does <b>chronological order</b> mean?', options:['the order in which events happened','the order from shortest to longest','the order from most to least exciting','the order the characters were named'], correct:0, explain:'Chronological order is <b>time order</b> &mdash; the order in which the events happened.'},
+      {passage:TELESCOPE, q:'Which event happened <b>first</b>?', options:['Ben found a strange telescope in his attic with a warning note.','He pressed the purple button and watched giant dinosaurs.','The attic spun wildly and Ben fell through a portal.','Trapped in the past, he searched for a way to get back home.'], correct:0, explain:'The story must start with Ben <b>finding the telescope</b> &mdash; nothing else can happen until he has it.'},
+      {passage:TELESCOPE, q:'Which event happened <b>last</b>?', options:['Trapped in the past, he searched for a way to get back home.','Ben found a strange telescope in his attic with a note.','Looking through the lens, he saw a busy Old West town.','He pressed the purple button and watched giant dinosaurs.'], correct:0, explain:'Being <b>trapped in the past</b> and searching for a way home is how the story ends.'},
+      {q:'True or False: “Maria woke up late. She missed the bus. She hurried to get ready for school.” These events are in sequential order.', options:['True','False'], correct:1, explain:'False — she hurried to get ready <b>before</b> she missed the bus, not after.'},
+      {q:'Which set of events is in the <b>correct time order</b>?', options:['Ben planted a seed, watered it, and it grew.','Carlo got a high score, then took the test.','Anna ate her lunch, then she woke up early.','The plant made flowers, then Ben planted it.'], correct:0, explain:'Plant &rarr; water &rarr; grow is the only set that follows the order of time.'}
+    ]
+  },
+  {
+    id:'spelling',
+    icon:'✏️',
+    title:'Spelling Words #1',
+    subtitle:'Famine to proffer',
+    cards:[
+      {front:'Pre-Test Rules', back:'Number your paper <b>1 to 10</b>. Listen as your teacher reads each word and explains its meaning. Use each word in a <b>complete sentence</b> that matches its meaning.'},
+      {front:'FAMINE', back:'a serious situation where a large number of people do not have enough food to eat for a long period of time'},
+      {front:'REMORSE', back:'a deep feeling of regret or guilt for something wrong you have done'},
+      {front:'RECIPROCATE', back:'to give or do something in return for something you have received'},
+      {front:'HOUNDED', back:'to be constantly chased, bothered, or pressured by someone'},
+      {front:'INEVITABLE', back:'something that is certain to happen and cannot be avoided'},
+      {front:'TOLERATE', back:'to allow or accept something even if you do not like it'},
+      {front:'DWELL', back:'to live in a place <b>or</b> to keep thinking about something for a long time'},
+      {front:'ACCORD', back:'an agreement or harmony between people or groups'},
+      {front:'APPOINT', back:'to choose or assign someone to a position or duty'},
+      {front:'PROFFER', back:'to offer something to someone, usually in a polite or formal way'}
+    ],
+    quiz:[
+      {q:'Which word means a serious situation where many people do not have enough food for a long time?', options:['famine','remorse','accord','dwell'], correct:0, explain:'<b>Famine</b> &mdash; not enough food for a long period of time.'},
+      {q:'What does <b>REMORSE</b> mean?', options:['a deep feeling of regret for something wrong you did','an agreement or harmony between people or groups','something that is certain to happen and cannot be avoided','to be constantly chased, bothered, or pressured by someone'], correct:0, explain:'Remorse is a deep feeling of <b>regret or guilt</b> for something wrong you have done.'},
+      {q:'Which word means to give or do something <b>in return</b> for something you received?', options:['reciprocate','tolerate','appoint','hounded'], correct:0, explain:'To <b>reciprocate</b> is to give back in return.'},
+      {q:'True or False: HOUNDED means being constantly chased, bothered, or pressured by someone.', options:['True','False'], correct:0, explain:'Correct — that is the meaning from your spelling list.'},
+      {q:'Which word means something that is <b>certain to happen</b> and cannot be avoided?', options:['inevitable','proffer','famine','accord'], correct:0, explain:'<b>Inevitable</b> &mdash; it will happen no matter what.'},
+      {q:'True or False: TOLERATE means to refuse something you do not like.', options:['True','False'], correct:1, explain:'False — to tolerate is to <b>allow or accept</b> something even if you do not like it.'},
+      {q:'“We should not <b>dwell</b> on our mistakes.” Here, dwell means&hellip;', options:['to keep thinking about it for a long time','to live in a place for a long time','to offer it politely to someone else','to choose someone for a duty'], correct:0, explain:'Dwell has two meanings. Here it means to <b>keep thinking about</b> something for a long time.'},
+      {q:'True or False: ACCORD means a fight or disagreement between groups.', options:['True','False'], correct:1, explain:'False — accord is an <b>agreement or harmony</b> between people or groups.'},
+      {q:'Which word means to choose or assign someone to a position or duty?', options:['appoint','reciprocate','remorse','tolerate'], correct:0, explain:'To <b>appoint</b> someone is to choose them for a position or duty.'},
+      {q:'Which word means to <b>offer</b> something in a polite or formal way?', options:['proffer','hounded','dwell','inevitable'], correct:0, explain:'To <b>proffer</b> is to offer politely or formally.'},
+      {q:'Which word is spelled correctly?', options:['inevitable','inevitible','inevetable','inivitable'], correct:0, explain:'I-N-E-V-I-T-<b>A</b>-B-L-E.'},
+      {q:'Which spelling of the word is correct?', options:['reciprocate','resiprocate','reciprokate','recipricate'], correct:0, explain:'R-E-<b>C</b>-I-P-R-O-<b>C</b>-A-T-E.'}
+    ]
+  },
+  {
+    id:'traits',
+    icon:'🧑‍🤝‍🧑',
+    title:'Character Traits',
+    subtitle:'Trait or feeling? Prove it with because',
+    cards:[
+      {front:'Character Trait', back:'A word that tells what a character is <b>usually like</b> &mdash; their personality.<br><i>helpful, patient, organized, kind, careless, brave</i>'},
+      {front:'Feeling (NOT a trait)', back:'How a character feels <b>at one moment</b>. It changes quickly.<br><i>overwhelmed, tired, happy, scared, excited</i>'},
+      {front:'The All-the-Time Test', back:'Ask: &ldquo;Is this person like this <b>all the time</b>, or just <b>right now</b>?&rdquo;<br>All the time &rarr; trait. Right now &rarr; feeling.'},
+      {front:'Your Test: &ldquo;Overwhelmed&rdquo;', back:'On your summative test, &ldquo;Liam is <b>overwhelmed</b>&rdquo; was marked <b>not a trait</b>. Overwhelmed is a <b>feeling</b>. Choose a personality word instead.'},
+      {front:'Inferring a Trait', back:'Look at what the character <b>does</b>, <b>says</b>, and <b>how they treat others</b>. Then name the personality those actions show.'},
+      {front:'The Answer Format', back:'&ldquo;<b>___ is ___ because ___.</b>&rdquo;<br>Give the <b>trait</b>, then the <b>evidence</b> from the text. The &ldquo;because&rdquo; part earns points too.'},
+      {front:'Sofia', back:'<b>Organized</b> &mdash; organized her materials before class began.<br><b>Helpful</b> &mdash; offered to help Liam and explained step by step.<br><b>Patient</b> &mdash; stayed patient even when Liam made mistakes.'},
+      {front:'Liam', back:'Clues: rushed in as the bell rang, dropped his bag loudly, sighed whenever something seemed difficult.<br>Traits you could infer: <b>careless</b>, or <b>easily discouraged</b>.'},
+      {front:'Feeling or Trait? Game', back:'<b>angry</b> &rarr; feeling<br><b>kind</b> &rarr; trait<br><b>nervous</b> &rarr; feeling<br><b>honest</b> &rarr; trait'},
+      {front:'Clues to Look For', back:'<b>Actions</b> &mdash; what the character does.<br><b>Dialogue</b> &mdash; what the character says, and how.<br><b>Thoughts/Feelings</b> &mdash; what the character thinks.<br><b>Physical descriptions</b> &mdash; how the character looks.'},
+      {front:'Jordan and the Puppy', back:'Folded the blanket <b>carefully</b>, <b>whispered</b> “It’s okay, you’re safe now,” <b>stayed beside</b> it.<br>Model sentence: <b>Jordan is kind and compassionate because he carefully helped the puppy and spoke to it gently.</b>'}
+    ],
+    quiz:[
+      {q:'Which word is a <b>character trait</b>?', options:['helpful','tired','overwhelmed','scared'], correct:0, explain:'Helpful describes what someone is <b>usually like</b>. The other three are feelings.'},
+      {q:'Which word is a <b>feeling</b>, not a trait?', options:['overwhelmed','organized','patient','helpful'], correct:0, explain:'Overwhelmed is how someone feels <b>right now</b> &mdash; exactly the word marked &ldquo;not a trait&rdquo; on your test.'},
+      {q:'True or False: &ldquo;Overwhelmed&rdquo; is a character trait.', options:['True','False'], correct:1, explain:'False — overwhelmed is a <b>feeling</b>. It changes from moment to moment.'},
+      {q:'True or False: A character trait tells what a character is usually like.', options:['True','False'], correct:0, explain:'Correct — it is their personality, not a passing mood.'},
+      {passage:LIAM_SOFIA, q:'&ldquo;Sofia had already organized her materials before class began.&rdquo; Which trait does this show?', options:['organized','lazy','careless','nervous'], correct:0, explain:'Getting everything ready before class shows she is <b>organized</b>.'},
+      {passage:LIAM_SOFIA, q:'&ldquo;She stayed patient, even when Liam made mistakes.&rdquo; This shows Sofia is&hellip;', options:['patient','impatient','tired','bossy'], correct:0, explain:'The text tells you directly: she <b>stayed patient</b>.'},
+      {passage:LIAM_SOFIA, q:'Which is the <b>best</b> answer in the &ldquo;___ is ___ because ___&rdquo; format?', options:['Sofia is helpful because she offered to help Liam and explained the steps.','Sofia is nervous because she organized all of her materials before class.','Sofia is careless because she explained the instructions to Liam step by step.','Sofia is happy because the bell rang and the class began that morning.'], correct:0, explain:'A real trait (<b>helpful</b>) with evidence from the text that proves it.'},
+      {passage:LIAM_SOFIA, q:'True or False: &ldquo;He sighed whenever something seemed difficult&rdquo; is a clue that can help you infer one of Liam&rsquo;s traits.', options:['True','False'], correct:0, explain:'Correct — sighing every time work gets hard suggests he is <b>easily discouraged</b>.'},
+      {q:'True or False: A good trait answer only needs the trait word; the &ldquo;because&rdquo; part is optional.', options:['True','False'], correct:1, explain:'False — the <b>because</b> part is the evidence, and it is worth points on your test.'},
+      {passage:LIAM_SOFIA, q:'&ldquo;Liam rushed into the classroom just as the bell rang, dropping his bag loudly on the floor.&rdquo; Which trait fits Liam best?', options:['careless','organized','patient','calm'], correct:0, explain:'Rushing in at the last second and dropping his bag loudly shows he is <b>careless</b>. Organized and patient describe Sofia, and nothing Liam does is calm.'},
+      {q:'Which word is a <b>character trait</b>, not a feeling?', options:['honest','angry','nervous','tired'], correct:0, explain:'In the “Feeling or Trait?” game, <b>honest</b> and <b>kind</b> are traits. Angry and nervous are feelings.'},
+      {passage:JORDAN, q:'Which traits does this passage show?', options:['kind and compassionate','careless and rude','lazy and bored','bossy and selfish'], correct:0, explain:'He helped the puppy <b>carefully</b> and spoke <b>gently</b>, so Jordan is <b>kind and compassionate</b>.'},
+      {passage:JORDAN, q:'Which clue is <b>dialogue</b>?', options:['He whispered, “It’s okay, you’re safe now.”','He carefully folded the blanket around the puppy.','He gently stroked its fur with his hand.','He stayed beside the puppy the whole time.'], correct:0, explain:'Dialogue is <b>what the character says</b>. The others are actions.'}
+    ]
+  },
+  {
+    id:'conclusions',
+    icon:'🔍',
+    title:'Drawing Conclusions',
+    subtitle:'Clues + experience = hidden ideas',
+    cards:[
+      {front:'Drawing a Conclusion', back:'Understanding the <b>hidden ideas</b> in a text &mdash; the things it <b>does not say directly</b>.'},
+      {front:'The Formula', back:'<b>Clues + personal experience = conclusion</b>.<br>Readers draw conclusions <b>by combining clues with personal experience to understand hidden ideas in the text</b>. (Item 13 on your summative test &mdash; answer D.)'},
+      {front:'Sara&rsquo;s Test', back:'Clues: studied every night, finished assignments on time, <b>smiled</b> at her score.<br>Conclusion: Sara <b>likely got a good score</b>.'},
+      {front:'Tom&rsquo;s Umbrella', back:'Clues: grabbed his umbrella; the sky was dark and cloudy.<br>Conclusion: it might rain.<br>The <b>best</b> supporting detail is the most complete one: <b>the dark and cloudy sky</b>.'},
+      {front:'Jake in Class', back:'Clues: yawned many times, rubbed his eyes, rested his head on his desk.<br>Conclusion: Jake is tired &mdash; he <b>probably did not get enough sleep</b> the night before.'},
+      {front:'Clue or Conclusion?', back:'&ldquo;Jake yawned&rdquo; just <b>repeats</b> a clue. A conclusion <b>goes beyond</b> what is written, and often uses words like <i>probably</i> or <i>likely</i>.'},
+      {front:'Don&rsquo;t Go Too Far', back:'A conclusion must be <b>supported</b> by the clues. &ldquo;Sara got a half score&rdquo; is not supported &mdash; she smiled.'},
+      {front:'Your Teacher’s Formula', back:'<b>Text Clues + Prior Knowledge = Conclusion</b>.<br>Prior knowledge is what you already know from your own experience.<br>⚠️ On the summative (item 13) the answer was still <b>D</b>: “combining clues with personal experience to understand <b>hidden ideas</b>.” Option B also says “what they already know” but leaves out the hidden ideas &mdash; do not pick it.'},
+      {front:'The Empty Playground', back:'Clues: the playground was empty, dark clouds covered the sky, children hurried inside.<br>What you know: these signs usually mean rain.<br>Conclusion: <b>It is about to rain.</b>'},
+      {front:'Lena’s Big Box', back:'Clues: bread, canned goods, water, flashlights and batteries in a box; she listened to the weather report; her parents boarded up the windows.<br>Conclusion: <b>Lena’s family is preparing for a strong storm or typhoon.</b>'}
+    ],
+    quiz:[
+      {q:'How do readers draw conclusions when reading a text?', options:['by noticing clues','by connecting text clues with what they already know to form a clear idea','by using text details and identifying important information from the passage','by combining clues with personal experience to understand hidden ideas in the text'], correct:3, explain:'The key words are <b>hidden ideas</b>. A conclusion is about what the text does <i>not</i> say directly, and you reach it by combining the clues with your <b>personal experience</b>. Option &ldquo;connecting text clues with what they already know to form a clear idea&rdquo; sounds close, but your teacher&rsquo;s answer is the one that names <b>personal experience</b> and <b>hidden ideas</b>.'},
+      {q:'&ldquo;<i>Sara studied every night and completed all her assignments on time. She smiled when she saw her test score.</i>&rdquo; What can you conclude?', options:['Sara likely got a good score on her test.','Sara took a test and got a low score.','Sara studied hard for her exam and got a half score.','Sara is happily studying every night.'], correct:0, explain:'Studying hard + smiling at the score &rarr; she <b>likely got a good score</b>. &ldquo;Sara is happily studying every night&rdquo; only repeats a clue &mdash; it is not a conclusion.'},
+      {q:'&ldquo;<i>Tom grabbed his umbrella before leaving the house. The sky was dark and cloudy.</i>&rdquo; Which detail <b>best</b> supports the conclusion that it might rain?', options:['the dark and cloudy sky','the sky','the umbrella','The sky is cloudy.'], correct:0, explain:'Pick the <b>most complete</b> weather clue. &ldquo;The dark and cloudy sky&rdquo; says more than &ldquo;the sky&rdquo; or &ldquo;cloudy&rdquo; alone. The umbrella only shows what Tom <i>did</i>; the sky is the proof that rain may come.'},
+      {q:'True or False: For the passage about Jake, &ldquo;Jake yawned&rdquo; is a good conclusion.', options:['True','False'], correct:1, explain:'False — it only <b>repeats a clue</b>. A conclusion goes beyond it: Jake is tired and probably did not get enough sleep.'},
+      {q:'True or False: To draw a conclusion, you combine clues from the text with your personal experience.', options:['True','False'], correct:0, explain:'Correct — clues + personal experience = conclusion. That is how you understand the hidden ideas in a text.'},
+      {q:'&ldquo;<i>Ben&rsquo;s shirt was muddy and grass-stained. He was holding a soccer ball and breathing hard.</i>&rdquo; What can you conclude?', options:['Ben had just been playing soccer outside.','Ben was holding a soccer ball in his hands.','Ben lost his soccer ball at school today.','Ben was sleeping in his room all afternoon.'], correct:0, explain:'Mud + grass stains + ball + breathing hard &rarr; he was <b>playing soccer outside</b>. &ldquo;Ben was holding a soccer ball&rdquo; only repeats a clue &mdash; it is not a conclusion.'},
+      {passage:LUNCHBOX_1, q:'What can you conclude from this part of the story?', options:['Lara&rsquo;s lunchbox was not in the classroom.','Lara did not want to eat her lunch that day.','Lara&rsquo;s friends hid her lunchbox as a joke.','Lara found her lunchbox inside her locker.'], correct:0, explain:'She checked her desk, locker and the classroom shelves and could not find it, so it was <b>not in the classroom</b>. Nothing says her friends hid it.'},
+      {q:'True or False: A good conclusion must be supported by clues in the text.', options:['True','False'], correct:0, explain:'Correct — if no clue supports it, it is just a guess.'},
+      {q:'True or False: If a story says &ldquo;Mia smiled and hugged her puppy,&rdquo; you can conclude that Mia was angry.', options:['True','False'], correct:1, explain:'False — smiling and hugging are clues that she was <b>happy</b> or relieved, not angry.'},
+      {q:'&ldquo;<i>Jake yawned many times and rubbed his eyes during class. He rested his head on his desk.</i>&rdquo; Which of these is a <b>conclusion</b>, not just a clue?', options:['Jake probably did not get enough sleep.','Jake yawned many times.','Jake rubbed his eyes during class.','Jake rested his head on his desk in class.'], correct:0, explain:'The other three are written right in the text. The conclusion goes beyond them.'},
+      {q:'“<i>The playground was empty. Dark clouds covered the sky. Children hurried inside carrying their bags.</i>” What conclusion can you draw?', options:['It is about to rain.','The children are going on a trip.','School has been closed for the year.','The playground is being painted.'], correct:0, explain:'Dark clouds + children rushing inside + what you know about those signs &rarr; <b>it is about to rain</b>.'},
+      {q:'“<i>Lena packed bread, canned goods, bottled water, flashlights, and batteries into a large box. She listened to the weather report while her parents secured the windows with wooden boards.</i>” What can you conclude?', options:['Lena’s family is preparing for a strong storm.','Lena’s family is moving to a new house soon.','Lena is packing snacks for a school field trip.','Lena’s parents are fixing their broken windows.'], correct:0, explain:'Food, water, flashlights, a weather report and boarded windows all point to a <b>strong storm or typhoon</b>.'},
+      {q:'“<i>The cake was gone. Crumbs were on Ben’s shirt, and icing was on his lips.</i>” What is the best conclusion?', options:['Ben ate the cake.','Ben baked a new cake for everyone.','Ben’s dog knocked the cake off the table.','Ben does not like cake at all.'], correct:0, explain:'Crumbs on his shirt and icing on his lips are the clues: <b>Ben ate the cake</b>.'}
+    ]
+  },
+  {
+    id:'figurative',
+    icon:'🌬️',
+    title:'Figurative Language',
+    subtitle:'Personification, metaphor & simile',
+    cards:[
+      {front:'Figurative Language', back:'Words that mean <b>more than their exact meaning</b>, used to paint a picture in the reader&rsquo;s mind.'},
+      {front:'Personification', back:'Gives <b>human actions or feelings</b> to <b>non-human things</b>.<br>&ldquo;The angry storm <b>shouted</b> at the sea.&rdquo;<br>&ldquo;The leaves <b>danced</b> in the air.&rdquo;'},
+      {front:'Proving Personification', back:'Point to the <b>human action</b> and the <b>non-human thing</b> doing it. Leaves cannot really dance &mdash; so &ldquo;the leaves danced&rdquo; is personification.'},
+      {front:'Not Personification', back:'&ldquo;The wind blew.&rdquo; &ldquo;The stars shine brightly.&rdquo; &ldquo;The flowers move in the breeze.&rdquo; These things <b>really do</b> that &mdash; no human action is given.'},
+      {front:'Metaphor', back:'Says one thing <b>is</b> another, <b>without</b> like or as.<br>&ldquo;The classroom <b>was a zoo</b>.&rdquo; &rarr; it was noisy and wild, not full of animals.'},
+      {front:'Simile', back:'Compares two things <b>using like or as</b>.<br>&ldquo;Her smile was <b>as bright as</b> the sun.&rdquo;'},
+      {front:'Metaphor or Just a Fact?', back:'Not every &ldquo;is a&rdquo; sentence is a metaphor. &ldquo;My brother is a <b>doctor</b>&rdquo; is <b>really true</b> &mdash; that is a complement noun. &ldquo;The classroom was a <b>zoo</b>&rdquo; is <b>not really true</b> &mdash; that is a metaphor.'},
+      {front:'Metaphor vs Simile', back:'Has <b>like</b> or <b>as</b>? &rarr; simile.<br>Says it simply <b>is</b> the other thing? &rarr; metaphor.'},
+      {front:'More From Class', back:'Simile: “Ravens are <b>as smart as</b> dolphins.” “Ravens are <b>like</b> acrobats in the sky.”<br>Metaphor: “Ballerinas <b>are</b> graceful swans.” “My brother <b>is</b> a walking encyclopedia.”<br>Personification: “The ocean <b>sighed</b> throughout the night.”'},
+      {front:'Morning’s Song', back:'“The sun is a golden coin in the sky” &rarr; <b>metaphor</b>.<br>“The breeze whispers softly through each tree” &rarr; <b>personification</b>.<br>“Clouds drift by like boats at sea” &rarr; <b>simile</b>.'}
+    ],
+    quiz:[
+      {q:'Which of the following statements shows <b>personification</b>?', options:['The angry storm shouted at the sea.','The wind blew.','The stars shine brightly.','The flowers moved gently in the breeze.'], correct:0, explain:'A storm cannot really be angry or shout &mdash; those are <b>human</b> actions. The other three are things that really happen.'},
+      {passage:CLASSROOM, q:'What part of the text above is an example of a <b>metaphor</b>?', options:['The classroom was a zoo.','The classroom was noisy during recess.','The teacher smiled as she watched them enjoy their break.','Students laughed and talked while moving around their seats.'], correct:0, explain:'It says the classroom <b>is</b> a zoo, without like or as. The other sentences mean exactly what they say.'},
+      {q:'&ldquo;<i>The wind blew softly through the trees as the leaves danced in the air.</i>&rdquo; How can you prove this uses personification?', options:['It gives leaves a human action: dancing.','It uses sensory details about the air.','It exaggerates how strong the wind is.','It compares two things using like or as.'], correct:0, explain:'Leaves cannot really <b>dance</b> &mdash; a human action is given to a non-human thing.'},
+      {q:'True or False: &ldquo;The wind blew&rdquo; is personification.', options:['True','False'], correct:1, explain:'False — wind really does blow. No human action is given to it.'},
+      {q:'True or False: A metaphor compares two things without using like or as.', options:['True','False'], correct:0, explain:'Correct — &ldquo;The classroom was a zoo.&rdquo;'},
+      {q:'True or False: &ldquo;The classroom was a zoo&rdquo; means there were real animals in the classroom.', options:['True','False'], correct:1, explain:'False — it is a <b>metaphor</b>. It means the classroom was noisy and wild, like a zoo.'},
+      {q:'&ldquo;<i>Her smile was as bright as the sun.</i>&rdquo; This is a&hellip;', options:['Simile','Metaphor','Personification','Alliteration'], correct:0, explain:'It compares using <b>as</b> &mdash; a simile.'},
+      {q:'&ldquo;<i>The sun smiled down on us.</i>&rdquo; This is an example of&hellip;', options:['Personification','Simile','Metaphor','Alliteration'], correct:0, explain:'The sun cannot really smile &mdash; a human action given to a non-human thing.'},
+      {q:'True or False: A simile uses the words like or as to compare.', options:['True','False'], correct:0, explain:'Correct — that is the one clue that tells a simile from a metaphor.'},
+      {q:'&ldquo;<i>My brother is a sleepy bear in the morning.</i>&rdquo; This is an example of&hellip;', options:['Metaphor','Simile','Personification','Assonance'], correct:0, explain:'He is not really a bear &mdash; it says he <b>is</b> one, with no like or as, to show how sleepy he is. That is a metaphor.'},
+      {q:'Which sentence is a <b>metaphor</b>?', options:['My sister is a shining star on stage.','My brother is a doctor at the hospital.','My aunt is an excellent chef.','Mrs. Santos became the principal.'], correct:0, explain:'Your sister is not really a star &mdash; that is a metaphor. The other three are <b>really true</b>, so they are just sentences with a complement noun.'},
+      {q:'“<i>Clouds drift by like boats at sea.</i>” This is a&hellip;', options:['Simile','Metaphor','Personification','Onomatopoeia'], correct:0, explain:'It compares clouds to boats using <b>like</b> &mdash; a simile.'},
+      {q:'“<i>The road is a long gray snake.</i>” This is a&hellip;', options:['Metaphor','Simile','Personification','Alliteration'], correct:0, explain:'The road is not really a snake, and there is no like or as &mdash; a <b>metaphor</b>.'},
+      {q:'“<i>The trees wave hello as I pass by.</i>” This is an example of&hellip;', options:['Personification','Simile','Metaphor','Consonance'], correct:0, explain:'Trees cannot really wave hello &mdash; a human action given to a non-human thing.'}
+    ]
+  },
+  {
+    id:'sound',
+    icon:'🎵',
+    title:'Sound Devices',
+    subtitle:'Onomatopoeia, alliteration, assonance & consonance',
+    cards:[
+      {front:'Sound Devices', back:'Ways writers <b>repeat sounds</b> to make lines fun to read aloud and easy to remember.'},
+      {front:'Alliteration', back:'Repeats the <b>beginning consonant sounds</b> of words.<br>&ldquo;<b>S</b>illy <b>s</b>nakes <b>s</b>lide <b>s</b>ilently.&rdquo;'},
+      {front:'Assonance', back:'Repeats <b>vowel sounds</b> in nearby words.<br>&ldquo;The l<b>i</b>ght of the f<b>i</b>re is br<b>i</b>ght.&rdquo; (the long <i>i</i> sound)'},
+      {front:'Consonance', back:'Repeats <b>consonant sounds</b> inside or at the end of words.<br>&ldquo;The bla<b>ck</b> sa<b>ck</b> stu<b>ck</b> in the ba<b>ck</b>.&rdquo; (the <i>k</i> sound)'},
+      {front:'How to Tell Them Apart', back:'Same sound at the <b>start</b> of words &rarr; <b>alliteration</b>.<br>Same <b>vowel</b> sound &rarr; <b>assonance</b>.<br>Same <b>consonant</b> sound in the middle or end &rarr; <b>consonance</b>.'},
+      {front:'Pick the MOST Exact Answer', back:'&ldquo;It repeats sounds&rdquo; is true of all three. For alliteration the best answer is the exact one: <b>it repeats beginning consonant sounds</b>.'},
+      {front:'Onomatopoeia', back:'Words that <b>imitate the sounds</b> they name.<br>“The bees <b>buzzed</b> around the garden.” “The clock went <b>tick-tock</b>.” “The thunder <b>boomed</b> across the sky.”'},
+      {front:'Why Use Sound Devices?', back:'They use the sounds of words to create <b>rhythm, mood, emphasis, and meaning</b>, making writing more engaging, memorable, and expressive.'},
+      {front:'More From Class', back:'Alliteration: “<b>S</b>ally <b>s</b>old <b>s</b>eashells by the <b>s</b>eashore.”<br>Assonance: “The r<b>ai</b>n in Sp<b>ai</b>n falls m<b>ai</b>nly on the pl<b>ai</b>n.”<br>Consonance: repeats the sound <b>inside or at the end</b> of words, not only at the start.'},
+      {front:'Sound and Mood', back:'“Sunlight dances on my face&hellip;” &rarr; <b>joyful and cheerful</b>.<br>“Raindrops whisper on the ground, soft and slow, a lonely sound&hellip;” &rarr; <b>sad and lonely</b>.'}
+    ],
+    quiz:[
+      {q:'How does alliteration make the sentence &ldquo;<i>Silly snakes slide silently</i>&rdquo; more interesting?', options:['It repeats beginning consonant sounds.','It repeats sounds.','It tells a story.','It adds meaning.'], correct:0, explain:'&ldquo;It repeats sounds&rdquo; is not wrong, but it is not the <b>best</b> answer. Alliteration repeats the <b>beginning consonant</b> sound: s-s-s-s.'},
+      {q:'Why is &ldquo;<i>The light of the fire is bright</i>&rdquo; an example of assonance?', options:['because it repeats vowel sounds in nearby words','because it repeats the same letters in every word','because it tells a short story about a fire','because it rhymes at the end of every word'], correct:0, explain:'light, fire, bright all share the long <b>i vowel</b> sound &mdash; that is assonance.'},
+      {q:'Which of the following sentences uses <b>consonance</b> correctly?', options:['The black sack stuck in the back.','The dog barked at me.','The doorbell rang very loudly today.','My friend waved hello.'], correct:0, explain:'black, sack, stuck, back all repeat the <b>k</b> consonant sound at the end.'},
+      {q:'True or False: Alliteration repeats the vowel sounds in the middle of words.', options:['True','False'], correct:1, explain:'False — that describes <b>assonance</b>. Alliteration repeats the <b>beginning consonant</b> sounds.'},
+      {q:'True or False: &ldquo;Big brown bears bounce&rdquo; is an example of alliteration.', options:['True','False'], correct:0, explain:'Correct — every word begins with the same <b>b</b> sound.'},
+      {q:'True or False: Assonance is the repetition of vowel sounds in nearby words.', options:['True','False'], correct:0, explain:'Correct — like the long <i>i</i> in &ldquo;The light of the fire is bright.&rdquo;'},
+      {q:'&ldquo;<i>Peter picked pink peppers.</i>&rdquo; This is an example of&hellip;', options:['Alliteration','Assonance','Personification','Metaphor'], correct:0, explain:'Every word starts with the <b>p</b> sound &mdash; alliteration.'},
+      {q:'&ldquo;<i>Go slow over the road.</i>&rdquo; The long <i>o</i> sound repeats. This is an example of&hellip;', options:['Assonance','Alliteration','Metaphor','Simile'], correct:0, explain:'A repeated <b>vowel</b> sound (go, slow, over, road) is assonance.'},
+      {q:'True or False: Consonance is the repetition of vowel sounds in nearby words.', options:['True','False'], correct:1, explain:'False — that is <b>assonance</b>. Consonance repeats <b>consonant</b> sounds, like the <b>k</b> in &ldquo;The black sack stuck in the back.&rdquo;'},
+      {q:'Which sound is repeated in &ldquo;<i>Silly snakes slide silently</i>&rdquo;?', options:['the s sound at the start of each word','the long i sound in each word','the k sound at the end of each word','the t sound in the middle of each word'], correct:0, explain:'Each word begins with <b>s</b> &mdash; that repeated beginning sound is what makes it alliteration.'},
+      {q:'“<i>The thunder boomed across the sky.</i>” Which sound device does <b>boomed</b> show?', options:['Onomatopoeia','Assonance','Alliteration','Consonance'], correct:0, explain:'<b>Boomed</b> imitates the sound thunder makes &mdash; onomatopoeia.'},
+      {q:'True or False: Onomatopoeia words imitate the sounds they describe, like <i>buzz</i> and <i>tick-tock</i>.', options:['True','False'], correct:0, explain:'Correct — they help readers <b>hear</b> what is happening.'},
+      {q:'“<i>Raindrops whisper on the ground, / Soft and slow, a lonely sound.</i>” What mood do these lines create?', options:['sad and lonely','joyful and cheerful','angry and loud','silly and funny'], correct:0, explain:'Words like <b>lonely</b>, <b>soft</b> and <b>slow</b> create a quiet, <b>sad and lonely</b> mood.'}
+    ]
+  },
+  {
+    id:'predicting',
+    icon:'🔮',
+    title:'Predicting Outcomes',
+    subtitle:'Clues, schema & reality check',
+    cards:[
+      {front:'Predicting Outcomes', back:'Telling <b>what you think can happen next</b>.'},
+      {front:'What to Base It On', back:'1. the <b>given clues</b><br>2. <b>what you already know</b> about a situation<br>3. your own <b>past experiences</b> in a similar situation'},
+      {front:'Dark Clouds', back:'You see dark clouds rolling in. You know dark clouds bring rain. So you predict <b>it will rain later</b> &mdash; and you can prepare.'},
+      {front:'Schema', back:'Schema = <b>what you already know based on your experiences</b>. It is like a “brain file” or “memory box” where you keep everything you have learned.'},
+      {front:'Using Schema', back:'“Liza walked home under the heavy rain&hellip; she felt scared.”<br>Character: Liza &middot; Setting: rainy day, outside &middot; Event: walking home during a storm.<br>If you have been in heavy rain, you understand how Liza feels.'},
+      {front:'Reality Check', back:'<b>Can happen:</b> Maria studied hard and got a high score. After days of heavy rain, the river flooded nearby houses.<br><b>Cannot happen:</b> a dog started talking and gave advice; a boy jumped into a painting and lived there forever.'},
+      {front:'Prediction or Conclusion?', back:'Both use clues + what you already know. A <b>prediction</b> tells what will happen <b>next</b>. A <b>conclusion</b> figures out something the text does <b>not say directly</b>.'},
+      {front:'Sentence Frames', back:'“This event <b>can</b> happen in real life because&hellip;”<br>“This event <b>cannot</b> happen in real life because&hellip;”'}
+    ],
+    quiz:[
+      {q:'What does <b>predicting outcomes</b> mean?', options:['telling what you think can happen next','retelling what already happened in the story','finding the lesson the author wants to teach','describing where and when the story happens'], correct:0, explain:'Predicting outcomes means telling <b>what you think can happen next</b>.'},
+      {q:'“<i>Lena packed her bag, checked her watch, and ran toward the door without telling anyone.</i>” What will she most likely do next?', options:['She will leave the house in a hurry.','She will unpack her bag and take a long nap.','She will sit down and watch television.','She will call everyone to a family meeting.'], correct:0, explain:'A packed bag, checking the time and running to the door are clues that she is about to <b>leave in a hurry</b>.'},
+      {q:'True or False: Schema is what you already know based on your experiences.', options:['True','False'], correct:0, explain:'Correct — it is your “brain file” or “memory box”.'},
+      {q:'True or False: You can only make predictions from clues the story states directly.', options:['True','False'], correct:1, explain:'False — you can also use <b>what you already know</b> and your <b>past experiences</b>.'},
+      {q:'Which event <b>can</b> happen in real life?', options:['After days of heavy rain, the river flooded nearby houses.','A dog suddenly started talking and gave its owner advice.','A boy jumped into a painting and lived inside it forever.','A cloud came down and carried a girl all the way to school.'], correct:0, explain:'Heavy rain really can make a river overflow. Dogs cannot talk, and no one can live inside a painting.'},
+      {q:'Which event <b>cannot</b> happen in real life?', options:['A dog suddenly started talking and gave advice to its owner.','Maria studied hard for her test and got a high score.','Ben forgot his lunch and felt hungry at school.','The river overflowed after days of heavy rain.'], correct:0, explain:'Real dogs cannot talk or give advice, so that event is not realistic.'},
+      {q:'True or False: “A boy jumped into a painting and lived inside it forever” can happen in real life.', options:['True','False'], correct:1, explain:'False — this event <b>cannot</b> happen in real life.'},
+      {q:'You see dark clouds rolling in toward you. What can you predict?', options:['It will rain later.','The sun will shine all day.','It will be a hot, dry afternoon.','The wind will stop completely.'], correct:0, explain:'You know dark clouds bring rain, so you predict <b>it will rain later</b>.'},
+      {passage:LIZA, q:'What is the <b>setting</b> of this scenario?', options:['a rainy day, outside','Liza','walking home during a storm','feeling scared of the trees'], correct:0, explain:'Setting is where and when: <b>a rainy day, outside</b>. Liza is the character, and walking home is the event.'},
+      {q:'Which is one thing you can use to make a prediction?', options:['your past experiences','the number of pages in the book','the color of the book cover','the name of the story’s author'], correct:0, explain:'Predictions come from clues, what you already know, and your <b>past experiences</b> in a similar situation.'},
+      {q:'True or False: Schema is like a “brain file” or “memory box.”', options:['True','False'], correct:0, explain:'Correct — it holds everything you have learned or experienced.'}
+    ]
+  },
+  {
+    id:'mainidea',
+    icon:'💡',
+    title:'Main Idea & Details',
+    subtitle:'What is it mostly about?',
+    cards:[
+      {front:'Main Idea', back:'What the text is <b>mostly about</b>, or the most important message the author wants readers to understand.'},
+      {front:'Supporting Details', back:'The important <b>events, facts, actions, or descriptions</b> that help explain the main idea.'},
+      {front:'The Question to Ask', back:'<b>“What is this text mostly about?”</b> Then look at the details that support your answer.'},
+      {front:'Find What They Share', back:'Who is the passage about? What does the character do? <b>What do all the details have in common?</b> That shared idea is the main idea.'},
+      {front:'Lena and the Animals', back:'Main idea: <b>Lena enjoys helping animals and hopes to work with them in the future.</b><br>Feeding dogs, cleaning cages, playing with cats = supporting details.'},
+      {front:'Marco’s Community', back:'Main idea: <b>Marco enjoys helping and improving his community.</b><br>Details: cleaned the park, collected canned food, planted flowers along the sidewalk.'},
+      {front:'Three Skills', back:'<b>Main idea</b>: “What is this mostly about?”<br><b>Summarizing</b>: “What happened or what did I learn?”<br><b>Outlining</b>: “How can I organize these ideas?”'}
+    ],
+    quiz:[
+      {passage:LENA_ANIMALS, q:'What is the passage <b>mostly about</b>?', options:['Lena enjoys helping animals and hopes to work with them.','Lena cleans the dirty cages at the local animal shelter.','Lena visits the local animal shelter every single Saturday.','Lena plays with the cats after she feeds all of the dogs.'], correct:0, explain:'Every detail is about Lena helping animals. The other choices are single <b>supporting details</b>.'},
+      {passage:LENA_ANIMALS, q:'“She fed the dogs.” In this passage, this sentence is a&hellip;', options:['supporting detail','main idea','title','setting'], correct:0, explain:'Feeding the dogs is one action that helps explain the main idea &mdash; a <b>supporting detail</b>.'},
+      {q:'True or False: The main idea is what the text is mostly about.', options:['True','False'], correct:0, explain:'Correct — it is the most important message the author wants you to understand.'},
+      {q:'True or False: Supporting details have nothing to do with the main idea.', options:['True','False'], correct:1, explain:'False — supporting details <b>help explain</b> the main idea.'},
+      {passage:MARCO, q:'What is the <b>main idea</b>?', options:['Marco enjoys helping and improving his community.','Marco collected canned food from all of his neighbors.','Marco planted many flowers along the sidewalk.','Marco helped his friends clean a nearby park.'], correct:0, explain:'The food drive, the park and the flowers all show one thing: <b>Marco enjoys helping his community</b>.'},
+      {passage:MARCO, q:'Which is a <b>supporting detail</b>?', options:['He planted flowers along the sidewalk.','Marco wants to move far away to another town.','Marco does not like any of his noisy neighbors.','Marco thinks that parks are boring places.'], correct:0, explain:'Planting flowers is one of the actions that supports the main idea. The others are not in the passage.'},
+      {passage:MIA_GARDEN, q:'What is the passage <b>mostly about</b>?', options:['Mia and her classmates worked together to fix the garden.','Mia pulled out all the weeds by herself after school.','The school garden had many colorful flowers in it.','The plants in the school garden needed more water.'], correct:0, explain:'All the details lead to one idea: <b>working together</b>, they made the garden healthy again.'},
+      {passage:MIA_GARDEN, q:'Which detail supports the main idea?', options:['Together, they pulled out weeds and watered the plants.','Mia’s favorite color is the bright yellow of sunflowers.','The school library is right beside the school garden.','Mia’s classmates would rather play games at recess.'], correct:0, explain:'Pulling weeds and watering plants <b>together</b> is evidence for the main idea.'},
+      {q:'Which question helps you find the <b>main idea</b>?', options:['“What is this text mostly about?”','“How can I organize these ideas?”','“What happened or what did I learn?”','“Where and when did the story happen?”'], correct:0, explain:'“How can I organize these ideas?” is for outlining, and “What happened?” is for summarizing.'},
+      {passage:LENA_ANIMALS, q:'True or False: Feeding dogs, cleaning cages, and playing with cats are supporting details.', options:['True','False'], correct:0, explain:'Correct — they are the individual actions that support the main idea.'},
+      {q:'True or False: Summarizing and finding the main idea ask the same main question.', options:['True','False'], correct:1, explain:'False — main idea asks “What is this mostly about?” Summarizing asks “What happened or what did I learn?”'}
+    ]
+  },
   {
     id:'summary',
     icon:'📝',
@@ -374,7 +708,10 @@ const LESSONS = [
       {front:'Minor Detail', back:'Extra information the story still works without &mdash; colours, clothes, what someone was carrying, the exact spot. <i>&ldquo;Mia was wearing her favorite yellow shirt.&rdquo;</i>'},
       {front:'The Quick Test', back:'Ask: <b>&ldquo;Would the story still make sense without this?&rdquo;</b> Yes &rarr; it is a minor detail, leave it out. No &rarr; it is an important event, keep it.'},
       {front:'Mia&rsquo;s Puppy &mdash; Important', back:'Puppy escaped from the backyard &rarr; she asked her neighbors to help search &rarr; they found the puppy near the town park &rarr; Mia brought the puppy home safely.'},
-      {front:'Mia&rsquo;s Puppy &mdash; Minor', back:'Her <b>yellow shirt</b>. Carlo&rsquo;s <b>blue umbrella</b>. The puppy sitting beside a <b>large tree</b>. None of these change what happens.'}
+      {front:'Mia&rsquo;s Puppy &mdash; Minor', back:'Her <b>yellow shirt</b>. Carlo&rsquo;s <b>blue umbrella</b>. The puppy sitting beside a <b>large tree</b>. None of these change what happens.'},
+      {front:'A Good Summary Should&hellip;', back:'include the <b>main idea</b> or main event &middot; include the <b>important events</b> &middot; present events in the <b>correct order</b> &middot; leave out <b>minor details</b> &middot; use your <b>own words</b> &middot; be <b>shorter</b> than the original.'},
+      {front:'The Summary Formula', back:'<b>WHO + WHAT HAPPENED + IMPORTANT EVENTS + HOW IT ENDED</b>'},
+      {front:'Anna’s Homework', back:'Summary: “Anna forgot her homework at home, so she hurried back to get it and returned just in time to catch the bus to school.”<br>What she ate and putting on her uniform are left out &mdash; minor details.'}
     ],
     quiz:[
       {q:'True or False: A summary tells the most important parts of a story in a shorter form.', options:['True','False'], correct:0, explain:'Correct — that is exactly what your worksheet says a summary is.'},
@@ -387,7 +724,181 @@ const LESSONS = [
       {q:'What should you leave out of a summary?', options:['Minor details and repeated information','The beginning, middle, and ending','The main problem the character must solve','The events in the order they happened'], correct:0, explain:'Step 3: leave out <b>minor details and repeated information</b>. The beginning, the problem and the ending all stay.'},
       {q:'True or False: A summary should be written in your own words.', options:['True','False'], correct:0, explain:'Correct — Step 5 is to use your <b>own words</b>, not copy sentences from the story.'},
       {passage:LUNCHBOX_1, q:'Which is the <b>most important event</b> in this part of the story?', options:['Lara discovered that her lunchbox was missing.','Lara checked the shelves in the classroom.','Lara checked inside her locker for it.','Lara was excited to eat with her friends.'], correct:0, explain:'The missing lunchbox is the problem the whole story is about. The places she checked are smaller details of the search.'},
-      {passage:LUNCHBOX_2, q:'Which sentence is the <b>best summary</b> of this part?', options:['Lara went back to the library and asked the librarian for help.','Lara hurried, and the library had many tables and bookshelves.','Lara was very excited to eat lunch with her friends at school.','Lara checked her desk, her locker, and the classroom shelves.'], correct:0, explain:'It keeps the important events (going back, asking for help) in her own words and drops the minor details (tables, bookshelves).'}
+      {passage:LUNCHBOX_2, q:'Which sentence is the <b>best summary</b> of this part?', options:['Lara went back to the library and asked the librarian for help.','Lara hurried, and the library had many tables and bookshelves.','Lara was very excited to eat lunch with her friends at school.','Lara checked her desk, her locker, and the classroom shelves.'], correct:0, explain:'It keeps the important events (going back, asking for help) in her own words and drops the minor details (tables, bookshelves).'},
+      {q:'Which is the summary formula from class?', options:['WHO + WHAT HAPPENED + IMPORTANT EVENTS + HOW IT ENDED','TITLE + AUTHOR + EVERY DETAIL + FAVORITE PART','SETTING + COLORS + CLOTHES + WEATHER + TIME','WHERE + WHEN + WHY + OPINION + LESSON'], correct:0, explain:'Who, what happened, the important events, and how it ended &mdash; nothing more.'},
+      {passage:FORGOTTEN_PROJECT, q:'Which is the <b>best summary</b>?', options:['Miguel left his project at home, called his mother, and she brought it in time so he could present.','Miguel put his project in a large blue box that had a small sticker on its side.','Miguel was excited, and his box was blue, and his mother came, and he thanked her.','Miguel’s class was going to present science projects to their teacher that week.'], correct:0, explain:'It keeps who, what happened, the important events and how it ended. The blue box and the sticker are minor details.'},
+      {q:'True or False: A good summary is shorter than the original story.', options:['True','False'], correct:0, explain:'Correct — it keeps only the most important ideas or events.'}
+    ]
+  },
+  {
+    id:'outline',
+    icon:'🗂️',
+    title:'Outlining',
+    subtitle:'Main topics, subtopics & points',
+    cards:[
+      {front:'Outline', back:'A <b>plan</b> that shows a general idea of the <b>content and structure</b> of a piece of writing. It is divided into sections and subsections to separate the main ideas from the supporting ideas.'},
+      {front:'Three Parts', back:'<b>Main topics</b> &mdash; the broadest ideas.<br><b>Subtopics</b> &mdash; clarify the characteristics of those broad ideas.<br><b>Points</b> &mdash; clarify the subtopics by giving examples.<br>An outline goes from <b>broad to specific</b>.'},
+      {front:'Two Kinds', back:'<b>Sentence outline</b> &mdash; main topic and subtopics in <b>complete sentences</b>.<br><b>Topic outline</b> &mdash; main topic and subtopics in <b>phrases and words</b>.'},
+      {front:'Topic Outline Example', back:'I. Benefits of Exercise<br>&nbsp;&nbsp;A. Physical Health<br>&nbsp;&nbsp;B. Mental Health<br>&nbsp;&nbsp;C. Better Sleep<br>(The slide used small a, b, c here, but the formatting rule is <b>capital letters</b> for subtopics.)'},
+      {front:'Numbers and Letters', back:'<b>Roman numerals</b> (I, II, III) &rarr; main topics<br><b>Capital letters</b> (A, B, C) &rarr; subtopics<br><b>Arabic numerals</b> (1, 2, 3) &rarr; points'},
+      {front:'Indent Each Level', back:'Each sub-level is <b>indented further</b>, so you can see which ideas belong under a bigger idea.'},
+      {front:'Taking Care of Earth', back:'III. Join movements. &larr; main topic<br>&nbsp;&nbsp;B. Participate in the activities of environmental organizations. &larr; subtopic<br>&nbsp;&nbsp;&nbsp;&nbsp;1. Plant trees. &larr; point'}
+    ],
+    quiz:[
+      {q:'What is an <b>outline</b>?', options:['a plan that shows the content and structure of writing','a short retelling of the important events in a story','the lesson or message the author wants to share','a list of hard words and meanings at the end of a book'], correct:0, explain:'An outline is a <b>plan</b> that shows the content and structure of a piece of writing.'},
+      {q:'In an outline, <b>main topics</b> are marked with&hellip;', options:['Roman numerals (I, II, III)','capital letters (A, B, C)','Arabic numerals (1, 2, 3)','bullets and stars'], correct:0, explain:'Roman numerals are used only for the main topics.'},
+      {q:'In an outline, <b>subtopics</b> are marked with&hellip;', options:['capital letters (A, B, C)','Roman numerals (I, II, III)','Arabic numerals (1, 2, 3)','the title of the essay'], correct:0, explain:'Capital letters mark the subtopics, indented under each main topic.'},
+      {q:'In an outline, <b>points</b> are marked with&hellip;', options:['Arabic numerals (1, 2, 3)','capital letters (A, B, C)','Roman numerals (I, II, III)','the author’s name'], correct:0, explain:'Arabic numerals mark the points &mdash; the specific details and examples.'},
+      {q:'True or False: An outline arranges ideas from broad to specific.', options:['True','False'], correct:0, explain:'Correct — main topics are broadest, then subtopics, then points.'},
+      {q:'True or False: The points are the broadest ideas in an outline.', options:['True','False'], correct:1, explain:'False — the <b>main topics</b> are the broadest. Points are the most specific.'},
+      {q:'True or False: A topic outline lists the main topic and subtopics in phrases and words.', options:['True','False'], correct:0, explain:'Correct — a <b>sentence</b> outline uses complete sentences instead.'},
+      {q:'True or False: A sentence outline lists the subtopics in single words only.', options:['True','False'], correct:1, explain:'False — a sentence outline uses <b>complete sentences</b>. Phrases and words belong in a topic outline.'},
+      {q:'“I. Benefits of Exercise &mdash; A. Physical Health, B. Mental Health, C. Better Sleep.” What kind of outline is this?', options:['a topic outline','a sentence outline','a summary','a glossary'], correct:0, explain:'The subtopics are <b>phrases</b>, not complete sentences &mdash; a topic outline.'},
+      {passage:EARTH_OUTLINE, q:'“1. Plant trees.” is which part of this outline?', options:['a point','a main topic','a subtopic','the title'], correct:0, explain:'It is marked with an Arabic numeral, so it is a <b>point</b>.'},
+      {passage:EARTH_OUTLINE, q:'Which is a <b>subtopic</b> under “II. Reduce paper consumption”?', options:['Use both sides of paper.','Join movements.','Segregate wastes properly.','Taking Care of Earth'], correct:0, explain:'“Use both sides of paper” is marked A under II. “Join movements” and “Segregate wastes properly” are main topics.'},
+      {q:'What does indenting each level show?', options:['which ideas belong under a bigger idea','which ideas are the most exciting','which ideas the writer likes best','which ideas should be left out'], correct:0, explain:'Indenting shows that a smaller idea <b>belongs under</b> the bigger idea above it.'}
+    ]
+  },
+  {
+    id:'purpose',
+    icon:'✍️',
+    title:'Author’s Purpose',
+    subtitle:'Inform, entertain, or describe',
+    cards:[
+      {front:'Author’s Purpose', back:'The <b>reason</b> an author writes. Every text has a mission!'},
+      {front:'I Is for Inform', back:'Gives <b>facts</b>, teaches a topic, or explains how things are done. Few opinions.<br>“Rain is a form of precipitation&hellip;” gives facts about rain.'},
+      {front:'Inform &mdash; Examples', back:'<b>Textbooks</b> &middot; <b>news reports</b> &middot; <b>instruction manuals</b>'},
+      {front:'E Is for Entertain', back:'To <b>amuse</b>, engage, excite, or emotionally involve the reader &mdash; make you laugh, feel curious or scared, or enjoy a story.<br>Ben stepped on a squeaky toy and woke the whole house.'},
+      {front:'Entertain &mdash; Examples', back:'<b>Stories</b> (exciting tales) &middot; <b>comics</b> (funny pictures and dialogue) &middot; <b>poems</b> (rhythm, rhyme, and feelings)'},
+      {front:'D Is for Describe', back:'Helps the reader <b>imagine or understand what something is like</b>.<br>“Tall sunflowers stood beside small pink roses, while butterflies flew from one plant to another.”'},
+      {front:'Describe &mdash; Examples', back:'<b>Travel brochures</b> &middot; <b>picture books</b> &middot; <b>menu books</b>'}
+    ],
+    quiz:[
+      {passage:PURPOSE_1, q:'What is the author’s purpose?', options:['To inform','To entertain','To describe'], correct:0, explain:'It gives <b>facts</b> about how bees help plants &mdash; to inform.'},
+      {passage:PURPOSE_2, q:'What is the author’s purpose?', options:['To entertain','To inform','To describe'], correct:0, explain:'It is a funny little story about a puppy stealing a sandwich &mdash; to entertain.'},
+      {passage:PURPOSE_3, q:'What is the author’s purpose?', options:['To describe','To inform','To entertain'], correct:0, explain:'It helps you picture <b>what the house looks like</b> &mdash; vines, dusty windows, a rusty roof. To describe.'},
+      {passage:PURPOSE_4, q:'What is the author’s purpose?', options:['To inform','To describe','To entertain'], correct:0, explain:'It explains <b>facts</b> about volcanoes &mdash; to inform.'},
+      {passage:PURPOSE_5, q:'What is the author’s purpose?', options:['To entertain','To describe','To inform'], correct:0, explain:'It is an exciting, slightly scary story that keeps you curious &mdash; to entertain.'},
+      {q:'“<i>Ben tried to sneak into the kitchen for a midnight snack. Unfortunately, he stepped on the squeaky toy and woke the entire house.</i>” The purpose is&hellip;', options:['To entertain','To inform','To describe'], correct:0, explain:'The writer wants you to <b>enjoy the funny situation</b> &mdash; to entertain.'},
+      {q:'Which text is usually written to <b>inform</b>?', options:['an instruction manual','a comic strip','a funny poem','a travel brochure'], correct:0, explain:'Instruction manuals, textbooks and news reports give facts and steps.'},
+      {q:'Which text is usually written to <b>describe</b>?', options:['a menu book','a news report','a textbook','a comic strip'], correct:0, explain:'Menu books, travel brochures and picture books help you imagine what something is like.'},
+      {q:'True or False: Comics are usually written to entertain.', options:['True','False'], correct:0, explain:'Correct — funny pictures and dialogue are meant to amuse you.'},
+      {q:'True or False: A text written to inform is full of the author’s opinions.', options:['True','False'], correct:1, explain:'False — informing texts focus on <b>facts</b>, steps and real-world data, without many opinions.'},
+      {q:'“<i>The garden was filled with colorful flowers. Tall sunflowers stood beside small pink roses.</i>” Why did the author write this?', options:['To describe the garden','To inform us about roses','To entertain with a joke'], correct:0, explain:'The writer gives details about <b>how the garden looks</b> &mdash; to describe.'}
+    ]
+  },
+  {
+    id:'tone',
+    icon:'🎭',
+    title:'Tone & Mood',
+    subtitle:'The author’s voice, the reader’s feeling',
+    cards:[
+      {front:'Tone', back:'The <b>author’s attitude</b> &mdash; the author’s “voice”. Serious? Excited? Inspiring? Find it by looking at the <b>specific words</b> the author uses.'},
+      {front:'Mood', back:'What <b>the reader</b> feels. It is made by the <b>setting and atmosphere</b>.'},
+      {front:'Tone vs Mood', back:'<b>Who feels it?</b> Tone: the author or narrator. Mood: the reader (you!).<br><b>How is it made?</b> Tone: word choice and attitude. Mood: setting and atmosphere.'},
+      {front:'Example Words', back:'Tone: <b>serious, uplifting, humorous</b>.<br>Mood: <b>peaceful, gloomy, motivated</b>.'},
+      {front:'Formal Tone', back:'For <b>official settings</b> where authority, accuracy and respect matter. Uses full words, exact vocabulary and standard grammar. <b>Avoids slang</b> and emotional bias.'},
+      {front:'Informal Tone', back:'<b>Conversational, direct, and warm</b> &mdash; for friends and familiar people. Uses contractions, everyday phrases, shorter sentences and expressive language.'},
+      {front:'Analyzing a Stanza', back:'“Come, love your troubled country, / Embrace it with all your heart tomorrow!”<br>Tone: <b>inspiring and encouraging</b>. Mood: <b>proud and motivated</b>.'}
+    ],
+    quiz:[
+      {q:'What is <b>tone</b>?', options:['the author’s attitude toward the subject','the feeling the reader gets','the place and time of the story','the most exciting part of the story'], correct:0, explain:'Tone is the <b>author’s attitude</b>. The feeling the reader gets is the mood.'},
+      {q:'Who feels the <b>mood</b>?', options:['the reader','the author','the narrator','the illustrator'], correct:0, explain:'Mood is what <b>you, the reader</b>, feel. Tone belongs to the author or narrator.'},
+      {q:'True or False: Tone is shown through word choice and the author’s attitude.', options:['True','False'], correct:0, explain:'Correct — look at the specific words the author uses.'},
+      {q:'True or False: Mood is the author’s attitude, and tone is how the reader feels.', options:['True','False'], correct:1, explain:'False — it is the other way around. <b>Tone</b> is the author’s attitude; <b>mood</b> is how the reader feels.'},
+      {q:'Which word from the lesson describes a <b>mood</b>?', options:['gloomy','humorous','serious','uplifting'], correct:0, explain:'In your teacher’s table, <b>gloomy</b>, peaceful and motivated are moods. Serious, uplifting and humorous are tones.'},
+      {passage:STANZA, q:'What is the <b>tone</b> of this stanza?', options:['inspiring and encouraging','angry and bitter','funny and silly','bored and sleepy'], correct:0, explain:'“Come, love your troubled country, embrace it with all your heart” &mdash; the poet is <b>inspiring and encouraging</b> the reader.'},
+      {passage:STANZA, q:'What <b>mood</b> does this stanza create?', options:['proud and motivated','scared and nervous','sleepy and bored','confused and lost'], correct:0, explain:'The reader is left feeling <b>proud and motivated</b>.'},
+      {q:'Which sentence has a <b>formal</b> tone?', options:['We would like to inform you that the meeting starts at nine.','Hey guys, the meeting’s gonna start at nine, so don’t be late, okay?','Gonna be late, sorry! Save me a seat, pls!','Yay, no meeting tomorrow, woohoo!'], correct:0, explain:'Full words and standard grammar with no slang &mdash; formal. The others use slang and contractions.'},
+      {q:'Which sentence has an <b>informal</b> tone?', options:['Can’t wait to see you guys later!','The principal will address the students this afternoon.','Please submit your reports on or before Friday.','Visitors are required to sign in at the front desk.'], correct:0, explain:'“Can’t” and “you guys” are conversational &mdash; an informal tone.'},
+      {q:'True or False: A formal tone uses slang and lots of contractions.', options:['True','False'], correct:1, explain:'False — a formal tone <b>avoids slang</b> and uses full words. Contractions belong to an informal tone.'},
+      {q:'True or False: An informal tone is conversational, direct, and warm.', options:['True','False'], correct:0, explain:'Correct — it is built for friends and familiar audiences.'},
+      {q:'Where would a <b>formal</b> tone fit best?', options:['a letter to the school principal','a text message to your best friend','a chat with your cousin','a birthday card for your sister'], correct:0, explain:'A formal tone is for <b>official settings</b> where respect matters.'}
+    ]
+  },
+  {
+    id:'generalize',
+    icon:'🧩',
+    title:'Making Generalizations',
+    subtitle:'Many examples, one pattern',
+    cards:[
+      {front:'Generalization', back:'A <b>broad statement</b> about a group of people, things, or situations, based on <b>several examples</b> or pieces of evidence.'},
+      {front:'Look, Find, Say', back:'Look at <b>MANY</b> &rarr; find the <b>PATTERN</b> &rarr; say <b>SOMETHING GENERAL</b>.'},
+      {front:'Three Steps', back:'Step 1: Look at the examples.<br>Step 2: Find the pattern.<br>Step 3: Make a broad statement.<br>Dogs, cats and rabbits need food &rarr; <b>Animals need food to live.</b>'},
+      {front:'Drinking Water', back:'Ana, Ben, Carlo and Dana each drink water at different times = <b>evidence</b>.<br>General statement: <b>People drink water throughout the day.</b>'},
+      {front:'Faulty Generalization', back:'A generalization is faulty when it is <b>not supported by facts</b>.<br>“Everyone loves peanut butter.” &rarr; you cannot ask everybody.<br>Better: “<b>Many</b> people love peanut butter.”'},
+      {front:'Enough Evidence', back:'A good generalization is based on <b>enough evidence</b>. It should not be based on only one example.'},
+      {front:'Things to Consider', back:'1. Read all the given information.<br>2. Know your purpose.<br>3. Give sufficient examples or proof, such as research or experiments.'}
+    ],
+    quiz:[
+      {q:'What is a <b>generalization</b>?', options:['a broad statement about a group based on several examples','a statement about one person based on just one example','a guess about what will happen next in the story','the exact dictionary meaning of a single word'], correct:0, explain:'A generalization is a <b>broad statement</b> built from <b>several</b> examples.'},
+      {q:'Dogs need food. Cats need food. Rabbits need food. What generalization can you make?', options:['Animals need food to live.','Only dogs need food.','Cats eat more than dogs.','Rabbits are the best pets.'], correct:0, explain:'The pattern is that they all need food, so: <b>animals need food to live</b>.'},
+      {passage:HEALTHY_SET, q:'What generalization can you make?', options:['People with healthy habits help keep their bodies healthy.','Mia is the only child who eats fruits and vegetables daily.','Everyone in the world exercises for exactly 30 minutes.','Sleeping is much more important than drinking water.'], correct:0, explain:'Every child practices a healthy habit, so the broad statement is about <b>healthy habits keeping bodies healthy</b>.'},
+      {passage:READING_SET, q:'What generalization can you make?', options:['People who enjoy reading often make time for books.','Daniel is the only child who carries a book in his bag.','Nobody visits the library except Mark on Fridays.','All children dislike reading books before bedtime.'], correct:0, explain:'All four make time for books, so: <b>people who enjoy reading often make time for books</b>.'},
+      {q:'True or False: “Everyone loves peanut butter” is a faulty generalization.', options:['True','False'], correct:0, explain:'Correct — it cannot be proven, because you cannot ask everybody.'},
+      {q:'True or False: A good generalization can be based on only one example.', options:['True','False'], correct:1, explain:'False — it needs <b>enough evidence</b>, not just one example.'},
+      {q:'Which is a better way to say “Everyone loves peanut butter”?', options:['Many people love peanut butter.','All people love peanut butter.','Nobody likes peanut butter.','Everyone loves jam instead.'], correct:0, explain:'“<b>Many</b> people” can be supported by facts. “Everyone” and “nobody” cannot.'},
+      {q:'What is the <b>first</b> step in making a generalization?', options:['Look at the examples.','Make a broad statement.','Find the pattern.','Ask everybody you know.'], correct:0, explain:'Look at the examples &rarr; find the pattern &rarr; make a broad statement.'},
+      {q:'When is a generalization <b>faulty</b>?', options:['when it is not supported by facts','when it uses too many examples','when it is a complete sentence','when it talks about a group'], correct:0, explain:'Your teacher’s slide: generalizations are faulty when they are <b>not supported by facts</b>.'},
+      {passage:WATER_SET, q:'In this set, what are the four sentences about Ana, Ben, Carlo and Dana?', options:['evidence','the general statement','the setting','the conclusion'], correct:0, explain:'Each child is one piece of <b>evidence</b>. The general statement is “People drink water throughout the day.”'},
+      {q:'True or False: A generalization is a statement about only one person or thing.', options:['True','False'], correct:1, explain:'False — it is a <b>broad</b> statement about a <b>group</b>.'},
+      {q:'True or False: To make a generalization, you find the pattern the examples have in common.', options:['True','False'], correct:0, explain:'Correct — Step 2 is to find the pattern.'}
+    ]
+  },
+  {
+    id:'connotation',
+    icon:'👍',
+    title:'Denotation & Connotation',
+    subtitle:'Dictionary meaning vs feeling',
+    cards:[
+      {front:'Denotation', back:'The <b>literal or exact meaning</b> of a word &mdash; the meaning you would find in a <b>dictionary</b>.<br>“The snake is under the table.” Snake = a type of reptile.'},
+      {front:'Planet', back:'Denotation of <i>planet</i>: a large, round object in space that moves around a star.'},
+      {front:'Connotation', back:'The <b>feeling or idea</b> connected to a word. It depends on <b>context, culture, or the situation</b>.'},
+      {front:'Positive Connotation', back:'A pleasant, favorable, good feeling.<br><b>confident</b> (brave, capable) &middot; <b>generous</b> (kind, giving) &middot; <b>slim</b> (healthy, attractive) &middot; <b>childlike</b> (innocent, playful) &middot; <b>thrifty</b> (wise with money)'},
+      {front:'Negative Connotation', back:'An unpleasant, unfavorable, bad feeling.<br><b>bossy</b> (controlling) &middot; <b>greedy</b> (selfish) &middot; <b>skinny</b> (too thin) &middot; <b>childish</b> (immature) &middot; <b>cheap</b> (poor quality, unwilling to spend)'},
+      {front:'Word Pairs', back:'<b>slim</b> 👍 vs <b>skinny</b> 👎<br><b>childlike</b> 👍 vs <b>childish</b> 👎<br>Similar dictionary meaning, different feeling.'},
+      {front:'Home', back:'“After a long trip, Mia was happy to return to her <b>home</b>.” Here <i>home</i> carries a warm, <b>positive</b> connotation.'}
+    ],
+    quiz:[
+      {q:'What is the <b>denotation</b> of the word “planet”?', options:['A large object that orbits a star','A mysterious place in outer space','A beautiful world to explore'], correct:0, explain:'Denotation is the exact dictionary meaning: a large object that orbits a star. The others add feelings.'},
+      {q:'Which sentence uses the word “home” with a <b>positive connotation</b>?', options:['After a long trip, Mia was happy to return to her home.','The home was listed as a building for sale.','The workers measured the home before repairing it.'], correct:0, explain:'Being <b>happy to return</b> gives <i>home</i> a warm feeling. The other two only use its dictionary meaning.'},
+      {q:'Which word has a <b>positive</b> connotation?', options:['Generous','Bossy','Greedy'], correct:0, explain:'<b>Generous</b> means kind and giving &mdash; a good feeling.'},
+      {q:'Which word has a <b>negative</b> connotation?', options:['childish','childlike','thrifty','confident'], correct:0, explain:'<b>Childish</b> suggests immature. Childlike (innocent, playful) is positive.'},
+      {q:'True or False: Denotation is the dictionary meaning of a word.', options:['True','False'], correct:0, explain:'Correct — the literal or exact meaning.'},
+      {q:'True or False: Connotation is the exact dictionary meaning of a word.', options:['True','False'], correct:1, explain:'False — that is <b>denotation</b>. Connotation is the <b>feeling or idea</b> connected to a word.'},
+      {q:'Which word gives a more <b>pleasant</b> feeling?', options:['slim','skinny'], correct:0, explain:'<b>Slim</b> suggests healthy and attractive. Skinny suggests too thin.'},
+      {q:'What connotation does <b>thrifty</b> have?', options:['Positive','Negative'], correct:0, explain:'Thrifty means <b>wise with money</b> &mdash; positive.'},
+      {q:'What connotation does <b>cheap</b> have?', options:['Negative','Positive'], correct:0, explain:'Cheap suggests <b>poor quality or unwilling to spend</b> &mdash; negative.'},
+      {q:'True or False: In “The snake is under the table,” <i>snake</i> simply names a type of reptile. That is its denotation.', options:['True','False'], correct:0, explain:'Correct — no feeling is added; it is the literal meaning.'},
+      {q:'True or False: A word’s connotation never changes with context or culture.', options:['True','False'], correct:1, explain:'False — connotation <b>depends on context, culture, or the situation</b>.'}
+    ]
+  },
+  {
+    id:'dictionary',
+    icon:'📖',
+    title:'Dictionary & Glossary',
+    subtitle:'Meaning, pronunciation & more',
+    cards:[
+      {front:'Dictionary', back:'A <b>reference book or digital resource</b> that lists the words in a language and explains what they mean.'},
+      {front:'What Else Is Inside', back:'<b>Pronunciation</b> (how to say the word) &middot; <b>spelling</b> &middot; <b>part of speech</b> (noun, verb, adjective&hellip;) &middot; <b>example sentences</b> &middot; <b>synonyms and antonyms</b> (similar and opposite words) &middot; <b>word origins</b> (etymology)'},
+      {front:'Parts of an Entry', back:'<b>bot·a·ny</b> &larr; entry word<br>[&hellip;] &larr; pronunciation<br><i>n.</i> &larr; part of speech<br>the branch of biology dealing with plant life &larr; meaning<br>from Greek <i>botane</i>, “plant” &larr; language of origin'},
+      {front:'Glossary', back:'Part of a book, usually found <b>at the end</b>. Like a dictionary, it is an <b>alphabetical list</b> of words.'},
+      {front:'Dictionary vs Glossary', back:'A glossary lists only the <b>technical or specific words used in that book</b>. It does <b>not</b> contain all the words in a language. A dictionary does.'},
+      {front:'Find One!', back:'Open any of your textbooks and check the <b>last pages</b> &mdash; that is where the glossary usually is.'},
+      {front:'When to Look Up a Word', back:'Mia found a <i>desolate</i> garden, then a <i>magnificent</i> one with a <i>majestic</i> tree. Unfamiliar words like these are the ones to look up for their meaning and pronunciation.'}
+    ],
+    quiz:[
+      {q:'What is a <b>dictionary</b>?', options:['a reference that lists words and explains what they mean','a list of only the technical words found at the end of one book','a plan that shows the content and structure of a piece of writing','a short retelling of only the most important events in a story'], correct:0, explain:'A dictionary lists the words in a language and explains their meanings. The list at the end of one book is a glossary.'},
+      {q:'Where is a <b>glossary</b> usually found?', options:['at the end of a book','on the front cover','in the first chapter','on the title page'], correct:0, explain:'A glossary is usually on the <b>last pages</b> of a book.'},
+      {q:'True or False: A glossary contains all the words in a language.', options:['True','False'], correct:1, explain:'False — it lists only the technical or specific words <b>used in that book</b>.'},
+      {q:'True or False: Both a dictionary and a glossary list words in alphabetical order.', options:['True','False'], correct:0, explain:'Correct — a glossary is an alphabetical list, like a dictionary.'},
+      {passage:BOTANY, q:'What does <i>n.</i> tell you?', options:['the part of speech (noun)','how you should say the word aloud','the language the word came from','the meaning of the word'], correct:0, explain:'<i>n.</i> stands for <b>noun</b> &mdash; the part of speech.'},
+      {passage:BOTANY, q:'“from Greek <i>botane</i>, ‘plant’” tells you the word’s&hellip;', options:['language of origin','part of speech','pronunciation','example sentence in a story'], correct:0, explain:'It shows where the word <b>came from</b> &mdash; its origin (etymology).'},
+      {q:'What does the <b>pronunciation</b> in a dictionary entry tell you?', options:['how to say the word','where the word came from','the word’s opposite','which book uses the word'], correct:0, explain:'Pronunciation shows <b>how to say</b> the word.'},
+      {q:'In a dictionary, <b>synonyms and antonyms</b> are&hellip;', options:['similar and opposite words','the first and last words on a page','nouns and verbs','old and new ways to spell a word'], correct:0, explain:'Synonyms are <b>similar</b> words and antonyms are <b>opposite</b> words.'},
+      {q:'True or False: A glossary lists technical or specific words used in the book it is part of.', options:['True','False'], correct:0, explain:'Correct — that is what makes it different from a dictionary.'},
+      {q:'True or False: <i>Etymology</i> means a word’s part of speech.', options:['True','False'], correct:1, explain:'False — etymology means a word’s <b>origin</b>, where it came from.'},
+      {passage:BOTANY, q:'What does <b>botany</b> mean?', options:['the branch of biology dealing with plant life','the study of stars, planets, moons, and outer space','the study of rocks, minerals, and soil','the branch of science about animals'], correct:0, explain:'The entry says botany is <b>the branch of biology dealing with plant life</b>.'}
     ]
   },
   {
@@ -447,171 +958,122 @@ const LESSONS = [
     ]
   },
   {
-    id:'elements',
-    icon:'📚',
-    title:'Elements of a Narrative',
-    subtitle:'Character, setting, plot & theme',
+    id:'pronouns',
+    icon:'👤',
+    title:'Pronouns, Part 1',
+    subtitle:'Personal, possessive & indefinite',
     cards:[
-      {front:'Narrative', back:'A <b>story</b>. Every narrative has four elements: <b>character, setting, plot, and theme</b>.'},
-      {front:'Character', back:'<b>Who</b> the story is about. What they do shows what they are like.<br>&ldquo;Maria helped an old woman carry her bags, even though she was in a hurry.&rdquo; &rarr; shows Maria is kind &rarr; <b>Character</b>.'},
-      {front:'Setting', back:'<b>Where and when</b> the story happens.<br>&ldquo;Anna and her family went camping in the <b>mountains</b> during a <b>cold winter night</b>.&rdquo;'},
-      {front:'Plot', back:'The <b>events</b> of the story &mdash; what happens, from beginning to end.'},
-      {front:'Theme', back:'The <b>lesson or message</b> of the story.<br>&ldquo;Kindness should always be shared with others.&rdquo;'},
-      {front:'Plot vs Theme', back:'Plot = <b>what happens</b>.<br>Theme = <b>what the story teaches</b>.<br>&ldquo;The story shares a lesson about kindness&rdquo; is about the <b>theme</b>, not the plot.'},
-      {front:'Sequential Plot', back:'Events told <b>in time order</b>, one after another.<br>&ldquo;A boy loses his dog, searches around town, and finally finds it at the park.&rdquo;'}
+      {front:'Pronoun', back:'A word that <b>replaces a noun</b> to avoid repetitive and clumsy phrasing.<br>“Mojo went to Mojo’s cave.” &rarr; “Mojo went to <b>his</b> cave. <b>He</b> was eager to start again!”'},
+      {front:'Subject Pronouns', back:'Take the place of the <b>subject doing the action</b>.<br><b>I, we, you, he, she, it, they</b><br>“<b>They</b> handled the problem well.”'},
+      {front:'Object Pronouns', back:'<b>Receive the action</b> of the verb.<br><b>me, us, you, him, her, it, them</b><br>“Mike gave the book to <b>me</b>.”'},
+      {front:'Person and Number', back:'1st person (speaking): I / me &middot; we / us<br>2nd person (spoken to): you / you<br>3rd person (spoken about): he, she, it / him, her, it &middot; they / them'},
+      {front:'Possessive Pronouns', back:'Show <b>ownership</b>: <b>mine, yours, his, hers, its, ours, theirs</b>.<br>“The banana is <b>his</b>.” “The pillow belongs to Ria. It is <b>hers</b>.”'},
+      {front:'Indefinite Pronouns', back:'Do <b>not name an exact</b> person, place, or thing.<br>“<b>Everyone</b> can dream of having a better future.” “<b>No one</b> deserves to fail.”'},
+      {front:'Singular or Plural?', back:'<b>Always singular:</b> another, anybody, anyone, anything, each, either, everybody, everyone, little, much, nobody, no one, nothing, one, other<br><b>Always plural:</b> both, few, many, several<br><b>Either:</b> all, any, more, most, none, some'}
     ],
     quiz:[
-      {q:'&ldquo;<i>Maria helped an old woman carry her bags, even though she was in a hurry.</i>&rdquo; What element of a narrative does this show?', options:['Character','Plot','Theme','Setting'], correct:0, explain:'It shows <b>what Maria is like</b> &mdash; kind, even when busy. That is the character.'},
-      {q:'&ldquo;<i>Kindness should always be shared with others.</i>&rdquo; What element of a narrative is this?', options:['Theme','Plot','Setting','Character'], correct:0, explain:'It is a <b>lesson or message</b> &mdash; the theme.'},
-      {q:'&ldquo;<i>Anna and her family went camping in the mountains during a cold winter night.</i>&rdquo; Which element is mostly highlighted?', options:['Setting','Plot','Theme','Character'], correct:0, explain:'The mountains (<b>where</b>) and a cold winter night (<b>when</b>) &mdash; the setting.'},
-      {q:'Which statement <b>best</b> represents a sequential plot?', options:['A boy loses his dog, searches around town, and finally finds it at the park.','The story shares a lesson about kindness.','A boy is kind and helpful to everyone he meets.','The story takes place in a quiet village by the river.'], correct:0, explain:'Only this one tells <b>events in order</b>: loses &rarr; searches &rarr; finds. The others are theme, character and setting.'},
-      {q:'True or False: The setting tells where and when a story happens.', options:['True','False'], correct:0, explain:'Correct — place and time together make the setting.'},
-      {q:'True or False: The theme is the list of events that happen in the story.', options:['True','False'], correct:1, explain:'False — the events are the <b>plot</b>. The theme is the <b>lesson or message</b>.'},
-      {q:'True or False: &ldquo;The story takes place in a quiet village by the river&rdquo; describes the setting.', options:['True','False'], correct:0, explain:'Correct — a quiet village by the river is <b>where</b> the story happens.'},
-      {q:'True or False: &ldquo;A boy is kind and helpful to everyone he meets&rdquo; describes the plot.', options:['True','False'], correct:1, explain:'False — it tells what the boy is <b>like</b>, so it describes a <b>character</b>. No events happen in it.'},
-      {q:'Which element answers the question &ldquo;What lesson does the story teach?&rdquo;', options:['Theme','Setting','Character','Plot'], correct:0, explain:'The lesson or message is the <b>theme</b>.'},
-      {passage:LUNCHBOX_1, q:'The story happens at school, at lunchtime. Which element of the story is this?', options:['Setting','Theme','Plot','Character'], correct:0, explain:'School is <b>where</b> and lunchtime is <b>when</b> &mdash; the setting.'}
+      {q:'“Mojo went to <b>his</b> cave. <b>He</b> was eager to start again!” Why are pronouns used here?', options:['to avoid repeating the same noun','to add more describing words','to show the setting of the story','to make every sentence longer'], correct:0, explain:'Pronouns replace “Mojo” so it is not repeated in a clumsy way.'},
+      {q:'“<b>They</b> handled the problem well.” <i>They</i> is&hellip;', options:['a subject pronoun','an object pronoun','a possessive pronoun','an indefinite pronoun'], correct:0, explain:'<i>They</i> is the subject doing the action.'},
+      {q:'“Mike gave the book to <b>me</b>.” <i>Me</i> is&hellip;', options:['an object pronoun','a subject pronoun','a possessive pronoun','an indefinite pronoun'], correct:0, explain:'<i>Me</i> receives the action &mdash; an object pronoun.'},
+      {q:'“The shirt is <b>mine</b>.” <i>Mine</i> is&hellip;', options:['a possessive pronoun','a subject pronoun','an object pronoun','an indefinite pronoun'], correct:0, explain:'<i>Mine</i> shows ownership.'},
+      {q:'“<b>Everyone</b> can dream of having a better future.” <i>Everyone</i> is&hellip;', options:['an indefinite pronoun','a possessive pronoun','a reflexive pronoun','an object pronoun'], correct:0, explain:'<i>Everyone</i> does not name an exact person &mdash; indefinite.'},
+      {q:'Which is an <b>object</b> pronoun?', options:['him','he','she','they'], correct:0, explain:'<b>Him</b> receives the action. He, she and they are subject pronouns.'},
+      {q:'Which indefinite pronoun is <b>always plural</b>?', options:['several','everyone','nobody','each'], correct:0, explain:'Both, few, many and <b>several</b> are always plural. The others are always singular.'},
+      {q:'True or False: <i>Hers</i> is a possessive pronoun.', options:['True','False'], correct:0, explain:'Correct — “It is <b>hers</b>” shows the pillow belongs to Ria.'},
+      {q:'True or False: Subject pronouns receive the action of the verb.', options:['True','False'], correct:1, explain:'False — <b>object</b> pronouns receive the action. Subject pronouns do the action.'},
+      {q:'True or False: <i>No one</i> is an indefinite pronoun because it does not name an exact person.', options:['True','False'], correct:0, explain:'Correct — like <i>everyone</i>, it refers to people without naming them.'},
+      {q:'“The pillow belongs to Ria. It is ___.”', options:['hers','her','she','herself'], correct:0, explain:'<b>Hers</b> is the possessive pronoun that shows the pillow is Ria’s.'},
+      {q:'True or False: <i>Each</i> and <i>everybody</i> are always plural.', options:['True','False'], correct:1, explain:'False — each and everybody are <b>always singular</b>.'}
     ]
   },
   {
-    id:'plot',
-    icon:'⛰️',
-    title:'Parts of the Plot',
-    subtitle:'Exposition to resolution',
+    id:'pronouns2',
+    icon:'👉',
+    title:'Pronouns, Part 2',
+    subtitle:'Demonstrative, reflexive & relative',
     cards:[
-      {front:'The Plot Mountain', back:'<b>Exposition</b> &rarr; <b>Rising Action</b> &rarr; <b>Climax</b> &rarr; <b>Falling Action</b> &rarr; <b>Resolution</b>.<br>Climb up, reach the top, walk back down.'},
-      {front:'Exposition', back:'The <b>beginning</b>. It <b>introduces the characters and setting</b>.'},
-      {front:'Rising Action', back:'The <b>problem</b> appears and events <b>build up</b>, getting more exciting.'},
-      {front:'Climax', back:'The <b>top of the mountain</b> &mdash; the most exciting part, the turning point.'},
-      {front:'Falling Action', back:'Events <b>after the climax</b> that <b>lead to the ending</b>.'},
-      {front:'Resolution', back:'The <b>ending</b> &mdash; the problem is solved and the story wraps up.'},
-      {front:'Two From Your Test', back:'<b>Exposition</b> = introduces characters and setting (start).<br><b>Falling Action</b> = after the climax, leads to the ending.<br>Both were on your summative test.'}
+      {front:'Demonstrative Pronouns', back:'<b>Point out</b> specific people, places, or things based on <b>distance</b>.'},
+      {front:'Near or Far?', back:'Near, one: <b>this</b> &middot; Near, two or more: <b>these</b><br>Far, one: <b>that</b> &middot; Far, two or more: <b>those</b><br>“<b>This</b> is my friend Mojo.” “<b>That</b> is the safalan.”'},
+      {front:'Reflexive Pronouns', back:'End in <b>-self</b> or <b>-selves</b>: myself, yourself, himself, itself, ourselves, yourselves, themselves.<br>Used when the <b>subject and object are the same</b>: “I always look at <b>myself</b> in the mirror.” “Mojo encourages <b>himself</b>.”'},
+      {front:'Used for Emphasis (Intensive)', back:'Shows the subject did the action <b>on their own</b>.<br>“Mojo climbs the tree <b>by himself</b>.”'},
+      {front:'Relative Pronouns', back:'Introduce a <b>dependent (relative) clause</b> and connect it to an independent clause.<br><b>who, whom, which, that, what</b><br>Careful: <i>that</i> can also be demonstrative. “<b>That</b> is the safalan” points; “the fruit <b>that</b> fell” connects.'},
+      {front:'Relative Examples', back:'“Mojo, <b>who</b> was a smart monkey, ran to the tree.”<br>“Safalan, <b>which</b> is a delicious fruit, fell to the ground.”'}
     ],
     quiz:[
-      {q:'What part of the plot introduces the characters and setting?', options:['Exposition','Climax','Rising Action','Falling Action'], correct:0, explain:'The <b>exposition</b> is the beginning &mdash; it introduces who and where.'},
-      {q:'Which part of the plot shows events after the climax and leads to the ending?', options:['Falling Action','Exposition','Climax','Rising Action'], correct:0, explain:'The <b>falling action</b> comes down the mountain after the climax.'},
-      {q:'Which part of the plot is the most exciting part, the turning point?', options:['Climax','Resolution','Exposition','Falling Action'], correct:0, explain:'The <b>climax</b> is the top of the plot mountain.'},
-      {q:'In which part of the plot does the problem appear and the events build up?', options:['Rising Action','Resolution','Falling Action','Exposition'], correct:0, explain:'The <b>rising action</b> climbs toward the climax as the problem grows.'},
-      {q:'True or False: The exposition comes at the beginning of the story.', options:['True','False'], correct:0, explain:'Correct — it opens the story by introducing the characters and setting.'},
-      {q:'True or False: The falling action happens before the climax.', options:['True','False'], correct:1, explain:'False — the falling action comes <b>after</b> the climax. The rising action is the part before it.'},
-      {q:'True or False: The climax is the turning point, the most exciting part of the story.', options:['True','False'], correct:0, explain:'Correct — it is the top of the plot mountain.'},
-      {q:'True or False: The resolution introduces the characters and the setting.', options:['True','False'], correct:1, explain:'False — that is the <b>exposition</b>. The resolution is the ending, where the problem is solved.'},
-      {q:'Which shows the parts of the plot in the correct order?', options:['Exposition, Rising Action, Climax, Falling Action, Resolution','Exposition, Climax, Rising Action, Falling Action, Resolution','Rising Action, Exposition, Climax, Resolution, Falling Action','Climax, Exposition, Falling Action, Rising Action, Resolution'], correct:0, explain:'Start (exposition), climb (rising action), top (climax), come down (falling action), end (resolution).'},
-      {q:'&ldquo;Mia discovered that her puppy had escaped, so she asked her neighbors to help her search.&rdquo; Which part of the plot is this?', options:['Rising Action','Exposition','Resolution','Falling Action'], correct:0, explain:'The problem has appeared and the search is building up &mdash; <b>rising action</b>.'}
+      {q:'Which demonstrative pronoun is for things that are <b>near</b> and <b>two or more</b>?', options:['these','this','that','those'], correct:0, explain:'Near + plural = <b>these</b>.'},
+      {q:'Which demonstrative pronoun is for <b>one</b> thing that is <b>far</b>?', options:['that','this','these','those'], correct:0, explain:'Far + singular = <b>that</b>.'},
+      {q:'“Do you see the fruit on that tree? <b>That</b> is the safalan.” The bold word is a&hellip;', options:['demonstrative pronoun','reflexive pronoun','relative pronoun','possessive pronoun'], correct:0, explain:'<i>That</i> points out a specific thing that is far away.'},
+      {q:'“Mojo encourages <b>himself</b>.” <i>Himself</i> is a&hellip;', options:['reflexive pronoun','demonstrative pronoun','relative pronoun','subject pronoun'], correct:0, explain:'It ends in -self and reflects back to the subject, Mojo.'},
+      {q:'“Mojo climbs the tree <b>by himself</b>.” What does <i>himself</i> show here?', options:['that Mojo did it on his own','that Mojo is far away','who owns the tree','which tree Mojo chose'], correct:0, explain:'Used for emphasis, it shows Mojo did the action <b>independently</b>.'},
+      {q:'“Mojo, <b>who</b> was a smart monkey, ran to the tree.” <i>Who</i> is a&hellip;', options:['relative pronoun','demonstrative pronoun','reflexive pronoun','object pronoun'], correct:0, explain:'<i>Who</i> introduces the clause “was a smart monkey” and connects it to the sentence.'},
+      {q:'Which is a <b>relative</b> pronoun?', options:['which','those','myself','these'], correct:0, explain:'Who, whom, <b>which</b>, that and what are relative pronouns.'},
+      {q:'True or False: Reflexive pronouns end in -self or -selves.', options:['True','False'], correct:0, explain:'Correct — myself, himself, ourselves, themselves&hellip;'},
+      {q:'True or False: <i>Those</i> is used for one thing that is near.', options:['True','False'], correct:1, explain:'False — <i>those</i> is for <b>two or more</b> things that are <b>far</b>. One near thing is <i>this</i>.'},
+      {q:'True or False: A relative pronoun connects a relative clause to an independent clause.', options:['True','False'], correct:0, explain:'Correct — like <i>which</i> in “Safalan, which is a delicious fruit, fell to the ground.”'},
+      {q:'“We cleaned the whole room by ___.”', options:['ourselves','ourself','us','we'], correct:0, explain:'The subject is <i>we</i>, so the -selves form is <b>ourselves</b>.'},
+      {q:'True or False: <i>This</i> and <i>these</i> point to things that are far from the speaker.', options:['True','False'], correct:1, explain:'False — <i>this</i> and <i>these</i> are for things that are <b>near</b>.'}
     ]
   },
   {
-    id:'sound',
-    icon:'🎵',
-    title:'Sound Devices',
-    subtitle:'Alliteration, assonance & consonance',
+    id:'factopinion',
+    icon:'⚖️',
+    title:'Fact vs Opinion',
+    subtitle:'Can it be proven?',
     cards:[
-      {front:'Sound Devices', back:'Ways writers <b>repeat sounds</b> to make lines fun to read aloud and easy to remember.'},
-      {front:'Alliteration', back:'Repeats the <b>beginning consonant sounds</b> of words.<br>&ldquo;<b>S</b>illy <b>s</b>nakes <b>s</b>lide <b>s</b>ilently.&rdquo;'},
-      {front:'Assonance', back:'Repeats <b>vowel sounds</b> in nearby words.<br>&ldquo;The l<b>i</b>ght of the f<b>i</b>re is br<b>i</b>ght.&rdquo; (the long <i>i</i> sound)'},
-      {front:'Consonance', back:'Repeats <b>consonant sounds</b> inside or at the end of words.<br>&ldquo;The bla<b>ck</b> sa<b>ck</b> stu<b>ck</b> in the ba<b>ck</b>.&rdquo; (the <i>k</i> sound)'},
-      {front:'How to Tell Them Apart', back:'Same sound at the <b>start</b> of words &rarr; <b>alliteration</b>.<br>Same <b>vowel</b> sound &rarr; <b>assonance</b>.<br>Same <b>consonant</b> sound in the middle or end &rarr; <b>consonance</b>.'},
-      {front:'Pick the MOST Exact Answer', back:'&ldquo;It repeats sounds&rdquo; is true of all three. For alliteration the best answer is the exact one: <b>it repeats beginning consonant sounds</b>.'}
+      {front:'Fact', back:'A statement that is <b>true and can be accepted</b>. It is based on actual <b>research and observation</b> and backed by <b>scientific evidence</b>.'},
+      {front:'Fact Examples', back:'The Earth orbits the Sun.<br>Water boils at 100°C at sea level.<br>Water can exist as a solid, liquid, or gas.<br>Australia has six states and two territories.'},
+      {front:'Opinion', back:'A statement based on the <b>beliefs, feelings, and judgements</b> of people. It <b>cannot be proven</b> as true.'},
+      {front:'Opinion Examples', back:'Chocolate ice cream is the best flavour.<br>This movie is boring.<br>Students should have less homework.<br>Summer is the greatest season of all time.'},
+      {front:'Opinion Signal Words', back:'Opinions often (not always) use <b>I think</b>, or words like <b>good, better, the best</b>.'},
+      {front:'Why It’s an Opinion', back:'“Chocolate cake is the best dessert” is an opinion because <b>somebody else may like another dessert</b>.'},
+      {front:'Fact or Bluff?', back:'“The Earth is the largest planet in our solar system.” &rarr; <b>Bluff!</b> A false statement is not a fact.<br>“According to a study, mice can jump up to 18 inches.” &rarr; backed by research, so it is based on facts.'}
     ],
     quiz:[
-      {q:'How does alliteration make the sentence &ldquo;<i>Silly snakes slide silently</i>&rdquo; more interesting?', options:['It repeats beginning consonant sounds.','It repeats sounds.','It tells a story.','It adds meaning.'], correct:0, explain:'&ldquo;It repeats sounds&rdquo; is not wrong, but it is not the <b>best</b> answer. Alliteration repeats the <b>beginning consonant</b> sound: s-s-s-s.'},
-      {q:'Why is &ldquo;<i>The light of the fire is bright</i>&rdquo; an example of assonance?', options:['because it repeats vowel sounds in nearby words','because it repeats the same letters in every word','because it tells a short story about a fire','because it rhymes at the end of every word'], correct:0, explain:'light, fire, bright all share the long <b>i vowel</b> sound &mdash; that is assonance.'},
-      {q:'Which of the following sentences uses <b>consonance</b> correctly?', options:['The black sack stuck in the back.','The dog barked at me.','The doorbell rang very loudly today.','My friend waved hello.'], correct:0, explain:'black, sack, stuck, back all repeat the <b>k</b> consonant sound at the end.'},
-      {q:'True or False: Alliteration repeats the vowel sounds in the middle of words.', options:['True','False'], correct:1, explain:'False — that describes <b>assonance</b>. Alliteration repeats the <b>beginning consonant</b> sounds.'},
-      {q:'True or False: &ldquo;Big brown bears bounce&rdquo; is an example of alliteration.', options:['True','False'], correct:0, explain:'Correct — every word begins with the same <b>b</b> sound.'},
-      {q:'True or False: Assonance is the repetition of vowel sounds in nearby words.', options:['True','False'], correct:0, explain:'Correct — like the long <i>i</i> in &ldquo;The light of the fire is bright.&rdquo;'},
-      {q:'&ldquo;<i>Peter picked pink peppers.</i>&rdquo; This is an example of&hellip;', options:['Alliteration','Assonance','Personification','Metaphor'], correct:0, explain:'Every word starts with the <b>p</b> sound &mdash; alliteration.'},
-      {q:'&ldquo;<i>Go slow over the road.</i>&rdquo; The long <i>o</i> sound repeats. This is an example of&hellip;', options:['Assonance','Alliteration','Metaphor','Simile'], correct:0, explain:'A repeated <b>vowel</b> sound (go, slow, over, road) is assonance.'},
-      {q:'True or False: Consonance is the repetition of vowel sounds in nearby words.', options:['True','False'], correct:1, explain:'False — that is <b>assonance</b>. Consonance repeats <b>consonant</b> sounds, like the <b>k</b> in &ldquo;The black sack stuck in the back.&rdquo;'},
-      {q:'Which sound is repeated in &ldquo;<i>Silly snakes slide silently</i>&rdquo;?', options:['the s sound at the start of each word','the long i sound in each word','the k sound at the end of each word','the t sound in the middle of each word'], correct:0, explain:'Each word begins with <b>s</b> &mdash; that repeated beginning sound is what makes it alliteration.'}
+      {q:'“Water can exist as a solid, liquid, or gas.”', options:['Fact','Opinion'], correct:0, explain:'It is backed by scientific evidence &mdash; a fact.'},
+      {q:'“Summer is the greatest season of all time.”', options:['Opinion','Fact'], correct:0, explain:'“Greatest” is a feeling &mdash; others may prefer another season. Opinion.'},
+      {q:'“The Earth orbits the Sun.”', options:['Fact','Opinion'], correct:0, explain:'It can be scientifically proven &mdash; a fact.'},
+      {q:'“This movie is boring.”', options:['Opinion','Fact'], correct:0, explain:'It is a personal judgment &mdash; an opinion.'},
+      {q:'“Australia has six states and two territories.”', options:['Fact','Opinion'], correct:0, explain:'It is a geographical fact that can be checked.'},
+      {q:'“Students should have less homework.”', options:['Opinion','Fact'], correct:0, explain:'It is a debatable viewpoint &mdash; an opinion.'},
+      {q:'Which statement is a <b>fact</b>?', options:['Water boils at 100°C at sea level.','Chocolate cake is the best dessert.','Summer is the greatest season of all.','Chocolate ice cream is the best flavour.'], correct:0, explain:'Only the boiling point can be proven with evidence. The others use “best” or “greatest”.'},
+      {q:'Which statement is based on facts?', options:['According to a study, mice can jump up to 18 inches in the air.','Mice love cheese.'], correct:0, explain:'It is backed by <b>a study</b> &mdash; research and evidence.'},
+      {q:'True or False: An opinion can be proven true with scientific evidence.', options:['True','False'], correct:1, explain:'False — an opinion is based on beliefs and feelings and <b>cannot be proven</b>.'},
+      {q:'True or False: Words like “best” and “better” often signal an opinion.', options:['True','False'], correct:0, explain:'Correct — superlatives and comparatives often show a personal judgment.'},
+      {q:'True or False: “The Earth is the largest planet in our solar system” is a fact.', options:['True','False'], correct:1, explain:'False — in the Fact or Bluff game this was a <b>bluff</b>. A false statement is not a fact.'},
+      {q:'Why is “Chocolate cake is the best dessert” an <b>opinion</b>?', options:['Other people may like a different dessert.','It was written in a science textbook.','It can be measured with a ruler.','Everyone in the world agrees with it.'], correct:0, explain:'It is based on one person’s feeling &mdash; <b>somebody else may think of another dessert</b>.'}
     ]
   },
   {
-    id:'figurative',
-    icon:'🌬️',
-    title:'Figurative Language',
-    subtitle:'Personification, metaphor & simile',
+    id:'visual',
+    icon:'🖼️',
+    title:'Visual Elements',
+    subtitle:'Lines, symbols, colors & more',
     cards:[
-      {front:'Figurative Language', back:'Words that mean <b>more than their exact meaning</b>, used to paint a picture in the reader&rsquo;s mind.'},
-      {front:'Personification', back:'Gives <b>human actions or feelings</b> to <b>non-human things</b>.<br>&ldquo;The angry storm <b>shouted</b> at the sea.&rdquo;<br>&ldquo;The leaves <b>danced</b> in the air.&rdquo;'},
-      {front:'Proving Personification', back:'Point to the <b>human action</b> and the <b>non-human thing</b> doing it. Leaves cannot really dance &mdash; so &ldquo;the leaves danced&rdquo; is personification.'},
-      {front:'Not Personification', back:'&ldquo;The wind blew.&rdquo; &ldquo;The stars shine brightly.&rdquo; &ldquo;The flowers move in the breeze.&rdquo; These things <b>really do</b> that &mdash; no human action is given.'},
-      {front:'Metaphor', back:'Says one thing <b>is</b> another, <b>without</b> like or as.<br>&ldquo;The classroom <b>was a zoo</b>.&rdquo; &rarr; it was noisy and wild, not full of animals.'},
-      {front:'Simile', back:'Compares two things <b>using like or as</b>.<br>&ldquo;Her smile was <b>as bright as</b> the sun.&rdquo;'},
-      {front:'Metaphor or Just a Fact?', back:'Not every &ldquo;is a&rdquo; sentence is a metaphor. &ldquo;My brother is a <b>doctor</b>&rdquo; is <b>really true</b> &mdash; that is a complement noun. &ldquo;The classroom was a <b>zoo</b>&rdquo; is <b>not really true</b> &mdash; that is a metaphor.'},
-      {front:'Metaphor vs Simile', back:'Has <b>like</b> or <b>as</b>? &rarr; simile.<br>Says it simply <b>is</b> the other thing? &rarr; metaphor.'}
+      {front:'Visual Elements', back:'The <b>pictures, colors, symbols, shapes, fonts</b>, and other visual features used in a text to <b>communicate ideas or feelings</b>. They make an output vivid and stir the reader’s emotions.'},
+      {front:'Lines', back:'Show <b>pattern, growth, depth, movement</b>, and emotions. They can be natural or man-made.<br>The line a swing makes represents <b>height</b>.'},
+      {front:'Symbols', back:'<b>Represent concepts</b> and suggest the overall message.<br>A child represents <b>youthful imagination</b>.'},
+      {front:'Colors', back:'Suggest <b>mood</b> and create <b>atmosphere</b>.<br>White clouds represent a <b>joyful</b> atmosphere.'},
+      {front:'Gaze', back:'Shows the connection between the viewer and the subject &mdash; <b>where the subject is looking</b>.<br>The child on the swing looking up adds to the positive atmosphere.'},
+      {front:'Framing', back:'The <b>layout</b> of the visual elements. It <b>draws attention</b> to the subject.<br>The framing focuses on the joy of the child.'},
+      {front:'Social Distance', back:'How <b>close</b> the subject is to the viewer.<br>A child shown far away suggests a more <b>objective</b> look.'}
     ],
     quiz:[
-      {q:'Which of the following statements shows <b>personification</b>?', options:['The angry storm shouted at the sea.','The wind blew.','The stars shine brightly.','The flowers moved gently in the breeze.'], correct:0, explain:'A storm cannot really be angry or shout &mdash; those are <b>human</b> actions. The other three are things that really happen.'},
-      {passage:CLASSROOM, q:'What part of the text above is an example of a <b>metaphor</b>?', options:['The classroom was a zoo.','The classroom was noisy during recess.','The teacher smiled as she watched them enjoy their break.','Students laughed and talked while moving around their seats.'], correct:0, explain:'It says the classroom <b>is</b> a zoo, without like or as. The other sentences mean exactly what they say.'},
-      {q:'&ldquo;<i>The wind blew softly through the trees as the leaves danced in the air.</i>&rdquo; How can you prove this uses personification?', options:['It gives leaves a human action: dancing.','It uses sensory details about the air.','It exaggerates how strong the wind is.','It compares two things using like or as.'], correct:0, explain:'Leaves cannot really <b>dance</b> &mdash; a human action is given to a non-human thing.'},
-      {q:'True or False: &ldquo;The wind blew&rdquo; is personification.', options:['True','False'], correct:1, explain:'False — wind really does blow. No human action is given to it.'},
-      {q:'True or False: A metaphor compares two things without using like or as.', options:['True','False'], correct:0, explain:'Correct — &ldquo;The classroom was a zoo.&rdquo;'},
-      {q:'True or False: &ldquo;The classroom was a zoo&rdquo; means there were real animals in the classroom.', options:['True','False'], correct:1, explain:'False — it is a <b>metaphor</b>. It means the classroom was noisy and wild, like a zoo.'},
-      {q:'&ldquo;<i>Her smile was as bright as the sun.</i>&rdquo; This is a&hellip;', options:['Simile','Metaphor','Personification','Alliteration'], correct:0, explain:'It compares using <b>as</b> &mdash; a simile.'},
-      {q:'&ldquo;<i>The sun smiled down on us.</i>&rdquo; This is an example of&hellip;', options:['Personification','Simile','Metaphor','Alliteration'], correct:0, explain:'The sun cannot really smile &mdash; a human action given to a non-human thing.'},
-      {q:'True or False: A simile uses the words like or as to compare.', options:['True','False'], correct:0, explain:'Correct — that is the one clue that tells a simile from a metaphor.'},
-      {q:'&ldquo;<i>My brother is a sleepy bear in the morning.</i>&rdquo; This is an example of&hellip;', options:['Metaphor','Simile','Personification','Assonance'], correct:0, explain:'He is not really a bear &mdash; it says he <b>is</b> one, with no like or as, to show how sleepy he is. That is a metaphor.'},
-      {q:'Which sentence is a <b>metaphor</b>?', options:['My sister is a shining star on stage.','My brother is a doctor at the hospital.','My aunt is an excellent chef.','Mrs. Santos became the principal.'], correct:0, explain:'Your sister is not really a star &mdash; that is a metaphor. The other three are <b>really true</b>, so they are just sentences with a complement noun.'}
-    ]
-  },
-  {
-    id:'conclusions',
-    icon:'🔍',
-    title:'Drawing Conclusions',
-    subtitle:'Clues + experience = hidden ideas',
-    cards:[
-      {front:'Drawing a Conclusion', back:'Understanding the <b>hidden ideas</b> in a text &mdash; the things it <b>does not say directly</b>.'},
-      {front:'The Formula', back:'<b>Clues + personal experience = conclusion</b>.<br>Readers draw conclusions <b>by combining clues with personal experience to understand hidden ideas in the text</b>. (Item 13 on your summative test &mdash; answer D.)'},
-      {front:'Sara&rsquo;s Test', back:'Clues: studied every night, finished assignments on time, <b>smiled</b> at her score.<br>Conclusion: Sara <b>likely got a good score</b>.'},
-      {front:'Tom&rsquo;s Umbrella', back:'Clues: grabbed his umbrella; the sky was dark and cloudy.<br>Conclusion: it might rain.<br>The <b>best</b> supporting detail is the most complete one: <b>the dark and cloudy sky</b>.'},
-      {front:'Jake in Class', back:'Clues: yawned many times, rubbed his eyes, rested his head on his desk.<br>Conclusion: Jake is tired &mdash; he <b>probably did not get enough sleep</b> the night before.'},
-      {front:'Clue or Conclusion?', back:'&ldquo;Jake yawned&rdquo; just <b>repeats</b> a clue. A conclusion <b>goes beyond</b> what is written, and often uses words like <i>probably</i> or <i>likely</i>.'},
-      {front:'Don&rsquo;t Go Too Far', back:'A conclusion must be <b>supported</b> by the clues. &ldquo;Sara got a half score&rdquo; is not supported &mdash; she smiled.'}
-    ],
-    quiz:[
-      {q:'How do readers draw conclusions when reading a text?', options:['by noticing clues','by connecting text clues with what they already know to form a clear idea','by using text details and identifying important information from the passage','by combining clues with personal experience to understand hidden ideas in the text'], correct:3, explain:'The key words are <b>hidden ideas</b>. A conclusion is about what the text does <i>not</i> say directly, and you reach it by combining the clues with your <b>personal experience</b>. Option &ldquo;connecting text clues with what they already know to form a clear idea&rdquo; sounds close, but your teacher&rsquo;s answer is the one that names <b>personal experience</b> and <b>hidden ideas</b>.'},
-      {q:'&ldquo;<i>Sara studied every night and completed all her assignments on time. She smiled when she saw her test score.</i>&rdquo; What can you conclude?', options:['Sara likely got a good score on her test.','Sara took a test and got a low score.','Sara studied hard for her exam and got a half score.','Sara is happily studying every night.'], correct:0, explain:'Studying hard + smiling at the score &rarr; she <b>likely got a good score</b>. &ldquo;Sara is happily studying every night&rdquo; only repeats a clue &mdash; it is not a conclusion.'},
-      {q:'&ldquo;<i>Tom grabbed his umbrella before leaving the house. The sky was dark and cloudy.</i>&rdquo; Which detail <b>best</b> supports the conclusion that it might rain?', options:['the dark and cloudy sky','the sky','the umbrella','The sky is cloudy.'], correct:0, explain:'Pick the <b>most complete</b> weather clue. &ldquo;The dark and cloudy sky&rdquo; says more than &ldquo;the sky&rdquo; or &ldquo;cloudy&rdquo; alone. The umbrella only shows what Tom <i>did</i>; the sky is the proof that rain may come.'},
-      {q:'True or False: For the passage about Jake, &ldquo;Jake yawned&rdquo; is a good conclusion.', options:['True','False'], correct:1, explain:'False — it only <b>repeats a clue</b>. A conclusion goes beyond it: Jake is tired and probably did not get enough sleep.'},
-      {q:'True or False: To draw a conclusion, you combine clues from the text with your personal experience.', options:['True','False'], correct:0, explain:'Correct — clues + personal experience = conclusion. That is how you understand the hidden ideas in a text.'},
-      {q:'&ldquo;<i>Ben&rsquo;s shirt was muddy and grass-stained. He was holding a soccer ball and breathing hard.</i>&rdquo; What can you conclude?', options:['Ben had just been playing soccer outside.','Ben was holding a soccer ball in his hands.','Ben lost his soccer ball at school today.','Ben was sleeping in his room all afternoon.'], correct:0, explain:'Mud + grass stains + ball + breathing hard &rarr; he was <b>playing soccer outside</b>. &ldquo;Ben was holding a soccer ball&rdquo; only repeats a clue &mdash; it is not a conclusion.'},
-      {passage:LUNCHBOX_1, q:'What can you conclude from this part of the story?', options:['Lara&rsquo;s lunchbox was not in the classroom.','Lara did not want to eat her lunch that day.','Lara&rsquo;s friends hid her lunchbox as a joke.','Lara found her lunchbox inside her locker.'], correct:0, explain:'She checked her desk, locker and the classroom shelves and could not find it, so it was <b>not in the classroom</b>. Nothing says her friends hid it.'},
-      {q:'True or False: A good conclusion must be supported by clues in the text.', options:['True','False'], correct:0, explain:'Correct — if no clue supports it, it is just a guess.'},
-      {q:'True or False: If a story says &ldquo;Mia smiled and hugged her puppy,&rdquo; you can conclude that Mia was angry.', options:['True','False'], correct:1, explain:'False — smiling and hugging are clues that she was <b>happy</b> or relieved, not angry.'},
-      {q:'&ldquo;<i>Jake yawned many times and rubbed his eyes during class. He rested his head on his desk.</i>&rdquo; Which of these is a <b>conclusion</b>, not just a clue?', options:['Jake probably did not get enough sleep.','Jake yawned many times.','Jake rubbed his eyes during class.','Jake rested his head on his desk in class.'], correct:0, explain:'The other three are written right in the text. The conclusion goes beyond them.'}
-    ]
-  },
-  {
-    id:'traits',
-    icon:'🧑‍🤝‍🧑',
-    title:'Character Traits',
-    subtitle:'Trait or feeling? Prove it with because',
-    cards:[
-      {front:'Character Trait', back:'A word that tells what a character is <b>usually like</b> &mdash; their personality.<br><i>helpful, patient, organized, kind, careless, brave</i>'},
-      {front:'Feeling (NOT a trait)', back:'How a character feels <b>at one moment</b>. It changes quickly.<br><i>overwhelmed, tired, happy, scared, excited</i>'},
-      {front:'The All-the-Time Test', back:'Ask: &ldquo;Is this person like this <b>all the time</b>, or just <b>right now</b>?&rdquo;<br>All the time &rarr; trait. Right now &rarr; feeling.'},
-      {front:'Your Test: &ldquo;Overwhelmed&rdquo;', back:'On your summative test, &ldquo;Liam is <b>overwhelmed</b>&rdquo; was marked <b>not a trait</b>. Overwhelmed is a <b>feeling</b>. Choose a personality word instead.'},
-      {front:'Inferring a Trait', back:'Look at what the character <b>does</b>, <b>says</b>, and <b>how they treat others</b>. Then name the personality those actions show.'},
-      {front:'The Answer Format', back:'&ldquo;<b>___ is ___ because ___.</b>&rdquo;<br>Give the <b>trait</b>, then the <b>evidence</b> from the text. The &ldquo;because&rdquo; part earns points too.'},
-      {front:'Sofia', back:'<b>Organized</b> &mdash; organized her materials before class began.<br><b>Helpful</b> &mdash; offered to help Liam and explained step by step.<br><b>Patient</b> &mdash; stayed patient even when Liam made mistakes.'},
-      {front:'Liam', back:'Clues: rushed in as the bell rang, dropped his bag loudly, sighed whenever something seemed difficult.<br>Traits you could infer: <b>careless</b>, or <b>easily discouraged</b>.'}
-    ],
-    quiz:[
-      {q:'Which word is a <b>character trait</b>?', options:['helpful','tired','overwhelmed','scared'], correct:0, explain:'Helpful describes what someone is <b>usually like</b>. The other three are feelings.'},
-      {q:'Which word is a <b>feeling</b>, not a trait?', options:['overwhelmed','organized','patient','helpful'], correct:0, explain:'Overwhelmed is how someone feels <b>right now</b> &mdash; exactly the word marked &ldquo;not a trait&rdquo; on your test.'},
-      {q:'True or False: &ldquo;Overwhelmed&rdquo; is a character trait.', options:['True','False'], correct:1, explain:'False — overwhelmed is a <b>feeling</b>. It changes from moment to moment.'},
-      {q:'True or False: A character trait tells what a character is usually like.', options:['True','False'], correct:0, explain:'Correct — it is their personality, not a passing mood.'},
-      {passage:LIAM_SOFIA, q:'&ldquo;Sofia had already organized her materials before class began.&rdquo; Which trait does this show?', options:['organized','lazy','careless','nervous'], correct:0, explain:'Getting everything ready before class shows she is <b>organized</b>.'},
-      {passage:LIAM_SOFIA, q:'&ldquo;She stayed patient, even when Liam made mistakes.&rdquo; This shows Sofia is&hellip;', options:['patient','impatient','tired','bossy'], correct:0, explain:'The text tells you directly: she <b>stayed patient</b>.'},
-      {passage:LIAM_SOFIA, q:'Which is the <b>best</b> answer in the &ldquo;___ is ___ because ___&rdquo; format?', options:['Sofia is helpful because she offered to help Liam and explained the steps.','Sofia is nervous because she organized all of her materials before class.','Sofia is careless because she explained the instructions to Liam step by step.','Sofia is happy because the bell rang and the class began that morning.'], correct:0, explain:'A real trait (<b>helpful</b>) with evidence from the text that proves it.'},
-      {passage:LIAM_SOFIA, q:'True or False: &ldquo;He sighed whenever something seemed difficult&rdquo; is a clue that can help you infer one of Liam&rsquo;s traits.', options:['True','False'], correct:0, explain:'Correct — sighing every time work gets hard suggests he is <b>easily discouraged</b>.'},
-      {q:'True or False: A good trait answer only needs the trait word; the &ldquo;because&rdquo; part is optional.', options:['True','False'], correct:1, explain:'False — the <b>because</b> part is the evidence, and it is worth points on your test.'},
-      {passage:LIAM_SOFIA, q:'&ldquo;Liam rushed into the classroom just as the bell rang, dropping his bag loudly on the floor.&rdquo; Which trait fits Liam best?', options:['careless','organized','patient','calm'], correct:0, explain:'Rushing in at the last second and dropping his bag loudly shows he is <b>careless</b>. Organized and patient describe Sofia, and nothing Liam does is calm.'}
+      {q:'What are <b>visual elements</b>?', options:['pictures, colors, symbols, and fonts that share ideas','the words a character says in a story','the order of events in a story’s plot','the sounds that repeat in a poem'], correct:0, explain:'Visual elements are the pictures, colors, symbols, shapes and fonts used to communicate ideas or feelings.'},
+      {q:'Which visual element shows <b>where the subject is looking</b>?', options:['gaze','framing','lines','colors'], correct:0, explain:'<b>Gaze</b> connects the viewer and the subject through where the subject looks.'},
+      {q:'Which visual element suggests <b>mood</b> and creates atmosphere?', options:['colors','gaze','social distance','framing'], correct:0, explain:'<b>Colors</b> suggest mood &mdash; white clouds for a joyful atmosphere.'},
+      {q:'Which visual element is the <b>layout</b> that draws attention to the subject?', options:['framing','symbols','lines','gaze'], correct:0, explain:'<b>Framing</b> is the layout that focuses your attention on the subject.'},
+      {q:'What does <b>social distance</b> refer to?', options:['how close the subject is to the viewer','where the subject is looking','which colors are used','how big the letters are'], correct:0, explain:'Social distance is the <b>proximity</b> of the subject and the viewer.'},
+      {q:'What do <b>symbols</b> do in a visual text?', options:['represent concepts or ideas','show where the subject looks','list the steps of a process','tell the order of events'], correct:0, explain:'Symbols represent concepts &mdash; a child can represent youthful imagination.'},
+      {q:'True or False: Lines can show movement, growth, and height.', options:['True','False'], correct:0, explain:'Correct — the line a swing makes represents height.'},
+      {q:'True or False: A subject shown far from the viewer suggests a more objective look.', options:['True','False'], correct:0, explain:'Correct — that is what social distance tells us.'},
+      {q:'True or False: Visual elements have nothing to do with the meaning of a text.', options:['True','False'], correct:1, explain:'False — they <b>contribute to the meaning and purpose</b> of a text.'},
+      {q:'True or False: In the swing poster, the white clouds create a gloomy, sad atmosphere.', options:['True','False'], correct:1, explain:'False — white clouds represent a <b>joyful</b> atmosphere.'},
+      {passage:WATER_POSTER, q:'Why are the words <b>SAVE WATER</b> printed so large?', options:['to catch the reader’s attention first','to fill up the empty space on the poster','because the poster has no pictures at all','to make the poster harder to read'], correct:0, explain:'Big words are the first thing the eye sees, so the main message stands out.'},
+      {passage:WATER_POSTER, q:'What <b>message</b> does this poster want to share?', options:['to encourage people to save water','to teach how to fix a kitchen tap','to sell a new kind of water bottle','to tell a funny story about a boy'], correct:0, explain:'The pictures, symbols and words all work together to encourage people to <b>save water</b>.'}
     ]
   }
 ];
-const FINAL_EXAM_PER_LESSON = 2;
+const FINAL_EXAM_PER_LESSON = 1;
 const SH = window.StudyHistory, SH_APP = 'page-turners', SH_TITLE = 'Page Turners';
 let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'pageturners_progress_v1';
@@ -698,7 +1160,13 @@ const STRATEGY = [
   {kicker:'Sound Devices Tip', title:'Start, vowel, or consonant?', body:'Same sound at the <b>start</b> of words &rarr; alliteration. Same <b>vowel</b> sound &rarr; assonance. Same <b>consonant</b> sound in the middle or end &rarr; consonance.'},
   {kicker:'Story Tip', title:'Climb the plot mountain', body:'Exposition (meet the characters and setting) &rarr; rising action (the problem builds) &rarr; climax (the top) &rarr; falling action (after the climax) &rarr; resolution (the end).'},
   {kicker:'Figurative Language Tip', title:'Prove it by naming the human action', body:'For personification, point to what a non-human thing is doing that only people do: the leaves <b>danced</b>, the storm <b>shouted</b>. If it is something the thing really does (the wind blew), it is not personification.'},
-  {kicker:'Summary Tip', title:'Would the story still make sense without it?', body:'If yes, it is a <b>minor detail</b> &mdash; leave it out. Colours, clothes, and exactly where something sat are almost always minor.'}
+  {kicker:'Summary Tip', title:'Would the story still make sense without it?', body:'If yes, it is a <b>minor detail</b> &mdash; leave it out. Colours, clothes, and exactly where something sat are almost always minor.'},
+  {kicker:'Fact vs Opinion Tip', title:'Can it be proven?', body:'If research or evidence can prove it, it is a <b>fact</b>. If it is a belief or feeling, it is an <b>opinion</b>. Watch for <b>I think</b>, <b>better</b>, and <b>the best</b>.'},
+  {kicker:'Author’s Purpose Tip', title:'Inform, entertain, or describe?', body:'Facts and steps &rarr; <b>inform</b>. A story that makes you laugh, feel curious, or scared &rarr; <b>entertain</b>. Details that help you picture how something looks &rarr; <b>describe</b>.'},
+  {kicker:'Tone & Mood Tip', title:'Author or reader?', body:'<b>Tone</b> is the author’s attitude, shown by word choice. <b>Mood</b> is what you, the reader, feel. Formal tone = no slang, full words. Informal = contractions, warm and chatty.'},
+  {kicker:'Outline Tip', title:'I &rarr; A &rarr; 1', body:'Roman numerals for <b>main topics</b>, capital letters for <b>subtopics</b>, Arabic numerals for <b>points</b>. Indent each level further in.'},
+  {kicker:'Pronoun Tip', title:'Near or far? One or more?', body:'<b>this</b> (near, one) &middot; <b>these</b> (near, many) &middot; <b>that</b> (far, one) &middot; <b>those</b> (far, many). Pronouns ending in -self or -selves are <b>reflexive</b>.'},
+  {kicker:'Generalization Tip', title:'Many examples, not just one', body:'A good generalization comes from <b>several</b> examples. Words like <b>everyone</b> can make it faulty; <b>many</b> is safer.'}
 ];
 
 let currentLessonIdx = null;
