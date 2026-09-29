@@ -283,6 +283,19 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .points-live{font-size:.85rem; font-weight:800; color:var(--ink); white-space:nowrap;}
 .points-live .streak{color:var(--bad); margin-left:4px;}
 .points-earned{font-size:1rem; font-weight:800; color:var(--ink); margin-bottom:6px;}
+/* ---- Learn from a wrong answer ---- */
+.learn{display:flex; flex-direction:column; gap:8px;}
+.learn-row{background:var(--surface); border-radius:12px; padding:9px 12px; border-left:5px solid var(--bad); line-height:1.5;}
+.learn-row b.learn-label{display:block; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft);}
+.learn-row .learn-choice{font-weight:800;}
+.learn-row .learn-why{display:block; margin-top:3px;}
+.learn-right{border-left-color:var(--good);}
+.learn-tip{border-left-color:var(--gold);}
+.missed-review{text-align:left; margin:14px 0 18px; padding-top:14px; border-top:1px solid var(--border);}
+.missed-review h3{text-align:center; margin:0 0 10px; font-size:1rem;}
+.missed-list{max-height:420px; overflow-y:auto;}
+.missed-item{background:var(--surface2); border-radius:12px; padding:12px 14px; margin-bottom:10px; font-size:0.9rem;}
+.missed-item .missed-q{font-weight:700; margin:0 0 8px;}
 </style>
 
 <div class="app">
@@ -395,6 +408,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <div class="score-line" id="results-score"></div>
       <div class="points-earned" id="points-earned"></div>
       <div class="results-stars" id="results-stars"></div>
+      <div class="missed-review hidden" id="missed-review"></div>
       <div class="results-actions">
         <button class="primary-btn" style="width:auto" onclick="retryLesson()">Try Again</button>
         <button class="secondary-btn" onclick="goHome()">Lesson Map</button>
@@ -430,14 +444,19 @@ function fracToString(num, den){
 }
 
 /* ---- Helper: build a shuffled multiple-choice question ---- */
-function mcQuestion(qText, correctText, wrongTexts, explain){
+/* A wrong answer may be a plain string or [text, why it is wrong]. */
+function mcQuestion(qText, correctText, wrongTexts, explain, tip){
   const uniqueWrong = [];
-  wrongTexts.forEach(t=>{ if(t !== correctText && !uniqueWrong.includes(t)) uniqueWrong.push(t); });
-  const opts = [{text:correctText, correct:true}, ...uniqueWrong.map(t=>({text:t, correct:false}))];
+  wrongTexts.forEach(w=>{
+    const [t, why] = Array.isArray(w) ? w : [w, ''];
+    if(t !== correctText && !uniqueWrong.some(u=>u.text === t)) uniqueWrong.push({text:t, why});
+  });
+  const opts = [{text:correctText, correct:true, why:''}, ...uniqueWrong.map(u=>({text:u.text, correct:false, why:u.why}))];
   const order = shuffle(opts.map((_,i)=>i));
   const options = order.map(i=>opts[i].text);
+  const why = order.map(i=>opts[i].why);
   const correct = order.findIndex(i=>opts[i].correct);
-  return { q:qText, options, correct, explain };
+  return { q:qText, options, correct, explain, why, tip };
 }
 
 /* ================= GENERATOR: Divisibility Rules ================= */
@@ -463,6 +482,40 @@ function divisibilityExplain(n, d, isTrue){
     }
   }
 }
+/* The rule for d applied to n, with the real numbers: "its last two digits 36 ÷ 4 = 9" */
+function divisibilityCheck(n, d){
+  const digits = String(n).split('').map(Number);
+  const sum = digits.reduce((a,b)=>a+b, 0);
+  const last = n % 10;
+  const tail = (k, text) => {
+    const part = Number(text);
+    const q = Math.floor(part / d), r = part % d;
+    return `its last ${k} digits make ${part}, and ${part} &divide; ${d} = ${q}${r ? ` remainder ${r}` : ' exactly'}`;
+  };
+  switch(d){
+    case 2: return `it ends in ${last}, which is ${last % 2 === 0 ? 'even' : 'odd'}`;
+    case 5: return `it ends in ${last}${last === 0 || last === 5 ? '' : ', not 0 or 5'}`;
+    case 10: return `it ends in ${last}${last === 0 ? '' : ', not 0'}`;
+    case 3: case 9: return `its digits add up to ${digits.join('+')} = ${sum}, and ${sum} ${sum % d === 0 ? 'is' : 'is not'} divisible by ${d}`;
+    case 4: return tail('two', String(n).slice(-2));
+    case 8: return tail('three', String(n).slice(-3));
+    case 6: return `it ${n % 2 === 0 ? 'is' : 'is not'} even, and its digit sum ${sum} ${sum % 3 === 0 ? 'is' : 'is not'} divisible by 3`;
+  }
+}
+function divisionFact(n, d){
+  const q = Math.floor(n / d), r = n % d;
+  return `${n.toLocaleString()} &divide; ${d} = ${q.toLocaleString()}${r ? ` remainder ${r}` : ' with nothing left over'}`;
+}
+const DIVISIBILITY_TIPS = {
+  2: 'For 2, look only at the last digit: 0, 2, 4, 6 or 8 means yes.',
+  3: 'For 3, add up every digit. If the total is in the 3 times table, the number is divisible by 3.',
+  4: 'For 4, cover everything except the last two digits and divide just that small number by 4.',
+  5: 'For 5, look only at the last digit: it must be 0 or 5.',
+  6: 'For 6, run two checks: is it even (rule for 2)? Do its digits add up to a multiple of 3 (rule for 3)? It needs BOTH.',
+  8: 'For 8, cover everything except the last three digits and divide just that number by 8.',
+  9: 'For 9, add up every digit. If the total is in the 9 times table, the number is divisible by 9.',
+  10: 'For 10, look only at the last digit: it must be 0.'
+};
 function genDivisibilityTF(){
   const d = pick(DIVISORS);
   const wantTrue = Math.random() < 0.5;
@@ -475,11 +528,16 @@ function genDivisibilityTF(){
     n = base + r;
   }
   const actual = n % d === 0;
+  const N = n.toLocaleString();
+  const why = actual
+    ? `It IS divisible by ${d}: ${divisibilityCheck(n, d)}. Check: ${divisionFact(n, d)}.`
+    : `It is NOT divisible by ${d}: ${divisibilityCheck(n, d)}. Check: ${divisionFact(n, d)}, so ${N} is not divisible by ${d}.`;
   return mcQuestion(
-    `True or False: ${n.toLocaleString()} is divisible by ${d}.`,
+    `True or False: ${N} is divisible by ${d}.`,
     actual ? 'True' : 'False',
-    [actual ? 'False' : 'True'],
-    divisibilityExplain(n, d, actual)
+    [[actual ? 'False' : 'True', why]],
+    divisibilityExplain(n, d, actual),
+    DIVISIBILITY_TIPS[d] + ' Then say True only if the rule works.'
   );
 }
 function genDivisibilityMC(){
@@ -498,7 +556,10 @@ function genDivisibilityMC(){
     q: `Which of these numbers IS divisible by ${d}?`,
     options: allNums.map(x=>x.toLocaleString()),
     correct: correctIdx,
-    explain: divisibilityExplain(correctN, d, true) + ` The other numbers leave a remainder when divided by ${d}.`
+    explain: divisibilityExplain(correctN, d, true) + ` The other numbers leave a remainder when divided by ${d}.`,
+    why: allNums.map(x => x === correctN ? ''
+      : `${x.toLocaleString()} is not divisible by ${d}: ${divisibilityCheck(x, d)}. Check: ${divisionFact(x, d)}.`),
+    tip: DIVISIBILITY_TIPS[d] + ' Test every choice with the rule and cross out each one that fails.'
   };
 }
 function genDivisibilitySet(n){
@@ -508,31 +569,43 @@ function genDivisibilitySet(n){
 /* ================= GENERATOR: Order of Operations (GEMDAS) ================= */
 function genGemdasQuestion(){
   const template = pick(['A','B','C','D']);
-  let q, correct, mistake, explain;
+  let q, correct, mistake, explain, mistakeWhy, recheck, tip;
   if(template === 'A'){
     const a = randInt(10, 20), b = randInt(2, a-1), c = randInt(2, 9);
     correct = (a-b)*c;
     mistake = a - b;
     q = `What is the value of (${a} &minus; ${b}) &times; ${c}?`;
     explain = `Parentheses first: ${a} &minus; ${b} = ${a-b}. Then multiply: ${a-b} &times; ${c} = ${correct}.`;
+    mistakeWhy = `${mistake} is only the part inside the parentheses: ${a} &minus; ${b} = ${a-b}. You stopped there and forgot to multiply by ${c}.`;
+    recheck = `Recheck ${a} &minus; ${b} first, then the &times; ${c}.`;
+    tip = 'Parentheses first &mdash; then look OUTSIDE the parentheses. There is still an operation waiting for you.';
   } else if(template === 'B'){
     const a = randInt(2, 15), b = randInt(2, 9), c = randInt(2, 9);
     correct = a + b*c;
     mistake = (a+b)*c;
     q = `What is the value of ${a} + ${b} &times; ${c}?`;
     explain = `Multiply first: ${b} &times; ${c} = ${b*c}. Then add: ${a} + ${b*c} = ${correct}.`;
+    mistakeWhy = `You added before multiplying: (${a} + ${b}) &times; ${c} = ${a+b} &times; ${c} = ${mistake}. GEMDAS says multiply first.`;
+    recheck = `Recheck ${b} &times; ${c}, then the + ${a}.`;
+    tip = 'Say GEMDAS out loud and circle the &times; first. Only add after the multiplying is done.';
   } else if(template === 'C'){
     const a = randInt(2, 9), b = randInt(2, 9), dd = randInt(2, 5), k = randInt(2, 9), c = dd*k;
     correct = a*b + k;
     mistake = a*b + c;
     q = `What is the value of ${a} &times; ${b} + ${c} &divide; ${dd}?`;
     explain = `Divide first: ${c} &divide; ${dd} = ${k}. Multiply: ${a} &times; ${b} = ${a*b}. Then add: ${a*b} + ${k} = ${correct}.`;
+    mistakeWhy = `You skipped the division: ${a*b} + ${c} = ${mistake}. The ${c} had to be divided by ${dd} before adding.`;
+    recheck = `Recheck ${a} &times; ${b} and ${c} &divide; ${dd}, then add the two results.`;
+    tip = 'Circle every &times; and &divide; and do those first. The + waits until both are done.';
   } else {
     const dd = randInt(2, 5), k = randInt(2, 9), b = dd*k, a = randInt(b+5, b+40);
     correct = a - k;
     mistake = a - b;
     q = `What is the value of ${a} &minus; ${b} &divide; ${dd}?`;
     explain = `Divide first: ${b} &divide; ${dd} = ${k}. Then subtract: ${a} &minus; ${k} = ${correct}.`;
+    mistakeWhy = `You skipped the division: ${a} &minus; ${b} = ${mistake}. The ${b} had to be divided by ${dd} before subtracting.`;
+    recheck = `Recheck ${b} &divide; ${dd}, then ${a} minus that.`;
+    tip = 'Circle the &divide; and do it first, even though the &minus; comes first when you read left to right.';
   }
   const extraOffsets = shuffle([-4,-3,-2,-1,1,2,3,4,5]);
   let extra = null;
@@ -540,8 +613,13 @@ function genGemdasQuestion(){
     const candidate = correct + off;
     if(candidate !== correct && candidate !== mistake && candidate >= 0){ extra = candidate; break; }
   }
-  const wrongs = extra !== null ? [mistake, extra] : [mistake];
-  return mcQuestion(q, String(correct), wrongs.map(String), explain);
+  const wrongs = [[String(mistake), mistakeWhy]];
+  if(extra !== null){
+    const off = extra - correct;
+    wrongs.push([String(extra),
+      `${extra} is ${Math.abs(off)} ${off > 0 ? 'more' : 'less'} than the right answer, so the order may be fine but a calculation slipped. ${recheck}`]);
+  }
+  return mcQuestion(q, String(correct), wrongs, explain, tip);
 }
 function genGemdasSet(n){
   return Array.from({length:n}, ()=> genGemdasQuestion());
@@ -552,36 +630,51 @@ function genFractionBasicsQuestion(){
   const shape = pick(['numerator','denominator','concept']);
   const b = randInt(4, 12);
   const a = randInt(1, b-1);
+  const notInFrac = (x, part) => [String(x), `${x} is not one of the numbers in ${a}/${b} at all. The ${part} is a number you can see in the fraction.`];
   if(shape === 'numerator'){
     return mcQuestion(
       `In the fraction ${a}/${b}, what is the numerator?`,
       String(a),
-      [String(b), String(a===1?a+2:a-1), String(b-1)],
-      `The numerator is the TOP number of a fraction. In ${a}/${b}, the top number is ${a}.`
+      [[String(b), `${b} is the BOTTOM number of ${a}/${b}, so it is the denominator. The numerator is the top number.`],
+       notInFrac(a===1?a+2:a-1, 'numerator'), notInFrac(b-1, 'numerator')],
+      `The numerator is the TOP number of a fraction. In ${a}/${b}, the top number is ${a}.`,
+      'Memory hook: Numerator = North (up top), Denominator = Down (at the bottom).'
     );
   }
   if(shape === 'denominator'){
     return mcQuestion(
       `In the fraction ${a}/${b}, what is the denominator?`,
       String(b),
-      [String(a), String(b+1), String(b-1===0?b+2:b-1)],
-      `The denominator is the BOTTOM number of a fraction. In ${a}/${b}, the bottom number is ${b}.`
+      [[String(a), `${a} is the TOP number of ${a}/${b}, so it is the numerator. The denominator is the bottom number.`],
+       notInFrac(b+1, 'denominator'), notInFrac(b-1===0?b+2:b-1, 'denominator')],
+      `The denominator is the BOTTOM number of a fraction. In ${a}/${b}, the bottom number is ${b}.`,
+      'Memory hook: Denominator = Down (at the bottom), Numerator = North (up top).'
     );
   }
   const concepts = [
     { text:`True or False: In a fraction, the denominator tells you how many equal parts make up the whole.`, answer:true,
-      explain:`True &mdash; the denominator (bottom number) always tells you how many equal parts the whole is divided into.` },
+      explain:`True &mdash; the denominator (bottom number) always tells you how many equal parts the whole is divided into.`,
+      why:`The statement matches the rule, so it is not False. Counting the equal parts of the whole really is the denominator&rsquo;s job.`,
+      tip:`Picture a pizza: the bottom number says how many slices it was cut into.` },
     { text:`True or False: In a fraction, the numerator tells you how many equal parts make up the whole.`, answer:false,
-      explain:`False &mdash; that's the denominator's job. The numerator (top number) tells you how many of those parts you HAVE.` },
+      explain:`False &mdash; that's the denominator's job. The numerator (top number) tells you how many of those parts you HAVE.`,
+      why:`The word <b>numerator</b> is the swapped term. Telling how many parts make the whole is the denominator&rsquo;s job, so the statement is not True.`,
+      tip:`Check which word the statement uses, then ask: is that the top number (parts you have) or the bottom number (parts in the whole)?` },
     { text:`True or False: The number on TOP of a fraction is called the denominator.`, answer:false,
-      explain:`False &mdash; the top number is called the numerator. The bottom number is the denominator.` },
+      explain:`False &mdash; the top number is called the numerator. The bottom number is the denominator.`,
+      why:`The word <b>denominator</b> is the swapped term. The top number is the numerator, so the statement is not True.`,
+      tip:`Memory hook: Denominator = Down. If a statement puts the denominator on top, it is False.` },
     { text:`True or False: In the fraction ${a}/${b}, the ${b} tells you the whole has been divided into ${b} equal parts.`, answer:true,
-      explain:`True &mdash; the bottom number (${b}) is the denominator, which always tells you how many equal parts make the whole.` },
+      explain:`True &mdash; the bottom number (${b}) is the denominator, which always tells you how many equal parts make the whole.`,
+      why:`${b} is the bottom number of ${a}/${b}, so it is the denominator &mdash; and the denominator does count the equal parts of the whole. The statement is not False.`,
+      tip:`Find where the number sits: bottom = parts in the whole, top = parts you have.` },
     { text:`True or False: In the fraction ${a}/${b}, the ${a} tells you how many of the ${b} equal parts you have.`, answer:true,
-      explain:`True &mdash; the top number (${a}) is the numerator, which tells you how many parts you have out of the whole.` },
+      explain:`True &mdash; the top number (${a}) is the numerator, which tells you how many parts you have out of the whole.`,
+      why:`${a} is the top number of ${a}/${b}, so it is the numerator &mdash; and the numerator does count the parts you have. The statement is not False.`,
+      tip:`Find where the number sits: top = parts you have, bottom = parts in the whole.` },
   ];
   const c = pick(concepts);
-  return mcQuestion(c.text, c.answer ? 'True' : 'False', [c.answer ? 'False' : 'True'], c.explain);
+  return mcQuestion(c.text, c.answer ? 'True' : 'False', [[c.answer ? 'False' : 'True', c.why]], c.explain, c.tip);
 }
 function genFractionBasicsSet(n){
   return Array.from({length:n}, ()=> genFractionBasicsQuestion());
@@ -613,10 +706,14 @@ function genMultiplyFractionsQuestion(){
       : `Multiply: ${w} &times; ${n1}/${d1} (simplify your answer)`;
     return mc4(
       q, correctStr,
-      [unsimplifiedStr, addMistakeStr, wrongDenMistakeStr],
+      [[unsimplifiedStr, twinWhy(unsimplifiedStr, correctStr)],
+       [addMistakeStr, `You added ${w} + ${n1} = ${w+n1} instead of multiplying, which gives ${addMistakeStr}. ${w} &times; ${n1} = ${productNum}, so the top should be ${productNum}.`],
+       [wrongDenMistakeStr, `You multiplied the denominator by ${w} too (${d1} &times; ${w} = ${d1*w}). Only the numerator is multiplied &mdash; the denominator stays ${d1}, not ${wrongDenMistakeStr}.`]],
       `Multiply the whole number by the <b>numerator</b>, and <b>keep the same denominator</b>.<br>` +
       `${w} &times; ${n1} = ${productNum}, so ${w} &times; ${n1}/${d1} = ${showReduceBold(productNum, productDen)}.` +
-      simplifyNote(productNum, productDen)
+      simplifyNote(productNum, productDen),
+      `Only the TOP number meets the whole number: ${w} &times; top, same bottom. Then ask &ldquo;can I simplify?&rdquo; before you choose.`,
+      `Recheck ${w} &times; ${n1} = ${productNum}, then simplify.`
     );
   }
   if(type === 'fracfrac'){
@@ -630,10 +727,13 @@ function genMultiplyFractionsQuestion(){
     return mc4(
       `Multiply: ${n1}/${d1} &times; ${n2}/${d2} (simplify your answer)`,
       correctStr,
-      [unsimplifiedStr, addAcrossStr],
+      [[unsimplifiedStr, twinWhy(unsimplifiedStr, correctStr)],
+       [addAcrossStr, `You added straight across: ${n1} + ${n2} = ${n1+n2} and ${d1} + ${d2} = ${d1+d2}, giving ${addAcrossStr}. To multiply, use &times; on both: ${n1} &times; ${n2} and ${d1} &times; ${d2}.`]],
       `Multiply <b>straight across</b>: numerator &times; numerator, denominator &times; denominator.<br>` +
       `${n1}&times;${n2} = ${productNum}, and ${d1}&times;${d2} = ${productDen}, giving ${showReduceBold(productNum, productDen)}.` +
-      simplifyNote(productNum, productDen)
+      simplifyNote(productNum, productDen),
+      'Top &times; top, bottom &times; bottom, then simplify. Sense check: two fractions smaller than 1 multiply to an answer smaller than both.',
+      `Recheck ${n1} &times; ${n2} = ${productNum} and ${d1} &times; ${d2} = ${productDen}, then simplify.`
     );
   }
   // mixed number x fraction
@@ -651,10 +751,13 @@ function genMultiplyFractionsQuestion(){
   return mc4(
     `Multiply: ${w} ${n1}/${d1} &times; ${n2}/${d2} (convert the mixed number first, then simplify)`,
     correctStr,
-    [unsimplifiedStr, forgotNumeratorStr],
+    [[unsimplifiedStr, twinWhy(unsimplifiedStr, correctStr)],
+     [forgotNumeratorStr, `You changed ${w} ${n1}/${d1} into ${w*d1}/${d1} and forgot to add the ${n1}, which leads to ${forgotNumeratorStr}. It should be (${w}&times;${d1}) + ${n1} = ${improperNum}, so ${improperNum}/${d1}.`]],
     `First change the mixed number to an improper fraction: (${w}&times;${d1})+${n1} = ${improperNum}, so ${w} ${n1}/${d1} = ${improperNum}/${d1}.<br>` +
     `Then multiply straight across: ${improperNum}/${d1} &times; ${n2}/${d2} = ${showReduceBold(productNum, productDen)}.` +
-    simplifyNote(productNum, productDen)
+    simplifyNote(productNum, productDen),
+    'Mixed number first: whole &times; bottom, then ADD the top. Write the improper fraction down before you multiply straight across.',
+    `Recheck ${improperNum}/${d1} &times; ${n2}/${d2}: ${improperNum} &times; ${n2} = ${productNum} and ${d1} &times; ${d2} = ${productDen}, then simplify.`
   );
 }
 function genMultiplyFractionsSet(n){
@@ -719,14 +822,50 @@ function numericVariants(s){
   ].filter(([, b])=> b > 0).map(([a, b])=> fracStr(a, b));
 }
 
-/* ---- Helper: cap distractors at 3, drop dupes, top up if we came up short ---- */
-function mc4(qText, correctText, wrongCandidates, explain){
+/* "2 1/4" -> {n:9, d:4}; null for anything that is not a whole number or fraction */
+function parseFrac(s){
+  let m;
+  if((m = String(s).match(/^(\d+) (\d+)\/(\d+)$/))) return {n: (+m[1]) * (+m[3]) + (+m[2]), d: +m[3]};
+  if((m = String(s).match(/^(\d+)\/(\d+)$/))) return {n: +m[1], d: +m[2]};
+  if((m = String(s).match(/^(\d+)$/))) return {n: +m[1], d: 1};
+  return null;
+}
+
+/* The unsimplified twin of the answer: same amount, not in simplest form */
+function twinWhy(t, correctText){
+  const x = parseFrac(t);
+  const g = x ? gcd(x.n, x.d) : 1;
+  const part = String(t).includes(' ') ? ' of the fraction part' : '';
+  return `${t} is the same amount as ${correctText}, but it is not in simplest form. Divide the top and bottom${part} by ${g} to finish.`;
+}
+
+/* A near-miss with no single named mistake: say exactly how far off it is. */
+function nearWhy(correctText, t, recheck){
+  const c = parseFrac(correctText), x = parseFrac(t);
+  if(!c || !x) return '';
+  const diff = x.n * c.d - c.n * x.d;
+  if(diff === 0) return twinWhy(t, correctText);
+  let what;
+  if(x.n * c.n === x.d * c.d) what = `${t} is the right answer flipped upside down (top and bottom swapped).`;
+  else if(x.n * c.d === 2 * c.n * x.d) what = `${t} is exactly twice the right amount.`;
+  else if(2 * x.n * c.d === c.n * x.d) what = `${t} is exactly half of the right amount.`;
+  else what = `${t} is ${fracStr(Math.abs(diff), c.d * x.d)} ${diff > 0 ? 'more' : 'less'} than the right answer &mdash; close, but not it.`;
+  return recheck ? what + ' ' + recheck : what;
+}
+
+/* ---- Helper: cap distractors at 3, drop dupes, top up if we came up short ----
+   A candidate may be a plain string or [text, why]. Plain numeric strings get a
+   computed near-miss why, with `recheck` naming the step to look at again. */
+function mc4(qText, correctText, wrongCandidates, explain, tip, recheck){
   const seen = new Set([correctText]);
   const wrongs = [];
-  const add = t => { if(t && !seen.has(t)) { seen.add(t); wrongs.push(t); } };
+  const add = w => {
+    const [t, why] = Array.isArray(w) ? w : [w, ''];
+    if(t && !seen.has(t)) { seen.add(t); wrongs.push([t, why || nearWhy(correctText, t, recheck)]); }
+  };
   wrongCandidates.forEach(add);
   if(wrongs.length < 3 && looksNumeric(correctText)) numericVariants(correctText).forEach(add);
-  return mcQuestion(qText, correctText, wrongs.slice(0,3), explain);
+  return mcQuestion(qText, correctText, wrongs.slice(0,3), explain, tip);
 }
 
 /* ================= GENERATOR: Dividing Fractions ================= */
@@ -743,13 +882,15 @@ function buildDivideItem(lenient){
       `Divide: ${a.n}/${a.d} &divide; ${b.n}/${b.d} <span style="font-weight:600">(simplify your answer)</span>`,
       correctStr,
       [
-        fracToString(num, den),
-        fracStr(a.n*b.n, a.d*b.d),
-        fracStr(a.d*b.n, a.n*b.d),
-        fracStr(a.n+b.d, a.d+b.n)
+        [fracToString(num, den), twinWhy(fracToString(num, den), correctStr)],
+        [fracStr(a.n*b.n, a.d*b.d), `You multiplied without flipping: ${a.n}/${a.d} &times; ${b.n}/${b.d} = ${showReduce(a.n*b.n, a.d*b.d)}. Flip the second fraction to ${b.d}/${b.n} first.`],
+        [fracStr(a.d*b.n, a.n*b.d), `You flipped the FIRST fraction instead of the second: ${a.d}/${a.n} &times; ${b.n}/${b.d} = ${showReduce(a.d*b.n, a.n*b.d)}. That is the right answer upside down.`],
+        [fracStr(a.n+b.d, a.d+b.n), `You flipped correctly, but then added straight across instead of multiplying: ${a.n} + ${b.d} = ${a.n+b.d} on top and ${a.d} + ${b.n} = ${a.d+b.n} on the bottom, giving ${showReduce(a.n+b.d, a.d+b.n)}.`]
       ],
       `<b>Keep</b> ${a.n}/${a.d} &middot; <b>Change</b> &divide; into &times; &middot; <b>Flip</b> ${b.n}/${b.d} into ${b.d}/${b.n}.<br>` +
-      `So ${a.n}/${a.d} &times; ${b.d}/${b.n} = ${showReduce(num, den)}.` + simplifyNote(num, den)
+      `So ${a.n}/${a.d} &times; ${b.d}/${b.n} = ${showReduce(num, den)}.` + simplifyNote(num, den),
+      'Say it as you write it: Keep the first, Change &divide; to &times;, Flip only the SECOND fraction. Then multiply straight across and simplify.',
+      `Recheck ${a.n}/${a.d} &times; ${b.d}/${b.n}: ${a.n} &times; ${b.d} = ${num} and ${a.d} &times; ${b.n} = ${den}, then simplify.`
     );
   }
 
@@ -760,10 +901,15 @@ function buildDivideItem(lenient){
     return mc4(
       `Divide: ${f.n}/${f.d} &divide; ${w} <span style="font-weight:600">(simplify your answer)</span>`,
       fracStr(num, den),
-      [ fracToString(num, den), fracStr(f.n*w, f.d), fracStr(f.n, f.d + w), fracStr(f.n + w, f.d) ],
+      [ [fracToString(num, den), twinWhy(fracToString(num, den), fracStr(num, den))],
+        [fracStr(f.n*w, f.d), `You multiplied by ${w} instead of dividing: ${f.n}/${f.d} &times; ${w} = ${showReduce(f.n*w, f.d)}. That is bigger than ${f.n}/${f.d}, but sharing makes each part smaller.`],
+        [fracStr(f.n, f.d + w), `You added ${w} to the denominator (${f.d} + ${w} = ${f.d + w}), giving ${showReduce(f.n, f.d + w)}. Dividing by ${w} means multiplying the denominator: ${f.d} &times; ${w} = ${den}.`],
+        [fracStr(f.n + w, f.d), `You added ${w} to the numerator (${f.n} + ${w} = ${f.n + w}), giving ${showReduce(f.n + w, f.d)}. Dividing by ${w} means multiplying by 1/${w}.`] ],
       `Dividing by ${w} is the same as multiplying by 1/${w}.<br>` +
       `${f.n}/${f.d} &times; 1/${w} = ${showReduce(num, den)}. Sharing something out makes each share <b>smaller</b>.` +
-      simplifyNote(num, den)
+      simplifyNote(num, den),
+      `Turn &divide; ${w} into &times; 1/${w}. Sense check: your answer must be SMALLER than ${f.n}/${f.d}.`,
+      `Recheck ${f.n}/${f.d} &times; 1/${w}: the bottom becomes ${f.d} &times; ${w} = ${den}.`
     );
   }
 
@@ -774,10 +920,15 @@ function buildDivideItem(lenient){
     return mc4(
       `Divide: ${w} &divide; ${f.n}/${f.d} <span style="font-weight:600">(simplify your answer)</span>`,
       fracStr(num, den),
-      [ fracToString(num, den), fracStr(w*f.n, f.d), fracStr(f.n, w*f.d), fracStr(f.d, w*f.n) ],
+      [ [fracToString(num, den), twinWhy(fracToString(num, den), fracStr(num, den))],
+        [fracStr(w*f.n, f.d), `You multiplied without flipping: ${w} &times; ${f.n}/${f.d} = ${showReduce(w*f.n, f.d)}. Flip ${f.n}/${f.d} into ${f.d}/${f.n} first.`],
+        [fracStr(f.n, w*f.d), `You divided the wrong way round (${f.n}/${f.d} &divide; ${w} = ${showReduce(f.n, w*f.d)}). That is the right answer upside down.`],
+        [fracStr(f.d, w*f.n), `You flipped ${f.n}/${f.d} correctly, but then divided by ${w} instead of multiplying: ${f.d}/${f.n} &divide; ${w} = ${showReduce(f.d, w*f.n)}.`] ],
       `Write ${w} as ${w}/1. <b>Keep</b> ${w}/1 &middot; <b>Change</b> to &times; &middot; <b>Flip</b> ${f.n}/${f.d} into ${f.d}/${f.n}.<br>` +
       `${w}/1 &times; ${f.d}/${f.n} = ${showReduce(num, den)}. Dividing by a fraction smaller than 1 makes the answer <b>bigger</b> &mdash; that is normal!` +
-      simplifyNote(num, den)
+      simplifyNote(num, den),
+      `Put a 1 under the whole number (${w}/1), then Keep&ndash;Change&ndash;Flip. Sense check: dividing by a fraction smaller than 1 gives an answer BIGGER than ${w}.`,
+      `Recheck ${w}/1 &times; ${f.d}/${f.n}: ${w} &times; ${f.d} = ${num} on top, ${f.n} on the bottom.`
     );
   }
 
@@ -790,14 +941,16 @@ function buildDivideItem(lenient){
       `Divide: ${W} ${f.n}/${f.d} &divide; ${b.n}/${b.d} <span style="font-weight:600">(change the mixed number first)</span>`,
       fracStr(num, den),
       [
-        fracToString(num, den),
-        fracStr(W*f.d*b.d, f.d*b.n),
-        fracStr(imp*b.n, f.d*b.d),
-        fracStr(W*b.d, b.n)
+        [fracToString(num, den), twinWhy(fracToString(num, den), fracStr(num, den))],
+        [fracStr(W*f.d*b.d, f.d*b.n), `You forgot to add the ${f.n} when changing the mixed number: ${W} &times; ${f.d} = ${W*f.d}, but it should be (${W}&times;${f.d}) + ${f.n} = ${imp}. That slip leads to ${fracStr(W*f.d*b.d, f.d*b.n)}.`],
+        [fracStr(imp*b.n, f.d*b.d), `You multiplied by ${b.n}/${b.d} without flipping it: ${imp}/${f.d} &times; ${b.n}/${b.d} = ${showReduce(imp*b.n, f.d*b.d)}. Flip it to ${b.d}/${b.n} first.`],
+        [fracStr(W*b.d, b.n), `You dropped the ${f.n}/${f.d} and only worked out ${W} &divide; ${b.n}/${b.d} = ${showReduce(W*b.d, b.n)}. The whole mixed number must be divided.`]
       ],
       `First change the mixed number: (${W}&times;${f.d})+${f.n} = ${imp}, so ${W} ${f.n}/${f.d} = ${imp}/${f.d}.<br>` +
       `Then Keep&ndash;Change&ndash;Flip: ${imp}/${f.d} &times; ${b.d}/${b.n} = ${showReduce(num, den)}.` +
-      simplifyNote(num, den)
+      simplifyNote(num, den),
+      'Mixed number first: whole &times; bottom, then ADD the top. Only after that, Keep&ndash;Change&ndash;Flip.',
+      `Recheck ${imp}/${f.d} &times; ${b.d}/${b.n}: ${imp} &times; ${b.d} = ${num} and ${f.d} &times; ${b.n} = ${den}, then simplify.`
     );
   }
 
@@ -808,10 +961,15 @@ function buildDivideItem(lenient){
   return mc4(
     `How many <b>1/${k}</b> are there in <b>${m}/${j}</b>?`,
     String(ans),
-    [ String(t), String(ans+1), String(m*k), fracStr(m, j*k) ],
+    [ [String(t), `${t} is how many 1/${k} fit in just 1/${j} (${k} &divide; ${j} = ${t}). You have ${m}/${j}, so you need ${m} times as many.`],
+      [String(ans+1), `${ans+1} is 1 too many: ${ans+1} groups of 1/${k} make ${ans+1}/${k}, which is more than ${m}/${j} = ${ans}/${k}.`],
+      [String(m*k), `${m*k} is only ${m} &times; ${k}. You forgot the bottom: ${m}/${j} &times; ${k}/1 = ${m*k}/${j}, and ${m*k} &divide; ${j} = ${ans}.`],
+      [fracStr(m, j*k), `You multiplied instead of dividing: ${m}/${j} &times; 1/${k} = ${showReduce(m, j*k)}. That is a tiny piece, not a count of groups.`] ],
     `Division asks &ldquo;how many groups of this size fit inside?&rdquo;<br>` +
     `${m}/${j} is the same as ${ans}/${k}, and ${ans}/${k} is <b>${ans}</b> groups of 1/${k}.<br>` +
-    `Keep&ndash;Change&ndash;Flip agrees: ${m}/${j} &divide; 1/${k} = ${m}/${j} &times; ${k}/1 = ${m*k}/${j} = <b>${ans}</b>.`
+    `Keep&ndash;Change&ndash;Flip agrees: ${m}/${j} &divide; 1/${k} = ${m}/${j} &times; ${k}/1 = ${m*k}/${j} = <b>${ans}</b>.`,
+    `Rename ${m}/${j} so its bottom is ${k}, like the small piece. The new top number is how many pieces fit.`,
+    `Recheck ${m}/${j} &times; ${k}/1 = ${m*k}/${j}, then divide.`
   );
 }
 
@@ -875,33 +1033,41 @@ function genWordProblemsQuestion(){
       ? `Then ${k} more ${unit} are prepared from another batch. How many ${unit} are there altogether?`
       : `Then ${k} of the ${unit} ${k === 1 ? 'is' : 'are'} used. How many ${unit} are left?`;
     const story = `${s.ctx.story(s.totalStr, s.perStr)} ${tail}`;
+    const sym = addMode ? '+' : '&minus;';
+    const step1 = `${s.totalStr} &divide; ${s.perStr} = ${s.count}`;
+    const product = showReduce(s.totNum * s.perNum, s.totDen * s.perDen);
+    const secondTip = `Circle the word <i>${addMode ? 'altogether' : 'left'}</i>: it means there is a second step. Divide first, then ${addMode ? 'add' : 'subtract'} the ${k}.`;
 
     if(kind === 'first'){
       return mc4(
         `${story}<br><br><b>What should you do FIRST?</b>`,
         `Divide ${s.totalStr} by ${s.perStr}`,
         [
-          `Multiply ${s.totalStr} by ${s.perStr}`,
-          addMode ? `Add ${k} to ${s.totalStr}` : `Subtract ${k} from ${s.totalStr}`,
-          `Divide ${s.perStr} by ${s.totalStr}`
+          [`Multiply ${s.totalStr} by ${s.perStr}`, `${s.totalStr} &times; ${s.perStr} = ${product}, a tiny amount &mdash; not a number of ${unit}. To find how many ${s.perStr} fit in ${s.totalStr}, you divide.`],
+          [addMode ? `Add ${k} to ${s.totalStr}` : `Subtract ${k} from ${s.totalStr}`, `${s.totalStr} is an amount, not a number of ${unit}, so you cannot ${addMode ? 'add' : 'subtract'} ${k} ${plural(k, unit)} yet. First find how many ${unit} there are: ${step1}.`],
+          [`Divide ${s.perStr} by ${s.totalStr}`, `That is backwards: ${s.perStr} &divide; ${s.totalStr} = 1/${s.count}, which asks how many ${s.totalStr} fit in ${s.perStr}. The total goes first.`]
         ],
         `Divide first. You cannot ${addMode?'add':'subtract'} ${k} ${plural(k, unit)} until you know how many there were to begin with &mdash; and that means asking how many ${s.perStr} fit inside ${s.totalStr}.<br>` +
-        `${s.totalStr} &divide; ${s.perStr} = ${s.count}, then ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b>.`
+        `${s.totalStr} &divide; ${s.perStr} = ${s.count}, then ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b>.`,
+        `Ask yourself: &ldquo;What must I know before I can ${addMode ? 'add' : 'subtract'}?&rdquo; You need the number of ${unit} first, and &ldquo;how many fit in&rdquo; means divide.`
       );
     }
     if(kind === 'answer'){
+      const opposite = addMode ? s.count - k : s.count + k;
       const wrongs = [
-        String(s.count),
-        String(addMode ? s.count - k : s.count + k),
-        String(k),
-        String(final + 1)
-      ].filter(v => Number(v) >= 1 && Number(v) !== final);
+        [String(s.count), `${s.count} is only step 1 (${step1}). The question asks how many are ${addMode ? 'altogether' : 'left'}, so you still need ${s.count} ${sym} ${k}.`],
+        [String(opposite), `You ${addMode ? 'subtracted' : 'added'} instead of ${addMode ? 'adding' : 'subtracting'}: ${s.count} ${addMode ? '&minus;' : '+'} ${k} = ${opposite}. The word <i>${addMode ? 'altogether' : 'left'}</i> means ${addMode ? 'add' : 'subtract'}.`],
+        [String(k), `${k} is just the number of ${unit} ${addMode ? 'added' : 'used'}. It is part of step 2: ${s.count} ${sym} ${k}.`],
+        [String(final + 1), `${final + 1} is 1 more than the right answer. Recheck step 1 (${step1}) and then ${s.count} ${sym} ${k}.`]
+      ].filter(([v]) => Number(v) >= 1 && Number(v) !== final);
       return mc4(
         story,
         String(final),
         wrongs,
         `<b>Step 1 &mdash; Divide:</b> ${s.totalStr} &divide; ${s.perStr} = ${s.totalStr} &times; ${s.perDen}/${s.perNum} = ${s.count}.<br>` +
-        `<b>Step 2 &mdash; ${addMode?'Add':'Subtract'}:</b> ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b> ${plural(final, unit)}.`
+        `<b>Step 2 &mdash; ${addMode?'Add':'Subtract'}:</b> ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b> ${plural(final, unit)}.`,
+        secondTip,
+        `Recheck step 1 (${step1}) and then ${s.count} ${sym} ${k}.`
       );
     }
     return mc4(
@@ -910,12 +1076,13 @@ function genWordProblemsQuestion(){
         ? `They stopped after dividing and forgot to add the ${k} extra. The answer is ${final}.`
         : `They stopped after dividing and forgot to subtract the ${k} used. The answer is ${final}.`,
       [
-        `Nothing &mdash; ${s.count} is the correct answer.`,
-        `They should have multiplied instead of dividing.`,
-        `They flipped the wrong fraction.`
+        [`Nothing &mdash; ${s.count} is the correct answer.`, `${s.count} is only step 1 (${step1}). The question asks how many are ${addMode ? 'altogether' : 'left'}, so ${s.count} ${sym} ${k} still has to be done.`],
+        [`They should have multiplied instead of dividing.`, `Dividing was right: ${step1} tells how many ${unit} there are. Multiplying would give ${s.totalStr} &times; ${s.perStr} = ${product}, which counts nothing.`],
+        [`They flipped the wrong fraction.`, `The division was done correctly: ${s.totalStr} &times; ${s.perDen}/${s.perNum} = ${s.count}. The mistake is the missing second step, not the flipping.`]
       ],
       `${s.totalStr} &divide; ${s.perStr} = ${s.count} is right, but that is only <b>step 1</b>. The question asks how many are ${addMode?'altogether':'left'}, so ${s.count} ${addMode?'+':'&minus;'} ${k} = <b>${final}</b>.<br>` +
-      `Whenever you see <i>left</i>, <i>remain</i>, or <i>altogether</i>, look for a second step.`
+      `Whenever you see <i>left</i>, <i>remain</i>, or <i>altogether</i>, look for a second step.`,
+      `Check that the answer used EVERY number in the story. Here the ${k} was never used &mdash; that is the clue.`
     );
   }
 
@@ -930,18 +1097,25 @@ function genWordProblemsQuestion(){
       return mc4(
         `${story}<br><br><b>Which operation do you use?</b>`,
         `Multiply ${f.n}/${f.d} by 1/${d2}`,
-        [ `Divide ${f.n}/${f.d} by 1/${d2}`, `Divide 1/${d2} by ${f.n}/${f.d}`, `Subtract 1/${d2} from ${f.n}/${f.d}` ],
+        [ [`Divide ${f.n}/${f.d} by 1/${d2}`, `Dividing by 1/${d2} gives ${f.n}/${f.d} &times; ${d2} = ${showReduce(f.n*d2, f.d)} cup &mdash; MORE than a full batch. You are making less, so that cannot be right.`],
+          [`Divide 1/${d2} by ${f.n}/${f.d}`, `That asks how many ${f.n}/${f.d} cups fit inside 1/${d2}, which is not the question. You need 1/${d2} <i>of</i> the ${stuff}.`],
+          [`Subtract 1/${d2} from ${f.n}/${f.d}`, `Subtracting would take away 1/${d2} of a cup. But 1/${d2} is a part <i>of</i> the recipe, not a cup amount, and &ldquo;of&rdquo; means multiply.`] ],
         `You need 1/${d2} <i>of</i> ${f.n}/${f.d}, and the word <b>&ldquo;of&rdquo;</b> means multiply:<br>` +
         `${f.n}/${f.d} &times; 1/${d2} = <b>${correctStr}</b> cup.<br>` +
-        `Careful! Dividing by 1/${d2} would make the answer <b>bigger</b>, but you are making <b>less</b> than a full batch, so the answer must be smaller.`
+        `Careful! Dividing by 1/${d2} would make the answer <b>bigger</b>, but you are making <b>less</b> than a full batch, so the answer must be smaller.`,
+        'Hunt for the word &ldquo;of&rdquo; after a fraction &mdash; it means &times;. Then guess: should the answer be bigger or smaller than the recipe amount?'
       );
     }
     return mc4(
       `${story} How much ${stuff} do you need?`,
       correctStr,
-      [ fracStr(f.n*d2, f.d), fracToString(num, den), fracStr(f.n, f.d + d2) ],
+      [ [fracStr(f.n*d2, f.d), `You multiplied by ${d2} (the same as dividing by 1/${d2}): ${f.n}/${f.d} &times; ${d2} = ${showReduce(f.n*d2, f.d)}. That is more than a full batch, but you are making less.`],
+        [fracToString(num, den), twinWhy(fracToString(num, den), correctStr)],
+        [fracStr(f.n, f.d + d2), `You added ${d2} to the denominator (${f.d} + ${d2} = ${f.d + d2}), giving ${showReduce(f.n, f.d + d2)}. &ldquo;Of&rdquo; means multiply, so the bottom is ${f.d} &times; ${d2} = ${den}.`] ],
       `&ldquo;1/${d2} <b>of</b> the recipe&rdquo; means multiply:<br>${f.n}/${f.d} &times; 1/${d2} = ${showReduce(num, den)} cup.<br>` +
-      `Check: ${correctStr} is smaller than ${f.n}/${f.d}, which makes sense because you are making less than one batch.`
+      `Check: ${correctStr} is smaller than ${f.n}/${f.d}, which makes sense because you are making less than one batch.`,
+      `&ldquo;1/${d2} of&rdquo; means &times; 1/${d2}. Sense check: your answer must be smaller than ${f.n}/${f.d} cup.`,
+      `Recheck ${f.n}/${f.d} &times; 1/${d2}: ${f.n} on top, ${f.d} &times; ${d2} = ${den} on the bottom, then simplify.`
     );
   }
 
@@ -953,9 +1127,14 @@ function genWordProblemsQuestion(){
   return mc4(
     `A ${thing} recipe uses ${f.n}/${f.d} cup of flour. If you split the recipe into ${w} equal parts, how much flour is in each part?`,
     correctStr,
-    [ fracStr(f.n*w, f.d), fracToString(num, den), fracStr(f.n, f.d + w), fracStr(w, f.d) ],
+    [ [fracStr(f.n*w, f.d), `You multiplied by ${w} instead of dividing: ${f.n}/${f.d} &times; ${w} = ${showReduce(f.n*w, f.d)}. That is more than the whole ${f.n}/${f.d} cup, but each part must be smaller.`],
+      [fracToString(num, den), twinWhy(fracToString(num, den), correctStr)],
+      [fracStr(f.n, f.d + w), `You added ${w} to the denominator (${f.d} + ${w} = ${f.d + w}), giving ${showReduce(f.n, f.d + w)}. Dividing by ${w} multiplies the denominator: ${f.d} &times; ${w} = ${den}.`],
+      [fracStr(w, f.d), `You put the ${w} on top in place of the ${f.n}. Check by multiplying back: ${fracStr(w, f.d)} &times; ${w} = ${fracStr(w*w, f.d)}, not ${f.n}/${f.d}.`] ],
     `Splitting into ${w} equal parts means divide by ${w}: ${f.n}/${f.d} &divide; ${w} = ${f.n}/${f.d} &times; 1/${w} = ${showReduce(num, den)} cup.<br>` +
-    `Check: each part must be <b>smaller</b> than ${f.n}/${f.d}, and it is.`
+    `Check: each part must be <b>smaller</b> than ${f.n}/${f.d}, and it is.`,
+    `&ldquo;Split into ${w} equal parts&rdquo; means &divide; ${w}, which is &times; 1/${w}. Check by multiplying your answer by ${w}: you should get back ${f.n}/${f.d}.`,
+    `Recheck ${f.n}/${f.d} &times; 1/${w}: the bottom becomes ${f.d} &times; ${w} = ${den}, then simplify.`
   );
 }
 function genWordProblemsSet(n){
@@ -1009,7 +1188,8 @@ function nonZeroPos(digits){
    so this is scoped to the decimal generators rather than baked into mc4. */
 function distinctNumeric(correct, list){
   const c = Number(correct);
-  return list.filter(x => !(isFinite(Number(x)) && isFinite(c) && Number(x) === c));
+  const text = x => Array.isArray(x) ? x[0] : x;
+  return list.filter(x => !(isFinite(Number(text(x))) && isFinite(c) && Number(text(x)) === c));
 }
 
 /* The value of a digit sitting `pos` places after the point: 3 at pos 1 -> "0.03" */
@@ -1037,23 +1217,26 @@ function genDecimalPlaceQuestion(){
     return mc4(
       `In <b>${d.str}</b>, what is the <b>place value</b> of the digit <b>${digit}</b>?`,
       PLACE_NAMES[pos],
-      PLACE_NAMES.filter(p => p !== PLACE_NAMES[pos]).concat(['ones']),
+      placeNameWrongs(pos, `In ${d.str} the ${digit} is the ${ORDINALS[pos]} digit after the point`)
+        .concat([['ones', `The ones place is to the LEFT of the decimal point, where the ${d.whole} is. The ${digit} is after the point.`]]),
       `Count the places to the right of the decimal point: 1st = tenths, 2nd = hundredths, 3rd = thousandths.<br>` +
-      `In ${d.str} the digit ${digit} is the <b>${ORDINALS[pos]}</b> digit after the point, so its place value is <b>${PLACE_NAMES[pos]}</b>.`
+      `In ${d.str} the digit ${digit} is the <b>${ORDINALS[pos]}</b> digit after the point, so its place value is <b>${PLACE_NAMES[pos]}</b>.`,
+      'Put your finger on the decimal point and count the digits to the right: 1 = tenths, 2 = hundredths, 3 = thousandths.'
     );
   }
 
   if(type === 'valueOf'){
     const correct = placeValueOf(digit, pos);
-    const wrongs = [String(digit)];
-    if(pos > 0) wrongs.push(placeValueOf(digit, pos - 1));
-    wrongs.push(placeValueOf(digit, pos + 1));
+    const wrongs = [[String(digit), digitNotValueWhy(digit, pos)]];
+    if(pos > 0) wrongs.push(shiftedValueWrong(digit, pos, pos - 1, d.str));
+    wrongs.push(shiftedValueWrong(digit, pos, pos + 1, d.str));
     return mc4(
       `In <b>${d.str}</b>, what is the <b>value</b> of the digit <b>${digit}</b>?`,
       correct,
       distinctNumeric(correct, wrongs),
       `The digit ${digit} is in the <b>${PLACE_NAMES[pos]}</b> place, so its value is <b>${correct}</b>.<br>` +
-      `<i>Careful:</i> the <b>digit</b> is ${digit}, but the <b>value</b> of that digit is ${correct}.`
+      `<i>Careful:</i> the <b>digit</b> is ${digit}, but the <b>value</b> of that digit is ${correct}.`,
+      VALUE_TIP
     );
   }
 
@@ -1065,12 +1248,16 @@ function genDecimalPlaceQuestion(){
       `How do you read <b>${d.str}</b> in words?`,
       correct,
       [
-        numWords(d.whole) + ' and ' + numWords(frac) + ' ' + wrongPlace,
-        numWords(d.whole) + ' point ' + d.digits.map(x => W_ONES[x]).join(' '),
-        numWords(d.whole) + ' ' + numWords(frac) + ' ' + PLACE_NAMES[places - 1]
+        [numWords(d.whole) + ' and ' + numWords(frac) + ' ' + wrongPlace,
+          `This ends in &ldquo;${wrongPlace}&rdquo;, but ${d.str} has ${places} decimal places, so its last place is ${PLACE_NAMES[places - 1]}.`],
+        [numWords(d.whole) + ' point ' + d.digits.map(x => W_ONES[x]).join(' '),
+          `This reads the digits one by one after &ldquo;point&rdquo;. The lesson reads the point as &ldquo;and&rdquo;, then the decimal part as one number (${numWords(frac)}) with its place name.`],
+        [numWords(d.whole) + ' ' + numWords(frac) + ' ' + PLACE_NAMES[places - 1],
+          `This is missing the word &ldquo;and&rdquo;. The decimal point must be read as &ldquo;and&rdquo; &mdash; without it, the whole number and the decimal part run together.`]
       ],
       `The whole number is read first, then the word <b>and</b> for the decimal point, then the decimal part named by its <b>last</b> place.<br>` +
-      `${d.str} has ${places} decimal places, so it ends in <b>${PLACE_NAMES[places - 1]}</b>: <b>${correct}</b>.`
+      `${d.str} has ${places} decimal places, so it ends in <b>${PLACE_NAMES[places - 1]}</b>: <b>${correct}</b>.`,
+      'Three parts: say the whole number, say &ldquo;and&rdquo; at the point, then read the digits after the point as one number and name the LAST digit&rsquo;s place.'
     );
   }
 
@@ -1078,11 +1265,29 @@ function genDecimalPlaceQuestion(){
   return mc4(
     `Which place is the <b>${ORDINALS[which]}</b> digit after the decimal point?`,
     PLACE_NAMES[which],
-    PLACE_NAMES.filter(p => p !== PLACE_NAMES[which]).concat(['ones']),
+    placeNameWrongs(which, `The question asks about the ${ORDINALS[which]} digit`)
+      .concat([['ones', 'The ones place is to the LEFT of the decimal point. The question asks about a digit AFTER the point.']]),
     `Reading right from the decimal point: 1st = <b>tenths</b>, 2nd = <b>hundredths</b>, 3rd = <b>thousandths</b>.<br>` +
-    `Each place to the right is ten times smaller than the one before it.`
+    `Each place to the right is ten times smaller than the one before it.`,
+    'Say the order out loud from the point: tenths (1st), hundredths (2nd), thousandths (3rd). The &ldquo;th&rdquo; places are all after the point.'
   );
 }
+
+/* The other decimal place names, each explained against the position that was asked. */
+function placeNameWrongs(pos, context){
+  return PLACE_NAMES.map((p, i) => [p, `${p} is the ${ORDINALS[i]} place after the point. ${context}, so it is not ${p}.`])
+    .filter((_, i) => i !== pos);
+}
+function digitNotValueWhy(digit, pos){
+  return `${digit} is the digit itself, not its value. Sitting in the ${PLACE_NAMES[pos]} place, the ${digit} is worth ${placeValueOf(digit, pos)}.`;
+}
+/* 0.03 offered for a digit that is really in the tenths: say where it put the digit */
+function shiftedValueWrong(digit, pos, wrongPos, str){
+  const v = placeValueOf(digit, wrongPos);
+  const dir = wrongPos < pos ? 'left' : 'right';
+  return [v, `${v} puts the ${digit} ${wrongPos + 1} place${wrongPos ? 's' : ''} after the point &mdash; one place too far ${dir}. In ${str} it is ${pos + 1} place${pos ? 's' : ''} after the point, the ${PLACE_NAMES[pos]}.`];
+}
+const VALUE_TIP = 'Digit = the number you see; value = what it is worth. Write 0. then add zeros until the digit lands in its place.';
 function genDecimalPlaceSet(n){
   return Array.from({length:n}, ()=> genDecimalPlaceQuestion());
 }
@@ -1102,9 +1307,11 @@ function genFindDigitQuestion(){
     return mc4(
       `In <b>${Number(n).toLocaleString()}</b>, what digit is in the <b>${placeName}</b> place?`,
       String(digit),
-      digits.filter((_, i) => i !== idx).map(String),
+      digits.map((x, i) => [String(x), `${x} is in the ${WHOLE_PLACES[3 - i]} place of ${Number(n).toLocaleString()}, not the ${placeName} place.`])
+        .filter((_, i) => i !== idx),
       `Reading right to left from the end: ones, tens, hundreds, thousands.<br>` +
-      `In ${Number(n).toLocaleString()} the <b>${placeName}</b> digit is <b>${digit}</b>.`
+      `In ${Number(n).toLocaleString()} the <b>${placeName}</b> digit is <b>${digit}</b>.`,
+      'Start at the LAST digit and label each one going left: ones, tens, hundreds, thousands. Then read off the digit under the place you need.'
     );
   }
 
@@ -1117,10 +1324,14 @@ function genFindDigitQuestion(){
     return mc4(
       `In <b>${d.str}</b>, what <b>digit</b> is in the <b>${PLACE_NAMES[pos]}</b> place?`,
       String(digit),
-      distinctNumeric(String(digit), d.digits.filter((_, i) => i !== pos).map(String)
-        .concat([String(d.whole), placeValueOf(digit, pos)])),
+      distinctNumeric(String(digit), d.digits.map((x, i) => [String(x), `${x} is the ${PLACE_NAMES[i]} digit (${i + 1} place${i ? 's' : ''} after the point). The ${PLACE_NAMES[pos]} is ${pos + 1} place${pos ? 's' : ''} after the point.`])
+        .filter((_, i) => i !== pos)
+        .concat([[String(d.whole), `${d.whole} is BEFORE the decimal point &mdash; it is in the ones place. Start counting at the point and move right.`],
+                 [placeValueOf(digit, pos), `${placeValueOf(digit, pos)} is the VALUE of the ${PLACE_NAMES[pos]} digit. The question asks for the digit itself.`]])),
       `Start at the decimal point and move <b>${pos + 1}</b> place${pos ? 's' : ''} to the right.<br>` +
-      `In ${d.str} the ${PLACE_NAMES[pos]} digit is <b>${digit}</b>.`
+      `In ${d.str} the ${PLACE_NAMES[pos]} digit is <b>${digit}</b>.`,
+      'Read the question word: &ldquo;digit&rdquo; wants a single number (0&ndash;9). Put your finger on the point and step right one place at a time.',
+      `Start at the decimal point in ${d.str} and count ${pos + 1} place${pos ? 's' : ''} to the right.`
     );
   }
 
@@ -1128,9 +1339,11 @@ function genFindDigitQuestion(){
   return mc4(
     `In <b>${d.str}</b>, what is the <b>value</b> of the digit in the <b>${PLACE_NAMES[pos]}</b> place?`,
     correct,
-    distinctNumeric(correct, [String(digit), placeValueOf(digit, pos + 1)].concat(pos > 0 ? [placeValueOf(digit, pos - 1)] : [])),
+    distinctNumeric(correct, [[String(digit), digitNotValueWhy(digit, pos)], shiftedValueWrong(digit, pos, pos + 1, d.str)]
+      .concat(pos > 0 ? [shiftedValueWrong(digit, pos, pos - 1, d.str)] : [])),
     `The digit in the ${PLACE_NAMES[pos]} place is <b>${digit}</b>, and its value is <b>${correct}</b>.<br>` +
-    `<i>This is the classic trap:</i> if the question says <b>digit</b> the answer is ${digit}; if it says <b>value</b> the answer is ${correct}.`
+    `<i>This is the classic trap:</i> if the question says <b>digit</b> the answer is ${digit}; if it says <b>value</b> the answer is ${correct}.`,
+    'Read the question word: &ldquo;value&rdquo; wants what the digit is worth. Find the digit, then write it as 0. with zeros so it lands in that place.'
   );
 }
 function genFindDigitSet(n){
@@ -1160,9 +1373,12 @@ function genDecFracQuestion(){
     return mc4(
       `<b>${d.str}</b> has ${places} decimal place${places > 1 ? 's' : ''}. Which denominator do you use to turn it into a fraction?`,
       dens[places - 1],
-      dens.filter((_, i) => i !== places - 1).concat(['1']),
+      dens.map((x, i) => [x, `${x} is the denominator for ${i + 1} decimal place${i ? 's' : ''}. ${d.str} has ${places}.`])
+        .filter((_, i) => i !== places - 1)
+        .concat([['1', `A denominator of 1 turns the number into a whole number. ${d.str} has ${places} decimal place${places > 1 ? 's' : ''}, so it needs ${dens[places - 1]}.`]]),
       `The number of decimal places tells you the denominator: 1 place &rarr; <b>10</b>, 2 places &rarr; <b>100</b>, 3 places &rarr; <b>1,000</b>.<br>` +
-      `${d.str} has ${places}, so you use <b>${dens[places - 1]}</b> (then simplify).`
+      `${d.str} has ${places}, so you use <b>${dens[places - 1]}</b> (then simplify).`,
+      'Count the digits after the point. The denominator is a 1 followed by that many zeros.'
     );
   }
 
@@ -1178,15 +1394,17 @@ function genDecFracQuestion(){
       pick([`Convert <b>${decStr}</b> to a fraction in <b>simplest form</b>.`, `Which fraction is equal to <b>${decStr}</b>?`]),
       correct,
       [
-        num + '/' + pow,
-        r.den + '/' + num,                     // flipped, like choosing 2/5 for 0.5
-        num + '/' + (pow * 10),
-        r.den + '/' + r.num
+        [num + '/' + pow, twinWhy(num + '/' + pow, correct)],
+        [r.den + '/' + num, `In ${r.den}/${num} the numbers are in the wrong spots: ${decStr} means ${num} on TOP over ${pow}. The ${num} never moves to the bottom.`],   // flipped, like choosing 2/5 for 0.5
+        [num + '/' + (pow * 10), `${num}/${pow * 10} uses ${pow * 10}, the denominator for ${places + 1} decimal places, but ${decStr} has only ${places}, so use ${pow}.`],
+        [r.den + '/' + r.num, `${r.den}/${r.num} is the right fraction flipped upside down. It is ${r.num === 1 ? 'a whole number bigger than 1' : 'more than 1'}, but ${decStr} is less than 1.`]
       ],
       `${places} decimal place${places > 1 ? 's' : ''} means a denominator of <b>${pow.toLocaleString()}</b>: ${decStr} = ${num}/${pow.toLocaleString()}.<br>` +
       (correct === num + '/' + pow
         ? `That is already in simplest form: <b>${correct}</b>.`
-        : `Now simplify: ${num}/${pow.toLocaleString()} = <b>${correct}</b>.`)
+        : `Now simplify: ${num}/${pow.toLocaleString()} = <b>${correct}</b>.`),
+      'Digits after the point go on TOP; the number of decimal places picks the bottom (10, 100 or 1,000). Then simplify.',
+      `Recheck: ${decStr} = ${num}/${pow}, then divide the top and bottom by the same number until you cannot any more.`
     );
   }
 
@@ -1200,13 +1418,14 @@ function genDecFracQuestion(){
     `Convert <b>${num}/${den}</b> to a decimal.`,
     correct,
     distinctNumeric(correct, [
-      '0.' + num + den,                        // jammed the two digits together
-      '0.0' + correct.replace('0.', ''),       // shifted one place too far right
-      decimalString(num, 10),                  // read the numerator as tenths
-      decimalString(den - num, den)            // subtracted instead of divided
+      ['0.' + num + den, `You wrote ${num} and ${den} side by side after the point, making 0.${num}${den}. The fraction bar means divide: ${num} &divide; ${den}.`],                        // jammed the two digits together
+      ['0.0' + correct.replace('0.', ''), `0.0${correct.replace('0.', '')} has an extra 0 after the point, which pushes every digit one place right. It is 10 times too small.`],       // shifted one place too far right
+      [decimalString(num, 10), `${decimalString(num, 10)} is ${num}/10 &mdash; you read the ${num} as tenths. The denominator is ${den}, not 10.`],                  // read the numerator as tenths
+      [decimalString(den - num, den), `${decimalString(den - num, den)} is ${den - num}/${den}, the part that is left over (${den} &minus; ${num} = ${den - num}), not ${num}/${den}.`]            // subtracted instead of divided
     ]),
     `To turn a fraction into a decimal, <b>divide the numerator by the denominator</b>.<br>` +
-    `${num} &divide; ${den} = <b>${correct}</b>.`
+    `${num} &divide; ${den} = <b>${correct}</b>.`,
+    `Divide top by bottom: ${num} &divide; ${den}. Sense check: ${num}/${den} is less than 1, so the decimal must start with 0.`
   );
 }
 function genDecFracSet(n){
@@ -1286,13 +1505,14 @@ function acrossSlip(p, op){
 function distinctWrongs(correct, list){
   const val = t => { const m = String(t).match(/^(?:(\d+) )?(\d+)\/(\d+)$/); return m ? (+(m[1] || 0)) + m[2] / m[3] : Number(t); };
   const seen = new Set(), out = [];
-  list.forEach(t => {
+  list.forEach(w => {
+    const t = Array.isArray(w) ? w[0] : w;
     if(!t || t === correct) return;
     const v = val(t);
     const twin = Math.abs(v - val(correct)) < 1e-9;
     const key = twin ? 'twin' : v.toFixed(9);
     if(seen.has(key)) return;
-    seen.add(key); out.push(t);
+    seen.add(key); out.push(w);
   });
   return out;
 }
@@ -1306,15 +1526,34 @@ function genAddSubQuestion(){
     const p = buildAddSub(op, type === 'addSimilar' || type === 'subSimilar');
     const sym = op === '+' ? '+' : '&minus;';
     const correct = fracStr(p.num, p.lcd);
+    const verb = op === '+' ? 'add' : 'subtract';
+    const slip = acrossSlip(p, op);
+    const slipWhy = slip && `You ${verb}ed straight across: ${p.n1} ${sym} ${p.n2} = ${slip.split('/')[0]} on top and ${p.d1} ${sym} ${p.d2} = ${slip.split('/')[1]} on the bottom, giving ${slip}. Never ${verb} the denominators &mdash; only the numerators.`;
+    const topOnly = op === '+' ? p.n1 + p.n2 : Math.abs(p.n1 - p.n2);
+    const topOnlyStr = op === '+' ? fracStr(p.n1 + p.n2, p.lcd) : fracStr(Math.abs(p.n1 - p.n2) || 1, p.lcd);
+    const topOnlyWhy = topOnly === 0
+      ? nearWhy(correct, topOnlyStr, `Rename both fractions with the LCD ${p.lcd} before you subtract.`)
+      : `You ${verb}ed the original numerators (${Math.max(p.n1, op === '+' ? p.n1 : p.n2)} ${sym} ${op === '+' ? p.n2 : Math.min(p.n1, p.n2)} = ${topOnly}) and put them over ${p.lcd} without renaming, giving ${showReduce(topOnly, p.lcd)}. Rename first: ${p.n1}/${p.d1} = ${p.a}/${p.lcd} and ${p.n2}/${p.d2} = ${p.b}/${p.lcd}.`;
+    const lastWhy = op === '+'
+      ? `You renamed correctly to ${p.a}/${p.lcd} + ${p.b}/${p.lcd}, but then added the denominators too (${p.lcd} + ${p.lcd} = ${p.lcd * 2}), giving ${showReduce(p.a + p.b, p.lcd * 2)}. Keep the LCD ${p.lcd} on the bottom.`
+      : `You added instead of subtracting: ${p.a}/${p.lcd} + ${p.b}/${p.lcd} = ${showReduce(p.a + p.b, p.lcd)}. The sign is &minus;.`;
+    const recheck = p.d1 === p.d2
+      ? `Recheck ${p.n1} ${sym} ${p.n2} on top, keep the ${p.lcd} on the bottom, then simplify.`
+      : `Recheck the renaming (${p.a}/${p.lcd} and ${p.b}/${p.lcd}) and ${p.a} ${sym} ${p.b}, then simplify.`;
     const wrongs = [
-      acrossSlip(p, op),
-      fracToString(p.num, p.lcd),
-      op === '+' ? fracStr(p.n1 + p.n2, p.lcd) : fracStr(Math.abs(p.n1 - p.n2) || 1, p.lcd),
-      op === '+' ? fracStr(p.a + p.b, p.lcd * 2) : fracStr(p.a + p.b, p.lcd)
+      slip && [slip, slipWhy],
+      [fracToString(p.num, p.lcd), twinWhy(fracToString(p.num, p.lcd), correct)],
+      [topOnlyStr, topOnlyWhy],
+      [op === '+' ? fracStr(p.a + p.b, p.lcd * 2) : fracStr(p.a + p.b, p.lcd), lastWhy]
     ];
+    const near = t => [t, nearWhy(correct, t, recheck)];
     return mc4(
       `What is <b>${p.n1}/${p.d1} ${sym} ${p.n2}/${p.d2}</b>? Write it in simplest form.`,
-      correct, distinctWrongs(correct, wrongs.concat(numericVariants(correct), [fracStr(p.num + 1, p.lcd), fracStr(Math.max(1, p.num - 1), p.lcd), fracStr(p.num + p.lcd, p.lcd)])), addSubExplain(p, op, true)
+      correct, distinctWrongs(correct, wrongs.concat(numericVariants(correct).map(near), [fracStr(p.num + 1, p.lcd), fracStr(Math.max(1, p.num - 1), p.lcd), fracStr(p.num + p.lcd, p.lcd)].map(near))), addSubExplain(p, op, true),
+      p.d1 === p.d2
+        ? `Same bottoms? ${op === '+' ? 'Add' : 'Subtract'} only the tops and keep the bottom. Then ask: can I simplify?`
+        : `Different bottoms? LCD first, rename both, ${verb} only the tops, simplify. Sense check: ${op === '+' ? 'adding must give MORE than each fraction' : 'subtracting must give LESS than the first fraction'}.`,
+      recheck
     );
   }
 
@@ -1325,10 +1564,20 @@ function genAddSubQuestion(){
     return mc4(
       `What is the <b>LCD</b> (least common denominator) of <b>${n1}/${d1}</b> and <b>${n2}/${d2}</b>?`,
       String(L),
-      [String(d1 * d2), String(d1 + d2), String(Math.min(d1, d2)), String(L * 2)],
+      (() => {
+        const hi = Math.max(d1, d2), lo = Math.min(d1, d2), sum = d1 + d2;
+        const fails = sum % d2 !== 0 ? d2 : d1;
+        return [
+          [String(d1 * d2), `${d1} &times; ${d2} = ${d1 * d2} is a common denominator, but not the LEAST one: ${L} is smaller, and both ${d1} and ${d2} divide into it.`],
+          [String(sum), `Adding the denominators (${d1} + ${d2} = ${sum}) does not make a common denominator: ${sum} &divide; ${fails} leaves a remainder of ${sum % fails}.`],
+          [String(lo), `${lo} is just the smaller denominator. ${hi} does not divide into ${lo}, so it cannot be a common denominator.`],
+          [String(L * 2), `${L * 2} is a common denominator, but ${L} is smaller and also works. LCD means the LEAST one.`]
+        ];
+      })(),
       `The LCD is the <b>smallest</b> number that both denominators divide into evenly.<br>` +
       `Multiples of ${Math.max(d1, d2)}: ${[1,2,3,4].map(k => Math.max(d1, d2) * k).join(', ')}&hellip; ` +
-      `The first one that ${Math.min(d1, d2)} also divides into is <b>${L}</b>.`
+      `The first one that ${Math.min(d1, d2)} also divides into is <b>${L}</b>.`,
+      'List the multiples of the BIGGER denominator (1&times;, 2&times;, 3&times;&hellip;) and stop at the first one the smaller denominator divides into.'
     );
   }
 
@@ -1340,9 +1589,13 @@ function genAddSubQuestion(){
     return mc4(
       `To add <b>${n1}/${d1} + ${n2}/${d2}</b>, you rename both fractions with the LCD <b>${L}</b>. What does <b>${n1}/${d1}</b> become?`,
       `${n1 * k}/${L}`,
-      [`${n1}/${L}`, `${n1 + (L - d1)}/${L}`, `${n1 * k}/${d1}`, `${n1 + k}/${L}`],
+      [[`${n1}/${L}`, `You changed the bottom to ${L} but kept the top as ${n1}, which makes ${n1}/${L}. The bottom was multiplied by ${k}, so the top must be too: ${n1} &times; ${k} = ${n1 * k}.`],
+       [`${n1 + (L - d1)}/${L}`, `You added ${L - d1} to the top and the bottom (${d1} + ${L - d1} = ${L}), which makes ${n1 + (L - d1)}/${L}. Renaming means MULTIPLYING both by ${k}, not adding.`],
+       [`${n1 * k}/${d1}`, `You multiplied the top by ${k} but left the bottom as ${d1}, which makes ${n1 * k}/${d1}. The bottom must become the LCD, ${L}.`],
+       [`${n1 + k}/${L}`, `You added ${k} to the top (${n1} + ${k} = ${n1 + k}), which makes ${n1 + k}/${L}, instead of multiplying: ${n1} &times; ${k} = ${n1 * k}.`]],
       `${d1} &times; <b>${k}</b> = ${L}, so multiply the numerator by the same ${k}: ` +
-      `${n1}&times;${k} / ${d1}&times;${k} = <b>${n1 * k}/${L}</b>.<br>Whatever you do to the bottom, you do to the top.`
+      `${n1}&times;${k} / ${d1}&times;${k} = <b>${n1 * k}/${L}</b>.<br>Whatever you do to the bottom, you do to the top.`,
+      `Ask: &ldquo;${d1} times what makes ${L}?&rdquo; Then multiply the top by that same number.`
     );
   }
 
@@ -1364,11 +1617,17 @@ function genAddSubQuestion(){
     return mcQuestion(
       `${name} wrote <b>${p.n1}/${p.d1} ${sym} ${p.n2}/${p.d2} = ${slip}</b>. What did ${name} do wrong?`,
       `${op === '+' ? 'Added' : 'Subtracted'} the denominators instead of finding the LCD`,
-      ['Forgot to multiply the two numerators together',
-       `Should have ${op === '+' ? 'subtracted' : 'added'} the two fractions instead of ${op === '+' ? 'adding' : 'subtracting'}`,
-       'Nothing &mdash; the answer is already correct'],
+      (() => {
+        const bot = slip.split('/')[1], adding = op === '+' ? 'adding' : 'subtracting';
+        return [
+          ['Forgot to multiply the two numerators together', `Multiplying the numerators is a step for MULTIPLYING fractions, not for ${adding} them. The real slip is on the bottom: ${p.d1} ${sym} ${p.d2} = ${bot}.`],
+          [`Should have ${op === '+' ? 'subtracted' : 'added'} the two fractions instead of ${op === '+' ? 'adding' : 'subtracting'}`, `The problem shows ${sym}, so ${adding} was the right job. The slip is the bottom number: ${name} wrote ${bot}, which is ${p.d1} ${sym} ${p.d2}.`],
+          ['Nothing &mdash; the answer is already correct', `${slip} is not right. The LCD of ${p.d1} and ${p.d2} is ${p.lcd}, and ${p.a}/${p.lcd} ${sym} ${p.b}/${p.lcd} = ${showReduce(p.num, p.lcd)}.`]
+        ];
+      })(),
       `You never ${op === '+' ? 'add' : 'subtract'} the denominators. Find the LCD, rename, then ${op === '+' ? 'add' : 'subtract'} only the numerators.<br>` +
-      addSubExplain(p, op) + check
+      addSubExplain(p, op) + check,
+      `Look at the bottom of ${name}&rsquo;s answer. If it is just the two denominators ${op === '+' ? 'added' : 'subtracted'}, that is the straight-across slip.`
     );
   }
 
@@ -1383,25 +1642,42 @@ function genAddSubQuestion(){
        whole point of the question (her test used 3/6 and 1/2). */
     const eqPair = () => { const a = f(), k = randInt(2, 4); return pair({n: a.n * k, d: a.d * k}, a); };
     const notEqPair = () => { const a = f(), k = randInt(2, 4); return pair({n: a.n * k + 1, d: a.d * k}, a); };
+    const parts = s => s.match(/^(\d+)\/(\d+) and (\d+)\/(\d+)$/).slice(1).map(Number);
     if(kind === 'similar'){
-      return mcQuestion('Which pair shows <b>similar</b> fractions?', samePair(), three(diffPair),
-        '<b>Similar</b> fractions have the <b>same denominator</b>. Look only at the bottom numbers.');
+      return mcQuestion('Which pair shows <b>similar</b> fractions?', samePair(), three(diffPair).map(s => {
+          const [, a, , b] = parts(s);
+          return [s, `${s} have different denominators (${a} and ${b}), so they are dissimilar, not similar.`];
+        }),
+        '<b>Similar</b> fractions have the <b>same denominator</b>. Look only at the bottom numbers.',
+        'Cover the top numbers with your finger. Similar means the two bottom numbers match.');
     }
     if(kind === 'dissimilar'){
-      return mcQuestion('Which pair shows <b>dissimilar</b> fractions?', diffPair(), three(samePair),
-        '<b>Dissimilar</b> fractions have <b>different denominators</b>. These are the ones that need an LCD before you add or subtract.');
+      return mcQuestion('Which pair shows <b>dissimilar</b> fractions?', diffPair(), three(samePair).map(s => {
+          const [, a] = parts(s);
+          return [s, `${s} both have the denominator ${a}, so they are similar, not dissimilar.`];
+        }),
+        '<b>Dissimilar</b> fractions have <b>different denominators</b>. These are the ones that need an LCD before you add or subtract.',
+        'Cover the top numbers with your finger. Dissimilar means the two bottom numbers are different.');
     }
     const eq = eqPair();
-    return mcQuestion('Which pair shows <b>equivalent</b> fractions?', eq, three(notEqPair, eq),
-      '<b>Equivalent</b> fractions name the <b>same amount</b>. Simplify the fraction with the bigger numbers: if it becomes the other fraction, they are equivalent.');
+    return mcQuestion('Which pair shows <b>equivalent</b> fractions?', eq, three(notEqPair, eq).map(s => {
+        const [x, y, n, d] = parts(s), k = y / d;
+        return [s, `These are not the same amount. Rename ${n}/${d} with the bottom ${y}: ${n}&times;${k} / ${d}&times;${k} = ${n * k}/${y}, not ${x}/${y}.`];
+      }),
+      '<b>Equivalent</b> fractions name the <b>same amount</b>. Simplify the fraction with the bigger numbers: if it becomes the other fraction, they are equivalent.',
+      'For each pair, ask: what did the small bottom get multiplied by to make the big bottom? The top must have been multiplied by the same number.');
   }
 
   const which = pick(['adding', 'subtracting']);
+  const Verb = which === 'adding' ? 'Add' : 'Subtract', verb = Verb.toLowerCase();
   return mcQuestion(
     `What is the <b>first step</b> in ${which} dissimilar fractions?`,
     'Find the LCD',
-    [`${which === 'adding' ? 'Add' : 'Subtract'} the denominators`, 'Multiply the numerators', `${which === 'adding' ? 'Add' : 'Subtract'} the numerators`],
-    'Dissimilar fractions have different denominators, so <b>find the LCD first</b>. Then rename, then work with the numerators only, then simplify.'
+    [[`${Verb} the denominators`, `You never ${verb} the denominators &mdash; that is the straight-across slip (${which === 'adding' ? '1/2 + 1/4 is not 2/6' : '5/6 &minus; 1/3 is not 4/3'}).`],
+     ['Multiply the numerators', `Multiplying the numerators is a step for multiplying fractions. It is not part of ${which} them.`],
+     [`${Verb} the numerators`, `You do ${verb} the numerators, but only in step 3, after both fractions have the same denominator. It is not the first step.`]],
+    'Dissimilar fractions have different denominators, so <b>find the LCD first</b>. Then rename, then work with the numerators only, then simplify.',
+    `Different bottoms cannot be ${which === 'adding' ? 'added' : 'subtracted'} yet. Remember the 4 steps in order: LCD, rename, ${verb} the tops, simplify.`
   );
 }
 function genAddSubSet(n){
@@ -1458,15 +1734,30 @@ function genOrderDecQuestion(){
     const list = arr => arr.map(v => decStr(w, v)).join(', ');
     const byLength = vals.slice().sort((x, y) => decPlaces(x) - decPlaces(y) || x - y);
     const perms = [[0,2,1],[1,0,2],[1,2,0],[2,0,1]].map(ix => ix.map(i => asc[i]));
-    const wrongs = [list(target.slice().reverse()), list(up ? byLength : byLength.slice().reverse())]
-      .concat(perms.map(list));
+    const dirName = up ? 'least to greatest' : 'greatest to least';
+    /* The first neighbouring pair that is in the wrong order, checked with padded values */
+    const orderWhy = arr => {
+      for(let i = 0; i < arr.length - 1; i++){
+        const x = arr[i], y = arr[i + 1];
+        if(up ? x > y : x < y){
+          return `${decStr(w, x)} comes before ${decStr(w, y)}, but ${padded(w, x)} ${x > y ? '&gt;' : '&lt;'} ${padded(w, y)}, so for ${dirName} ${decStr(w, y)} must come first.`;
+        }
+      }
+      return '';
+    };
+    const reversed = target.slice().reverse(), lengthOrder = up ? byLength : byLength.slice().reverse();
+    const wrongs = [
+      [list(reversed), `This is ${up ? 'greatest to least' : 'least to greatest'} &mdash; the right numbers in the wrong direction. The question asks for ${dirName}.`],
+      [list(lengthOrder), `This sorts them by how many digits they have, not by their value. ${orderWhy(lengthOrder)}`]
+    ].concat(perms.map(pm => [list(pm), orderWhy(pm)]));
     return mc4(
       `What is the correct arrangement of these decimals from <b>${up ? 'least to greatest' : 'greatest to least'}</b>: ${list(vals)}?`,
       list(target), wrongs,
       `Line up the decimal points and fill the empty places with zeros: ${vals.map(v => padded(w, v)).join(', ')}.<br>` +
       `Now compare them like whole numbers: ${asc.map(v => String(v).padStart(3, '0')).join(' &lt; ')}.<br>` +
       `${up ? '<b>Least</b> (smallest) comes first' : '<b>Greatest</b> (biggest) comes first'}: <b>${list(target)}</b>.<br>` +
-      `<i>Read the direction twice &mdash; the reversed list is always one of the choices.</i>`
+      `<i>Read the direction twice &mdash; the reversed list is always one of the choices.</i>`,
+      `Circle the direction words first. Then add zeros so every decimal has 3 places and compare them like whole numbers.`
     );
   }
 
@@ -1485,12 +1776,21 @@ function genOrderDecQuestion(){
     const sy = kind === 'equal' ? (w + '.' + String(y / 100) + '0') : decStr(w, y);
     const correct = x > y ? '&gt;' : x < y ? '&lt;' : '=';
     const word = x > y ? 'greater than' : x < y ? 'less than' : 'equal to';
+    const px = padded(w, x), py = padded(w, y);
+    const symWhy = s => {
+      if(x === y) return `${s} says the two are different, but ${sx} and ${sy} are equal: ${px} = ${py}. A zero at the end does not change the value.`;
+      if(s === '=') return `= means the same value, but ${px} and ${py} are different numbers.`;
+      const i = [...px].findIndex((ch, j) => ch !== py[j]);
+      const place = PLACE_NAMES[i - px.indexOf('.') - 1];
+      return `${s} would mean ${sx} is ${s === '&gt;' ? 'greater' : 'less'} than ${sy}. Compare ${px} and ${py}: in the ${place} place, ${px[i]} ${px[i] > py[i] ? '&gt;' : '&lt;'} ${py[i]}, so ${sx} is ${word} ${sy}.`;
+    };
     return mcQuestion(
       `Which symbol makes this true? <b>${sx} ___ ${sy}</b>`,
-      correct, ['&gt;', '&lt;', '='].filter(s => s !== correct),
+      correct, ['&gt;', '&lt;', '='].filter(s => s !== correct).map(s => [s, symWhy(s)]),
       `Fill with zeros so both have the same number of places: ${padded(w, x)} and ${padded(w, y)}.<br>` +
       `Compare place by place from the left: ${sx} is <b>${word}</b> ${sy}, so the answer is <b>${correct}</b>.` +
-      (kind === 'equal' ? `<br><i>Adding a zero at the end of a decimal does not change its value.</i>` : '')
+      (kind === 'equal' ? `<br><i>Adding a zero at the end of a decimal does not change its value.</i>` : ''),
+      'Add zeros so both have the same number of places, then compare from the left, one place at a time. The open side of &gt; or &lt; faces the bigger number.'
     );
   }
 
@@ -1501,23 +1801,37 @@ function genOrderDecQuestion(){
     const best = want === 'greatest' ? Math.max(...vals) : Math.min(...vals);
     return mcQuestion(
       `Which decimal is the <b>${want}</b>?`,
-      decStr(w, best), vals.filter(v => v !== best).map(v => decStr(w, v)),
+      decStr(w, best), vals.filter(v => v !== best).map(v => {
+        const longer = want === 'greatest' ? decPlaces(v) > decPlaces(best) : decPlaces(v) < decPlaces(best);
+        const show = u => decStr(w, u) === padded(w, u) ? decStr(w, u) : `${decStr(w, u)} = ${padded(w, u)}`;
+        return [decStr(w, v), `${show(v)}, but ${show(best)}, which is ${want === 'greatest' ? 'bigger' : 'smaller'}.` +
+          (longer ? (want === 'greatest' ? ' More digits does not mean bigger.' : ' Fewer digits does not mean smaller.') : '')];
+      }),
       `Fill with zeros so they all have three places: ${vals.map(v => padded(w, v)).join(', ')}.<br>` +
-      `Then compare: the ${want} is <b>${decStr(w, best)}</b>.` + lengthTrapNote(vals, want, best)
+      `Then compare: the ${want} is <b>${decStr(w, best)}</b>.` + lengthTrapNote(vals, want, best),
+      `Pad every decimal with zeros to 3 places, then compare them like whole numbers and pick the ${want === 'greatest' ? 'biggest' : 'smallest'}.`
     );
   }
 
   const t = pick([
     () => { const x = randInt(1, 9); return {q:`True or False: <b>${w}.${x}</b> and <b>${w}.${x}0</b> have the same value.`, a:true,
-      e:`True &mdash; a zero at the end of a decimal does not change its value: ${w}.${x} = ${w}.${x}0 = ${w}.${x}00.`}; },
+      e:`True &mdash; a zero at the end of a decimal does not change its value: ${w}.${x} = ${w}.${x}0 = ${w}.${x}00.`,
+      why:`They really are the same: ${w}.${x}0 is ${x} tenths and 0 hundredths, exactly the same as ${w}.${x}. The extra zero adds nothing.`,
+      tip:'Remember 0.5 = 0.50 = 0.500: zeros added at the END of a decimal never change its value.'}; },
     () => { let x, y; do { x = randInt(2, 9); y = randInt(10, 99); } while(Math.floor(y / 10) >= x || y % 10 === 0); return {q:`True or False: <b>${w}.${y}</b> is greater than <b>${w}.${x}</b> because ${y} is bigger than ${x}.`, a:false,
-      e:`False &mdash; fill with zeros: ${w}.${y} vs ${w}.${x}0. The tenths digit decides first: ${Math.floor(y / 10)} ${Math.floor(y / 10) === 1 ? 'tenth is' : 'tenths are'} less than ${x} tenths, so ${w}.${y} is <b>less</b>.`}; },
+      e:`False &mdash; fill with zeros: ${w}.${y} vs ${w}.${x}0. The tenths digit decides first: ${Math.floor(y / 10)} ${Math.floor(y / 10) === 1 ? 'tenth is' : 'tenths are'} less than ${x} tenths, so ${w}.${y} is <b>less</b>.`,
+      why:`The &ldquo;because&rdquo; is the trap: ${y} is bigger than ${x} as a whole number, but as decimals ${w}.${x} = ${w}.${x}0, and ${x}0 hundredths is more than ${y} hundredths. So it is not True.`,
+      tip:'Never compare decimals by how long they are. Fill with zeros until they have the same number of places, then compare.'}; },
     () => ({q:'True or False: &ldquo;Least to greatest&rdquo; means you write the smallest number first.', a:true,
-      e:'True &mdash; <b>least</b> means smallest. Least to greatest starts small and ends big.'}),
+      e:'True &mdash; <b>least</b> means smallest. Least to greatest starts small and ends big.',
+      why:'The statement is right, so it is not False: the first word, &ldquo;least&rdquo;, means smallest, and it tells you what comes first.',
+      tip:'The first word of the direction tells you what goes first: &ldquo;least&rdquo; first = smallest first.'}),
     () => ({q:'True or False: &ldquo;Least to greatest&rdquo; means you write the biggest number first.', a:false,
-      e:'False &mdash; that is <b>greatest to least</b>. Least to greatest starts with the smallest number.'})
+      e:'False &mdash; that is <b>greatest to least</b>. Least to greatest starts with the smallest number.',
+      why:'The word &ldquo;biggest&rdquo; is the swapped part. Least to greatest starts with the smallest number, so the statement is not True.',
+      tip:'The first word of the direction tells you what goes first: &ldquo;greatest&rdquo; first = biggest first, &ldquo;least&rdquo; first = smallest first.'})
   ])();
-  return mcQuestion(t.q, t.a ? 'True' : 'False', [t.a ? 'False' : 'True'], t.e);
+  return mcQuestion(t.q, t.a ? 'True' : 'False', [[t.a ? 'False' : 'True', t.why]], t.e, t.tip);
 }
 function genOrderDecSet(n){
   return Array.from({length:n}, ()=> genOrderDecQuestion());
@@ -1756,6 +2070,14 @@ function renderScene(svgEl, n){
 let currentLessonIdx = 0;
 let cardIdx = 0;
 let quizIdx = 0;
+let missedQuestions = [];
+function learnHtml(m){
+  return `<div class="learn">
+    <div class="learn-row learn-picked"><b class="learn-label">You picked</b><span class="learn-choice">${m.picked}</span>${m.why ? `<span class="learn-why">Why that's not right: ${m.why}</span>` : ''}</div>
+    <div class="learn-row learn-right"><b class="learn-label">The right answer</b><span class="learn-choice">${m.answer}</span><span class="learn-why">${m.explain}</span></div>
+    ${m.tip ? `<div class="learn-row learn-tip"><b class="learn-label">💡 Tip for next time</b>${m.tip}</div>` : ''}
+  </div>`;
+}
 let quizScore = 0;
 let sessionPoints = 0, streak = 0, bestStreak = 0;
 
@@ -1966,6 +2288,7 @@ function startQuiz(){
   historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, false, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
+  missedQuestions = [];
   startRound();
   renderQuestion();
   showScreen(quizScreen);
@@ -1981,6 +2304,7 @@ function startFinalExam(){
   historyQuizId = SH ? SH.quizStarted(SH_APP, SH_TITLE, currentQuizMeta.id, currentQuizMeta.title, true, currentQuizSet.length) : null;
   quizIdx = 0;
   quizScore = 0;
+  missedQuestions = [];
   startRound();
   renderQuestion();
   showScreen(quizScreen);
@@ -2023,10 +2347,13 @@ function selectOption(idx){
   const correct = idx === q.correct;
   SH && SH.quizAnswered(historyQuizId, correct, q.q, q.options[idx], q.options[q.correct]);
   if(correct) quizScore++;
+  else missedQuestions.push({ q:q.q, picked:q.options[idx], why:(q.why||[])[idx] || '', answer:q.options[q.correct], explain:q.explain, tip:q.tip || '' });
   awardPoint(correct);
   renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
   const fb = document.getElementById('q-feedback');
-  fb.innerHTML = `<div class="feedback ${correct?'good':'bad'}"><strong>${correct?'Correct! 🎉':'Not quite.'}</strong>${q.explain}</div>`;
+  fb.innerHTML = correct
+    ? `<div class="feedback good"><strong>Correct! 🎉</strong>${q.explain}</div>`
+    : `<div class="feedback bad"><strong>Not quite — let's learn from this!</strong>${learnHtml(missedQuestions[missedQuestions.length-1])}</div>`;
   document.getElementById('q-next-btn').classList.remove('hidden');
 }
 
@@ -2057,6 +2384,11 @@ function renderResults(total){
   document.getElementById('results-score').innerHTML = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
   document.getElementById('points-earned').textContent = pointsRoundLine('this round');
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
+  const reviewEl = document.getElementById('missed-review');
+  reviewEl.innerHTML = missedQuestions.length
+    ? '<h3>Questions to Review</h3><div class="missed-list">' + missedQuestions.map(m => `<div class="missed-item"><p class="missed-q">${m.q}</p>${learnHtml(m)}</div>`).join('') + '</div>'
+    : '';
+  reviewEl.classList.toggle('hidden', !missedQuestions.length);
 }
 
 function retryLesson(){
@@ -2766,11 +3098,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Because 2/3 is less than 1, and multiplying by a number less than 1 takes only a <b>part</b> of the amount, so the result must be smaller.', c:true},
-          {t:'Because the answer was written in simplest form, and reducing a fraction to lowest terms always makes the amount it stands for smaller.'},
-          {t:'Because 3/4 and 2/3 have different denominators, and multiplying two unlike fractions always shrinks the answer to the smaller one.'},
-          {t:'Because multiplying two fractions is really repeated subtraction, so each one is taken away from the other one in turn.'}
+          {t:'Because the answer was written in simplest form, and reducing a fraction to lowest terms always makes the amount it stands for smaller.', w:'Simplifying never changes the amount: 6/12 and 1/2 are the same number. The answer is smaller because we multiplied by 2/3, which is less than 1.'},
+          {t:'Because 3/4 and 2/3 have different denominators, and multiplying two unlike fractions always shrinks the answer to the smaller one.', w:'Denominators do not decide this, and the answer 1/2 is not even equal to the smaller fraction 2/3. What matters is that 2/3 is less than 1, so we take only part of 3/4.'},
+          {t:'Because multiplying two fractions is really repeated subtraction, so each one is taken away from the other one in turn.', w:'Multiplying is not subtracting. 2/3 &times; 3/4 means 2/3 <i>of</i> 3/4 &mdash; a part of an amount &mdash; and a part is smaller than the whole amount.'}
         ],
-        model:{ why:'"Multiplying makes it bigger" is only true for whole numbers greater than 1. Multiplying by <b>1</b> keeps an amount the same; multiplying by a number <b>less than 1</b> shrinks it. Here 2/3 is less than 1, so 2/3 of 3/4 has to be less than 3/4. This is a fast reasonableness check at the C step: if you multiply by a proper fraction and your answer came out bigger, you have made a mistake somewhere.' }
+        model:{ why:'"Multiplying makes it bigger" is only true for whole numbers greater than 1. Multiplying by <b>1</b> keeps an amount the same; multiplying by a number <b>less than 1</b> shrinks it. Here 2/3 is less than 1, so 2/3 of 3/4 has to be less than 3/4. This is a fast reasonableness check at the C step: if you multiply by a proper fraction and your answer came out bigger, you have made a mistake somewhere.' },
+        tip:'Ask: is the number I am multiplying by bigger than 1, equal to 1, or less than 1? Less than 1 means the answer shrinks.'
       }
     ]
   },
@@ -2803,11 +3136,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Because 2/5 counts a part of the <b>water in the tank</b> while 1/10 counts a part of a <b>full tank</b> &mdash; two different wholes.', c:true},
-          {t:'Because 2/5 and 1/10 have different denominators, and two fractions can only be added when their denominators already match.'},
-          {t:'Because Ben used his water before his mother used hers, and amounts used at different times cannot be added together.'},
-          {t:'Because 2/5 is bigger than 1/10, and a bigger fraction must always be multiplied before a smaller one is added to it.'}
+          {t:'Because 2/5 and 1/10 have different denominators, and two fractions can only be added when their denominators already match.', w:'Different denominators are easy to fix: 2/5 renames to 4/10. The real problem is that 2/5 is a part of the water in the tank, while 1/10 is a part of a full tank.'},
+          {t:'Because Ben used his water before his mother used hers, and amounts used at different times cannot be added together.', w:'When something happened does not stop you from adding. Once both amounts count parts of a full tank (3/10 and 1/10), they add up fine.'},
+          {t:'Because 2/5 is bigger than 1/10, and a bigger fraction must always be multiplied before a smaller one is added to it.', w:'There is no rule about bigger fractions going first. We multiply 2/5 by 3/4 because Ben&rsquo;s 2/5 is 2/5 <i>of</i> the water in the tank, not of a full tank.'}
         ],
-        model:{ why:'Every fraction is a fraction <b>of something</b>, and these two name different wholes. Ben\'s 2/5 is 2/5 of the <i>water in the tank</i>; his mother\'s 1/10 is 1/10 of a <i>full tank</i>. Adding them straight away is like adding 2/5 of a glass to 1/10 of a bucket, and it gives the wrong total &mdash; 2/5 + 1/10 = 5/10 = 1/2, not 2/5. Multiplying first rewrites Ben\'s share as 3/10 of a full tank, and only then do both numbers count the same whole. Note that the denominators are <b>not</b> the problem: 2/5 and 1/10 rename to 4/10 and 1/10 easily enough. What matters is what each fraction is a part of.' }
+        model:{ why:'Every fraction is a fraction <b>of something</b>, and these two name different wholes. Ben\'s 2/5 is 2/5 of the <i>water in the tank</i>; his mother\'s 1/10 is 1/10 of a <i>full tank</i>. Adding them straight away is like adding 2/5 of a glass to 1/10 of a bucket, and it gives the wrong total &mdash; 2/5 + 1/10 = 5/10 = 1/2, not 2/5. Multiplying first rewrites Ben\'s share as 3/10 of a full tank, and only then do both numbers count the same whole. Note that the denominators are <b>not</b> the problem: 2/5 and 1/10 rename to 4/10 and 1/10 easily enough. What matters is what each fraction is a part of.' },
+        tip:'Before adding two fractions in a story, finish the sentence for each one: &ldquo;this is a part of ______.&rdquo; Only add when both blanks are the same whole.'
       }
     ]
   },
@@ -2840,11 +3174,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Because multiplication is the shortcut for repeated equal groups, and all three pitchers need the very same 2/3 cup.', c:true},
-          {t:'Because 3 is a whole number, and adding and multiplying always give the same answer whenever one number is whole.'},
-          {t:'Because the two answers only happen to match here; with a different recipe the two methods would disagree.'},
-          {t:'Because adding fractions and multiplying fractions are really the same operation written with two different signs.'}
+          {t:'Because 3 is a whole number, and adding and multiplying always give the same answer whenever one number is whole.', w:'Adding 2/3 + 3 is not the same as 2/3 &times; 3. The match comes from adding the SAME 2/3 three times &mdash; equal groups &mdash; not from 3 being whole.'},
+          {t:'Because the two answers only happen to match here; with a different recipe the two methods would disagree.', w:'It is not luck. Adding an amount n times always equals multiplying it by n, because multiplication is repeated equal addition. It works for every recipe.'},
+          {t:'Because adding fractions and multiplying fractions are really the same operation written with two different signs.', w:'They are different operations: 2/3 + 3 and 2/3 &times; 3 give different answers. Only adding the same 2/3 again and again matches multiplying.'}
         ],
-        model:{ why:'Multiplication <b>is</b> repeated addition when the groups are equal. Three pitchers each take 2/3 cup, so 2/3 + 2/3 + 2/3 and 2/3 &times; 3 are two ways of describing the same pile of juice, and both come to 6/3 = 2 cups. This is worth knowing for two reasons: it gives you a free C-step check on any "how much for n of them" question, and adding is slow once n gets large &mdash; nobody wants to add 2/3 twelve times.' }
+        model:{ why:'Multiplication <b>is</b> repeated addition when the groups are equal. Three pitchers each take 2/3 cup, so 2/3 + 2/3 + 2/3 and 2/3 &times; 3 are two ways of describing the same pile of juice, and both come to 6/3 = 2 cups. This is worth knowing for two reasons: it gives you a free C-step check on any "how much for n of them" question, and adding is slow once n gets large &mdash; nobody wants to add 2/3 twelve times.' },
+        tip:'Look for equal groups: the same amount again and again. Equal groups means multiplying is the shortcut for adding.'
       }
     ]
   },
@@ -2877,11 +3212,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Dividing by 2 &mdash; Keep&ndash;Change&ndash;Flip turns &divide; 2/1 into &times; 1/2, so halving and dividing by 2 are one and the same.', c:true},
-          {t:'Dividing by 1/2 &mdash; you always divide by the fraction that is named, so taking half means dividing by one half.'},
-          {t:'Multiplying by 2 &mdash; the recipe is being split between two batches, so each amount has to be doubled.'},
-          {t:'Multiplying by 1/4 &mdash; half of a half is a quarter, so half a recipe needs a quarter of each amount.'}
+          {t:'Dividing by 1/2 &mdash; you always divide by the fraction that is named, so taking half means dividing by one half.', w:'Dividing BY 1/2 does the opposite: 3/5 &divide; 1/2 = 3/5 &times; 2/1 = 6/5, twice as much. Taking half must give less.'},
+          {t:'Multiplying by 2 &mdash; the recipe is being split between two batches, so each amount has to be doubled.', w:'Doubling makes 2 recipes, not half of one. Rina makes LESS, so each amount must get smaller: 3/5 &times; 1/2 = 3/10.'},
+          {t:'Multiplying by 1/4 &mdash; half of a half is a quarter, so half a recipe needs a quarter of each amount.', w:'Rina halves the recipe only once, so each amount is multiplied by 1/2, not 1/4. 3/5 &times; 1/4 would be a quarter of the recipe.'}
         ],
-        model:{ why:'"Take half", "halve it" and "divide by 2" are three names for the same step, and Keep&ndash;Change&ndash;Flip shows why: <b>keep</b> 3/5, <b>change</b> &divide; to &times;, <b>flip</b> 2/1 to 1/2, giving 3/5 &times; 1/2. Watch the tempting wrong answer: dividing <i>by</i> 1/2 does the opposite and makes the amount twice as big, because 3/5 &divide; 1/2 = 3/5 &times; 2/1 = 6/5. Halving means multiplying by 1/2, never dividing by it.' }
+        model:{ why:'"Take half", "halve it" and "divide by 2" are three names for the same step, and Keep&ndash;Change&ndash;Flip shows why: <b>keep</b> 3/5, <b>change</b> &divide; to &times;, <b>flip</b> 2/1 to 1/2, giving 3/5 &times; 1/2. Watch the tempting wrong answer: dividing <i>by</i> 1/2 does the opposite and makes the amount twice as big, because 3/5 &divide; 1/2 = 3/5 &times; 2/1 = 6/5. Halving means multiplying by 1/2, never dividing by it.' },
+        tip:'Guess the size first: half of something must be SMALLER. Any choice that makes the amount bigger can be crossed out.'
       }
     ]
   },
@@ -2914,11 +3250,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Because the 2 extra containers hold a different liquid, so you must first find how many the blue liquid fills.', c:true},
-          {t:'Because GEMDAS says division is always done before addition, whatever order the steps happen in inside the story.'},
-          {t:'Because 5/6 is the largest number in the problem, and the largest number in a word problem is always dealt with first.'},
-          {t:'Because a whole number cannot be added to a fraction until the fraction has been rewritten with the same denominator.'}
+          {t:'Because GEMDAS says division is always done before addition, whatever order the steps happen in inside the story.', w:'GEMDAS is for a number sentence that is already written. In a word problem, the story decides the order: you need the number of blue containers before you can add the 2 more.'},
+          {t:'Because 5/6 is the largest number in the problem, and the largest number in a word problem is always dealt with first.', w:'5/6 is not even the largest number &mdash; 2 is bigger. And there is no such rule: the order comes from what you must know first.'},
+          {t:'Because a whole number cannot be added to a fraction until the fraction has been rewritten with the same denominator.', w:'Denominators are not the problem. Adding 5/6 + 2 is wrong because 5/6 counts litres and 2 counts containers &mdash; two different things.'}
         ],
-        model:{ why:'The order comes from the <b>story</b>, not from a rule. The 2 extra containers hold a different liquid, so they were never part of the 5/6 litre. If you added first (5/6 + 2) you would be adding containers to litres, which is meaningless. Divide to turn the 5/6 litre into <b>10 containers</b>, and only then are both numbers counting the same thing, so 10 + 2 = 12 makes sense. In a multi-step problem, always ask: <b>"what must I know first?"</b>' }
+        model:{ why:'The order comes from the <b>story</b>, not from a rule. The 2 extra containers hold a different liquid, so they were never part of the 5/6 litre. If you added first (5/6 + 2) you would be adding containers to litres, which is meaningless. Divide to turn the 5/6 litre into <b>10 containers</b>, and only then are both numbers counting the same thing, so 10 + 2 = 12 makes sense. In a multi-step problem, always ask: <b>"what must I know first?"</b>' },
+        tip:'Say what each number counts (litres? containers?). You can only add numbers that count the same thing.'
       }
     ]
   },
@@ -2951,11 +3288,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'"Pieces of 1/6 metre <b>each</b>" asks how many groups of that size fit &rarr; divide. "1/6 <b>of</b> the ribbon" asks for a part of the whole &rarr; multiply.', c:true},
-          {t:'Task A has the bigger answer, and the task with the bigger answer is always the one that needs division rather than multiplication.'},
-          {t:'The fraction written second tells you the operation, and 1/6 comes second in both tasks, so both of them use the same one.'},
-          {t:'Either operation works for both tasks, because 4 pieces and 1/9 metre are two different ways of writing the very same amount.'}
+          {t:'Task A has the bigger answer, and the task with the bigger answer is always the one that needs division rather than multiplication.', w:'You cannot know which answer is bigger until you choose the operation, so this cannot tell you what to do. The words &ldquo;each&rdquo; and &ldquo;of&rdquo; decide it.'},
+          {t:'The fraction written second tells you the operation, and 1/6 comes second in both tasks, so both of them use the same one.', w:'The tasks use different operations (4 and 1/9 are different answers), so the order of the numbers cannot be the clue. The wording is.'},
+          {t:'Either operation works for both tasks, because 4 pieces and 1/9 metre are two different ways of writing the very same amount.', w:'4 pieces counts things, while 1/9 metre is a length &mdash; they are not the same kind of thing, let alone the same amount.'}
         ],
-        model:{ why:'Identical numbers, opposite operations &mdash; the <b>words</b> decide. Watch for two signals:<br>&bull; <b>"each", "per", "cut into pieces of", "how many fit"</b> &rarr; measurement division. The answer <i>counts</i> things, so it is usually a whole number.<br>&bull; <b>"of the", "a part of", "half of it"</b> &rarr; multiplication. The answer is an <i>amount</i> in the same unit, and it is smaller than what you started with.<br>A fast sanity check: 4 pieces and 1/9 metre are not even the same kind of thing, so the two tasks could never share an answer.' }
+        model:{ why:'Identical numbers, opposite operations &mdash; the <b>words</b> decide. Watch for two signals:<br>&bull; <b>"each", "per", "cut into pieces of", "how many fit"</b> &rarr; measurement division. The answer <i>counts</i> things, so it is usually a whole number.<br>&bull; <b>"of the", "a part of", "half of it"</b> &rarr; multiplication. The answer is an <i>amount</i> in the same unit, and it is smaller than what you started with.<br>A fast sanity check: 4 pieces and 1/9 metre are not even the same kind of thing, so the two tasks could never share an answer.' },
+        tip:'Circle the signal words: &ldquo;each&rdquo;, &ldquo;pieces of&rdquo;, &ldquo;how many fit&rdquo; &rarr; divide; &ldquo;of the&rdquo;, &ldquo;a part of&rdquo; &rarr; multiply.'
       }
     ]
   },
@@ -2988,11 +3326,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Because 3 counts <b>bags</b>, not kilograms &mdash; each bag holds only 1/8 kg, so the three together weigh 3/8 kilogram.', c:true},
-          {t:'Because the bags were all filled from 7/8 kilogram, so any 3 of them must weigh 3/7 of a kilogram altogether.'},
-          {t:'Because 3 kilograms is the weight of all seven bags together, not the weight of the three she set aside.'},
-          {t:'Because a bag of rice always weighs a little more than the rice inside it once the packaging is counted.'}
+          {t:'Because the bags were all filled from 7/8 kilogram, so any 3 of them must weigh 3/7 of a kilogram altogether.', w:'3/7 is 3 of the 7 BAGS, not kilograms. Each bag holds 1/8 kg, so 3 bags weigh 3 &times; 1/8 = 3/8 kilogram.'},
+          {t:'Because 3 kilograms is the weight of all seven bags together, not the weight of the three she set aside.', w:'All seven bags weigh only 7/8 kilogram (7 &times; 1/8), not 3 kilograms. The 3 counts bags, not kilograms.'},
+          {t:'Because a bag of rice always weighs a little more than the rice inside it once the packaging is counted.', w:'The story never mentions packaging. Lito is wrong because 3 is a number of bags, and 3 bags of 1/8 kg weigh 3/8 kg.'}
         ],
-        model:{ why:'The number 3 in this story is a <b>count of bags</b>, not a weight. To turn a count of bags into kilograms you must multiply by what one bag holds: 3 &times; 1/8 = 3/8 kilogram. Lito read "3" as if it already meant kilograms. Before you write any number down, say what it measures out loud &mdash; "3 <i>bags</i>", "1/8 <i>kilogram per bag</i>" &mdash; and the operation you need usually becomes obvious.' }
+        model:{ why:'The number 3 in this story is a <b>count of bags</b>, not a weight. To turn a count of bags into kilograms you must multiply by what one bag holds: 3 &times; 1/8 = 3/8 kilogram. Lito read "3" as if it already meant kilograms. Before you write any number down, say what it measures out loud &mdash; "3 <i>bags</i>", "1/8 <i>kilogram per bag</i>" &mdash; and the operation you need usually becomes obvious.' },
+        tip:'Say each number with its unit: &ldquo;3 bags&rdquo;, &ldquo;1/8 kg per bag&rdquo;. To change bags into kilograms, multiply by what one bag holds.'
       }
     ]
   },
@@ -3025,11 +3364,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'He multiplied 2/3 by the <b>whole</b> 12 m, but 2/3 describes only the 9 m that went into capes.', c:true},
-          {t:'He should have divided 12 by 2/3, because the word "of" tells you to divide whenever the first number is a whole number.'},
-          {t:'His arithmetic slipped: 12 &times; 2/3 does not equal 8 metres, and the correct product would have given him the right answer.'},
-          {t:'Nothing went wrong &mdash; 8 metres and 6 metres are the same length written with two different units of measurement.'}
+          {t:'He should have divided 12 by 2/3, because the word "of" tells you to divide whenever the first number is a whole number.', w:'&ldquo;Of&rdquo; means multiply, whether the number is whole or not. Multiplying was right &mdash; he just multiplied the wrong amount (12 m instead of 9 m).'},
+          {t:'His arithmetic slipped: 12 &times; 2/3 does not equal 8 metres, and the correct product would have given him the right answer.', w:'His arithmetic is fine: 12 &times; 2/3 = 24/3 = 8. The mistake is using 12 m, when 2/3 is a part of the 9 m that went into capes.'},
+          {t:'Nothing went wrong &mdash; 8 metres and 6 metres are the same length written with two different units of measurement.', w:'Both are in metres, and 8 m is longer than 6 m. The long capes use 6 m: 2/3 of the 9 m of cape cloth.'}
         ],
-        model:{ why:'His arithmetic is fine &mdash; 12 &times; 2/3 really is 8. The mistake is at the <b>U step</b>: he attached the fraction to the wrong whole. Every fraction in a word problem is a fraction <b>of something specific</b>, and here the sentence says "of the cloth that went into capes", which is 9 m, not 12 m. Before multiplying, always finish this sentence out loud: <b>"two-thirds of ______."</b> His answer also fails the C step: the long capes and the short capes together must come to 9 m, and 8 m would leave only 1 m for the short capes, which is not a third of 9 m.' }
+        model:{ why:'His arithmetic is fine &mdash; 12 &times; 2/3 really is 8. The mistake is at the <b>U step</b>: he attached the fraction to the wrong whole. Every fraction in a word problem is a fraction <b>of something specific</b>, and here the sentence says "of the cloth that went into capes", which is 9 m, not 12 m. Before multiplying, always finish this sentence out loud: <b>"two-thirds of ______."</b> His answer also fails the C step: the long capes and the short capes together must come to 9 m, and 8 m would leave only 1 m for the short capes, which is not a third of 9 m.' },
+        tip:'Finish the sentence out loud before multiplying: &ldquo;two-thirds OF ______.&rdquo; Find that exact amount in the story.'
       }
     ]
   },
@@ -3062,11 +3402,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'Because Keep&ndash;Change&ndash;Flip only works on fractions &mdash; a mixed number has to become an improper fraction first.', c:true},
-          {t:'Because 9/4 is a larger number than 2 1/4, and dividing always needs the larger of the two forms.'},
-          {t:'Because the answer has to be a whole number, and only improper fractions can give whole-number answers.'},
-          {t:'Because you must flip 2 1/4 as well as 3/8, and only an improper fraction can be turned upside down.'}
+          {t:'Because 9/4 is a larger number than 2 1/4, and dividing always needs the larger of the two forms.', w:'9/4 and 2 1/4 are the SAME number written two ways ((2&times;4)+1 = 9). We rewrite it because Keep&ndash;Change&ndash;Flip needs a single fraction.'},
+          {t:'Because the answer has to be a whole number, and only improper fractions can give whole-number answers.', w:'You do not know the answer is whole before you divide. We rewrite 2 1/4 because the rule needs one numerator and one denominator.'},
+          {t:'Because you must flip 2 1/4 as well as 3/8, and only an improper fraction can be turned upside down.', w:'Only the number you divide BY (3/8) is flipped. 9/4 is kept as it is: 9/4 &times; 8/3.'}
         ],
-        model:{ why:'A mixed number is secretly an addition &mdash; 2 1/4 means 2 + 1/4 &mdash; and Keep&ndash;Change&ndash;Flip has nothing to flip when it meets an addition. Writing it as the single fraction 9/4 gives you one numerator and one denominator, which is exactly what the rule needs. Two of the wrong answers are worth naming out loud: 9/4 and 2 1/4 are the <b>same number</b> written two ways, not a larger one and a smaller one; and the flip belongs only to the number you are dividing <b>by</b>, never to the number you are dividing.' }
+        model:{ why:'A mixed number is secretly an addition &mdash; 2 1/4 means 2 + 1/4 &mdash; and Keep&ndash;Change&ndash;Flip has nothing to flip when it meets an addition. Writing it as the single fraction 9/4 gives you one numerator and one denominator, which is exactly what the rule needs. Two of the wrong answers are worth naming out loud: 9/4 and 2 1/4 are the <b>same number</b> written two ways, not a larger one and a smaller one; and the flip belongs only to the number you are dividing <b>by</b>, never to the number you are dividing.' },
+        tip:'Before any &times; or &divide; with fractions, check for mixed numbers and change them first: whole &times; bottom + top.'
       }
     ]
   },
@@ -3079,11 +3420,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'He changed &divide; to &times; but forgot to flip the second fraction &mdash; it should be 3/4 &times; 8/1.', c:true},
-          {t:'He flipped the wrong one; the rule is to turn 3/4 upside down, which gives 4/3 &times; 1/8.'},
-          {t:'He should have left the &divide; sign alone, because Keep&ndash;Change&ndash;Flip is only for multiplying.'},
-          {t:'His method is right and only the last step slipped: 3/32 was never reduced to lowest terms.'}
+          {t:'He flipped the wrong one; the rule is to turn 3/4 upside down, which gives 4/3 &times; 1/8.', w:'Marco did not flip anything &mdash; he copied 1/8 unchanged. And the rule flips the SECOND fraction (1/8 &rarr; 8/1), never the first.'},
+          {t:'He should have left the &divide; sign alone, because Keep&ndash;Change&ndash;Flip is only for multiplying.', w:'Keep&ndash;Change&ndash;Flip is the rule for DIVIDING. Changing &divide; to &times; was right; the missing part was flipping 1/8 to 8/1.'},
+          {t:'His method is right and only the last step slipped: 3/32 was never reduced to lowest terms.', w:'3/32 is already in lowest terms, and the method is wrong: he skipped the flip. The correct work is 3/4 &times; 8/1 = 6 glasses.'}
         ],
-        model:{ why:'Keep&ndash;Change&ndash;Flip has three parts and Marco did only two. He <b>kept</b> 3/4 and <b>changed</b> &divide; to &times;, but he never <b>flipped</b> the divisor, so he copied 1/8 down unchanged. The correct second step is 3/4 &times; <b>8/1</b>. Note that flipping the <i>first</i> fraction instead (4/3 &times; 1/8) is a different mistake that also gives a wrong answer &mdash; the flip always belongs to the number you are dividing <b>by</b>.' }
+        model:{ why:'Keep&ndash;Change&ndash;Flip has three parts and Marco did only two. He <b>kept</b> 3/4 and <b>changed</b> &divide; to &times;, but he never <b>flipped</b> the divisor, so he copied 1/8 down unchanged. The correct second step is 3/4 &times; <b>8/1</b>. Note that flipping the <i>first</i> fraction instead (4/3 &times; 1/8) is a different mistake that also gives a wrong answer &mdash; the flip always belongs to the number you are dividing <b>by</b>.' },
+        tip:'Check Keep&ndash;Change&ndash;Flip one word at a time: was the first kept? was &divide; changed to &times;? was the second fraction flipped?'
       },
       {
         q:'Work the problem correctly. How many glasses can be filled?',
@@ -3100,11 +3442,12 @@ const CASES = [
         type:'choice',
         options:[
           {t:'<b>"Is my answer reasonable?"</b> &mdash; 3/32 is less than one glass, but 3/4 litre is far more than 1/8 litre, so the answer had to be bigger than 1.', c:true},
-          {t:'<b>"Did I answer the question?"</b> &mdash; he was asked for a number of glasses, but 3/32 is written as a part of a litre instead of a count.'},
-          {t:'<b>"Is my computation correct?"</b> &mdash; 3/4 &times; 1/8 does not actually equal 3/32, so redoing that one product would have shown the slip.'},
-          {t:'None of them would help here, because every C-step question only tests the arithmetic, and Marco\'s arithmetic was already perfect.'}
+          {t:'<b>"Did I answer the question?"</b> &mdash; he was asked for a number of glasses, but 3/32 is written as a part of a litre instead of a count.', w:'Marco did answer in glasses (&ldquo;3/32 glasses&rdquo;), so this check passes and tells him nothing. The problem is the SIZE of the answer.'},
+          {t:'<b>"Is my computation correct?"</b> &mdash; 3/4 &times; 1/8 does not actually equal 3/32, so redoing that one product would have shown the slip.', w:'3/4 &times; 1/8 really is 3/32 (3&times;1 = 3, 4&times;8 = 32). Redoing it gives the same wrong answer, because the mistake is the missing flip.'},
+          {t:'None of them would help here, because every C-step question only tests the arithmetic, and Marco\'s arithmetic was already perfect.', w:'The reasonableness check does help: 3/4 L is far more than one 1/8 L glass, so an answer smaller than 1 glass is impossible.'}
         ],
-        model:{ why:'Marco\'s <b>computation</b> was flawless and he <b>did</b> answer in glasses, so those two checks pass and tell him nothing. The check that bites is <b>reasonableness</b>. Estimating before you compute: 1/8 L is a small glass and 3/4 L is a good-sized pitcher, so the answer should be several glasses &mdash; certainly more than one. An answer of 3/32 of a glass is impossible, and that mismatch points straight at the operation. <b>A wrong operation almost always shows up as an answer of the wrong size, which is why the C step is worth the extra minute.</b>' }
+        model:{ why:'Marco\'s <b>computation</b> was flawless and he <b>did</b> answer in glasses, so those two checks pass and tell him nothing. The check that bites is <b>reasonableness</b>. Estimating before you compute: 1/8 L is a small glass and 3/4 L is a good-sized pitcher, so the answer should be several glasses &mdash; certainly more than one. An answer of 3/32 of a glass is impossible, and that mismatch points straight at the operation. <b>A wrong operation almost always shows up as an answer of the wrong size, which is why the C step is worth the extra minute.</b>' },
+        tip:'Estimate before you compute: how many small glasses should a big pitcher fill? If the answer is the wrong size, recheck the operation.'
       }
     ]
   }
@@ -3237,9 +3580,10 @@ function caseCheckChoice(btn, btns, ok, pickedText){
   btns.forEach(x=>{ x.disabled = true; if(x.dataset.right === '1') x.classList.add('correct'); });
   if(!ok) btn.classList.add('incorrect');
   document.getElementById('case-feedback').innerHTML =
-    `<div class="feedback ${ok?'good':'bad'}"><strong>${ok?'Yes! 🎉':'Not quite.'}</strong>` +
-    (ok ? 'That is the reasoning your teacher is looking for.' : 'The best answer is the one highlighted above.') +
-    `</div>` + caseModelHtml(q.model);
+    (ok
+      ? `<div class="feedback good"><strong>Yes! 🎉</strong>That is the reasoning your teacher is looking for.</div>`
+      : `<div class="feedback bad"><strong>Not quite — let's learn from this!</strong>${learnHtml({ picked:pickedText, why:(q.options.find(o=>o.t===pickedText)||{}).w || '', answer:q.options.find(o=>o.c).t, explain:'The full worked explanation is below.', tip:q.tip || '' })}</div>`) +
+    caseModelHtml(q.model);
   caseRevealNext();
 }
 
