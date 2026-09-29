@@ -275,7 +275,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
     <div class="hero">
       <span class="badge">Science · Grade 5 · First Term</span>
       <h1>Life Lab 🔬</h1>
-      <p>Grow your plant one correct answer at a time! Study the states of matter, measuring and changes of state, microorganisms and fungi, the major groups of plants and animals, and the plant organ systems &mdash; then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
+      <p>Grow your plant one correct answer at a time! Study matter and its states, measuring, physical and chemical changes, the scientific method and science investigations, microorganisms and fungi, the major groups of plants and animals, and the plant organ systems &mdash; then take the Mock Exam and read the Exam Strategy guide so you're ready for your teacher's test.</p>
       <div class="points-total" id="points-total-badge"></div>
     </div>
     <div class="card-list" id="homeList"></div>
@@ -357,6 +357,293 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 <script src="study-history.js" data-grade="grade5"></script>
 <script>
 const LESSONS = [
+  {
+    id:'whatmatter',
+    icon:'⚛️',
+    title:'What Is Matter?',
+    subtitle:'Mass, space, atoms & things that are not matter',
+    cards:[
+      {front:'Matter', back:'<b>Matter is anything that has mass and takes up space.</b> Examples: a book, a pencil, water, air, a chair, a ball.'},
+      {front:'Mass and Space', back:'<b>Mass</b> is the amount of material in an object. <b>Space</b> is the area or volume that an object occupies.'},
+      {front:'Atoms', back:'Matter is made up of the tiniest particles called <b>atoms</b>. Atoms are the <b>building blocks</b>, or the smallest units, of matter.'},
+      {front:'Molecules', back:'A <b>group of atoms</b> is called a <b>molecule</b>. A water molecule, <b>H<sub>2</sub>O</b>, is made up of <b>two atoms of hydrogen (H)</b> and <b>one atom of oxygen (O)</b>. On their own, hydrogen and oxygen are gases.'},
+      {front:'Not Matter', back:'<b>Light, heat, sound and electricity</b> are <b>forms of energy</b>. They do not have mass and do not take up space, so they are <b>not matter</b>.'},
+      {front:'Mass vs Weight', back:'<b>Mass</b> is the amount of matter in an object. <b>Weight</b> is the measure of <b>Earth&rsquo;s pull of gravity</b> on it. On the moon an object&rsquo;s weight changes, but its <b>mass stays the same</b>. Mass is measured in grams (g) for light objects and kilograms (kg) for heavy ones.'},
+      {front:'Volume', back:'<b>Volume</b> is the amount of space an object occupies. A wardrobe cabinet occupies a <b>bigger volume</b> than a chair.'},
+      {front:'Shape', back:'<b>Shape</b> is the outline, outer surface or boundary of an object, like a square, circle, oval or rectangle. Some matter has <b>no definite shape</b> &mdash; it follows the shape of its container.'},
+      {front:'Properties of Matter', back:'<b>Properties</b> describe the traits of a material: color, length, weight, mass, density and others. We look at properties to make sure a material is <b>useful for the task</b>.'}
+    ],
+    quiz:[
+      {q:'What is matter?', options:['anything that has mass and takes up space','anything that you can see with your own eyes, like a toy','anything that is alive','anything that makes a sound'], correct:0, explain:'Matter is anything that has <b>mass</b> and <b>takes up space</b>. Air is matter even though you cannot see it.'},
+      {q:'Which of these is NOT matter?', options:['light','air','water','chair'], correct:0, explain:'<b>Light</b> is a form of energy. Air, water and a chair all have mass and take up space.'},
+      {q:'Why are light, heat, sound, and electricity NOT matter?', options:['They are forms of energy that have no mass and take up no space.','They are made of atoms that are too small to be seen.','They are all gases.','They are all liquids.'], correct:0, explain:'They are <b>forms of energy</b> &mdash; no mass, no space.'},
+      {q:'What are the tiniest particles that make up matter?', options:['atoms','molecules','cells','grains'], correct:0, explain:'<b>Atoms</b> are the building blocks of matter. A group of atoms is a molecule.'},
+      {q:'What do you call a group of atoms?', options:['molecule','atom','cell','solid'], correct:0, explain:'A group of atoms is a <b>molecule</b>.'},
+      {q:'What is a water molecule (H<sub>2</sub>O) made of?', options:['two atoms of hydrogen and one atom of oxygen','one atom of hydrogen and two atoms of oxygen','two atoms of hydrogen and two atoms of oxygen','three atoms of hydrogen only'], correct:0, explain:'H<sub>2</sub> = <b>two hydrogen</b> atoms, O = <b>one oxygen</b> atom.'},
+      {q:'Air cannot be seen. Why is it still considered matter?', options:['It has mass and takes up space.','It makes a sound when the wind blows.','It is a form of energy.','It is always cold.'], correct:0, explain:'Air has <b>mass</b> and <b>takes up space</b> &mdash; think of air filling a balloon.'},
+      {q:'A rock is brought from Earth to the moon. What happens to it?', options:['Its mass stays the same, but its weight changes.','Its mass and its weight both stay exactly the same as on Earth.','Its mass changes, but its weight stays the same.','It loses all of its mass.'], correct:0, explain:'Weight depends on <b>gravity</b>, which is weaker on the moon. <b>Mass</b> stays the same anywhere.'},
+      {q:'What is volume?', options:['the amount of space an object occupies','the amount of material that is present in an object','the pull of gravity on an object','the outline of an object'], correct:0, explain:'Volume = <b>space occupied</b>. The amount of material is <b>mass</b>; the pull of gravity is <b>weight</b>.'},
+      {q:'Which object occupies the biggest volume?', options:['a wardrobe cabinet','a chair','a pencil','an eraser'], correct:0, explain:'The <b>wardrobe cabinet</b> is the biggest, so it takes up the most space.'},
+      {q:'True or False: Sound is matter because we can hear it.', options:['True','False'], correct:1, explain:'False &mdash; sound is a <b>form of energy</b>. It has no mass and takes up no space.'},
+      {q:'True or False: Mass is the amount of material in an object.', options:['True','False'], correct:0, explain:'Correct &mdash; mass is the amount of material (matter) in an object.'},
+      {q:'True or False: Weight is the measure of Earth&rsquo;s pull of gravity on an object.', options:['True','False'], correct:0, explain:'Correct &mdash; that is why weight changes on the moon but mass does not.'}
+    ]
+  },
+  {
+    id:'matter',
+    icon:'🧊',
+    title:'States of Matter',
+    subtitle:'Solids, liquids, gases & their particles',
+    cards:[
+      {front:'Solid', back:'Has a <b>definite shape and a definite volume</b>. It keeps its shape and size unless a force changes it. Examples: a book, a chair, a pencil, a rock, a stone, a sandwich, a metal spoon, ice, wood.'},
+      {front:'Liquid', back:'Has <b>no definite shape but a definite volume</b> &mdash; it takes the shape of its container but stays the same amount. Examples: water, milk, juice, oil, honey.'},
+      {front:'Gas', back:'Has <b>no definite shape and no definite volume</b>. It <b>spreads out and fills the space</b> of its container. Examples: air, oxygen, carbon dioxide, helium, steam (water vapor), the smell of perfume.'},
+      {front:'Particles in a Solid', back:'<b>Tightly packed</b> and held together by strong forces. They <b>vibrate in place</b> but do not move freely.'},
+      {front:'Particles in a Liquid', back:'<b>Close together</b> but not as tightly packed as in a solid. They <b>slide past each other</b>, which lets a liquid flow.'},
+      {front:'Particles in a Gas', back:'<b>Far apart</b>, with lots of space between them. They <b>move quickly and freely in all directions</b>. Gases can be compressed and expand to fill any container.'},
+      {front:'Same Matter, Different States', back:'Water and ice are both matter, but in <b>different states</b>: <b>ice is a solid</b>, <b>water is a liquid</b>, and steam is a gas.'},
+      {front:'Clues From Your Test', back:'Spoon moved to a drawer keeps its shape &rarr; <b>solid</b>. Honey changes shape but stays the same amount &rarr; <b>liquid</b>. Perfume spreads through the room, a balloon grows when filled with air &rarr; <b>gas</b>.'},
+      {front:'Quick Sort', back:'milk &rarr; liquid &middot; stone &rarr; solid &middot; steam &rarr; gas &middot; chair &rarr; solid &middot; juice &rarr; liquid &middot; air &rarr; gas'}
+    ],
+    quiz:[
+      {q:'Which state of matter includes objects such as a table, a pencil, and a rock?', options:['solid','gas','liquid','plasma'], correct:0, explain:'They keep their own shape and volume &mdash; <b>solids</b>.'},
+      {q:'Ben is packing for a picnic. Which item should he place in the solid group?', options:['sandwich','water','orange juice','air inside the balloon'], correct:0, explain:'A sandwich keeps its shape. Water and juice are liquids; the air is a gas.'},
+      {q:'Which state of matter has no definite shape but has a definite volume?', options:['liquid','ice','gas','solid'], correct:0, explain:'A <b>liquid</b> takes the shape of its container but keeps the same amount.'},
+      {q:'Carlo transferred a metal spoon from the kitchen table to a drawer. What property of solids does the spoon show?', options:['it has a definite shape and definite volume','it has no definite shape and no definite volume','it changes its shape depending on the container','it has no definite shape but has a definite volume'], correct:0, explain:'The spoon stays the same shape and size wherever it goes &mdash; a solid.'},
+      {q:'Vivian says that both water and ice are forms of matter, but they are different states. Which statement BEST explains why?', options:['ice is a solid, while water is a liquid','ice and water are both gases','ice is a gas, while water is a solid','ice and water are not forms of matter'], correct:0, explain:'<b>Ice is a solid</b> and <b>water is a liquid</b> &mdash; same matter, different states.'},
+      {q:'Which state of matter can spread out and fill the space inside a container?', options:['gas','solid','liquid','None of the choices is correct.'], correct:0, explain:'A <b>gas</b> spreads out to fill all the space it is given.'},
+      {q:'Carlo sprays perfume inside a room. After a few minutes, the smell spreads throughout the room. What property of gases does this show?', options:['Gases can spread out and fill the available space.','Gases have a fixed shape like solids.','Gases cannot move from one place to another.','Gases have a definite shape and definite volume.'], correct:0, explain:'The perfume&rsquo;s gas <b>spreads out and fills the room</b>.'},
+      {q:'Your teacher asks you to sort the following materials into their correct states of matter: milk, stone, and steam. Which answer is CORRECT?', options:['milk&ndash;liquid, stone&ndash;solid, steam&ndash;gas','milk&ndash;solid, stone&ndash;liquid, steam&ndash;gas','milk&ndash;gas, stone&ndash;solid, steam&ndash;liquid','milk&ndash;liquid, stone&ndash;gas, steam&ndash;solid'], correct:0, explain:'Milk flows (liquid), a stone keeps its shape (solid), steam spreads out (gas).'},
+      {q:'A balloon becomes bigger after it is filled with air. What does this show about gases?', options:['Gases do not have a definite shape and volume, and fill the available space.','Gases have a definite shape only.','Gases always stay inside one small area.','Gases have a definite shape and volume.'], correct:0, explain:'The air spreads out and <b>fills the balloon</b>, so the balloon grows.'},
+      {q:'Joshua places honey into different containers. He notices that the honey changes its shape but stays the same amount. What property of liquids does this show?', options:['liquids have no definite shape but have a definite volume','liquids have a definite shape and volume','liquids cannot take the shape of their container','liquids have no definite shape and no definite volume'], correct:0, explain:'Shape changes, amount stays the same &mdash; that is a <b>liquid</b>.'},
+      {q:'In which state of matter are the particles tightly packed and only vibrate in place?', options:['solid','liquid','gas','None of the choices is correct.'], correct:0, explain:'Solid particles are <b>tightly packed</b> and <b>vibrate in place</b>.'},
+      {q:'In which state of matter do the particles slide past each other, allowing the matter to flow?', options:['liquid','solid','gas','None of the choices is correct.'], correct:0, explain:'Liquid particles are close together but can <b>slide past each other</b>, so liquids flow.'},
+      {q:'In which state of matter are the particles far apart and moving quickly and freely in all directions?', options:['gas','solid','liquid','None of the choices is correct.'], correct:0, explain:'Gas particles are <b>far apart</b> and <b>move freely</b> in all directions.'},
+      {q:'Oxygen cannot be seen, but it takes up space. What state of matter is it?', options:['gas','solid','liquid','It is not matter.'], correct:0, explain:'Oxygen is a <b>gas</b>. It takes up space, so it is still matter.'},
+      {q:'Juice takes the shape of its container. What state of matter is it?', options:['liquid','solid','gas','It is not matter.'], correct:0, explain:'Juice takes the shape of its container but keeps its volume &mdash; a <b>liquid</b>.'},
+      {q:'During an activity, Paolo observes that a balloon takes up more space when filled with air. Which state of matter is inside the balloon?', options:['gas','liquid','solid','ice'], correct:0, explain:'Air is a <b>gas</b>. It spreads out and fills the balloon.'},
+      {q:'True or False: A gas has a definite shape and a definite volume.', options:['True','False'], correct:1, explain:'False &mdash; that describes a <b>solid</b>. A gas has no definite shape and no definite volume.'},
+      {q:'True or False: A liquid takes the shape of its container but keeps the same amount.', options:['True','False'], correct:0, explain:'Correct &mdash; like the honey in different containers.'},
+      {q:'True or False: A solid has a definite shape and a definite volume.', options:['True','False'], correct:0, explain:'Correct &mdash; a solid keeps its shape and size unless a force changes it.'},
+      {q:'True or False: A gas keeps the same shape even when it is moved to a different container.', options:['True','False'], correct:1, explain:'False &mdash; a gas has <b>no definite shape</b>. It spreads out to fill whatever container it is in.'}
+    ]
+  },
+  {
+    id:'measure',
+    icon:'📏',
+    title:'Measuring Matter',
+    subtitle:'kg, g, mg, mL, &deg;C & balances',
+    cards:[
+      {front:'Mass: kilogram (kg)', back:'For <b>heavy</b> things, like a <b>bag of rice</b>, a school bag or a watermelon. The kilogram is the <b>standard unit</b> of mass.'},
+      {front:'Mass: gram (g)', back:'For <b>small</b> amounts, like a <b>small powder sample</b>. There are <b>1,000 grams in 1 kilogram</b>. Smallest to biggest: <b>mg &lt; g &lt; kg</b>.'},
+      {front:'Mass: milligram (mg)', back:'For <b>very light</b> things. On your test the key used milligrams for a <b>paper clip</b>.'},
+      {front:'Liquid: milliliter (mL)', back:'For the <b>amount of liquid</b>, like the water in a small container.'},
+      {front:'Temperature: degree Celsius (&deg;C)', back:'For how <b>hot or cold</b> an object or place is, like water or a room.'},
+      {front:'Match the Unit to the Job', back:'kg, g and mg measure <b>mass</b>. mL measures <b>liquid amount</b>. &deg;C measures <b>temperature</b>. A unit from the wrong group is always wrong: never grams for temperature, never &deg;C for mass.'},
+      {front:'Mass or Volume?', back:'Solid things like a <b>watermelon, fish or vegetable</b> are measured by their <b>mass</b>. Liquids like <b>blood, cooking oil and milk</b> are measured by their <b>volume</b>.'},
+      {front:'Balances Measure Mass', back:'<b>Platform balance</b>: has a platform where the objects are placed. <b>Double beam balance</b>: two parallel beams, each with a pan at one end and a sliding counterweight on the other. <b>Triple beam balance</b>: three beams that carry the weights.'},
+      {front:'Using a Balance', back:'Put it on a smooth, even surface. <b>Set the pointer to zero first.</b> Place the object on the pan (at the center for a triple beam). Move the counterweights, <b>largest first</b>, until the pointer is back at zero. Add up the readings to get the mass.'}
+    ],
+    quiz:[
+      {q:'During a classroom activity, Carla measures the amount of water in a small container. Which unit should she use?', options:['milliliter (mL)','gram (g)','kilogram (kg)','degree celsius (&deg;C)'], correct:0, explain:'An amount of liquid is measured in <b>milliliters (mL)</b>.'},
+      {q:'Ana plans to use kilograms (kg) to measure a paper clip, grams (g) to measure a bag of rice, and degree celsius (&deg;C) to measure temperature. Which evaluation is CORRECT?', options:['Ana should use milligrams (mg) for the paper clip and kilogram (kg) for the bag of rice.','Ana used all units correctly.','Ana should use grams (g) for measuring temperature.','Ana should use degrees celsius (&deg;C) for measuring the mass of objects.'], correct:0, explain:'She swapped them: the light paper clip needs a small unit (mg) and the heavy rice needs <b>kilograms</b>. Her &deg;C for temperature was right.'},
+      {q:'A scientist measures the amount of a very small powder sample for an experiment. Which unit is the most suitable to use?', options:['gram (g)','kilogram (kg)','milliliter (mL)','degree celsius (&deg;C)'], correct:0, explain:'Powder needs a <b>mass</b> unit. Milligrams were <b>not one of the choices</b>, so the best answer is <b>grams</b> &mdash; kilograms are for heavy things, mL is for liquids and &deg;C is for temperature.'},
+      {q:'Which unit is used to measure the temperature of an object or place?', options:['degree celsius (&deg;C)','grams (g)','kilogram (kg)','milligram (mg)'], correct:0, explain:'Temperature is measured in <b>degrees Celsius (&deg;C)</b>.'},
+      {q:'Which situation shows the CORRECT use of a unit of measurement?', options:['measuring the temperature of water using degree celsius (&deg;C)','measuring the mass of a pencil using kilograms (kg)','measuring the temperature of a room using grams (g)','measuring the mass of a bag of rice using milligrams (mg)'], correct:0, explain:'&deg;C for temperature is correct. A pencil is too light for kg, grams cannot measure temperature, and rice is too heavy for mg.'},
+      {q:'Which unit is commonly used to measure the mass of a school bag?', options:['kilogram','milligram','gram','degree Celsius'], correct:0, explain:'A school bag is heavy, so use <b>kilograms</b>.'},
+      {q:'Ana wants to measure the temperature of warm water. Which unit should she use?', options:['degree Celsius (&deg;C)','gram (g)','kilogram (kg)','milliliter (mL)'], correct:0, explain:'Temperature &rarr; <b>&deg;C</b>.'},
+      {q:'Which of these is measured by its VOLUME?', options:['cooking oil','watermelon','fish','vegetable'], correct:0, explain:'Cooking oil is a liquid, so it is measured by <b>volume</b>. The others are measured by mass.'},
+      {q:'Which of these is measured by its MASS?', options:['watermelon','milk','blood','cooking oil'], correct:0, explain:'A watermelon is a solid, so it is measured by <b>mass</b>. Milk, blood and cooking oil are measured by volume.'},
+      {q:'How many grams are in 1 kilogram?', options:['1,000','100','10','500'], correct:0, explain:'<b>1 kg = 1,000 g</b>.'},
+      {q:'What is the standard unit for measuring mass?', options:['kilogram (kg)','gram (g)','milligram (mg)','liter (L)'], correct:0, explain:'The <b>kilogram</b> is the standard unit of mass. The liter is for liquid volume.'},
+      {q:'Which balance has three beams that carry the weights?', options:['triple beam balance','double beam balance','platform balance','spring balance'], correct:0, explain:'<b>Triple</b> = three beams. A double beam balance has two.'},
+      {q:'What should you do FIRST before weighing an object on a balance?', options:['Set the needle pointer to zero.','Add up the readings.','Move the smallest counterweight.','Write down the mass.'], correct:0, explain:'Always <b>set the pointer to zero</b> first, or every reading will be off.'},
+      {q:'True or False: Grams (g) can be used to measure the temperature of a room.', options:['True','False'], correct:1, explain:'False &mdash; grams measure <b>mass</b>. Temperature uses <b>&deg;C</b>.'},
+      {q:'True or False: A bag of rice is best measured in kilograms (kg).', options:['True','False'], correct:0, explain:'Correct &mdash; kilograms are for heavy things.'},
+      {q:'True or False: Milliliters (mL) are used to measure the amount of a liquid.', options:['True','False'], correct:0, explain:'Correct &mdash; like Carla measuring water in a container.'},
+      {q:'True or False: Degree Celsius (&deg;C) is used to measure the mass of objects.', options:['True','False'], correct:1, explain:'False &mdash; &deg;C measures <b>temperature</b>. Mass uses kg, g or mg.'},
+      {q:'True or False: Kilograms are used to measure temperature.', options:['True','False'], correct:1, explain:'False &mdash; kilograms measure <b>mass</b>. Temperature uses &deg;C.'},
+      {q:'True or False: Diego measures the mass of a watermelon using kilograms.', options:['True','False'], correct:0, explain:'Correct &mdash; a watermelon is heavy, so kilograms fit.'},
+      {q:'Which unit would you use to measure a glass of juice?', options:['milliliter (mL)','kilogram (kg)','degree celsius (&deg;C)','milligram (mg)'], correct:0, explain:'Juice is a liquid, so use <b>milliliters</b>.'}
+    ]
+  },
+  {
+    id:'volume',
+    icon:'🧪',
+    title:'Volume, Density & Temperature',
+    subtitle:'Liters, displacement, meniscus, density & thermometers',
+    cards:[
+      {front:'Volume Units', back:'Volume is the space matter occupies. It is measured in <b>cubic meters (m&sup3;)</b>, <b>liters (L)</b> and <b>milliliters (mL)</b>. The <b>standard unit for liquid volume is the liter</b>. mL is for <b>small</b> amounts of liquid; L is for <b>larger</b> amounts.'},
+      {front:'Tools for Liquids', back:'Measure liquid volume with a <b>graduated cylinder</b>, a <b>beaker</b> or a <b>flask</b>.'},
+      {front:'Volume of a Cube', back:'<b>Volume = side &times; side &times; side</b>. Example: 3 cm &times; 3 cm &times; 3 cm = <b>27 cm&sup3;</b>.'},
+      {front:'Volume of a Rectangular Prism', back:'<b>Volume = length &times; width &times; height</b>. Example: 5 cm &times; 3 cm &times; 2 cm = <b>30 cm&sup3;</b>.'},
+      {front:'Water Displacement', back:'For an <b>irregular solid</b> like a stone. Put water in a graduated cylinder (V1), drop the stone in, read the new level (V2). <b>Volume = V2 &minus; V1</b>. Example: 180 mL &minus; 150 mL = <b>30 mL</b>.'},
+      {front:'Meniscus', back:'The <b>curved surface</b> of a liquid in a cylinder. Most liquids have a <b>concave</b> meniscus. Read it at the <b>bottom of the curve, at eye level</b>.'},
+      {front:'Density', back:'The <b>mass per unit of volume</b>. <b>Density = mass &divide; volume</b>, usually in <b>g/cm&sup3;</b>. Example: 45 g &divide; 15 cm&sup3; = <b>3 g/cm&sup3;</b>. Also: mass = density &times; volume, and volume = mass &divide; density.'},
+      {front:'1 mL = 1 cm&sup3;', back:'One milliliter is equal to <b>one cubic centimeter</b>.'},
+      {front:'Temperature', back:'How <b>hot or cold</b> an object is. It is measured with a <b>thermometer</b>.'},
+      {front:'Three Temperature Scales', back:'<b>Celsius (&deg;C)</b>: used most in the world. Water boils at <b>100 &deg;C</b> and freezes at <b>0 &deg;C</b>. <b>Fahrenheit (&deg;F)</b>: used most in the United States. Water boils at <b>212 &deg;F</b> and freezes at <b>32 &deg;F</b>. <b>Kelvin (K)</b>: used mostly by scientists; its 0 is absolute zero.'}
+    ],
+    quiz:[
+      {q:'What is the standard unit for measuring liquid volume?', options:['liter (L)','milliliter (mL)','gram (g)','meter (m)'], correct:0, explain:'The <b>liter</b> is the standard unit. mL is also a volume unit, but for small amounts.'},
+      {q:'Which tool is used to measure the volume of a liquid?', options:['graduated cylinder','thermometer','triple beam balance','ruler'], correct:0, explain:'A <b>graduated cylinder</b> (or a beaker or flask) measures liquid volume. A thermometer measures temperature; a balance measures mass.'},
+      {q:'A cube has sides of 3 cm each. What is its volume?', options:['27 cm&sup3;','9 cm&sup3;','12 cm&sup3;','6 cm&sup3;'], correct:0, explain:'side &times; side &times; side = 3 &times; 3 &times; 3 = <b>27 cm&sup3;</b>.'},
+      {q:'A box is 5 cm long, 3 cm wide, and 2 cm high. What is its volume?', options:['30 cm&sup3;','10 cm&sup3;','15 cm&sup3;','25 cm&sup3;'], correct:0, explain:'length &times; width &times; height = 5 &times; 3 &times; 2 = <b>30 cm&sup3;</b>.'},
+      {q:'A graduated cylinder has 150 mL of water. After a stone is dropped in, the water rises to 180 mL. What is the volume of the stone?', options:['30 mL','180 mL','150 mL','330 mL'], correct:0, explain:'V2 &minus; V1 = 180 &minus; 150 = <b>30 mL</b>.'},
+      {q:'Which method is used to find the volume of an irregular solid, like a stone?', options:['water displacement method','multiplying length &times; width &times; height','using a thermometer','using a spring balance'], correct:0, explain:'A stone has no straight sides, so we use <b>water displacement</b>: V2 &minus; V1.'},
+      {q:'How should you read the concave meniscus of water in a graduated cylinder?', options:['at the bottom of the curve, at eye level','at the top of the curve, looking from above','at the top edge of the cylinder','after tilting the cylinder'], correct:0, explain:'Read the <b>bottom of the curve</b>, with your eyes <b>level</b> with the water.'},
+      {q:'What is the formula for density?', options:['mass &divide; volume','volume &divide; mass','mass &times; volume','mass + volume'], correct:0, explain:'Density = <b>mass &divide; volume</b>.'},
+      {q:'An object has a mass of 45 grams and a volume of 15 cm&sup3;. What is its density?', options:['3 g/cm&sup3;','60 g/cm&sup3;','30 g/cm&sup3;','675 g/cm&sup3;'], correct:0, explain:'45 &divide; 15 = <b>3 g/cm&sup3;</b>.'},
+      {q:'At what temperature does water boil on the Celsius scale?', options:['100 &deg;C','0 &deg;C','32 &deg;C','212 &deg;C'], correct:0, explain:'Water boils at <b>100 &deg;C</b>. 212 is the boiling point in <b>Fahrenheit</b> &mdash; a common trap.'},
+      {q:'Which temperature scale is used mostly by scientists?', options:['Kelvin (K)','Celsius (&deg;C)','Fahrenheit (&deg;F)','liter (L)'], correct:0, explain:'<b>Kelvin</b> is mostly used by scientists. Celsius is used most in the world; Fahrenheit in the United States.'},
+      {q:'What tool is used to measure temperature?', options:['thermometer','beaker','balance','graduated cylinder'], correct:0, explain:'A <b>thermometer</b> measures how hot or cold something is.'},
+      {q:'True or False: One milliliter (mL) is equal to one cubic centimeter (cm&sup3;).', options:['True','False'], correct:0, explain:'Correct &mdash; 1 mL = 1 cm&sup3;.'},
+      {q:'True or False: Water freezes at 32 &deg;C.', options:['True','False'], correct:1, explain:'False &mdash; water freezes at <b>0 &deg;C</b>. 32 is the freezing point in <b>&deg;F</b>.'},
+      {q:'True or False: Liters are used to measure larger amounts of liquid.', options:['True','False'], correct:0, explain:'Correct &mdash; liters for larger amounts, milliliters for small amounts.'},
+      {q:'True or False: Temperature is measured in liters (L).', options:['True','False'], correct:1, explain:'False &mdash; liters measure <b>volume</b>. Temperature uses &deg;C, &deg;F or K.'},
+      {q:'True or False: A beaker can be used to measure liquid volume.', options:['True','False'], correct:0, explain:'Correct &mdash; so can a graduated cylinder and a flask.'}
+    ]
+  },
+  {
+    id:'changes',
+    icon:'♨️',
+    title:'Changes of State',
+    subtitle:'Melting, freezing, boiling, evaporation, condensation, sublimation & deposition',
+    cards:[
+      {front:'Heat Causes Changes', back:'When the <b>temperature increases</b> or <b>decreases</b>, matter can change from one state to another. The matter does not disappear.'},
+      {front:'Melting (solid &rarr; liquid)', back:'Heat makes a solid turn into a liquid: an ice cube in the sun, a candle giving liquid wax when heated. Its particles vibrate faster until the bonds holding them break, so they can move around more freely.'},
+      {front:'Freezing (liquid &rarr; solid)', back:'When the <b>temperature decreases</b> below its freezing point, a liquid freezes into a solid: water in a freezer becoming ice, melted chocolate hardening in the refrigerator.'},
+      {front:'Boiling (liquid &rarr; gas)', back:'A liquid is <b>heated</b> until it turns into a gas, like water in a kettle giving off steam.'},
+      {front:'Evaporation (liquid &rarr; gas)', back:'A liquid turns into a gas at a temperature <b>below its boiling point</b>, from its <b>surface</b>: a puddle disappearing on a hot day as the sun&rsquo;s heat turns it into water vapor.'},
+      {front:'Condensation (gas &rarr; liquid)', back:'The reverse of evaporation: a gas <b>cools</b> and turns back into a liquid. Examples: <b>dew</b> on grass, water droplets on the outside of a <b>cold glass</b>.'},
+      {front:'Sublimation (solid &rarr; gas)', back:'A solid changes <b>directly into a gas</b> without becoming a liquid first, like <b>dry ice</b>.'},
+      {front:'Deposition (gas &rarr; solid)', back:'A gas changes <b>directly into a solid</b> without becoming a liquid first. This is how <b>frost</b> and <b>snowflakes</b> form.'},
+      {front:'Heat Added or Removed?', back:'<b>Heat added</b>: melting, boiling, evaporation, sublimation. <b>Heat removed</b> (cooling): freezing, condensation, deposition.'}
+    ],
+    quiz:[
+      {q:'Ella leaves an ice cube on a plate under the sun. After some time, the ice becomes water. What caused this change?', options:['The temperature increased, causing the solid to melt into a liquid.','The ice lost its mass and disappeared.','The ice changed into a gas without heat.','The temperature decreased, causing the liquid to freeze.'], correct:0, explain:'The sun&rsquo;s heat raised the temperature, so the solid <b>melted</b> into a liquid.'},
+      {q:'Carlo boils water in a kettle. After several minutes, steam comes out of the kettle. What change of state happened?', options:['liquid to gas','solid to gas','gas to liquid','solid to liquid'], correct:0, explain:'Water (liquid) became steam (gas).'},
+      {q:'During a hot day, Mark noticed that a puddle of water on the ground disappeared after several hours. He said that the heat from the sun caused the water to change into water vapor. Why is Mark&rsquo;s explanation CORRECT?', options:['because heat from the sun causes evaporation','because cold causes evaporation','because water changes into a solid','because water cannot change its state'], correct:0, explain:'Heat turns liquid water into water vapor: <b>evaporation</b>.'},
+      {q:'A student places a piece of dry ice in an open container. After some time, the dry ice disappears and changes directly into a gas. What process occurs?', options:['sublimation','melting','evaporation','condensation'], correct:0, explain:'Solid straight to gas, skipping liquid &mdash; <b>sublimation</b>.'},
+      {q:'A student observes that a candle becomes soft and produces liquid wax when heated. What process is shown?', options:['melting','freezing','evaporation','condensation'], correct:0, explain:'Solid wax turns into liquid wax &mdash; <b>melting</b>.'},
+      {q:'Which change happens when liquid water is heated and becomes water vapor?', options:['evaporation','melting','freezing','condensation'], correct:0, explain:'Liquid &rarr; gas with heat is <b>evaporation</b>.'},
+      {q:'Mark sees water droplets forming on the outside of a cold glass. What change of state is happening?', options:['condensation','evaporation','melting','freezing'], correct:0, explain:'Water vapor in the air touches the cold glass, cools, and turns into liquid droplets &mdash; <b>condensation</b>.'},
+      {q:'Tom places a cup of water in a freezer. After several hours, it becomes ice. What change occurred?', options:['freezing','melting','evaporation','condensation'], correct:0, explain:'Liquid &rarr; solid when cooled is <b>freezing</b>.'},
+      {q:'Melted chocolate hardens in the refrigerator. What change of state is this?', options:['liquid to solid','solid to liquid','gas to liquid','solid to gas'], correct:0, explain:'The melted (liquid) chocolate cools and becomes solid again.'},
+      {q:'Frost forms when water vapor turns directly into ice without becoming a liquid first. What is this process called?', options:['deposition','sublimation','condensation','freezing'], correct:0, explain:'Gas straight to solid is <b>deposition</b>. Sublimation is the opposite: solid straight to gas.'},
+      {q:'True or False: Freezing happens when the temperature decreases and a liquid turns into a solid.', options:['True','False'], correct:0, explain:'Correct &mdash; freezing is liquid &rarr; solid.'},
+      {q:'True or False: Freezing happens when a liquid changes into a gas.', options:['True','False'], correct:1, explain:'False &mdash; freezing is liquid &rarr; <b>solid</b>. Liquid &rarr; gas is evaporation or boiling.'},
+      {q:'True or False: When ice melts, it loses its mass and disappears.', options:['True','False'], correct:1, explain:'False &mdash; the ice does not disappear. It changes into <b>liquid water</b>.'},
+      {q:'True or False: Evaporation is caused by cold.', options:['True','False'], correct:1, explain:'False &mdash; evaporation is caused by <b>heat</b>, like the sun drying a puddle.'},
+      {q:'True or False: In sublimation, a solid changes directly into a gas.', options:['True','False'], correct:0, explain:'Correct &mdash; like dry ice.'},
+      {q:'True or False: Ice melting is an example of a gas changing into a liquid.', options:['True','False'], correct:1, explain:'False &mdash; ice is a <b>solid</b>, so melting ice is solid &rarr; liquid.'},
+      {q:'True or False: Dew forming on grass is an example of a gas changing into a liquid.', options:['True','False'], correct:0, explain:'Correct &mdash; that is <b>condensation</b>.'},
+      {q:'True or False: Water freezes when it is heated.', options:['True','False'], correct:1, explain:'False &mdash; water freezes when it is <b>cooled</b>. Heating makes it melt or evaporate.'},
+      {q:'Which change of state goes from gas to liquid?', options:['condensation','evaporation','melting','sublimation'], correct:0, explain:'Gas &rarr; liquid is <b>condensation</b>, the reverse of evaporation.'}
+    ]
+  },
+  {
+    id:'physchem',
+    icon:'🔥',
+    title:'Physical & Chemical Changes',
+    subtitle:'Sanding vs burning, solutions & signs of a new substance',
+    cards:[
+      {front:'Physical Change', back:'A change in a material&rsquo;s <b>physical properties</b>: its size, shape, weight, texture or state. <b>No new substance</b> is formed &mdash; it is still the same material.'},
+      {front:'Sanding Wood', back:'A piece of wood feels rough. After rubbing it with sandpaper it becomes smooth. Only its <b>texture</b> changed and no new material was made &mdash; a <b>physical change</b>.'},
+      {front:'3 Signs of a Physical Change', back:'1. The material is <b>physically deformed</b> (its shape or form changes). 2. It <b>changes phase or state</b>. 3. It is <b>made into a solution</b>.'},
+      {front:'A Change of State Is Physical', back:'It is <b>reversible</b>. Ice melts into water, and water can freeze back into ice. It looks different, but it is <b>still the same kind of matter</b>.'},
+      {front:'Solutions', back:'A <b>solution</b> is a mixture that looks the same throughout, like <b>salt dissolved in water</b>. The <b>solute</b> (salt) is dissolved by the <b>solvent</b> (water); there is usually more solvent than solute. Making a solution is a <b>physical change</b>.'},
+      {front:'Getting the Salt Back', back:'Heat the salt water so the water <b>evaporates</b>. The <b>salt crystals</b> are left behind. The salt and water were only physically combined.'},
+      {front:'Chemical Change', back:'A <b>new substance is formed</b> by a chemical reaction. Burning wood leaves <b>ashes</b> &mdash; wood and ash are two different materials.'},
+      {front:'Signs of a Chemical Change', back:'A <b>change in temperature</b>; a change in <b>color, odor or taste</b>; the formation of <b>precipitates</b> (solid bits); or the <b>release of gas</b>.'},
+      {front:'The Orange Matter Lab', back:'Adding <b>baking soda</b> to <b>orange juice</b> makes <b>bubbles</b>. The bubbles are a <b>gas</b> &mdash; a gas being released is a sign of a chemical change.'}
+    ],
+    quiz:[
+      {q:'A rough piece of wood becomes smooth after it is rubbed with sandpaper. What kind of change is this?', options:['physical change, because only the texture changed','chemical change, because a new substance was formed','chemical change, because the wood was burned','no change at all'], correct:0, explain:'Only the <b>texture</b> changed; it is still wood &mdash; a <b>physical change</b>.'},
+      {q:'A piece of wood is burned and only ashes are left. What kind of change is this?', options:['chemical change, because a new material was formed','physical change, because only the shape and size of the wood changed','physical change, because it can be reversed','no change, because it is still wood'], correct:0, explain:'Ash is a <b>new material</b>, so burning is a <b>chemical change</b>.'},
+      {q:'What makes a change a CHEMICAL change?', options:['A new substance is formed.','The shape of the material changes into something different.','The size of the material changes.','The material changes from solid to liquid.'], correct:0, explain:'Shape, size and state changes are physical. Only a <b>new substance</b> makes it chemical.'},
+      {q:'Which is a sign of a chemical change?', options:['release of gas','change in shape','change in size','change in texture'], correct:0, explain:'<b>Release of gas</b> is a sign of a chemical change. Shape, size and texture changes are physical.'},
+      {q:'Why is ice melting into water a physical change?', options:['It can be reversed, and it is still the same kind of matter.','A new substance is formed.','A gas is released.','A new substance forms when the ice changes color and odor.'], correct:0, explain:'Water can freeze back into ice &mdash; it is <b>reversible</b> and still water.'},
+      {q:'Salt is dissolved in water to make salt water. Which is the SOLUTE?', options:['salt','water','the glass','the heat'], correct:0, explain:'The <b>solute</b> is what gets dissolved &mdash; the salt.'},
+      {q:'In salt water, which material is the SOLVENT?', options:['water','salt','sugar','sand'], correct:0, explain:'The <b>solvent</b> does the dissolving, and there is usually more of it &mdash; the water.'},
+      {q:'How can you get the salt back from salt water?', options:['Heat it so the water evaporates and leaves the salt crystals behind.','Put it in the freezer until the salt water turns into ice.','Stir it for a long time.','Add more water to it.'], correct:0, explain:'Heating makes the <b>water evaporate</b>, leaving the <b>salt crystals</b>.'},
+      {q:'In the Orange Matter lab, baking soda is added to orange juice and bubbles form. What state of matter are the bubbles?', options:['gas','solid','liquid','They are not matter.'], correct:0, explain:'The bubbles are a <b>gas</b>. A gas being released is a sign of a chemical change.'},
+      {q:'Which of these is a PHYSICAL change?', options:['ice melting into water','wood burning into ashes','baking soda and orange juice making bubbles','none of these'], correct:0, explain:'Melting only changes the <b>state</b>. Burning and the bubbling lab both form something new.'},
+      {q:'True or False: In a physical change, no new substance is formed.', options:['True','False'], correct:0, explain:'Correct &mdash; the material stays the same kind of matter.'},
+      {q:'True or False: Dissolving salt in water is a chemical change.', options:['True','False'], correct:1, explain:'False &mdash; making a solution is a <b>physical change</b>. The salt can be separated again by evaporating the water.'},
+      {q:'True or False: A change in color, odor, or taste can be a sign of a chemical change.', options:['True','False'], correct:0, explain:'Correct &mdash; along with a change in temperature, precipitates and release of gas.'}
+    ]
+  },
+  {
+    id:'scimethod',
+    icon:'🔍',
+    title:'The Scientific Method',
+    subtitle:'Observe, ask, hypothesize, predict, test, analyze & conclude',
+    cards:[
+      {front:'Scientific Investigation', back:'A <b>step-by-step process</b> used to ask questions and test possible answers. Its main purpose is to <b>build knowledge</b> that explains natural events and helps <b>solve real-world problems</b>.'},
+      {front:'Scientific Method', back:'The process of finding answers to questions through <b>observation and experimentation</b>. Scientists use it to gather information and find solutions to problems.'},
+      {front:'The Steps in Order', back:'1. Make an <b>observation</b> &rarr; 2. Ask a <b>question</b> &rarr; 3. Form a <b>hypothesis</b> &rarr; 4. Make a <b>prediction</b> &rarr; 5. <b>Experiment</b> (test the prediction) &rarr; 6. <b>Analyze</b> the results &rarr; 7. <b>Conclude</b>, then share.'},
+      {front:'1. Observation', back:'Carefully <b>noticing and describing</b> what you see, hear or experience. It is the <b>starting point</b> for asking questions.'},
+      {front:'2. Question', back:'Ask a question <b>based on your observations</b>. Observing and asking often happen at the same time.'},
+      {front:'3. Hypothesis', back:'An <b>educated guess</b>, or a possible answer to the question. It must be <b>testable</b>. It is <b>not automatically the right answer</b> &mdash; you test it to find out.'},
+      {front:'4. Prediction', back:'The <b>possible outcome</b> we expect to happen <b>if the hypothesis is correct</b>.'},
+      {front:'5. Experiment', back:'Test <b>only one thing at a time</b>. Change only <b>one variable</b>, and keep everything else the same.'},
+      {front:'6. Analyze', back:'Look at the data you gathered and decide whether the results <b>support your hypothesis</b> or not.'},
+      {front:'7. Conclusion', back:'A <b>summarized statement</b> based on your observations and results. Supported? Do more tests to be sure. Not supported? Make a <b>new hypothesis</b> and test again. Then <b>share</b> your results with others.'}
+    ],
+    quiz:[
+      {q:'What is a hypothesis?', options:['an educated guess or possible answer that can be tested','the final answer to the question, which is always correct','a list of materials for an experiment','a chart that shows the results'], correct:0, explain:'A hypothesis is an <b>educated guess</b> that must be <b>testable</b>.'},
+      {q:'What is the FIRST step of the scientific method?', options:['make an observation','form a hypothesis that can be tested','draw a conclusion','do an experiment'], correct:0, explain:'Everything starts with an <b>observation</b>.'},
+      {q:'Which shows the steps of the scientific method in the correct order?', options:['observe &rarr; ask a question &rarr; hypothesis &rarr; prediction &rarr; experiment &rarr; analyze &rarr; conclude','hypothesis &rarr; observe &rarr; conclude &rarr; ask a question &rarr; experiment &rarr; analyze &rarr; prediction','ask a question &rarr; conclude &rarr; observe &rarr; experiment &rarr; hypothesis &rarr; prediction &rarr; analyze','experiment &rarr; conclude &rarr; hypothesis &rarr; observe &rarr; analyze &rarr; ask a question &rarr; prediction'], correct:0, explain:'Observe, ask, hypothesize, predict, experiment, analyze, conclude.'},
+      {q:'What is a prediction?', options:['the possible outcome we expect if the hypothesis is correct','the first thing you carefully notice and describe about something','a summary of the results','a step you do after the conclusion'], correct:0, explain:'A <b>prediction</b> says what should happen <b>if the hypothesis is correct</b>.'},
+      {q:'When doing an experiment, what should you do?', options:['Change only one variable and keep everything else the same.','Change several things at once so the experiment finishes sooner.','Skip recording your results.','Change your question in the middle of the test.'], correct:0, explain:'Test <b>one thing at a time</b> so you know what caused the result.'},
+      {q:'The results of an experiment do NOT support the hypothesis. What should the scientist do?', options:['Make a new hypothesis and test it again.','Change the results so they match the hypothesis.','Stop and never test it again.','Hide the results from others.'], correct:0, explain:'Come up with a <b>new hypothesis</b> and experiment again.'},
+      {q:'Which step is a summarized statement based on the observations and results of the experiment?', options:['conclusion','hypothesis','prediction','question'], correct:0, explain:'That is the <b>conclusion</b>.'},
+      {q:'The scientific method is the process of finding answers to questions through ___.', options:['observation and experimentation','guessing without testing','copying other people&rsquo;s answers','memorizing facts only'], correct:0, explain:'<b>Observation and experimentation</b>.'},
+      {q:'What is the main purpose of a scientific investigation?', options:['to build knowledge that explains natural events and helps solve real-world problems','to prove that your very first guess about a problem is always right','to finish an activity as fast as possible','to use as many materials as possible'], correct:0, explain:'It builds <b>knowledge</b> to explain nature and <b>solve problems</b>.'},
+      {q:'Lara says, &ldquo;I think sunlight makes an ice cube melt faster.&rdquo; She has not tested it yet. Which step is this?', options:['forming a hypothesis','drawing a conclusion','analyzing the results','sharing the findings'], correct:0, explain:'An untested possible answer is a <b>hypothesis</b>.'},
+      {q:'True or False: A hypothesis always gives the right answer.', options:['True','False'], correct:1, explain:'False &mdash; a hypothesis is only a <b>possible</b> answer. You must test it.'},
+      {q:'True or False: A useful hypothesis should be testable.', options:['True','False'], correct:0, explain:'Correct &mdash; you must be able to test it with an experiment.'},
+      {q:'True or False: Once a conclusion is drawn, you can present and communicate the results to other people.', options:['True','False'], correct:0, explain:'Correct &mdash; sharing comes after the conclusion.'}
+    ]
+  },
+  {
+    id:'investigate',
+    icon:'📋',
+    title:'Doing a Science Investigation',
+    subtitle:'Problem, materials, procedure, findings & safety',
+    cards:[
+      {front:'The 4 Steps of a Simple Investigation', back:'a. <b>What is the problem?</b> &rarr; b. <b>What materials do you need?</b> &rarr; c. <b>What do you need to do?</b> &rarr; d. <b>What have you found out or learned?</b>'},
+      {front:'A Good Science Question', back:'It is <b>clear and specific</b>, can be answered by <b>observation or experimentation</b>, and focuses on <b>one idea</b>. Examples: &ldquo;Does the amount of sunlight affect plant growth?&rdquo; &ldquo;Which material absorbs water the fastest?&rdquo;'},
+      {front:'List the Materials', back:'List everything you need <b>before you start</b>. For &ldquo;Does sunlight affect plant growth?&rdquo;: 2 small potted plants, water, a ruler, a notebook, sunlight, and a dark box or shaded area.'},
+      {front:'Lara&rsquo;s Ice Cubes', back:'<b>Problem</b>: Which melts faster, an ice cube under the sun or in the shade? <b>Materials</b>: 2 ice cubes, 2 small plates, a timer. <b>Steps</b>: prepare the materials &rarr; place one ice cube in the sun and one in the shade &rarr; observe and record which melts faster.'},
+      {front:'Mark&rsquo;s Toy Car and Ana&rsquo;s Paper Towels', back:'<b>Mark</b>: Will a toy car move farther when pushed gently or with a stronger force? (toy car, flat surface, measuring tape, tape to mark the start). <b>Ana</b>: Which absorbs more water, a thick or a thin paper towel? (1 thick and 1 thin paper towel, 2 cups, a dropper).'},
+      {front:'Why Follow Procedures?', back:'It keeps the investigation <b>fair and accurate</b>, keeps everyone <b>safe</b>, avoids mistakes, makes results <b>reliable</b>, and lets others <b>repeat</b> it. Forgetting to give two plants the same amount of water makes the test <b>unfair</b>.'},
+      {front:'Writing Step-by-Step Instructions', back:'Use <b>action words</b> (prepare, place, observe, record). Write <b>one step at a time</b>. Put the steps in the <b>correct order</b>. Use <b>numbers</b> to show the sequence.'},
+      {front:'Safety Reminders', back:'Listen to the teacher. Handle materials properly. <b>Do not taste, smell or touch unknown substances.</b> Keep your area clean. <b>Report spills, accidents or broken materials right away.</b> <b>Wash your hands</b> afterwards. No running or playing.'},
+      {front:'Observation vs Conclusion', back:'<b>Observations</b> are facts gathered with your senses or measuring tools &mdash; they <b>describe what happened</b> (&ldquo;The ice cube under the sun melted in 15 minutes.&rdquo;). A <b>conclusion</b> answers the question using that evidence &mdash; it <b>explains what the observations mean</b> (&ldquo;Ice cubes melt faster under the sun than in the shade.&rdquo;).'},
+      {front:'Answering With Evidence', back:'1. Review your observations and data. 2. Look for <b>patterns or changes</b>. 3. Use the <b>evidence</b> to answer the question. 4. Write a conclusion based on the results.'},
+      {front:'Sharing Findings', back:'Ways: oral presentation, class discussion, science report, <b>charts and graphs</b>, posters. It lets others learn, lets us <b>compare results</b>, encourages teamwork, and improves understanding.'}
+    ],
+    quiz:[
+      {q:'What is the FIRST step in a simple science investigation?', options:['Identify the problem or question you want to answer.','Write the conclusion based on your results.','Share your findings with the class.','Wash your hands.'], correct:0, explain:'Every investigation starts with <b>the problem</b>: what do you want to find out?'},
+      {q:'Which of these is a GOOD science question?', options:['Does the amount of sunlight affect plant growth?','Are plants pretty?','What is my favorite plant?','Why do I like my science class more than my other classes?'], correct:0, explain:'It is clear, focuses on one idea, and can be <b>tested</b> by experiment. The others are opinions.'},
+      {q:'Lara wants to find out which will melt faster: an ice cube under the sun or an ice cube in the shade. What is the problem to be investigated?', options:['Which melts faster: an ice cube under the sun or an ice cube in the shade?','How cold is an ice cube?','Where can Lara buy a bag of ice cubes near her house?','Why is the sun hot?'], correct:0, explain:'The problem is the exact question Lara wants to answer.'},
+      {q:'Which set of materials does Lara need for her ice cube investigation?', options:['2 ice cubes, 2 small plates, and a timer','1 toy car, a ruler, and masking tape','a thick and a thin paper towel, and a dropper','2 potted plants and a dark box'], correct:0, explain:'Two ice cubes (one for the sun, one for the shade), plates, and a <b>timer</b>.'},
+      {q:'Ana wants to find out which paper towel can absorb more water: a thick one or a thin one. Which materials does she need?', options:['1 thick paper towel, 1 thin paper towel, 2 small cups, and a dropper','2 ice cubes, 2 small plates, and a timer or stopwatch','a toy car and a measuring tape','a thermometer and a balance'], correct:0, explain:'She needs <b>both kinds of paper towel</b> and a way to add the same water to each.'},
+      {q:'Mark wants to know whether a toy car will move farther when pushed gently or when pushed with a stronger force. What is the problem?', options:['Will a toy car move farther when pushed gently or when pushed with a stronger force?','What color is the toy car?','How much does the toy car cost?','Which of Mark&rsquo;s toy cars is the newest and the most expensive one?'], correct:0, explain:'The problem is the question Mark wants to answer by testing.'},
+      {q:'Which order of steps is correct for Lara&rsquo;s investigation?', options:['find out the problem &rarr; prepare the materials &rarr; place the ice cubes &rarr; observe and record','observe and record &rarr; place the ice cubes &rarr; prepare the materials &rarr; find out the problem','prepare the materials &rarr; observe and record &rarr; find out the problem &rarr; place the ice cubes','place the ice cubes &rarr; find out the problem &rarr; observe and record &rarr; prepare the materials'], correct:0, explain:'Problem, materials, what to do, what you found out.'},
+      {q:'Why is it important to follow procedures in an investigation?', options:['It makes the investigation fair, accurate, and safe.','It lets you finish the activity before everyone else in the class.','It stops other people from repeating your test.','It lets you skip the steps you do not like.'], correct:0, explain:'Following procedures keeps the test <b>fair, accurate and safe</b>, and lets others repeat it.'},
+      {q:'Which of these is an OBSERVATION?', options:['The ice cube under the sun melted in 15 minutes.','Ice cubes melt faster under the sun than in the shade.','Plants grow faster when they receive sunlight.','Warm water dissolves sugar faster than cold water.'], correct:0, explain:'An observation <b>describes what happened</b>. The other three explain what the results mean &mdash; conclusions.'},
+      {q:'Which of these is a CONCLUSION?', options:['Plants grow faster when they receive sunlight.','The plant in sunlight grew 10 cm tall.','The water changed color after adding food coloring.','The ice cube in the shade melted in 30 minutes.'], correct:0, explain:'A conclusion <b>answers the question</b> using the evidence. The others are observations.'},
+      {q:'Which is a safety rule during science investigations?', options:['Do not taste, smell, or touch unknown substances.','Run so you can finish quickly.','Clean up spills quietly and keep them a secret from the teacher.','Play with the equipment while waiting.'], correct:0, explain:'Never taste, smell or touch <b>unknown substances</b>. Spills must be <b>reported</b> right away.'},
+      {q:'What should good step-by-step instructions use?', options:['action words like prepare, place, observe, and record','long paragraphs that explain everything, with no numbers','steps written in any order','as many steps in one sentence as possible'], correct:0, explain:'Use <b>action words</b>, one step at a time, in order, with numbers.'},
+      {q:'Which is a way to share findings with others?', options:['making charts and graphs','keeping the results to yourself','erasing your notes','changing the data'], correct:0, explain:'Charts and graphs, reports, posters, oral presentations and class discussions all share findings.'},
+      {q:'True or False: If you forget to give two plants the same amount of water, the investigation may not be fair.', options:['True','False'], correct:0, explain:'Correct &mdash; everything except the one thing you are testing must stay the same.'},
+      {q:'True or False: Observations explain what the results mean.', options:['True','False'], correct:1, explain:'False &mdash; observations <b>describe what happened</b>. <b>Conclusions</b> explain what it means.'},
+      {q:'True or False: You should wash your hands after a science investigation.', options:['True','False'], correct:0, explain:'Correct &mdash; it is one of the safety reminders.'}
+    ]
+  },
   {
     id:'bacteria',
     icon:'🦠',
@@ -574,86 +861,6 @@ const LESSONS = [
     ]
   },
   {
-    id:'matter',
-    icon:'🧊',
-    title:'States of Matter',
-    subtitle:'Solids, liquids & gases',
-    cards:[
-      {front:'Solid', back:'Has a <b>definite shape and a definite volume</b>. Examples: a table, a pencil, a rock, a stone, a sandwich, a metal spoon, ice.'},
-      {front:'Liquid', back:'Has <b>no definite shape but a definite volume</b> &mdash; it takes the shape of its container but stays the same amount. Examples: water, milk, orange juice, honey.'},
-      {front:'Gas', back:'Has <b>no definite shape and no definite volume</b>. It <b>spreads out and fills the space</b> of its container. Examples: steam, the air inside a balloon, the smell of perfume.'},
-      {front:'Same Matter, Different States', back:'Water and ice are both matter, but in <b>different states</b>: <b>ice is a solid</b>, <b>water is a liquid</b>, and steam is a gas.'},
-      {front:'Clues From Your Test', back:'Spoon moved to a drawer keeps its shape &rarr; <b>solid</b>. Honey changes shape but stays the same amount &rarr; <b>liquid</b>. Perfume spreads through the room, a balloon grows when filled with air &rarr; <b>gas</b>.'},
-      {front:'Quick Sort', back:'milk &rarr; liquid &middot; stone &rarr; solid &middot; steam &rarr; gas'}
-    ],
-    quiz:[
-      {q:'Which state of matter includes objects such as a table, a pencil, and a rock?', options:['solid','gas','liquid','plasma'], correct:0, explain:'They keep their own shape and volume &mdash; <b>solids</b>.'},
-      {q:'Ben is packing for a picnic. Which item should he place in the solid group?', options:['sandwich','water','orange juice','air inside the balloon'], correct:0, explain:'A sandwich keeps its shape. Water and juice are liquids; the air is a gas.'},
-      {q:'Which state of matter has no definite shape but has a definite volume?', options:['liquid','ice','gas','solid'], correct:0, explain:'A <b>liquid</b> takes the shape of its container but keeps the same amount.'},
-      {q:'Carlo transferred a metal spoon from the kitchen table to a drawer. What property of solids does the spoon show?', options:['it has a definite shape and definite volume','it has no definite shape and no definite volume','it changes its shape depending on the container','it has no definite shape but has a definite volume'], correct:0, explain:'The spoon stays the same shape and size wherever it goes &mdash; a solid.'},
-      {q:'Vivian says that both water and ice are forms of matter, but they are different states. Which statement BEST explains why?', options:['ice is a solid, while water is a liquid','ice and water are both gases','ice is a gas, while water is a solid','ice and water are not forms of matter'], correct:0, explain:'<b>Ice is a solid</b> and <b>water is a liquid</b> &mdash; same matter, different states.'},
-      {q:'Which state of matter can spread out and fill the space inside a container?', options:['gas','solid','liquid','None of the choices is correct.'], correct:0, explain:'A <b>gas</b> spreads out to fill all the space it is given.'},
-      {q:'Carlo sprays perfume inside a room. After a few minutes, the smell spreads throughout the room. What property of gases does this show?', options:['Gases can spread out and fill the available space.','Gases have a fixed shape like solids.','Gases cannot move from one place to another.','Gases have a definite shape and definite volume.'], correct:0, explain:'The perfume&rsquo;s gas <b>spreads out and fills the room</b>.'},
-      {q:'Your teacher asks you to sort the following materials into their correct states of matter: milk, stone, and steam. Which answer is CORRECT?', options:['milk&ndash;liquid, stone&ndash;solid, steam&ndash;gas','milk&ndash;solid, stone&ndash;liquid, steam&ndash;gas','milk&ndash;gas, stone&ndash;solid, steam&ndash;liquid','milk&ndash;liquid, stone&ndash;gas, steam&ndash;solid'], correct:0, explain:'Milk flows (liquid), a stone keeps its shape (solid), steam spreads out (gas).'},
-      {q:'A balloon becomes bigger after it is filled with air. What does this show about gases?', options:['Gases do not have a definite shape and volume, and fill the available space.','Gases have a definite shape only.','Gases always stay inside one small area.','Gases have a definite shape and volume.'], correct:0, explain:'The air spreads out and <b>fills the balloon</b>, so the balloon grows.'},
-      {q:'Joshua places honey into different containers. He notices that the honey changes its shape but stays the same amount. What property of liquids does this show?', options:['liquids have no definite shape but have a definite volume','liquids have a definite shape and volume','liquids cannot take the shape of their container','liquids have no definite shape and no definite volume'], correct:0, explain:'Shape changes, amount stays the same &mdash; that is a <b>liquid</b>.'},
-      {q:'True or False: A gas has a definite shape and a definite volume.', options:['True','False'], correct:1, explain:'False — that describes a <b>solid</b>. A gas has no definite shape and no definite volume.'},
-      {q:'True or False: A liquid takes the shape of its container but keeps the same amount.', options:['True','False'], correct:0, explain:'Correct — like the honey in different containers.'}
-    ]
-  },
-  {
-    id:'measure',
-    icon:'📏',
-    title:'Measuring Matter',
-    subtitle:'kg, g, mg, mL & &deg;C',
-    cards:[
-      {front:'Mass: kilogram (kg)', back:'For <b>heavy</b> things, like a <b>bag of rice</b>.'},
-      {front:'Mass: gram (g)', back:'For <b>small</b> amounts, like a <b>small powder sample</b>. Smallest to biggest: <b>mg &lt; g &lt; kg</b>.'},
-      {front:'Mass: milligram (mg)', back:'For <b>very light</b> things. On your test the key used milligrams for a <b>paper clip</b>.'},
-      {front:'Liquid: milliliter (mL)', back:'For the <b>amount of liquid</b>, like the water in a small container.'},
-      {front:'Temperature: degree Celsius (&deg;C)', back:'For how <b>hot or cold</b> an object or place is, like water or a room.'},
-      {front:'Match the Unit to the Job', back:'kg, g and mg measure <b>mass</b>. mL measures <b>liquid amount</b>. &deg;C measures <b>temperature</b>. A unit from the wrong group is always wrong: never grams for temperature, never &deg;C for mass.'}
-    ],
-    quiz:[
-      {q:'During a classroom activity, Carla measures the amount of water in a small container. Which unit should she use?', options:['milliliter (mL)','gram (g)','kilogram (kg)','degree celsius (&deg;C)'], correct:0, explain:'An amount of liquid is measured in <b>milliliters (mL)</b>.'},
-      {q:'Ana plans to use kilograms (kg) to measure a paper clip, grams (g) to measure a bag of rice, and degree celsius (&deg;C) to measure temperature. Which evaluation is CORRECT?', options:['Ana should use milligrams (mg) for the paper clip and kilogram (kg) for the bag of rice.','Ana used all units correctly.','Ana should use grams (g) for measuring temperature.','Ana should use degrees celsius (&deg;C) for measuring the mass of objects.'], correct:0, explain:'She swapped them: the light paper clip needs a small unit (mg) and the heavy rice needs <b>kilograms</b>. Her &deg;C for temperature was right.'},
-      {q:'A scientist measures the amount of a very small powder sample for an experiment. Which unit is the most suitable to use?', options:['gram (g)','kilogram (kg)','milliliter (mL)','degree celsius (&deg;C)'], correct:0, explain:'Powder needs a <b>mass</b> unit. Milligrams were <b>not one of the choices</b>, so the best answer is <b>grams</b> &mdash; kilograms are for heavy things, mL is for liquids and &deg;C is for temperature.'},
-      {q:'Which unit is used to measure the temperature of an object or place?', options:['degree celsius (&deg;C)','grams (g)','kilogram (kg)','milligram (mg)'], correct:0, explain:'Temperature is measured in <b>degrees Celsius (&deg;C)</b>.'},
-      {q:'Which situation shows the CORRECT use of a unit of measurement?', options:['measuring the temperature of water using degree celsius (&deg;C)','measuring the mass of a pencil using kilograms (kg)','measuring the temperature of a room using grams (g)','measuring the mass of a bag of rice using milligrams (mg)'], correct:0, explain:'&deg;C for temperature is correct. A pencil is too light for kg, grams cannot measure temperature, and rice is too heavy for mg.'},
-      {q:'True or False: Grams (g) can be used to measure the temperature of a room.', options:['True','False'], correct:1, explain:'False — grams measure <b>mass</b>. Temperature uses <b>&deg;C</b>.'},
-      {q:'True or False: A bag of rice is best measured in kilograms (kg).', options:['True','False'], correct:0, explain:'Correct — kilograms are for heavy things.'},
-      {q:'True or False: Milliliters (mL) are used to measure the amount of a liquid.', options:['True','False'], correct:0, explain:'Correct — like Carla measuring water in a container.'},
-      {q:'True or False: Degree Celsius (&deg;C) is used to measure the mass of objects.', options:['True','False'], correct:1, explain:'False — &deg;C measures <b>temperature</b>. Mass uses kg, g or mg.'},
-      {q:'Which unit would you use to measure a glass of juice?', options:['milliliter (mL)','kilogram (kg)','degree celsius (&deg;C)','milligram (mg)'], correct:0, explain:'Juice is a liquid, so use <b>milliliters</b>.'}
-    ]
-  },
-  {
-    id:'changes',
-    icon:'♨️',
-    title:'Changes of State',
-    subtitle:'Melting, freezing, evaporation, condensation & sublimation',
-    cards:[
-      {front:'Heat Causes Changes', back:'When the <b>temperature increases</b> or <b>decreases</b>, matter can change from one state to another. The matter does not disappear.'},
-      {front:'Melting (solid &rarr; liquid)', back:'Heat makes a solid turn into a liquid: an ice cube in the sun, a candle giving liquid wax when heated.'},
-      {front:'Freezing (liquid &rarr; solid)', back:'When the <b>temperature decreases</b>, a liquid freezes into a solid.'},
-      {front:'Evaporation (liquid &rarr; gas)', back:'<b>Heat</b> turns a liquid into water vapor: a puddle disappearing on a hot day, steam from a boiling kettle.'},
-      {front:'Condensation (gas &rarr; liquid)', back:'The reverse of evaporation: a gas turns back into a liquid.'},
-      {front:'Sublimation (solid &rarr; gas)', back:'A solid changes <b>directly into a gas</b> without becoming a liquid first, like <b>dry ice</b>.'}
-    ],
-    quiz:[
-      {q:'Ella leaves an ice cube on a plate under the sun. After some time, the ice becomes water. What caused this change?', options:['The temperature increased, causing the solid to melt into a liquid.','The ice lost its mass and disappeared.','The ice changed into a gas without heat.','The temperature decreased, causing the liquid to freeze.'], correct:0, explain:'The sun&rsquo;s heat raised the temperature, so the solid <b>melted</b> into a liquid.'},
-      {q:'Carlo boils water in a kettle. After several minutes, steam comes out of the kettle. What change of state happened?', options:['liquid to gas','solid to gas','gas to liquid','solid to liquid'], correct:0, explain:'Water (liquid) became steam (gas).'},
-      {q:'During a hot day, Mark noticed that a puddle of water on the ground disappeared after several hours. He said that the heat from the sun caused the water to change into water vapor. Why is Mark&rsquo;s explanation CORRECT?', options:['because heat from the sun causes evaporation','because cold causes evaporation','because water changes into a solid','because water cannot change its state'], correct:0, explain:'Heat turns liquid water into water vapor: <b>evaporation</b>.'},
-      {q:'A student places a piece of dry ice in an open container. After some time, the dry ice disappears and changes directly into a gas. What process occurs?', options:['sublimation','melting','evaporation','condensation'], correct:0, explain:'Solid straight to gas, skipping liquid &mdash; <b>sublimation</b>.'},
-      {q:'A student observes that a candle becomes soft and produces liquid wax when heated. What process is shown?', options:['melting','freezing','evaporation','condensation'], correct:0, explain:'Solid wax turns into liquid wax &mdash; <b>melting</b>.'},
-      {q:'True or False: Freezing happens when the temperature decreases and a liquid turns into a solid.', options:['True','False'], correct:0, explain:'Correct — freezing is liquid &rarr; solid.'},
-      {q:'True or False: When ice melts, it loses its mass and disappears.', options:['True','False'], correct:1, explain:'False — the ice does not disappear. It changes into <b>liquid water</b>.'},
-      {q:'True or False: Evaporation is caused by cold.', options:['True','False'], correct:1, explain:'False — evaporation is caused by <b>heat</b>, like the sun drying a puddle.'},
-      {q:'True or False: In sublimation, a solid changes directly into a gas.', options:['True','False'], correct:0, explain:'Correct — like dry ice.'},
-      {q:'Which change of state goes from gas to liquid?', options:['condensation','evaporation','melting','sublimation'], correct:0, explain:'Gas &rarr; liquid is <b>condensation</b>, the reverse of evaporation.'}
-    ]
-  },
-  {
     id:'classify',
     icon:'🗂️',
     title:'Classifying Living Things',
@@ -809,6 +1016,10 @@ const STRATEGY = [
   {kicker:'Science Tip #6', title:'Name the job, name the structure', body:'"Stores food underground" &rarr; <b>tuber</b>. "Underground stem growing sideways" &rarr; <b>rhizome</b>. "Layers of fleshy scale leaves" &rarr; <b>bulb</b>. "Protects from animals" &rarr; <b>thorn</b>. "Grows above ground for support" &rarr; <b>aerial root</b>.'},
   {kicker:'Lost Mark', title:'Never leave an item blank', body:'On your second summative test the reptiles question was left <b>blank</b> &mdash; that was your only lost point. A blank is always zero. If unsure, cross out what you know is wrong and pick from what is left.'},
   {kicker:'Science Tip', title:'Match the unit to what you measure', body:'<b>Mass</b> &rarr; kg (heavy), g (small), mg (very light). <b>Liquid</b> &rarr; mL. <b>Temperature</b> &rarr; &deg;C. A unit from the wrong group is always wrong.'},
+  {kicker:'Science Tip', title:'Mass is not weight', body:'<b>Mass</b> is how much matter is in an object and never changes. <b>Weight</b> is gravity&rsquo;s pull and changes on the moon. And remember: light, heat, sound and electricity are <b>energy</b>, not matter.'},
+  {kicker:'Science Tip', title:'Physical or chemical? Look for something new', body:'Ask one question: <b>was a new substance made?</b> No &rarr; physical (sanding, melting, dissolving salt). Yes &rarr; chemical (burning wood into ash, bubbles of gas from baking soda). Changes of state are always physical.'},
+  {kicker:'Science Tip', title:'Observation vs conclusion', body:'An <b>observation</b> describes what happened, often with a number (&ldquo;melted in 15 minutes&rdquo;). A <b>conclusion</b> explains what it means (&ldquo;ice melts faster in the sun&rdquo;). A <b>hypothesis</b> is the guess you make <b>before</b> testing.'},
+  {kicker:'Science Tip', title:'Celsius or Fahrenheit?', body:'Water boils at <b>100 &deg;C</b> and freezes at <b>0 &deg;C</b>. The numbers 212 and 32 are <b>&deg;F</b>. If a choice mixes them up, like &ldquo;water freezes at 32 &deg;C,&rdquo; it is wrong.'},
   {kicker:'General Tip', title:'Reread before you finalize', body:'Read the question once more with your answer in mind. If it still matches what the lesson actually said, you have got it.'}
 ];
 
