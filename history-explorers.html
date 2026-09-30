@@ -813,9 +813,16 @@ function saveProgress(p){
 }
 let progress = loadProgress();
 /* Opened from the lobby with ?reset=1 -> start a completely fresh run. */
-if (/(^|[?&])reset=1(&|$)/.test(location.search)){
+const STARS_DAY_KEY = STORAGE_KEY + '_day';
+const starsToday = (function(d){ return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); })(new Date());
+let starsDay = null;
+try{ starsDay = localStorage.getItem(STARS_DAY_KEY); }catch(e){}
+if (starsDay !== starsToday){
   progress = {};
   saveProgress(progress);
+  try{ localStorage.setItem(STARS_DAY_KEY, starsToday); }catch(e){}
+}
+if (/(^|[?&])reset=1(&|$)/.test(location.search)){
   SH && SH.appOpened(SH_APP, SH_TITLE);
   if (window.history && window.history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
 }
