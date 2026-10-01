@@ -203,7 +203,7 @@
     '.coins-badge:focus-visible,.cg-close:focus-visible{outline:3px solid #6B4A00;outline-offset:2px;}' +
     '.coins-live{margin-left:6px;white-space:nowrap;}' +
     '.coins-have{font-weight:800;margin-top:4px;}' +
-    '.coin-guide{position:fixed;inset:0;z-index:9999;display:flex;justify-content:center;align-items:flex-start;' +
+    '.coin-guide{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;display:flex;justify-content:center;align-items:flex-start;' +
       'overflow:auto;padding:16px;background:rgba(20,16,10,.55);}' +
     '.coin-guide[hidden]{display:none;}' +
     '.cg-box{width:100%;max-width:560px;margin:auto 0;background:#FFFDF6;color:#2B2320;border-radius:20px;padding:20px;' +
@@ -239,6 +239,7 @@
         var kind = node.getAttribute('data-coins');
         if (kind !== 'badge' && kind !== 'haveNow') return;
         node.textContent = T[kind](n);
+        node.hidden = false;
         if (kind === 'badge') node.setAttribute('aria-label', T.have(n) + '. ' + T.badgeLabel);
       });
     }
