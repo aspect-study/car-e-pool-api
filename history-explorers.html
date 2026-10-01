@@ -397,6 +397,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 <script src="wallet.js" data-grade="grade5"></script>
 <script src="fx.js" data-grade="grade5"></script>
 <script src="powerups.js" data-grade="grade5"></script>
+<script src="recall.js" data-grade="grade5"></script>
 <script>
 const LESSONS = [
   {
@@ -809,13 +810,48 @@ const LESSONS = [
     ]
   }
 ];
+
+// Questions she may answer by typing first (+5 bonus). Value: other accepted answers.
+const TYPE_IT = {
+  "Sino ang karaniwang pinuno ng sinaunang barangay?": [],
+  "\"Ako ang katawagan sa ilang pinuno sa pamayanang may impluwensiyang Malay-Indonesian.\" Sino ako?": ["Raja", "Radya"],
+  "Ang isang pamayanan ay naimpluwensiyahan ng Islam. Ano ang malamang na katawagan sa pinuno nito?": [],
+  "Alin ang <b>pinakamataas</b> na antas ng sinaunang lipunan?": [],
+  "\"Kabilang ako sa pinakamababang antas ng sinaunang lipunan.\" Sino ako?": [],
+  "Anong hanapbuhay ang umunlad sa <b>kapatagan</b>?": ["pagsasaka", "pagtatanim"],
+  "Anong hanapbuhay ang umunlad sa <b>baybaying-dagat</b>?": [],
+  "Ano ang natutuhang gamitin ng mga sinaunang Pilipino upang mapahusay ang paggawa ng kagamitan?": [],
+  "Kailan natuklasan ng National Museum of the Philippines ang mga artifact ng balangay?": ["1977"],
+  "Tinatayang ilan ang kapasidad ng isang balangay?": ["320"],
+  "Ang Filipino, Cebuano, Ilokano, at Waray ay mga halimbawa ng alin?": [],
+  "Anong tirahan ang gumagamit ng materyales mula sa kapaligiran at may simple at praktikal na disenyo?": ["bahaykubo"],
+  "Ano ang tawag ng mga Espanyol sa paniniwala ng ating mga ninuno sa mga anito?": [],
+  "Ano ang tawag ng mga <b>Igorot</b> sa kanilang diyos?": ["Kabunian"],
+  "Sino ang diyos na sinasamba ng mga Tagalog kapag panahon ng <b>pagtatanim</b>?": [],
+  "Sino ang diyos ng mga <b>mangingibig</b> ayon sa aralin?": [],
+  "Ano ang tawag sa tagapamagitan sa mga espiritu at sa mga tao sa mga <b>Bisaya</b>?": [],
+  "Ano ang tawag ng ating mga ninuno sa <b>buwaya</b> bilang tanda ng paggalang?": [],
+  "Ano ang tawag ng mga Bikolano sa <b>aswang</b>?": [],
+  "Ano ang tawag sa mga <b>higanteng elemento sa kagubatan</b>?": [],
+  "Ano ang ginagamit upang <b>mapaibig</b> ang isang tao?": [],
+  "Ayon sa pag-aaral ng historyador na si William Henry Scott, ano ang isinasama sa paglibing sa mga yumao?": ["alahas"],
+  "Ang <b>Manunggul Jar</b> ay halimbawa ng anong uri ng banga?": ["secondary burial"],
+  "Saan natagpuan ang <b>Manunggul Jar</b>?": ["Palawan"],
+  "Kailan nahukay ang mga anthropomorphic jar sa bayan ng Maitum, Sarangani?": ["1991"],
+  "Ano ang tawag sa halaga ng yamang ibinibigay ng pamilya ng lalaki sa pamilya ng babae?": [],
+  "Ano ang tawag sa kompensasyong maaaring hingin ng nanay ng babae para sa kaniyang pag-aalaga sa anak?": [],
+  "May kaklase kang nagsabing sabay-sabay umunlad ang mga tao sa Timog-Silangang Asya. Anong teorya ang kaniyang tinutukoy?": ["Core Population"],
+  "Aling teorya ang tungkol sa pagdating ng mga sinaunang tao nang pa-alon-alon, sa magkakaibang panahon?": ["Wave Migration"],
+  "Ano ang tawag sa pag-aaral ng mga pangyayari sa nakaraan batay sa mga ebidensiya?": [],
+  "Sino ang Diyos ng mga Samal na lumikha sa unang tao na si Nur Muhammad ayon sa kanilang kaalamang bayan?": [],
+};
 const FINAL_EXAM_PER_LESSON = 2;
 const SH = window.StudyHistory, SH_APP = 'history-explorers', SH_TITLE = 'History Explorers';
 let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'historyexplorers_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'historyexplorers_points_v1';
-const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+const POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
 function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
@@ -849,6 +885,11 @@ function shuffle(arr){
     [a[i],a[j]] = [a[j],a[i]];
   }
   return a;
+}
+// Recall decides whether this question pays, shows a typing box, and offers power-ups.
+function offerQuestion(pu){
+  if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+  else if (window.PowerUps) PowerUps.offer(pu);
 }
 function prepareQuestion(q){
   const order = shuffle(q.options.map((_,i)=>i));
@@ -1108,14 +1149,14 @@ function renderQuestion(){
     btn.onclick = ()=>selectOption(i);
     box.appendChild(btn);
   });
-  window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:box, options:box.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
+  offerQuestion({ art:q.art, quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:box, options:box.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
 }
 function showQuestionEnglish(){ document.getElementById('qHelp').style.display = 'none'; document.getElementById('qEn').style.display = 'block'; }
 
 function selectOption(i){
   const q = currentQuizSet[quizIdx];
   const buttons = document.querySelectorAll('#optionsBox .option');
-  SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct]);
+  SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct], window.Recall ? Recall.typed() : false);
   buttons.forEach((b,idx)=>{
     if(idx === q.correct) b.classList.add('correct');
     else if(idx === i) b.classList.add('wrong');
@@ -1128,7 +1169,8 @@ function selectOption(i){
     quizScore++;
     if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+    const pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
@@ -1194,7 +1236,7 @@ function renderResults(total){
   document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
   let ptsLine = `⭐ +${sessionPoints} points this round`;
   if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 best streak: ${bestStreak} in a row!`;
-  document.getElementById('points-earned').textContent = ptsLine;
+  document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
   renderMissedReview();
 }
 

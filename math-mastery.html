@@ -2012,7 +2012,7 @@ function historyShort(html){
 const STORAGE_KEY = 'mathmastery_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'mathmastery_points_v1';
-const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+const POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
 function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
@@ -2118,13 +2118,14 @@ function startRound(){
 }
 
 /* One answer marked, wherever it was earned: a quiz question, a UPAC step or a
-   case-study follow-up. They all pay the same, so a streak carries across the
+   case-study follow-up. A mock exam answer pays double. A streak carries across the
    whole round rather than resetting at each kind of question. */
-function awardPoint(correct, helped, shielded){
+function awardPoint(correct, helped, shielded, exam){
   if(correct){
     if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const ptsBase = exam ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT;
+    const pts = helped ? ptsBase / 2 : ptsBase + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
@@ -2378,7 +2379,7 @@ function selectOption(idx){
   const helped = !!(window.PowerUps && PowerUps.answered());
   if(correct) quizScore++;
   else missedQuestions.push({ q:q.q, picked:q.options[idx], why:(q.why||[])[idx] || '', answer:q.options[q.correct], explain:q.explain, tip:q.tip || '' });
-  awardPoint(correct, helped, !correct && !!(window.PowerUps && PowerUps.shield()));
+  awardPoint(correct, helped, !correct && !!(window.PowerUps && PowerUps.shield()), currentQuizMeta.id === 'final');
   renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
   const fb = document.getElementById('q-feedback');
   fb.innerHTML = correct

@@ -19,6 +19,17 @@
   // Paid for inside a quiz (powerups.js), never in the shop.
   var POWER_UPS = { hint: 3, fifty: 5, second: 5, shield: 4, later: 2, ate: 2, mommy: 4, tatay: 4 };
 
+  // A real school test, entered by a parent in the lobby. score * 100 >= total * pct, checked top-down.
+  var TEST_BONUS_TIERS = [{ pct: 100, coins: 50 }, { pct: 90, coins: 40 }, { pct: 80, coins: 30 }, { pct: 0, coins: 10 }];
+
+  function testBonus(score, total) {
+    if (!Number.isInteger(score) || !Number.isInteger(total) || total < 1 || score < 0 || score > total) return 0;
+    for (var i = 0; i < TEST_BONUS_TIERS.length; i++) {
+      if (score * 100 >= total * TEST_BONUS_TIERS[i].pct) return TEST_BONUS_TIERS[i].coins;
+    }
+    return 0;
+  }
+
   function pad(n) { return n < 10 ? '0' + n : String(n); }
 
   function dateKey(ms) {
@@ -37,7 +48,7 @@
     if (!/^grade[0-9]+$/.test(grade || '')) throw new Error('Wallet needs a grade like "grade5".');
     var KEY = grade + '_wallet_v1';
 
-    function fresh() { return { v: 1, baselines: {}, spent: 0, purchases: [], oldPointsCounted: false }; }
+    function fresh() { return { v: 1, baselines: {}, spent: 0, bonus: 0, purchases: [], oldPointsCounted: false }; }
 
     function read() {
       var raw = null;
@@ -50,6 +61,7 @@
           v: 1,
           baselines: d.baselines && typeof d.baselines === 'object' && !Array.isArray(d.baselines) ? d.baselines : {},
           spent: typeof d.spent === 'number' ? d.spent : 0,
+          bonus: typeof d.bonus === 'number' && d.bonus > 0 ? d.bonus : 0,
           purchases: Array.isArray(d.purchases) ? d.purchases.filter(function (p) { return p && typeof p.t === 'number'; }) : [],
           oldPointsCounted: d.oldPointsCounted === true
         };
@@ -77,7 +89,7 @@
 
     function balanceOf(state, points) {
       var earned = Math.floor(newPoints(state, points) / POINTS_PER_COIN);
-      return Math.max(0, WELCOME_GIFT + earned - state.spent);
+      return Math.max(0, WELCOME_GIFT + earned + state.bonus - state.spent);
     }
 
     function storedBalanceOf(state) {
@@ -138,8 +150,17 @@
 
       earned: function (points) {
         var state = read(), gained = newPoints(state, points);
-        return { points: gained, coins: Math.floor(gained / POINTS_PER_COIN), welcome: WELCOME_GIFT, spent: state.spent };
+        return { points: gained, coins: Math.floor(gained / POINTS_PER_COIN), welcome: WELCOME_GIFT, spent: state.spent, bonus: state.bonus };
       },
+
+      addBonus: function (coins) {
+        if (!Number.isInteger(coins) || coins <= 0) return false;
+        var state = read();
+        state.bonus += coins;
+        return write(state);
+      },
+
+      testBonus: testBonus,
 
       // Drops purchases before the last `days` local days; `spent` stays, so no coins come back.
       prune: function (days) {
@@ -189,6 +210,10 @@
             '⏭️ Later (' + POWER_UPS.later + ' coins): skip a hard question before using any help; it comes back at the end, for full points.'],
           ['👨‍👩‍👧', 'Ask Family', 'Ask Mommy (' + POWER_UPS.mommy + ' coins) or Tatay (' + POWER_UPS.tatay + ' coins) to explain the idea. They will not tell you the answer; you still choose, for half points. ' +
             'Once you pay, the coins are spent, so check first that they are free to help.'],
+          ['⏳', 'Resting questions', 'When you get a question right on your own, it rests for 3 days. You can still practice it, but it gives points again only after the rest. Remembering after days is what counts!'],
+          ['✏️', 'Type it first', 'See a ✏️ box? Type the answer before you look at the choices. If it is right, you earn 5 bonus points. If not, just pick from the choices.'],
+          ['🏆', 'Mock Exam', 'Every right answer in the Mock Exam is worth 20 points, double a lesson quiz!'],
+          ['📝', 'Real test bonus', 'Got your real test back from school? Show it to Mommy or Tatay. They can add up to 50 coins: 50 for a perfect score, 40 for 90% or more, 30 for 80% or more, and 10 for trying.'],
           ['★', 'Stars', 'Stars show your best score in each lesson today. They start fresh each new day, so you can win them again. Points and coins are never wiped.'],
           ['🔒', 'Just yours', 'Your coins belong to you only, and they stay on this tablet.']
         ];
@@ -227,6 +252,14 @@
             'Kapag nagbayad ka na, wala nang balikan, kaya tingnan muna kung libre sila.',
             'Ask Ate (' + POWER_UPS.ate + ' coins), Mommy (' + POWER_UPS.mommy + ' coins) or Tatay (' + POWER_UPS.tatay + ' coins). They explain the lesson but do not tell you the answer. You still choose, for half points. ' +
             'Once you pay, there is no going back, so check first that they are free.'],
+          ['⏳', 'Pahinga · Resting questions', 'Kapag tama ang sagot mo nang walang tulong, magpapahinga ang tanong nang 3 araw. Puwede mo pa rin itong sagutan, pero walang points hanggang matapos ang pahinga.',
+            'When you get a question right on your own, it rests for 3 days. You can still answer it, but it gives no points until the rest is over.'],
+          ['✏️', 'I-type muna · Type it first', 'May kahon na ✏️? I-type muna ang sagot bago tumingin sa choices. Kapag tama, may 5 bonus points ka. Kapag mali, pumili lang sa choices.',
+            'See a ✏️ box? Type the answer before you look at the choices. If it is right, you get 5 bonus points. If not, just pick from the choices.'],
+          ['🏆', 'Mock Exam', 'Bawat tamang sagot sa Mock Exam = 20 points, doble ng lesson quiz!',
+            'Every right answer in the Mock Exam = 20 points, double a lesson quiz!'],
+          ['📝', 'Totoong test · Real test bonus', 'Ipakita kay Mommy o Tatay ang score mo sa totoong test sa school. Hanggang 50 coins: 50 kapag perfect, 40 kapag 90% pataas, 30 kapag 80% pataas, at 10 dahil sumubok ka.',
+            'Show Mommy or Tatay your real test score from school. Up to 50 coins: 50 for a perfect score, 40 for 90% or more, 30 for 80% or more, and 10 for trying.'],
           ['★', 'Stars', 'Ang stars ay para sa araw na ito lang. Kinabukasan, simula ulit para makuha mo ulit. Hindi nawawala ang points at coins.',
             'Stars are for today only. Tomorrow they start fresh, so you can win them again. Your points and coins never disappear.'],
           ['🔒', 'Sa iyo lang · Just yours', 'Sa iyo lang ang coins mo, at nandito lang sila sa tablet na ito.',
@@ -365,7 +398,7 @@
     wallet.liveHtml = function () { return ' <span class="coins-live">🪙 ' + wallet.balanceStored() + '</span>'; };
   }
 
-  var exported = { create: create, CATALOG: CATALOG, POWER_UPS: POWER_UPS, findItem: findItem, GUIDE_TEXT: GUIDE_TEXT };
+  var exported = { create: create, CATALOG: CATALOG, POWER_UPS: POWER_UPS, TEST_BONUS_TIERS: TEST_BONUS_TIERS, testBonus: testBonus, findItem: findItem, GUIDE_TEXT: GUIDE_TEXT };
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = exported;
     return;

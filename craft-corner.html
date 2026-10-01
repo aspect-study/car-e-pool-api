@@ -385,6 +385,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 <script src="wallet.js" data-grade="grade5"></script>
 <script src="fx.js" data-grade="grade5"></script>
 <script src="powerups.js" data-grade="grade5"></script>
+<script src="recall.js" data-grade="grade5"></script>
 <script>
 const LESSONS = [
   {
@@ -639,13 +640,34 @@ const LESSONS = [
     ]
   }
 ];
+
+// Questions she may answer by typing first (+5 bonus). Value: other accepted answers.
+const TYPE_IT = {
+  "Before making a home furnishing you should think about purpose, materials, design, and safety. What is the FIFTH thing to consider?": [],
+  "Which embroidery tool holds the fabric tight and steady while you stitch?": ["embroidery hoop", "hoop"],
+  "A design that uses mainly squares and triangles is called a...": ["geometric"],
+  "Which design is made by the size, form, colour, and texture of an object?": ["structural"],
+  "Which crochet tool is used to weave in loose yarn ends?": ["tapestry needle"],
+  "What is the MAIN material used in crochet?": [],
+  "Which tool pulls and forms loops of yarn into stitches?": ["crochet hook", "hook"],
+  "For TREBLE crochet, how many times do you yarn over before inserting the hook?": ["two", "2", "two times", "2 times"],
+  "Which stitch is worked the same way as the running stitch, but with LONGER stitches?": ["straight"],
+  "Which stitch fills a shape with stitches worked closely side by side, creating a plump, solidly filled figure?": ["satin"],
+  "The stem stitch is also known by which other name?": ["outline stitch", "outline"],
+  "In a crochet pattern, what does <b>ch</b> mean?": ["chain stitch"],
+  "What does <b>dc</b> stand for?": [],
+  "Which abbreviation means SLIP STITCH?": ["slst"],
+  "What does <b>dec</b> mean in a crochet pattern?": [],
+  "Which sewing method uses a needle and thread and is done without an electric sewing machine?": [],
+  "Which part of the sewing machine holds the fabric firmly against the feed dogs?": [],
+};
 const FINAL_EXAM_PER_LESSON = 3;
 const SH = window.StudyHistory, SH_APP = 'craft-corner', SH_TITLE = 'Craft Corner';
 let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'craftcorner_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'craftcorner_points_v1';
-const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+const POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
 function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
@@ -679,6 +701,11 @@ function shuffle(arr){
     [a[i],a[j]] = [a[j],a[i]];
   }
   return a;
+}
+// Recall decides whether this question pays, shows a typing box, and offers power-ups.
+function offerQuestion(pu){
+  if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+  else if (window.PowerUps) PowerUps.offer(pu);
 }
 function prepareQuestion(q){
   const order = shuffle(q.options.map((_,i)=>i));
@@ -932,13 +959,13 @@ function renderQuestion(){
     btn.onclick = ()=>selectOption(i);
     box.appendChild(btn);
   });
-  window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:box, options:box.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
+  offerQuestion({ art:q.art, quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:box, options:box.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
 }
 
 function selectOption(i){
   const q = currentQuizSet[quizIdx];
   const buttons = document.querySelectorAll('#optionsBox .option');
-  SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct]);
+  SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct], window.Recall ? Recall.typed() : false);
   buttons.forEach((b,idx)=>{
     if(idx === q.correct) b.classList.add('correct');
     else if(idx === i) b.classList.add('wrong');
@@ -951,7 +978,8 @@ function selectOption(i){
     quizScore++;
     if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+    const pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
@@ -1017,7 +1045,7 @@ function renderResults(total){
   document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
   let ptsLine = `⭐ +${sessionPoints} points this round`;
   if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 best streak: ${bestStreak} in a row!`;
-  document.getElementById('points-earned').textContent = ptsLine;
+  document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
   renderMissedReview();
 }
 

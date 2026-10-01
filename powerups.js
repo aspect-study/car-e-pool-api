@@ -1,5 +1,5 @@
 /* In-quiz power-ups, paid with coins. Loaded by every game after the wallet file.
-   Each game calls PowerUps.offer({...}) when it shows a question, PowerUps.answered()
+   Each game calls PowerUps.offer({...}) when it shows a question (or PowerUps.skip() if it cannot use power-ups), PowerUps.answered()
    when the child answers (it says whether the answer was helped), and PowerUps.shield()
    on a wrong answer (it says whether a Streak Shield kept the streak).
    Ask Family runs on trust: the app cannot tell whether anyone helped. Paying is final (parent's choice). */
@@ -376,6 +376,12 @@
         tipBox.textContent = '';
         opts.before.parentNode.insertBefore(bar, opts.before);
         render();
+      },
+      // No bar and no state for a question that cannot use power-ups.
+      skip: function () {
+        disarm();
+        info = null;
+        if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
       },
       answered: function () {
         if (!info || info.answered) return false;

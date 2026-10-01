@@ -385,6 +385,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 <script src="wallet.js" data-grade="grade5"></script>
 <script src="fx.js" data-grade="grade5"></script>
 <script src="powerups.js" data-grade="grade5"></script>
+<script src="recall.js" data-grade="grade5"></script>
 <script>
 const LESSONS = [
   {
@@ -949,13 +950,61 @@ const LESSONS = [
     ]
   }
 ];
+
+// Questions she may answer by typing first (+5 bonus). Value: other accepted answers.
+const TYPE_IT = {
+  "What are the tiniest particles that make up matter?": ["atom"],
+  "What do you call a group of atoms?": ["molecules"],
+  "Which state of matter has no definite shape but has a definite volume?": [],
+  "Which state of matter can spread out and fill the space inside a container?": [],
+  "In which state of matter are the particles tightly packed and only vibrate in place?": [],
+  "How many grams are in 1 kilogram?": ["1000"],
+  "What is the standard unit for measuring mass?": ["kilogram", "kilograms", "kg"],
+  "What is the standard unit for measuring liquid volume?": ["liter", "liters", "L"],
+  "Which method is used to find the volume of an irregular solid, like a stone?": ["water displacement", "displacement", "displacement method"],
+  "A cube has sides of 3 cm each. What is its volume?": ["27", "27 cubic centimeters", "27 cubic cm"],
+  "What tool is used to measure temperature?": [],
+  "A student places a piece of dry ice in an open container. After some time, the dry ice disappears and changes directly into a gas. What process occurs?": [],
+  "A student observes that a candle becomes soft and produces liquid wax when heated. What process is shown?": [],
+  "Mark sees water droplets forming on the outside of a cold glass. What change of state is happening?": [],
+  "Frost forms when water vapor turns directly into ice without becoming a liquid first. What is this process called?": [],
+  "Which step is a summarized statement based on the observations and results of the experiment?": [],
+  "Lara says, &ldquo;I think sunlight makes an ice cube melt faster.&rdquo; She has not tested it yet. Which step is this?": ["hypothesis", "form a hypothesis", "forming hypothesis"],
+  "Bacteria that are shaped like spheres are called...": [],
+  "Which helpful bacterium is found in yogurt and other fermented foods?": [],
+  "Which division of fungi is known as the bread molds?": [],
+  "Which division includes the yeasts used in baking?": [],
+  "Mushrooms, toadstools and shelf fungi belong to which division?": [],
+  "What does the word &ldquo;gymnosperm&rdquo; mean in Greek?": ["naked seeds"],
+  "The leaves of pteridophytes are called...": ["frond"],
+  "Which is the largest and most diverse group of plants?": ["angiosperm", "flowering plants", "flowering plant"],
+  "Mosses, liverworts and hornworts belong to which group?": ["bryophyte"],
+  "Mammals are named after which body part?": ["mammary glands", "mammary gland"],
+  "Which fin provides stability to a fish?": ["dorsal fin", "dorsal"],
+  "The caudal fin is also known as the...": ["tail"],
+  "How many body segments does an insect have?": ["3"],
+  "Which group includes spiders, scorpions, ticks and mites?": ["arachnid"],
+  "Snails, clams, squids and octopus belong to which group?": ["mollusk"],
+  "Crabs, lobsters and shrimp are examples of...": ["crustacean"],
+  "Which part of the root grows downward from the seed?": ["primary root"],
+  "Which tissue transports water and water-soluble nutrients?": [],
+  "Which zone of the root enables root growth?": ["meristematic zone", "meristematic"],
+  "Which part of the plant is mainly responsible for photosynthesis?": ["leaves", "leaf"],
+  "Which part is the reproductive organ of the plant?": ["flower", "flowers"],
+  "Which structure is an underground stem that grows horizontally?": ["rhizome"],
+  "Onions and tulips grow from which specialized structure?": ["bulb"],
+  "Ginger and bamboo are examples of plants with...": ["rhizome"],
+  "A student finds mold growing on an old piece of fruit. Which group should the student classify the mold into?": ["fungus"],
+  "What are living things that are too small to be seen clearly with the naked eye called?": ["microorganism"],
+  "A plant has a short underground stem surrounded by thick, fleshy leaves that store food. Which specialized structure is being described?": ["bulbs"],
+};
 const FINAL_EXAM_PER_LESSON = 2;
 const SH = window.StudyHistory, SH_APP = 'life-lab', SH_TITLE = 'Life Lab';
 let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'lifelab_progress_v1';
 /* Points are cumulative and deliberately survive ?reset=1 — stars reset each visit, points never do. */
 const POINTS_KEY = 'lifelab_points_v1';
-const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+const POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
 function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
@@ -989,6 +1038,11 @@ function shuffle(arr){
     [a[i],a[j]] = [a[j],a[i]];
   }
   return a;
+}
+// Recall decides whether this question pays, shows a typing box, and offers power-ups.
+function offerQuestion(pu){
+  if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+  else if (window.PowerUps) PowerUps.offer(pu);
 }
 function prepareQuestion(q){
   const order = shuffle(q.options.map((_,i)=>i));
@@ -1247,13 +1301,13 @@ function renderQuestion(){
     btn.onclick = ()=>selectOption(i);
     box.appendChild(btn);
   });
-  window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:box, options:box.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
+  offerQuestion({ art:q.art, quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:box, options:box.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
 }
 
 function selectOption(i){
   const q = currentQuizSet[quizIdx];
   const buttons = document.querySelectorAll('#optionsBox .option');
-  SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct]);
+  SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct], window.Recall ? Recall.typed() : false);
   buttons.forEach((b,idx)=>{
     if(idx === q.correct) b.classList.add('correct');
     else if(idx === i) b.classList.add('wrong');
@@ -1266,7 +1320,8 @@ function selectOption(i){
     quizScore++;
     if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+    const pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
@@ -1332,7 +1387,7 @@ function renderResults(total){
   document.getElementById('resultScore').textContent = `You scored ${quizScore} out of ${total}.`;
   let ptsLine = `⭐ +${sessionPoints} points this round`;
   if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 best streak: ${bestStreak} in a row!`;
-  document.getElementById('points-earned').textContent = ptsLine;
+  document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
   renderMissedReview();
 }
 
