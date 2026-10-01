@@ -215,6 +215,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
         <h1>Block Bot</h1>
         <p>Build your robot with base-ten blocks! Questions and answer order shuffle every time, and numbers change every attempt, so you truly learn each skill. Try the Final Mock Exam once you've mastered every lesson!</p>
         <div class="points-total" id="points-total-badge"></div>
+      <button type="button" class="coins-badge" data-coins="badge" data-coins-guide></button>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -275,6 +276,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <h2 id="results-heading"></h2>
       <div class="score-line" id="results-score"></div>
       <div class="points-earned" id="points-earned"></div>
+      <div class="coins-have" data-coins="haveNow"></div>
       <div class="results-stars" id="results-stars"></div>
       <div class="missed-review" id="missed-review"></div>
       <div class="results-actions">
@@ -287,6 +289,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 </div>
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
+<script src="wallet-grade2.js" data-grade="grade2"></script>
 <script>
 /* ---- Philippine money art -------------------------------------------------
    Coins are drawn to true relative diameter (5 sentimo 16mm up to 20 piso
@@ -756,7 +759,7 @@ const FINAL_EXAM_PER_LESSON = 3;
 
 const POINTS_KEY = 'blockbot_points_v1';
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
-function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
 
 function shuffle(arr){
@@ -962,7 +965,7 @@ const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function updatePointsLive(){
   const el = document.getElementById('points-live');
   if (!el) return;
-  el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+  el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
 }
 
 const homeScreen = document.getElementById('screen-home');

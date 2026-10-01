@@ -318,6 +318,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
         <h1>Math Mastery</h1>
         <p>Divisibility, GEMDAS, adding, subtracting, multiplying and dividing fractions, decimals, and word problems! The numbers change every single time you play, so you can't memorize the answers &mdash; you have to know how to solve them. Try the <b>UPAC Walkthrough</b> to practise the four steps, the <b>Case Studies</b> when you want to think a real situation all the way through, and the Practice Test once every lesson is glowing!</p>
         <div class="points-total" id="points-total-badge"></div>
+      <button type="button" class="coins-badge" data-coins="badge" data-coins-guide></button>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -418,6 +419,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <h2 id="results-heading"></h2>
       <div class="score-line" id="results-score"></div>
       <div class="points-earned" id="points-earned"></div>
+      <div class="coins-have" data-coins="haveNow"></div>
       <div class="results-stars" id="results-stars"></div>
       <div class="missed-review hidden" id="missed-review"></div>
       <div class="results-actions">
@@ -430,6 +432,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 </div>
 
 <script src="study-history.js" data-grade="grade5"></script>
+<script src="wallet.js" data-grade="grade5"></script>
 <script>
 /* ---- Helpers: randomness ---- */
 function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -2009,7 +2012,7 @@ const STORAGE_KEY = 'mathmastery_progress_v1';
 const POINTS_KEY = 'mathmastery_points_v1';
 const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
-function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
 function loadProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; } }
 function saveProgress(p){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){} }
@@ -2100,7 +2103,7 @@ let quizScore = 0;
 let sessionPoints = 0, streak = 0, bestStreak = 0;
 
 function updatePointsLive(){
-  const html = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+  const html = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
   document.querySelectorAll('.points-live').forEach(el => { el.innerHTML = html; });
 }
 

@@ -216,6 +216,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
         <h1>Kuwentista</h1>
         <p>Mas mahigpit na antas: bagong halimbawa, hindi lang paulit-ulit sa flashcard. Repasuhin, sagutan, at subukan ang Pangwakas na Pagsusulit para maging handa sa tunay na exam!</p>
         <div class="points-total" id="points-total-badge"></div>
+      <button type="button" class="coins-badge" data-coins="badge" data-coins-guide></button>
       </div>
     </div>
     <div class="lesson-grid" id="lesson-grid"></div>
@@ -270,6 +271,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
       <h2 id="results-heading"></h2>
       <div class="score-line" id="results-score"></div>
       <div class="points-earned" id="points-earned"></div>
+      <div class="coins-have" data-coins="haveNow"></div>
       <div class="results-stars" id="results-stars"></div>
       <div class="missed-review" id="missed-review"></div>
       <div class="results-actions">
@@ -282,6 +284,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 </div>
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
+<script src="wallet-grade2.js" data-grade="grade2"></script>
 <script>
 const STORY_PASSAGE = `Isang mainit na araw, nakita ng masipag na langgam ang isang tipaklong na umaawit sa ilalim ng punong-kahoy. Habang naglalakad, patuloy na nagtitipon ang langgam ng pagkain para sa paparating na tag-ulan. Nang dumating ang tag-ulan, wala nang pagkain ang tipaklong ngunit marami pa rin ang naitipon ng langgam. Kusang-loob na ibinahagi ng langgam ang kaniyang pagkain sa tipaklong. Mula noon, natutong maging masipag ang tipaklong.`;
 
@@ -708,7 +711,7 @@ if (/(^|[?&])reset=1(&|$)/.test(location.search)){
 
 const POINTS_KEY = 'kuwentista_points_v1';
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
-function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
 
 function shuffle(arr){
@@ -795,7 +798,7 @@ const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function updatePointsLive(){
   const el = document.getElementById('points-live');
   if (!el) return;
-  el.innerHTML = '⭐ ' + sessionPoints + ' puntos' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+  el.innerHTML = '⭐ ' + sessionPoints + ' puntos' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
 }
 
 const homeScreen = document.getElementById('screen-home');

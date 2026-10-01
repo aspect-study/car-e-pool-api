@@ -339,6 +339,7 @@
       <h1 class="hero-title">Batang Bayani</h1>
       <p class="hero-sub">Piliin ang aralin at simulan ang pagsusulit! Nagbabago ang ayos ng tanong at sagot sa bawat pagsubok, kaya kailangan mong talagang alamin ang sagot &mdash; hindi lang tandaan ang pagkakasunod-sunod nito. Subukan ang Pangwakas na Pagsusulit kapag natapos mo na ang lahat ng aralin!</p>
       <div class="points-total" id="points-total-badge"></div>
+      <button type="button" class="coins-badge" data-coins="badge" data-coins-guide></button>
       <svg class="hero-scene" viewBox="0 0 300 150" role="img" aria-label="Mga bahay-kubo sa isang komunidad">
         <circle cx="245" cy="35" r="18" fill="var(--accent)" opacity="0.9"/>
         <g>
@@ -412,6 +413,7 @@
       <div class="stars" id="stars"></div>
       <div class="result-score" id="result-score"></div>
       <div class="points-earned" id="points-earned"></div>
+      <div class="coins-have" data-coins="haveNow"></div>
       <p class="result-msg" id="result-msg"></p>
       <div class="missed-review" id="missed-review"></div>
       <div class="btn-row">
@@ -423,6 +425,7 @@
 </div>
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
+<script src="wallet-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -478,7 +481,7 @@
 
   var POINTS_KEY = 'batangbayani_points_v1';
   function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
-  function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+  function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
   var totalPoints = loadTotalPoints();
 
   function starsFor(pct){
@@ -1017,7 +1020,7 @@
   function updatePointsLive(){
     var el = document.getElementById('points-live');
     if (!el) return;
-    el.innerHTML = '⭐ ' + sessionPoints + ' puntos' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+    el.innerHTML = '⭐ ' + sessionPoints + ' puntos' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
   }
 
   function revealProgress(){

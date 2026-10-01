@@ -332,6 +332,7 @@
       <h1 class="hero-title">Word Train</h1>
       <p class="hero-sub">Pick a lesson and keep the train rolling! Question and answer order shuffle every time, so you really have to know each answer — not just remember the order. Try the Final Mock Exam once you've finished every lesson!</p>
       <div class="points-total" id="points-total-badge"></div>
+      <button type="button" class="coins-badge" data-coins="badge" data-coins-guide></button>
       <svg class="hero-scene" viewBox="0 0 300 110" role="img" aria-label="A little train on a track">
         <rect x="0" y="90" width="300" height="3" fill="var(--track)"/>
         <g>
@@ -411,6 +412,7 @@
       <div class="stars" id="stars"></div>
       <div class="result-score" id="result-score"></div>
       <div class="points-earned" id="points-earned"></div>
+      <div class="coins-have" data-coins="haveNow"></div>
       <p class="result-msg" id="result-msg"></p>
       <div class="missed-review" id="missed-review"></div>
       <div class="btn-row">
@@ -422,6 +424,7 @@
 </div>
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
+<script src="wallet-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -477,7 +480,7 @@
 
   var POINTS_KEY = 'wordtrain_points_v1';
   function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
-  function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+  function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
   var totalPoints = loadTotalPoints();
 
   function starsFor(pct){
@@ -1013,7 +1016,7 @@
   function updatePointsLive(){
     var el = document.getElementById('points-live');
     if (!el) return;
-    el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+    el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
   }
 
   function revealProgress(){

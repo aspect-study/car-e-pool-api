@@ -300,6 +300,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
       <h1>Page Turners 📖</h1>
       <p>Fill your storybook one correct answer at a time! Study story elements and plot, character traits, conclusions, figurative language, sound devices, predicting, main idea, summarizing, outlining, author&rsquo;s purpose, tone and mood, generalizations, word meanings, the dictionary, nouns and pronouns, fact vs opinion and visual elements &mdash; then take the Mock Exam and read the Exam Strategy guide before your next test.</p>
       <div class="points-total" id="points-total-badge"></div>
+      <button type="button" class="coins-badge" data-coins="badge" data-coins-guide></button>
     </div>
     <div class="card-list" id="homeList"></div>
   </div>
@@ -356,6 +357,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
       <h2 id="resultTitle"></h2>
       <p id="resultScore"></p>
       <div class="points-earned" id="points-earned"></div>
+      <div class="coins-have" data-coins="haveNow"></div>
     </div>
     <div class="missed-review" id="missedReview" style="display:none;"></div>
     <div class="result-actions">
@@ -380,6 +382,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 </div>
 
 <script src="study-history.js" data-grade="grade5"></script>
+<script src="wallet.js" data-grade="grade5"></script>
 <script>
 const LUNCHBOX_1 = '<strong>The Lost Lunchbox</strong><br>Lara was excited to eat lunch with her friends at school. When lunchtime came, however, she discovered that her lunchbox was missing. She checked her desk, her locker, and the classroom shelves, but she could not find it.';
 const LUNCHBOX_2 = '<strong>The Lost Lunchbox</strong><br>Lara remembered that she had brought her lunchbox to the library earlier that morning. She hurried to the library and asked the librarian for help. Together, they looked around the tables and bookshelves.';
@@ -1106,7 +1109,7 @@ const STORAGE_KEY = 'pageturners_progress_v1';
 const POINTS_KEY = 'pageturners_points_v1';
 const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function loadTotalPoints(){ try{ return parseInt(localStorage.getItem(POINTS_KEY), 10) || 0; }catch(e){ return 0; } }
-function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} }
+function saveTotalPoints(n){ try{ localStorage.setItem(POINTS_KEY, String(n)); }catch(e){} if(window.Wallet && Wallet.renderCoins) Wallet.renderCoins(); }
 let totalPoints = loadTotalPoints();
 
 function loadProgress(){
@@ -1236,7 +1239,7 @@ let sessionPoints = 0, streak = 0, bestStreak = 0;
 function updatePointsLive(){
   const el = document.getElementById('points-live');
   if(!el) return;
-  el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '');
+  el.innerHTML = '⭐ ' + sessionPoints + ' pts' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
 }
 
 function cardKey(e){

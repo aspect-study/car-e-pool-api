@@ -286,7 +286,12 @@
     padding:7px 16px; border-radius:999px; border:0;
     background:var(--header-accent); color:var(--card);
   }
-  .shop-open:focus-visible, .shop-buy:focus-visible{ outline:3px solid var(--gold-deep); outline-offset:2px; }
+  .shop-open:focus-visible, .shop-buy:focus-visible, .guide-open:focus-visible{ outline:3px solid var(--gold-deep); outline-offset:2px; }
+  .guide-open{
+    font:inherit; font-size:0.92rem; font-weight:800; cursor:pointer;
+    padding:5px 14px; border-radius:999px;
+    background:var(--card); color:var(--header-accent); border:2px solid var(--header-accent);
+  }
   .shop-box{ max-width:640px; margin:0 auto; }
   .shop-coins{ margin:0; text-align:center; font-family:'Baloo 2', system-ui, sans-serif; font-size:1.7rem; font-weight:800; color:var(--gold-deep); }
   .shop-goal{ margin:2px 0 0; text-align:center; font-weight:800; }
@@ -327,6 +332,7 @@
     <div class="coin-row" id="coin-row" hidden>
       <span class="coin-badge" id="coin-badge"></span>
       <button class="shop-open" id="shop-open" type="button"></button>
+      <button class="guide-open" id="coin-guide-open" type="button" data-coins-guide></button>
     </div>
   </div>
 
@@ -564,6 +570,7 @@
 window.SHOP_TEXT = {
   coins: function(n){ return '🪙 ' + n + (n === 1 ? ' coin' : ' coins'); },
   shopButton: '🛒 Shop',
+  guideButton: '❓ How it works',
   title: 'Reward Shop',
   close: '✕ Close',
   intro: 'Every 10 points you earn gives you 1 coin. Pick a reward, then ask a parent to approve it.',
@@ -725,6 +732,7 @@ window.SHOP_TEXT = {
   }
 
   $('shop-open').textContent = T.shopButton;
+  $('coin-guide-open').textContent = T.guideButton;
   $('shop-title').textContent = T.title;
   $('shop-close').textContent = T.close;
   $('shop-intro').textContent = T.intro;
@@ -732,6 +740,13 @@ window.SHOP_TEXT = {
   $('shop-back').textContent = T.back;
   renderList();
   $('coin-row').hidden = false;
+
+  var GUIDE_SEEN = W.grade + '_coin_guide_seen_v1', seen = null;
+  try { seen = localStorage.getItem(GUIDE_SEEN); } catch (e) {}
+  if (!seen && W.showGuide){
+    W.showGuide();
+    try { localStorage.setItem(GUIDE_SEEN, '1'); } catch (e) {}
+  }
 
   $('shop-open').addEventListener('click', openShop);
   $('shop-close').addEventListener('click', closeShop);

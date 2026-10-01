@@ -1,4 +1,4 @@
-/* Loaded only by the lobbies, which declare UTF-8, so the catalog can hold emoji. */
+/* Loaded by the lobbies and every game. The pages are decoded as UTF-8, so the text can hold emoji. */
 (function (root) {
   'use strict';
 
@@ -34,7 +34,7 @@
     if (!/^grade[0-9]+$/.test(grade || '')) throw new Error('Wallet needs a grade like "grade5".');
     var KEY = grade + '_wallet_v1';
 
-    function fresh() { return { v: 1, baselines: {}, spent: 0, purchases: [] }; }
+    function fresh() { return { v: 1, baselines: {}, spent: 0, purchases: [], oldPointsCounted: false }; }
 
     function read() {
       var raw = null;
@@ -47,7 +47,8 @@
           v: 1,
           baselines: d.baselines && typeof d.baselines === 'object' && !Array.isArray(d.baselines) ? d.baselines : {},
           spent: typeof d.spent === 'number' ? d.spent : 0,
-          purchases: Array.isArray(d.purchases) ? d.purchases.filter(function (p) { return p && typeof p.t === 'number'; }) : []
+          purchases: Array.isArray(d.purchases) ? d.purchases.filter(function (p) { return p && typeof p.t === 'number'; }) : [],
+          oldPointsCounted: d.oldPointsCounted === true
         };
       } catch (e) {
         return fresh();
@@ -93,8 +94,15 @@
       grade: grade,
       catalog: CATALOG,
 
+      // The first track counts every point earned so far, once (parent's choice, 2026-10-01).
+      // After that, a points key seen for the first time starts from its current value.
       track: function (points) {
         var state = read(), changed = false;
+        if (!state.oldPointsCounted) {
+          Object.keys(points || {}).forEach(function (key) { state.baselines[key] = 0; });
+          state.oldPointsCounted = true;
+          changed = true;
+        }
         Object.keys(points || {}).forEach(function (key) {
           if (!own(state.baselines, key)) { state.baselines[key] = Number(points[key]) || 0; changed = true; }
         });
@@ -102,6 +110,17 @@
       },
 
       balance: function (points) { return balanceOf(read(), points); },
+
+      // For the games, which do not know the other subjects' keys: reads every tracked key.
+      balanceStored: function () {
+        var state = read(), points = {};
+        Object.keys(state.baselines).forEach(function (key) {
+          var raw = null;
+          try { raw = storage.getItem(key); } catch (e) {}
+          points[key] = parseInt(raw, 10) || 0;
+        });
+        return balanceOf(state, points);
+      },
 
       earned: function (points) {
         var state = read(), gained = newPoints(state, points);
@@ -134,7 +153,165 @@
     };
   }
 
-  var exported = { create: create, CATALOG: CATALOG, findItem: findItem };
+  function coinWord(n) { return n === 1 ? ' coin' : ' coins'; }
+
+  // Kid-facing copy for the coin badges and the "how it works" guide, per child.
+  var GUIDE_TEXT = {
+    grade5: {
+      title: 'How Points, Coins & the Shop Work',
+      have: function (n) { return '🪙 You have ' + n + coinWord(n); },
+      goal: function (need) { return need > 0 ? need + ' more' + coinWord(need) + ' to 🎮 1 ML game' : 'You have enough coins for 🎮 1 ML game!'; },
+      sections: function (ml) {
+        return [
+          ['⭐', 'Points', 'Every right answer gives you 10 points. When you get 3 or more right in a row 🔥, each one gives 15. A wrong answer never takes points away.'],
+          ['🪙', 'Coins', 'Every 10 points turns into 1 coin by itself. You do not need to press anything. A perfect 10-question lesson = 140 points = 14 coins.'],
+          ['🛒', 'The Shop', 'In the lobby, tap 🛒 Shop and pick a reward. Then ask Mommy or Tatay to type the PIN. Buying uses up coins, but your ⭐ points stay the same.'],
+          ['🎮', 'ML game', 'One ML game costs ' + ml + ' coins. You can buy 1 a day, and only after studying. That is about 3 perfect lessons!'],
+          ['★', 'Stars', 'Stars show your best score in each lesson today. They start fresh each new day, so you can win them again. Points and coins are never wiped.'],
+          ['🔒', 'Just yours', 'Your coins belong to you only, and they stay on this tablet.']
+        ];
+      },
+      close: 'Got it! 👍',
+      badge: function (n) { return '🪙 ' + n + coinWord(n) + ' ❓'; },
+      badgeLabel: 'How points and coins work',
+      haveNow: function (n) { return '🪙 You now have ' + n + coinWord(n); }
+    },
+    grade2: {
+      title: 'Paano gumagana ang Points, Coins at Shop?',
+      have: function (n) { return 'Meron kang 🪙 ' + n + coinWord(n); },
+      goal: function (need) { return need > 0 ? need + coinWord(need) + ' pa para sa 🎮 1 ML game' : 'Kaya mo nang bumili ng 🎮 1 ML game!'; },
+      sections: function (ml) {
+        return [
+          ['⭐', 'Points', 'Bawat tamang sagot = 10 points. Kapag 3 o higit pang sunod-sunod na tama 🔥, 15 points bawat isa. Hindi nababawasan ang points kapag mali ang sagot.'],
+          ['🪙', 'Coins', 'Bawat 10 points = 1 coin. Kusa itong nagiging coin, wala kang pipindutin. Perfect sa 10 tanong = 140 points = 14 coins!'],
+          ['🛒', 'Shop', 'Sa lobby, pindutin ang 🛒 Shop at pumili ng reward. Tapos ipa-type kay Mommy o Tatay ang PIN. Coins lang ang nagagastos, hindi nababawasan ang ⭐ points mo.'],
+          ['🎮', 'ML game', 'Ang 1 ML game ay ' + ml + ' coins. Isa lang bawat araw, at pagkatapos lang mag-aral. Mga 3 perfect na lesson lang yan!'],
+          ['★', 'Stars', 'Ang stars ay para sa araw na ito lang. Kinabukasan, simula ulit para makuha mo ulit. Hindi nawawala ang points at coins.'],
+          ['🔒', 'Sa iyo lang', 'Sa iyo lang ang coins mo, at nandito lang sila sa tablet na ito.']
+        ];
+      },
+      close: 'Gets ko na! 👍',
+      badge: function (n) { return '🪙 ' + n + coinWord(n) + ' ❓'; },
+      badgeLabel: 'Paano gumagana ang points at coins',
+      haveNow: function (n) { return '🪙 Meron ka nang ' + n + coinWord(n); }
+    }
+  };
+
+  var UI_CSS =
+    '.coins-badge{display:inline-flex;align-items:center;gap:6px;margin:10px 0 0 6px;padding:6px 14px;border-radius:999px;' +
+      'border:2px solid #F2C94C;background:#FFF6D8;color:#6B4A00;font:inherit;font-size:.85rem;font-weight:800;cursor:pointer;}' +
+    '.coins-badge:focus-visible,.cg-close:focus-visible{outline:3px solid #6B4A00;outline-offset:2px;}' +
+    '.coins-live{margin-left:6px;white-space:nowrap;}' +
+    '.coins-have{font-weight:800;margin-top:4px;}' +
+    '.coin-guide{position:fixed;inset:0;z-index:9999;display:flex;justify-content:center;align-items:flex-start;' +
+      'overflow:auto;padding:16px;background:rgba(20,16,10,.55);}' +
+    '.coin-guide[hidden]{display:none;}' +
+    '.cg-box{width:100%;max-width:560px;margin:auto 0;background:#FFFDF6;color:#2B2320;border-radius:20px;padding:20px;' +
+      'box-shadow:0 14px 40px rgba(0,0,0,.3);line-height:1.45;text-align:left;}' +
+    '.cg-box h2{margin:0 0 6px;font-size:1.25rem;}' +
+    '.cg-have{margin:0;font-size:1.4rem;font-weight:800;color:#8A5A00;}' +
+    '.cg-goal{margin:2px 0 6px;font-weight:700;}' +
+    '.cg-item{display:flex;gap:12px;align-items:flex-start;margin-top:8px;padding:10px 12px;background:#fff;' +
+      'border:1px solid #EFE3C8;border-radius:14px;}' +
+    '.cg-icon{flex:none;width:34px;font-size:1.6rem;line-height:1;text-align:center;}' +
+    '.cg-item b{display:block;margin-bottom:2px;}' +
+    '.cg-item p{margin:0;font-size:.95rem;}' +
+    '.cg-close{display:block;width:100%;margin-top:14px;padding:12px;border:0;border-radius:999px;background:#2E9E5B;' +
+      'color:#fff;font:inherit;font-size:1rem;font-weight:800;cursor:pointer;}';
+
+  // Fills every [data-coins] element ("badge" or "haveNow") and opens the guide
+  // from any [data-coins-guide] element.
+  function mountUi(win, wallet) {
+    var doc = win.document, T = GUIDE_TEXT[wallet.grade];
+    if (!T) return;
+    var overlay = null, styled = false;
+
+    function el(tag, cls, text) {
+      var e = doc.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+
+    function render() {
+      var n = wallet.balanceStored();
+      Array.prototype.forEach.call(doc.querySelectorAll('[data-coins]'), function (node) {
+        var kind = node.getAttribute('data-coins');
+        if (kind !== 'badge' && kind !== 'haveNow') return;
+        node.textContent = T[kind](n);
+        if (kind === 'badge') node.setAttribute('aria-label', T.have(n) + '. ' + T.badgeLabel);
+      });
+    }
+
+    function hide() { if (overlay) overlay.hidden = true; }
+
+    function addStyle() {
+      if (styled) return;
+      styled = true;
+      doc.head.appendChild(el('style', '', UI_CSS));
+    }
+
+    function build() {
+      addStyle();
+      overlay = el('div', 'coin-guide');
+      overlay.hidden = true;
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-labelledby', 'cg-title');
+      var box = el('div', 'cg-box');
+      var h = el('h2', '', T.title);
+      h.id = 'cg-title';
+      box.appendChild(h);
+      box.appendChild(el('p', 'cg-have'));
+      box.appendChild(el('p', 'cg-goal'));
+      T.sections(findItem('ml').coins).forEach(function (s) {
+        var item = el('div', 'cg-item');
+        item.appendChild(el('div', 'cg-icon', s[0]));
+        var body = el('div');
+        body.appendChild(el('b', '', s[1]));
+        body.appendChild(el('p', '', s[2]));
+        item.appendChild(body);
+        box.appendChild(item);
+      });
+      var close = el('button', 'cg-close', T.close);
+      close.type = 'button';
+      close.addEventListener('click', hide);
+      box.appendChild(close);
+      overlay.appendChild(box);
+      overlay.addEventListener('click', function (ev) { if (ev.target === overlay) hide(); });
+      doc.body.appendChild(overlay);
+    }
+
+    function show() {
+      if (!overlay) build();
+      var n = wallet.balanceStored();
+      overlay.querySelector('.cg-have').textContent = T.have(n);
+      overlay.querySelector('.cg-goal').textContent = T.goal(Math.max(0, findItem('ml').coins - n));
+      overlay.hidden = false;
+      overlay.querySelector('.cg-close').focus();
+    }
+
+    function start() {
+      addStyle();
+      render();
+    }
+
+    doc.addEventListener('click', function (ev) {
+      if (ev.target.closest && ev.target.closest('[data-coins-guide]')) show();
+    });
+    doc.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && overlay && !overlay.hidden) hide();
+    });
+    if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', start);
+    else start();
+
+    wallet.renderCoins = render;
+    wallet.showGuide = show;
+    wallet.guideOpen = function () { return !!overlay && !overlay.hidden; };
+    wallet.liveHtml = function () { return ' <span class="coins-live">🪙 ' + wallet.balanceStored() + '</span>'; };
+  }
+
+  var exported = { create: create, CATALOG: CATALOG, findItem: findItem, GUIDE_TEXT: GUIDE_TEXT };
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = exported;
     return;
@@ -142,5 +319,6 @@
   try {
     var script = root.document && root.document.currentScript;
     root.Wallet = create(root.localStorage, Date.now, script ? script.getAttribute('data-grade') : null);
+    mountUi(root, root.Wallet);
   } catch (e) {}
 })(this);
