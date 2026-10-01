@@ -274,6 +274,45 @@
   .h-wrong .pick{ color:var(--bad); }
   .h-wrong .ans{ color:var(--good); }
 
+  .coin-row{ display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; margin-top:10px; }
+  .coin-row[hidden]{ display:none; }
+  .coin-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--card); border:2px solid var(--gold-soft); color:var(--gold-deep);
+    font-weight:800; font-size:0.92rem; padding:5px 14px; border-radius:999px;
+  }
+  .shop-open{
+    font:inherit; font-size:0.92rem; font-weight:800; cursor:pointer;
+    padding:7px 16px; border-radius:999px; border:0;
+    background:var(--header-accent); color:var(--card);
+  }
+  .shop-open:focus-visible, .shop-buy:focus-visible{ outline:3px solid var(--gold-deep); outline-offset:2px; }
+  .shop-box{ max-width:640px; margin:0 auto; }
+  .shop-coins{ margin:0; text-align:center; font-family:'Baloo 2', system-ui, sans-serif; font-size:1.7rem; font-weight:800; color:var(--gold-deep); }
+  .shop-goal{ margin:2px 0 0; text-align:center; font-weight:800; }
+  .shop-intro{ text-align:center; }
+  .shop-items{ display:grid; gap:10px; margin-top:16px; }
+  .shop-item{
+    display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+    background:var(--card); border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+  }
+  .shop-emoji{
+    flex:none; width:48px; height:48px; border-radius:14px; background:var(--gold-soft);
+    display:flex; align-items:center; justify-content:center; font-size:1.7rem;
+  }
+  .shop-info{ flex:1 1 140px; min-width:0; overflow-wrap:anywhere; }
+  .shop-name{ font-weight:800; line-height:1.25; }
+  .shop-price{ margin-top:2px; font-size:0.85rem; font-weight:800; color:var(--gold-deep); }
+  .shop-note{ margin-top:4px; font-size:0.82rem; font-weight:600; line-height:1.4; color:var(--ink-soft); }
+  .shop-buy{
+    flex:none; margin-left:auto; font:inherit; font-weight:800; cursor:pointer;
+    padding:9px 18px; border-radius:12px; border:0; background:var(--good); color:var(--card);
+  }
+  .shop-need{ flex:none; margin-left:auto; max-width:120px; text-align:right; font-size:0.82rem; font-weight:800; color:var(--ink-soft); }
+  .shop-ask{ margin:0 0 4px; text-align:center; font-weight:800; font-size:1.05rem; }
+  .shop-done{ margin:28px 0; text-align:center; font-weight:800; font-size:1.2rem; line-height:1.4; }
+  .shop-actions{ display:flex; justify-content:center; margin-top:18px; }
+
   @media (prefers-reduced-motion: reduce){
     .subject-card{ transition:none; }
   }
@@ -285,6 +324,10 @@
     <h1>Study Games</h1>
     <p>Pick a subject and start a fresh run!</p>
     <div class="points-combined" id="points-combined-badge"></div>
+    <div class="coin-row" id="coin-row" hidden>
+      <span class="coin-badge" id="coin-badge"></span>
+      <button class="shop-open" id="shop-open" type="button"></button>
+    </div>
   </div>
 
   <div class="grid">
@@ -444,8 +487,10 @@
             <button class="p-btn" type="button" id="export-json">Export backup (.json)</button>
             <button class="p-btn" type="button" id="export-csv">Export spreadsheet (.csv)</button>
             <button class="p-btn" type="button" id="import-btn">Import backup</button>
+            <button class="p-btn" type="button" id="export-shop">Download shop history (.csv)</button>
             <input type="file" id="import-file" accept=".json,application/json" hidden>
           </div>
+          <p class="p-note">Shop purchases older than 7 days are deleted automatically. Download the shop history every week to keep a record.</p>
           <p class="p-note" id="backup-msg"></p>
         </div>
 
@@ -466,7 +511,43 @@
   </div>
 </div>
 
+<div class="parent-overlay" id="shop-overlay" role="dialog" aria-modal="true" aria-labelledby="shop-title" hidden>
+  <div class="shop-box">
+    <div class="parent-head">
+      <h2 id="shop-title"></h2>
+      <button class="p-btn" id="shop-close" type="button"></button>
+    </div>
+
+    <div id="shop-list-view">
+      <p class="shop-coins" id="shop-coins"></p>
+      <p class="shop-goal" id="shop-goal"></p>
+      <p class="p-note shop-intro" id="shop-earned"></p>
+      <p class="p-note shop-intro" id="shop-intro"></p>
+      <div class="shop-items" id="shop-items"></div>
+    </div>
+
+    <div id="shop-pin-view" hidden>
+      <p class="shop-ask" id="shop-ask"></p>
+      <p class="pin-hint" id="shop-pin-hint"></p>
+      <div class="pin-dots" id="shop-pin-dots"><span></span><span></span><span></span><span></span></div>
+      <div class="pin-pad" id="shop-pin-pad">
+        <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+        <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+        <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+        <button type="button" data-key="clear" aria-label="Delete digit">⌫</button><button type="button">0</button><span></span>
+      </div>
+      <div class="shop-actions"><button class="p-btn" id="shop-cancel" type="button"></button></div>
+    </div>
+
+    <div id="shop-done-view" hidden>
+      <p class="shop-done" id="shop-done"></p>
+      <div class="shop-actions"><button class="p-btn" id="shop-back" type="button"></button></div>
+    </div>
+  </div>
+</div>
+
 <script src="study-history.js" data-grade="grade5"></script>
+<script src="wallet.js" data-grade="grade5"></script>
 <script>
 (function(){
   function getPoints(key){
@@ -479,6 +560,199 @@
     el.textContent = '⭐ ' + pts + ' pts';
   });
   document.getElementById('points-combined-badge').textContent = '⭐ ' + total + ' points earned across all subjects';
+})();
+window.SHOP_TEXT = {
+  coins: function(n){ return '🪙 ' + n + (n === 1 ? ' coin' : ' coins'); },
+  shopButton: '🛒 Shop',
+  title: 'Reward Shop',
+  close: '✕ Close',
+  intro: 'Every 10 points you earn gives you 1 coin. Pick a reward, then ask a parent to approve it.',
+  goal: function(n, goal){ return n + ' more ' + (n === 1 ? 'coin' : 'coins') + ' to ' + goal + '!'; },
+  earned: function(pts, coins, welcome, spent){ return '⭐ ' + pts + ' new points → 🪙 ' + coins + ' coins · 🎁 ' + welcome + ' welcome · 🛒 ' + spent + ' spent'; },
+  allGoals: 'You can get any reward! 🎉',
+  need: function(n){ return n + ' more ' + (n === 1 ? 'coin' : 'coins'); },
+  tomorrow: 'Come back tomorrow',
+  buy: 'Buy',
+  notes: { ml: 'One match, win or lose. Only after studying. Play time is extra, on top of your normal time.' },
+  ask: function(item, coins){ return 'Ask a parent to enter the PIN to approve: ' + item + ' for ' + coins + ' coins'; },
+  pinHint: 'Parent PIN',
+  wrongPin: 'Wrong PIN',
+  cancel: 'Cancel',
+  done: function(item, left){ return '🎉 Approved! Enjoy your reward: ' + item + '. You have ' + left + (left === 1 ? ' coin' : ' coins') + ' left.'; },
+  saveFail: 'Could not save, so nothing was spent. Please try again.',
+  back: 'Back to the shop'
+};
+</script>
+<script data-shop>
+(function(){
+  var PIN = '0108';
+  var KEEP_DAYS = 7;
+  var W = window.Wallet, SH = window.StudyHistory, T = window.SHOP_TEXT;
+  if (SH) SH.prunePurchases(KEEP_DAYS);
+  if (!W || !T) return;
+  W.prune(KEEP_DAYS);
+  var $ = function(id){ return document.getElementById(id); };
+  var overlay = $('shop-overlay'), dots = $('shop-pin-dots'), wrap = document.querySelector('.wrap');
+  var pending = null, entered = '', shakeT = null;
+
+  function el(tag, cls, text){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function readPoints(){
+    var points = {};
+    document.querySelectorAll('[data-points-key]').forEach(function(card){
+      var key = card.getAttribute('data-points-key');
+      try { points[key] = parseInt(localStorage.getItem(key), 10) || 0; } catch (e) { points[key] = 0; }
+    });
+    W.track(points);
+    return points;
+  }
+  function itemById(id){ return W.catalog.filter(function(i){ return i.id === id; })[0]; }
+  function label(item){ return item.emoji + ' ' + item.name; }
+
+  function nextGoal(points){
+    var best = null, bestNeed = 0;
+    W.catalog.forEach(function(item){
+      var c = W.canBuy(item.id, points);
+      if (c.need > 0 && (!best || c.need < bestNeed)){ best = item; bestNeed = c.need; }
+    });
+    return best ? T.goal(bestNeed, best.goal) : T.allGoals;
+  }
+
+  function renderList(){
+    var points = readPoints(), coins = W.balance(points);
+    $('coin-badge').textContent = T.coins(coins);
+    $('shop-coins').textContent = T.coins(coins);
+    $('shop-goal').textContent = nextGoal(points);
+    var e = W.earned(points);
+    $('shop-earned').textContent = T.earned(e.points, e.coins, e.welcome, e.spent);
+    var box = $('shop-items');
+    box.textContent = '';
+    W.catalog.forEach(function(item){
+      var c = W.canBuy(item.id, points);
+      var row = el('div', 'shop-item');
+      row.setAttribute('data-item', item.id);
+      row.appendChild(el('div', 'shop-emoji', item.emoji));
+      var info = el('div', 'shop-info');
+      info.appendChild(el('div', 'shop-name', item.name));
+      info.appendChild(el('div', 'shop-price', T.coins(item.coins)));
+      if (T.notes[item.id]) info.appendChild(el('div', 'shop-note', T.notes[item.id]));
+      row.appendChild(info);
+      if (c.ok){
+        var buy = el('button', 'shop-buy', T.buy);
+        buy.type = 'button';
+        buy.setAttribute('data-buy', item.id);
+        row.appendChild(buy);
+      } else {
+        row.appendChild(el('div', 'shop-need', c.daily ? T.tomorrow : T.need(c.need)));
+      }
+      box.appendChild(row);
+    });
+  }
+
+  function show(view){
+    ['shop-list-view', 'shop-pin-view', 'shop-done-view'].forEach(function(id){ $(id).hidden = id !== view; });
+  }
+  function backToList(){
+    pending = null;
+    renderList();
+    show('shop-list-view');
+  }
+  function openShop(){
+    backToList();
+    overlay.hidden = false;
+    wrap.inert = true;
+    $('shop-close').focus();
+  }
+  function closeShop(){
+    if (overlay.hidden) return;
+    pending = null;
+    entered = '';
+    overlay.hidden = true;
+    wrap.inert = false;
+    renderList();
+    $('shop-open').focus();
+  }
+
+  function drawDots(){
+    Array.prototype.forEach.call(dots.children, function(d, i){ d.classList.toggle('fill', i < entered.length); });
+  }
+  function askParent(item){
+    pending = item;
+    entered = '';
+    drawDots();
+    $('shop-ask').textContent = T.ask(label(item), item.coins);
+    $('shop-pin-hint').textContent = T.pinHint;
+    show('shop-pin-view');
+    $('shop-cancel').focus();
+  }
+  function approve(){
+    var item = pending;
+    pending = null;
+    var points = readPoints();
+    if (!W.canBuy(item.id, points).ok){ backToList(); return; }
+    var bought = W.buy(item.id, points);
+    if (bought && SH) SH.purchased(item.id, item.name, item.coins);
+    var left = W.balance(points);
+    $('coin-badge').textContent = T.coins(left);
+    $('shop-done').textContent = bought ? T.done(label(item), left) : T.saveFail;
+    show('shop-done-view');
+    $('shop-back').focus();
+  }
+  function pressKey(key){
+    if (!pending) return;
+    if (key === 'clear'){ entered = entered.slice(0, -1); drawDots(); return; }
+    if (entered.length >= 4) return;
+    entered += key;
+    drawDots();
+    if (entered.length < 4) return;
+    if (entered === PIN){ entered = ''; approve(); return; }
+    entered = '';
+    clearTimeout(shakeT);
+    dots.classList.remove('shake');
+    void dots.offsetWidth;
+    dots.classList.add('shake');
+    $('shop-pin-hint').textContent = T.wrongPin;
+    shakeT = setTimeout(function(){
+      dots.classList.remove('shake');
+      drawDots();
+      $('shop-pin-hint').textContent = T.pinHint;
+    }, 1500);
+  }
+
+  $('shop-open').textContent = T.shopButton;
+  $('shop-title').textContent = T.title;
+  $('shop-close').textContent = T.close;
+  $('shop-intro').textContent = T.intro;
+  $('shop-cancel').textContent = T.cancel;
+  $('shop-back').textContent = T.back;
+  renderList();
+  $('coin-row').hidden = false;
+
+  $('shop-open').addEventListener('click', openShop);
+  $('shop-close').addEventListener('click', closeShop);
+  $('shop-cancel').addEventListener('click', backToList);
+  $('shop-back').addEventListener('click', backToList);
+  $('shop-items').addEventListener('click', function(ev){
+    var b = ev.target.closest('button[data-buy]');
+    if (b) askParent(itemById(b.getAttribute('data-buy')));
+  });
+  $('shop-pin-pad').addEventListener('click', function(ev){
+    var b = ev.target.closest('button');
+    if (b) pressKey(b.getAttribute('data-key') || b.textContent);
+  });
+  document.addEventListener('keydown', function(ev){
+    if (overlay.hidden) return;
+    if (ev.key === 'Escape') closeShop();
+    else if (pending && /^[0-9]$/.test(ev.key)) pressKey(ev.key);
+    else if (pending && ev.key === 'Backspace') pressKey('clear');
+  });
+  window.addEventListener('pagehide', closeShop);
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) closeShop(); });
 })();
 </script>
 <script>
@@ -583,6 +857,7 @@
   function describe(e){
     var subject = subjectOf(e.app, e.appTitle);
     if (e.type === 'open') return '📂 Opened ' + subject;
+    if (e.type === 'purchase') return '🛒 Bought ' + e.itemName + ' — ' + e.coins + ' coins';
     if (e.type === 'lesson') return '📖 ' + subject + ' · ' + e.lessonTitle + ' — viewed ' + e.cardsViewed + ' of ' + e.cardsTotal + ' cards';
     var icon = '✏️', name;
     if (e.kind === 'walkthrough') { icon = '🧩'; name = subject + ' · UPAC Walkthrough: ' + e.lessonTitle; }
@@ -725,6 +1000,9 @@
   });
   $('export-csv').addEventListener('click', function(){
     download('study-history-' + SH.grade + '-' + today() + '.csv', SH.exportCsv(subjectOf), 'text/csv;charset=utf-8');
+  });
+  $('export-shop').addEventListener('click', function(){
+    download('shop-history-' + SH.grade + '-' + today() + '.csv', SH.exportPurchasesCsv(), 'text/csv;charset=utf-8');
   });
   $('import-btn').addEventListener('click', function(){ picking = true; $('import-file').click(); });
   $('import-file').addEventListener('change', function(){

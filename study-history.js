@@ -5,7 +5,7 @@
   var KEY = 'grade2_history_v1';
   var ERROR_KEY = 'grade2_history_error_v1';
   var CORRUPT_PREFIX = 'grade2_history_corrupt_v1_';
-  var TYPES = ['open', 'lesson', 'quiz'];
+  var TYPES = ['open', 'lesson', 'quiz', 'purchase'];
   var MAX_ENTRY_MS = 60 * 60000;
   var ENTITIES = {
     amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
@@ -184,6 +184,25 @@
       });
     };
 
+    api.purchased = function (item, itemName, coins) {
+      return add({ type: 'purchase', app: 'shop', appTitle: 'Shop', item: String(item), itemName: plain(itemName), coins: coins });
+    };
+
+    api.prunePurchases = function (days) {
+      var cutoff = dayStart(dateKey(now()), -(days - 1));
+      function old(e) { return e && e.type === 'purchase' && !(e.t >= cutoff); }
+      // Runs on every lobby load, so check with the pure read first: mutate would copy corrupt data aside each time.
+      if (!(read() || []).some(old)) return 0;
+      var removed = 0;
+      mutate(function (entries) {
+        for (var i = entries.length - 1; i >= 0; i--) {
+          if (old(entries[i])) { entries.splice(i, 1); removed++; }
+        }
+        if (!removed) return false;
+      });
+      return removed;
+    };
+
     api.storageError = function () {
       try {
         var v = storage.getItem(ERROR_KEY);
@@ -271,6 +290,10 @@
     // "8 of 10" rather than "8/10": spreadsheets turn 8/10 into a date.
     function csvRow(e, nameOf) {
       var quiz = e.type === 'quiz';
+      if (e.type === 'purchase') {
+        return [dateKey(e.t), timeKey(e.t), nameOf ? nameOf(e.app, e.appTitle) : e.appTitle, 'Shop purchase',
+          e.itemName + ' (' + numOr0(e.coins) + ' coins)', '', '', '', '', '', '', '', ''];
+      }
       var type = e.type === 'open' ? 'Opened app' : e.type === 'lesson' ? 'Lesson' :
         e.kind === 'walkthrough' ? 'UPAC walkthrough' : e.kind === 'case' ? 'Case study' : e.final ? 'Final exam' : 'Quiz';
       var wrong = Array.isArray(e.wrong) ? e.wrong.filter(Boolean) : [];
@@ -297,6 +320,14 @@
       (read() || []).filter(validEntry).slice().sort(function (a, b) { return a.t - b.t || idCmp(a, b); }).forEach(function (e) {
         rows.push(csvRow(e, nameOf));
       });
+      return '\uFEFF' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n';
+    };
+
+    api.exportPurchasesCsv = function () {
+      var rows = [['Date', 'Time', 'Item', 'Coins']];
+      (read() || []).filter(function (e) { return validEntry(e) && e.type === 'purchase'; })
+        .sort(function (a, b) { return a.t - b.t || idCmp(a, b); })
+        .forEach(function (e) { rows.push([dateKey(e.t), timeKey(e.t), e.itemName, numOr0(e.coins)]); });
       return '\uFEFF' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n';
     };
 
