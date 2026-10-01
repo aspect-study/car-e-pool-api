@@ -259,6 +259,15 @@
   .tf-btn.correct{background:var(--good-soft); border-color:var(--good);}
   .tf-btn.wrong{background:var(--bad-soft); border-color:var(--bad);}
   .tf-btn[disabled]{cursor:default;}
+  .opt.explorable, .tf-btn.explorable{border-style:dashed;}
+  .opt.explored, .tf-btn.explored{box-shadow:0 0 0 3px var(--bg-alt);}
+  .explore{margin-top:4px;}
+  .explore-hint{font-size:0.9rem; color:var(--ink-soft); font-weight:700;}
+  .explore-card{margin-top:8px; background:var(--card); border:2px solid var(--border); border-left:5px solid var(--bad); border-radius:12px; padding:9px 12px; font-weight:600; line-height:1.45;}
+  .explore-card.explore-right{border-left-color:var(--good);}
+  .explore-card b{display:block; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft);}
+  .explore-card .learn-choice{font-weight:800;}
+  .explore-card .learn-why{display:block; margin-top:3px; font-weight:500;}
 
   .feedback{
     margin-top:16px; padding:14px 16px; border-radius:16px; font-weight:700; font-size:1rem;
@@ -393,6 +402,7 @@
       <div class="q-text" id="q-text"></div>
       <div class="q-sentence" id="q-sentence" style="display:none"></div>
       <div id="q-options"></div>
+      <div class="explore" id="q-explore" style="display:none;"></div>
       <div class="feedback" id="q-feedback"></div>
       <div class="next-wrap" id="next-wrap">
         <button class="btn" id="btn-next">Next &rarr;</button>
@@ -942,6 +952,7 @@
     sentenceEl.style.display = parts[1] ? '' : 'none';
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback'; fb.innerHTML = '';
+    document.getElementById('q-explore').style.display = 'none';
     document.getElementById('next-wrap').classList.remove('show');
 
     var optWrap = document.getElementById('q-options');
@@ -969,8 +980,36 @@
     }
   }
 
-  function lockOptions(){
-    document.querySelectorAll('.opt, .tf-btn').forEach(function(el){ el.disabled = true; });
+  function lockOptions(chosen){
+    document.querySelectorAll('.opt, .tf-btn').forEach(function(el){
+      if (el === chosen) el.disabled = true;
+      else el.classList.add('explorable');
+    });
+    showExploreHint('');
+  }
+
+  var EXPLORE = { hint:'&#128269; Curious? Tap the other answers to see why.', right:'This is the right answer', wrong:'Why not this one?', fallback:'This is not the right answer.' };
+  function exploreWhy(text){
+    return text.replace(/^(?:You said (?:True|False), but |Pinili mo ang (?:Tama|Mali), pero )(.)/, function(m, c){ return c.toUpperCase(); });
+  }
+  function showExploreHint(card){
+    var el = document.getElementById('q-explore');
+    el.innerHTML = '<div class="explore-hint">' + EXPLORE.hint + '</div>' + card;
+    el.style.display = 'block';
+  }
+  function exploreCard(btnEl, isRight, choice, text){
+    document.querySelectorAll('.opt, .tf-btn').forEach(function(el){ el.classList.toggle('explored', el === btnEl); });
+    showExploreHint('<div class="explore-card' + (isRight ? ' explore-right' : '') + '"><b>' + (isRight ? EXPLORE.right : EXPLORE.wrong) + '</b>' +
+      '<span class="learn-choice">' + choice + '</span><span class="learn-why">' + text + '</span></div>');
+  }
+  function exploreMC(opt, btnEl){
+    var item = currentQuizSet[qIdx];
+    exploreCard(btnEl, opt.correct, decode(opt.text), decode(opt.correct ? item.bad : (exploreWhy(opt.why || '') || EXPLORE.fallback)));
+  }
+  function exploreTF(choice, btnEl){
+    var item = currentQuizSet[qIdx];
+    var isRight = choice === item.answer;
+    exploreCard(btnEl, isRight, choice ? SH_TRUE : SH_FALSE, decode(isRight ? item.bad : (exploreWhy(item.why || '') || EXPLORE.fallback)));
   }
 
   var LEARN = { title:'Not quite &mdash; let&rsquo;s learn from this!', picked:'You picked', why:'Why that&rsquo;s not right', right:'The right answer', tip:'Tip for next time' };
@@ -1010,9 +1049,9 @@
   }
 
   function handleMC(opt, btnEl, optWrap){
-    if (answered) return;
+    if (answered) return exploreMC(opt, btnEl);
     answered = true;
-    lockOptions();
+    lockOptions(btnEl);
     var item = currentQuizSet[qIdx];
     optWrap.querySelectorAll('.opt').forEach(function(el, i){
       var thisOpt = item.options[i];
@@ -1023,9 +1062,9 @@
   }
 
   function handleTF(choice, chosenBtn){
-    if (answered) return;
+    if (answered) return exploreTF(choice, chosenBtn);
     answered = true;
-    lockOptions();
+    lockOptions(chosenBtn);
     var correct = currentQuizSet[qIdx].answer;
     var isRight = (choice === correct);
     chosenBtn.classList.add(isRight ? 'correct' : 'wrong');

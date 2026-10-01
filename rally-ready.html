@@ -225,6 +225,15 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 .option.correct{background:#E5F6EB;border-color:var(--good);color:#1B6B3C;}
 .option.wrong{background:#FCE9E9;border-color:var(--bad);color:#A82F2F;}
 .option:disabled{cursor:default;}
+.option.explorable{border-style:dashed;}
+.option.explored{box-shadow:0 0 0 3px var(--accent-soft);}
+.explore{margin-top:4px;}
+.explore-hint{font-size:.85rem;color:var(--muted);font-weight:700;}
+.explore-card{margin-top:8px;background:var(--card);border:2px solid var(--border);border-left:5px solid var(--bad);border-radius:10px;padding:9px 12px;line-height:1.5;font-size:.88rem;}
+.explore-card.explore-right{border-left-color:var(--good);}
+.explore-card b.learn-label{display:block;font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);}
+.explore-card .learn-choice{font-weight:800;}
+.explore-card .learn-why{display:block;margin-top:3px;}
 .explain{
   margin-top:12px;padding:12px 14px;background:var(--accent-soft);
   border-radius:12px;font-size:.88rem;line-height:1.5;color:var(--ink);
@@ -334,6 +343,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
     <div class="q-card">
       <h3 id="qText"></h3>
       <div id="optionsBox"></div>
+      <div class="explore" id="exploreBox" style="display:none;"></div>
       <div class="explain" id="explainBox" style="display:none;"></div>
     </div>
     <button class="btn full" id="nextBtn" style="display:none;" onclick="nextQuestion()">Next ▶</button>
@@ -845,6 +855,7 @@ function renderQuestion(){
   document.getElementById('sceneSvg').innerHTML = courtMarkup(Math.round((quizScore/total)*8));
   document.getElementById('qText').innerHTML = q.q;
   document.getElementById('explainBox').style.display = 'none';
+  document.getElementById('exploreBox').style.display = 'none';
   document.getElementById('nextBtn').style.display = 'none';
 
   const box = document.getElementById('optionsBox');
@@ -863,9 +874,11 @@ function selectOption(i){
   const buttons = document.querySelectorAll('#optionsBox .option');
   SH && SH.quizAnswered(historyQuizId, i === q.correct, q.art ? q.q + ' [' + q.options[q.correct] + ']' : q.q, q.options[i], q.options[q.correct]);
   buttons.forEach((b,idx)=>{
-    b.disabled = true;
     if(idx === q.correct) b.classList.add('correct');
     else if(idx === i) b.classList.add('wrong');
+    if(idx === i){ b.disabled = true; return; }
+    b.classList.add('explorable');
+    b.onclick = ()=>exploreOption(idx);
   });
   if(i === q.correct){
     quizScore++;
@@ -886,8 +899,21 @@ function selectOption(i){
   if(miss) missedQuestions.push(miss);
   document.getElementById('explainBox').innerHTML = miss ? learnHtml(miss) : explainHtml;
   document.getElementById('explainBox').style.display = 'block';
+  document.getElementById('exploreBox').innerHTML = '<div class="explore-hint">&#128269; Curious? Tap the other answers to see why.</div>';
+  document.getElementById('exploreBox').style.display = 'block';
   document.getElementById('nextBtn').style.display = 'block';
   document.getElementById('nextBtn').textContent = quizIdx < currentQuizSet.length-1 ? 'Next ▶' : 'See Results 🏆';
+}
+
+function exploreOption(i){
+  const q = currentQuizSet[quizIdx];
+  document.querySelectorAll('#optionsBox .option').forEach((b,idx)=>b.classList.toggle('explored', idx === i));
+  const explainHtml = q.explain;
+  const right = i === q.correct;
+  const card = right
+    ? '<div class="explore-card explore-right"><b class="learn-label">This is the right answer</b><span class="learn-choice">' + q.options[i] + '</span><span class="learn-why">' + explainHtml + '</span></div>'
+    : '<div class="explore-card"><b class="learn-label">Why not this one?</b><span class="learn-choice">' + q.options[i] + '</span><span class="learn-why">' + ((q.why||[])[i] || 'This is not the right answer.') + '</span>' + learnEn((q.whyEn||[])[i]) + '</div>';
+  document.getElementById('exploreBox').innerHTML = '<div class="explore-hint">&#128269; Curious? Tap the other answers to see why.</div>' + card;
 }
 
 function nextQuestion(){
