@@ -426,6 +426,7 @@
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
 <script src="wallet-grade2.js" data-grade="grade2"></script>
+<script src="fx-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -1163,8 +1164,10 @@
       sessionPoints += pts;
       totalPoints += pts;
       saveTotalPoints(totalPoints);
+      window.Fx && Fx.correct(streak);
     } else {
       streak = 0;
+      window.Fx && Fx.wrong();
       missedQuestions.push(miss);
     }
     updatePointsLive();
@@ -1208,6 +1211,7 @@
     var total = currentQuizSet.length;
     var starCount = starsFor(score / total);
     SH && SH.quizFinished(historyQuizId, starCount, sessionPoints, bestStreak);
+    window.Fx && Fx.finish(starCount);
     var best = Math.max(progress[currentQuizMeta.id] || 0, score);
     progress[currentQuizMeta.id] = best;
     saveProgress(progress);

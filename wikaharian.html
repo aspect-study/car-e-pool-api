@@ -395,6 +395,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 
 <script src="study-history.js" data-grade="grade5"></script>
 <script src="wallet.js" data-grade="grade5"></script>
+<script src="fx.js" data-grade="grade5"></script>
 <script>
 const LESSONS = [
   {
@@ -842,8 +843,10 @@ function selectOption(i){
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
+    window.Fx && Fx.correct(streak);
   } else {
     streak = 0;
+    window.Fx && Fx.wrong();
   }
   updatePointsLive();
   document.getElementById('quizScoreLabel').textContent = `Score: ${quizScore}`;
@@ -885,6 +888,7 @@ function finishQuiz(){
   if(quizScore > best) progress[currentQuizMeta.id] = quizScore;
   saveProgress(progress);
   SH && SH.quizFinished(historyQuizId, starsFor(quizScore / total), sessionPoints, bestStreak);
+  window.Fx && Fx.finish(starsFor(quizScore / total));
   renderResults(total);
   showScreen('resultsScreen');
 }

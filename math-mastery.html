@@ -433,6 +433,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 
 <script src="study-history.js" data-grade="grade5"></script>
 <script src="wallet.js" data-grade="grade5"></script>
+<script src="fx.js" data-grade="grade5"></script>
 <script>
 /* ---- Helpers: randomness ---- */
 function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -2126,8 +2127,10 @@ function awardPoint(correct){
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
+    window.Fx && Fx.correct(streak);
   } else {
     streak = 0;
+    window.Fx && Fx.wrong();
   }
   updatePointsLive();
 }
@@ -2411,6 +2414,7 @@ function finishQuiz(){
   progress[currentQuizMeta.id] = best;
   saveProgress(progress);
   SH && SH.quizFinished(historyQuizId, starsFor(quizScore / total), sessionPoints, bestStreak);
+  window.Fx && Fx.finish(starsFor(quizScore / total));
   renderResults(total);
   showScreen(resultsScreen);
 }
@@ -3097,6 +3101,7 @@ function wtCheckAnswer(){
 function wtShowSummary(){
   const p = wtCurrent();
   SH && SH.quizFinished(historyQuizId, 0, sessionPoints, bestStreak);
+  window.Fx && Fx.finish(0);
   const done = progress.wtDone || [];
   if(!done.includes(p.id)){ done.push(p.id); progress.wtDone = done; saveProgress(progress); }
   document.getElementById('wt-steps').innerHTML =
@@ -3695,6 +3700,7 @@ function caseCheckNum(){
 function caseShowKey(){
   const cs = CASES[caseIdx];
   SH && SH.quizFinished(historyQuizId, 0, sessionPoints, bestStreak);
+  window.Fx && Fx.finish(0);
   const done = progress.caseDone || [];
   if(!done.includes(cs.id)){ done.push(cs.id); progress.caseDone = done; saveProgress(progress); }
   const more = caseIdx < CASES.length - 1;

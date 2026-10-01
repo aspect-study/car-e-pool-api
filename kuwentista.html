@@ -285,6 +285,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
 <script src="wallet-grade2.js" data-grade="grade2"></script>
+<script src="fx-grade2.js" data-grade="grade2"></script>
 <script>
 const STORY_PASSAGE = `Isang mainit na araw, nakita ng masipag na langgam ang isang tipaklong na umaawit sa ilalim ng punong-kahoy. Habang naglalakad, patuloy na nagtitipon ang langgam ng pagkain para sa paparating na tag-ulan. Nang dumating ang tag-ulan, wala nang pagkain ang tipaklong ngunit marami pa rin ang naitipon ng langgam. Kusang-loob na ibinahagi ng langgam ang kaniyang pagkain sa tipaklong. Mula noon, natutong maging masipag ang tipaklong.`;
 
@@ -1004,8 +1005,10 @@ function selectOption(idx){
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
+    window.Fx && Fx.correct(streak);
   } else {
     streak = 0;
+    window.Fx && Fx.wrong();
     missedQuestions.push(miss);
   }
   updatePointsLive();
@@ -1048,6 +1051,7 @@ function finishQuiz(){
   progress[currentQuizMeta.id] = best;
   saveProgress(progress);
   SH && SH.quizFinished(historyQuizId, starsFor(quizScore / currentQuizSet.length), sessionPoints, bestStreak);
+  window.Fx && Fx.finish(starsFor(quizScore / currentQuizSet.length));
   renderResults();
   showScreen(resultsScreen);
 }

@@ -290,6 +290,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
 <script src="wallet-grade2.js" data-grade="grade2"></script>
+<script src="fx-grade2.js" data-grade="grade2"></script>
 <script>
 /* ---- Philippine money art -------------------------------------------------
    Coins are drawn to true relative diameter (5 sentimo 16mm up to 20 piso
@@ -926,8 +927,10 @@ function checkNumberline(){
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
+    window.Fx && Fx.correct(streak);
   } else {
     streak = 0;
+    window.Fx && Fx.wrong();
     missedQuestions.push(nlMiss);
   }
   updatePointsLive();
@@ -1170,8 +1173,10 @@ function selectOption(idx){
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
+    window.Fx && Fx.correct(streak);
   } else {
     streak = 0;
+    window.Fx && Fx.wrong();
     missedQuestions.push(miss);
   }
   updatePointsLive();
@@ -1215,6 +1220,7 @@ function finishQuiz(){
   progress[currentQuizMeta.id] = best;
   saveProgress(progress);
   SH && SH.quizFinished(historyQuizId, starsFor(quizScore / currentQuizSet.length), sessionPoints, bestStreak);
+  window.Fx && Fx.finish(starsFor(quizScore / currentQuizSet.length));
   renderResults(total);
   showScreen(resultsScreen);
 }

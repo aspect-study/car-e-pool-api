@@ -522,6 +522,7 @@
 
 <script src="study-history-grade2.js" data-grade="grade2"></script>
 <script src="wallet-grade2.js" data-grade="grade2"></script>
+<script src="fx-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   function getPoints(key){
@@ -672,6 +673,7 @@ window.SHOP_TEXT = {
     if (!W.canBuy(item.id, points).ok){ backToList(); return; }
     var bought = W.buy(item.id, points);
     if (bought && SH) SH.purchased(item.id, item.name, item.coins);
+    if (bought && window.Fx) Fx.purchase();
     var left = W.balance(points);
     $('coin-badge').textContent = T.coins(left);
     $('shop-done').textContent = bought ? T.done(label(item), left) : T.saveFail;
