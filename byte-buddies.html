@@ -432,6 +432,7 @@
 <script src="wallet-grade2.js" data-grade="grade2"></script>
 <script src="fx-grade2.js" data-grade="grade2"></script>
 <script src="powerups-grade2.js" data-grade="grade2"></script>
+<script src="recall-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -455,6 +456,11 @@
   function tf(q, answer, good, bad, more){
     more = more || {};
     return { type:'tf', q:q, answer:answer, good:good, bad:bad, why:more.why, tip:more.tip };
+  }
+  // Recall decides whether this question pays, shows a typing box, and offers power-ups.
+  function offerQuestion(pu){
+    if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+    else if (window.PowerUps) PowerUps.offer(pu);
   }
   function prepareQuestion(item){
     if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad, pic:item.pic, tip:item.tip };
@@ -913,6 +919,28 @@
     }
   ];
 
+  var TYPE_IT = {
+    "What do we call the physical parts of a computer that we can see and touch?": [],
+    "What do we call the programs that tell the hardware what to do?": [],
+    "What part of the computer do we use to see the screen?": [],
+    "Through this bar, you can easily switch between the programs or files that are simultaneously opened or running. What is it?": ["task bar"],
+    "These are the small images on the desktop that serve as the shortcuts for programs, folders, or files. What are they?": ["icon"],
+    "It is the background area of the desktop. What is it?": [],
+    "Which icon stores the deleted files?": [],
+    "Which icon explores and manages the contents of the computer drives?": [],
+    "Which icon shows the available network connections, computers, and devices?": [],
+    "To change the desktop wallpaper:\n1. Click the ___ button.": [],
+    "To change the desktop wallpaper:\n2. Select the ___ icon on the left.": [],
+    "To change the desktop wallpaper:\n4. Select ___. Select the box underneath it to choose between a picture, solid color, or slideshow.": [],
+    "We want to use a picture from our computer. What do we select under Choose your picture?": [],
+    "We right-click a shortcut on the desktop. What do we choose to add it to the taskbar?": ["pin"],
+    "Fill in the blank.\nThe ___ is a connection of networks.": [],
+    "Complete the word.\nYou can get to know more of your school by visiting your school&rsquo;s w______.": ["website"],
+    "Complete the word.\nThe I______ is working when I can go to other pages on the website.": [],
+    "Which connection is usually the slowest?": ["dialup"],
+    "Look at the picture. What device did the ISP technician bring?": [],
+  };
+
   /* ================= Computer SVG ================= */
   function pcMarkup(){
     return ''
@@ -1038,7 +1066,7 @@
   var currentQuizMeta = null;
   var missedQuestions = [];
   var sessionPoints = 0, streak = 0, bestStreak = 0;
-  var POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+  var POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 
   function updatePointsLive(){
     var el = document.getElementById('points-live');
@@ -1128,7 +1156,7 @@
         optWrap.appendChild(b);
       });
     }
-    window.PowerUps && PowerUps.offer({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
+    offerQuestion({ art: item.pic, quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
       options: item.type === 'tf' ? [] : optWrap.querySelectorAll('.opt'), correct: item.type === 'tf' ? -1 : item.options.findIndex(function(o){ return o.correct; }),
       tip: item.tip, tipEn: item.tipEn, q: item.q, historyId: historyQuizId, streak: streak, index: qIdx, rerender: renderQuestion });
   }
@@ -1179,7 +1207,7 @@
 
   function showFeedback(isCorrect, picked, answer, pickedWhy){
     var item = currentQuizSet[qIdx];
-    SH && SH.quizAnswered(historyQuizId, isCorrect, item.pic ? item.q + ' [' + answer + ']' : item.q, picked, answer);
+    SH && SH.quizAnswered(historyQuizId, isCorrect, item.pic ? item.q + ' [' + answer + ']' : item.q, picked, answer, window.Recall ? Recall.typed() : false);
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     var miss = isCorrect ? null : { q: decode(item.q), picked: decode(picked), why: pickedWhy ? decode(pickedWhy) : '', answer: decode(answer), explain: decode(item.bad), tip: item.tip ? decode(item.tip) : '' };
@@ -1190,7 +1218,8 @@
       score++;
       if (!helped) streak++;
       if (streak > bestStreak) bestStreak = streak;
-      var pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+      var ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+      var pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
       sessionPoints += pts;
       totalPoints += pts;
       saveTotalPoints(totalPoints);
@@ -1249,7 +1278,7 @@
     document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
     var ptsLine = '⭐ +' + sessionPoints + ' points this round';
     if (bestStreak >= STREAK_BONUS_AT) ptsLine += ' · 🔥 best streak: ' + bestStreak + ' in a row!';
-    document.getElementById('points-earned').textContent = ptsLine;
+    document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
     var msg;
     if (starCount === 3) msg = 'Powered up! Your computer is fully built and glowing — great work!';
     else if (starCount === 2) msg = 'Nice work! Your computer is almost built — try again to finish the setup!';

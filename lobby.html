@@ -457,6 +457,21 @@
         <div class="p-section"><div class="h-summary" id="hist-summary"></div></div>
         <div class="p-section" id="hist-list"></div>
 
+        <div class="p-section" id="test-score">
+          <h3>📝 Real test score</h3>
+          <div class="p-row">
+            <label>Subject <select id="ts-subject"></select></label>
+            <label>Test <input type="text" id="ts-name" maxlength="60" placeholder="e.g. Science ST1"></label>
+          </div>
+          <div class="p-row">
+            <label>Score <input type="number" id="ts-score" min="0" step="1" inputmode="numeric"></label>
+            <label>out of <input type="number" id="ts-total" min="1" step="1" inputmode="numeric"></label>
+            <button class="p-btn" type="button" id="ts-add" disabled>Add coins</button>
+          </div>
+          <p class="p-note">100% = 50 coins · 90% or more = 40 · 80% or more = 30 · below 80% = 10 for trying.</p>
+          <p class="p-note" id="ts-msg"></p>
+        </div>
+
         <div class="p-section">
           <h3>Backup</h3>
           <div class="p-row">
@@ -546,7 +561,7 @@ window.SHOP_TEXT = {
   close: '✕ Close',
   intro: 'Bawat 10 points = 1 coin! Pumili ng reward, tapos ipa-approve kay Mommy o Tatay.\nEvery 10 points = 1 coin! Pick a reward, then ask Mommy or Tatay to approve it.',
   goal: function(n, goal){ var c = n === 1 ? ' coin' : ' coins'; return n + c + ' pa para sa ' + goal + '!\n' + n + ' more' + c + ' to ' + goal + '!'; },
-  earned: function(pts, coins, welcome, spent){ return '⭐ ' + pts + ' new points → 🪙 ' + coins + ' coins · 🎁 ' + welcome + ' welcome · 🛒 ' + spent + ' spent'; },
+  earned: function(pts, coins, welcome, spent, bonus){ return '⭐ ' + pts + ' new points → 🪙 ' + coins + ' coins · 🎁 ' + welcome + ' welcome' + (bonus ? ' · 📝 ' + bonus + ' test bonus' : '') + ' · 🛒 ' + spent + ' spent'; },
   allGoals: 'Kaya mo nang bilhin lahat! Galing! 🎉\nYou can get any reward! Great job! 🎉',
   need: function(n){ return n + ' more ' + (n === 1 ? 'coin' : 'coins'); },
   tomorrow: 'Come back tomorrow',
@@ -607,7 +622,7 @@ window.SHOP_TEXT = {
     $('shop-coins').textContent = T.coins(coins);
     $('shop-goal').textContent = nextGoal(points);
     var e = W.earned(points);
-    $('shop-earned').textContent = T.earned(e.points, e.coins, e.welcome, e.spent);
+    $('shop-earned').textContent = T.earned(e.points, e.coins, e.welcome, e.spent, e.bonus);
     var box = $('shop-items');
     box.textContent = '';
     W.catalog.forEach(function(item){
@@ -711,6 +726,7 @@ window.SHOP_TEXT = {
   $('shop-cancel').textContent = T.cancel;
   $('shop-back').textContent = T.back;
   renderList();
+  W.refreshShop = renderList;
   $('coin-row').hidden = false;
 
   var GUIDE_SEEN = W.grade + '_coin_guide_seen_v1', seen = null;
@@ -845,23 +861,26 @@ window.SHOP_TEXT = {
     var subject = subjectOf(e.app, e.appTitle);
     if (e.type === 'open') return '📂 Opened ' + subject;
     if (e.type === 'purchase') return '🛒 Bought ' + e.itemName + ' — ' + e.coins + ' coins';
+    if (e.type === 'test') return '📝 Real test · ' + subject + ' · ' + e.testName + ' — ' + e.score + '/' + e.total + ' · +' + e.coins + ' coins';
     if (e.type === 'lesson') return '📖 ' + subject + ' · ' + e.lessonTitle + ' — viewed ' + e.cardsViewed + ' of ' + e.cardsTotal + ' cards';
     var icon = '✏️', name;
     if (e.kind === 'walkthrough') { icon = '🧩'; name = subject + ' · UPAC Walkthrough: ' + e.lessonTitle; }
     else if (e.kind === 'case') { icon = '📋'; name = subject + ' · Case Study: ' + e.lessonTitle; }
     else name = subject + ' · ' + (e.final ? 'Final Mock Exam' : e.lessonTitle + ' quiz');
-    if (!e.finished) return icon + ' ' + name + ' — stopped at ' + e.answered + ' of ' + e.total + ', ' + e.correct + ' correct' + helpsText(e);
+    if (!e.finished) return icon + ' ' + name + ' — stopped at ' + e.answered + ' of ' + e.total + ', ' + e.correct + ' correct' + helpsText(e) + typedText(e);
     var starCount = Math.min(3, Math.max(0, e.stars | 0));
     var stars = starCount > 0 ? ' ' + '⭐'.repeat(starCount) : '';
     var updatedAt = typeof e.updatedAt === 'number' ? e.updatedAt : e.t;
     var scoreText = e.kind === 'walkthrough' ? e.correct + '/' + e.total + ' steps' : e.correct + '/' + e.total;
-    return icon + ' ' + name + ' — ' + scoreText + stars + ' +' + e.points + ' pts · ' + formatDuration(updatedAt - e.t) + helpsText(e);
+    return icon + ' ' + name + ' — ' + scoreText + stars + ' +' + e.points + ' pts · ' + formatDuration(updatedAt - e.t) + helpsText(e) + typedText(e);
   }
 
   function helpsText(e){
     var text = SH.powerUpsText ? SH.powerUpsText(e) : '';
     return text ? ' · ⚡ ' + text : '';
   }
+
+  function typedText(e){ return e.typed ? ' · ✏️ ' + e.typed + ' typed' : ''; }
 
   function wrongDetails(e){
     var wrong = wrongList(e);
@@ -947,15 +966,57 @@ window.SHOP_TEXT = {
     return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
   }
 
+  var W = window.Wallet, tsRepeat = null;
+  function tsValues(){
+    var name = $('ts-name').value.trim(), scoreText = $('ts-score').value, totalText = $('ts-total').value;
+    var score = Number(scoreText), total = Number(totalText);
+    if (!name || scoreText === '' || totalText === '' || !Number.isInteger(score) || !Number.isInteger(total) || total < 1 || score < 0 || score > total) return null;
+    return { app: $('ts-subject').value, name: name, score: score, total: total, coins: W.testBonus(score, total) };
+  }
+  function tsPreview(){
+    tsRepeat = null;
+    var v = tsValues();
+    $('ts-add').disabled = !v;
+    $('ts-add').textContent = v ? 'Add ' + v.coins + ' coins' : 'Add coins';
+    $('ts-msg').textContent = v ? Math.floor(v.score * 100 / v.total) + '% → 🪙 ' + v.coins + ' coins' : '';
+  }
+  function tsAdd(){
+    var v = tsValues();
+    if (!v) return;
+    var earlier = SH.findTest(v.app, v.name);
+    if (earlier && tsRepeat !== earlier.id){
+      tsRepeat = earlier.id;
+      $('ts-msg').textContent = 'Already added on ' + fmtDate(SH.dateKey(earlier.t)) + '. Tap Add again to add it again.';
+      return;
+    }
+    if (!W.addBonus(v.coins)){ $('ts-msg').textContent = 'Could not save. Storage may be full.'; return; }
+    SH.testScore(v.app, subjectOf(v.app), v.name, v.score, v.total, v.coins);
+    if (W.refreshShop) W.refreshShop();
+    if (W.renderCoins) W.renderCoins();
+    $('ts-name').value = '';
+    $('ts-score').value = '';
+    $('ts-total').value = '';
+    tsPreview();
+    $('ts-msg').textContent = '✅ Added 🪙 ' + v.coins + ' coins for ' + v.name + '.';
+    renderHistory();
+  }
+
   document.querySelectorAll('.subject-card').forEach(function(card){
     var app = card.getAttribute('href').split('.html')[0];
     subjectByApp[app] = card.querySelector('.subject-title').textContent;
     var opt = el('option', '', subjectByApp[app]);
     opt.value = app;
     $('subject-filter').appendChild(opt);
+    var tsOpt = el('option', '', subjectByApp[app]);
+    tsOpt.value = app;
+    $('ts-subject').appendChild(tsOpt);
   });
 
   $('parent-open').addEventListener('click', openParent);
+  $('test-score').hidden = !(SH && W && W.addBonus && W.testBonus);
+  ['ts-name', 'ts-score', 'ts-total'].forEach(function(id){ $(id).addEventListener('input', tsPreview); });
+  $('ts-subject').addEventListener('change', tsPreview);
+  $('ts-add').addEventListener('click', tsAdd);
   $('parent-close').addEventListener('click', closeParent);
   window.addEventListener('pagehide', closeParent);
   window.addEventListener('focus', function(){ picking = false; });

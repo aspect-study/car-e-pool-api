@@ -5,7 +5,7 @@
   var KEY = 'grade2_history_v1';
   var ERROR_KEY = 'grade2_history_error_v1';
   var CORRUPT_PREFIX = 'grade2_history_corrupt_v1_';
-  var TYPES = ['open', 'lesson', 'quiz', 'purchase'];
+  var TYPES = ['open', 'lesson', 'quiz', 'purchase', 'test'];
   var MAX_ENTRY_MS = 60 * 60000;
   var ENTITIES = {
     amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
@@ -169,11 +169,12 @@
       return add(fields);
     };
 
-    api.quizAnswered = function (id, isCorrect, q, picked, answer) {
+    api.quizAnswered = function (id, isCorrect, q, picked, answer, typed) {
       update(id, function (e) {
         e.answered++;
         if (isCorrect) e.correct++;
         else e.wrong.push({ q: plain(q), picked: plain(picked), answer: plain(answer) });
+        if (typed) e.typed = (e.typed || 0) + 1;
       });
     };
 
@@ -195,6 +196,19 @@
 
     api.purchased = function (item, itemName, coins) {
       return add({ type: 'purchase', app: 'shop', appTitle: 'Shop', item: String(item), itemName: plain(itemName), coins: coins });
+    };
+
+    api.testScore = function (app, appTitle, testName, score, total, coins) {
+      return add({ type: 'test', app: String(app), appTitle: plain(appTitle), testName: plain(testName), score: score, total: total, coins: coins });
+    };
+
+    // The latest entry for this subject and test name (case-insensitive), or null.
+    api.findTest = function (app, testName) {
+      var want = plain(testName).toLowerCase(), found = null;
+      (read() || []).forEach(function (e) {
+        if (validEntry(e) && e.type === 'test' && e.app === app && String(e.testName).toLowerCase() === want && (!found || e.t > found.t)) found = e;
+      });
+      return found;
     };
 
     api.prunePurchases = function (days) {
@@ -309,6 +323,10 @@
       if (e.type === 'purchase') {
         return [dateKey(e.t), timeKey(e.t), nameOf ? nameOf(e.app, e.appTitle) : e.appTitle, 'Shop purchase',
           e.itemName + ' (' + numOr0(e.coins) + ' coins)', '', '', '', '', '', '', '', '', ''];
+      }
+      if (e.type === 'test') {
+        return [dateKey(e.t), timeKey(e.t), nameOf ? nameOf(e.app, e.appTitle) : e.appTitle, 'Real test',
+          e.testName + ' (+' + numOr0(e.coins) + ' coins)', numOr0(e.score) + ' of ' + numOr0(e.total), '', '', '', '', '', '', '', ''];
       }
       var type = e.type === 'open' ? 'Opened app' : e.type === 'lesson' ? 'Lesson' :
         e.kind === 'walkthrough' ? 'UPAC walkthrough' : e.kind === 'case' ? 'Case study' : e.final ? 'Final exam' : 'Quiz';

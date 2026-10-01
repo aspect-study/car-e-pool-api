@@ -292,6 +292,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 <script src="wallet-grade2.js" data-grade="grade2"></script>
 <script src="fx-grade2.js" data-grade="grade2"></script>
 <script src="powerups-grade2.js" data-grade="grade2"></script>
+<script src="recall-grade2.js" data-grade="grade2"></script>
 <script>
 /* ---- Philippine money art -------------------------------------------------
    Coins are drawn to true relative diameter (5 sentimo 16mm up to 20 piso
@@ -737,6 +738,41 @@ const LESSONS = [
   },
 ];
 
+// Questions she may answer by typing first (+5 bonus). Value: other accepted answers.
+const TYPE_IT = {
+  "How many ones make 1 ten?": [],
+  "How many tens make 1 hundred?": [],
+  "How many ones make 1 hundred?": [],
+  "What number is made of 2 thousands, 3 hundreds, 0 tens, 4 ones?": ["2,304"],
+  "Which numeral is this?\nfive thousand two hundred thirty-one": ["5,231"],
+  "Which numeral is this?\nnine thousand six hundred eighty-four": ["9,684"],
+  "How do you write 830 in words?": ["eight hundred and thirty"],
+  "Skip count by 2s. Which number is missing?\n2, 4, 6, __, 10": [],
+  "Skip count by 5s. Which number is missing?\n15, 20, __, 30": [],
+  "Skip count by 10s. Which number is missing?\n40, 50, __, 70": [],
+  "Skip count by 100s. Which number is missing?\n500, 600, __, 800": [],
+  "Order the numbers from smallest to greatest.\n238, 170, 209": [],
+  "What is the ordinal number for 3?": [],
+  "What is the ordinal word for 5th?": [],
+  "What is 14 in ordinal form?": ["fourteenth"],
+  "Write the number: 3 hundreds, 5 tens, 8 ones": [],
+  "What number does 6 hundreds, 0 tens, 9 ones make?": [],
+  "Write the number: 7 hundreds, 0 tens, 4 ones": [],
+  "In 2369, which digit is in the ones place?": [],
+  "In 8104, which digit is in the tens place?": [],
+  "Write 700 + 50 + 4 in standard form.": [],
+  "Write 6000 + 50 + 9 in standard form.": ["6,059"],
+  "426 + 142 = ?": [],
+  "234 + 145 = ?": [],
+  "1023 + 2431 = ?": ["3,454"],
+  "What do we call the answer in an addition problem?": ["sum"],
+  "426 + 146 = ?": [],
+  "186 + 447 = ?": [],
+  "489 + 156 = ?": [],
+  "Which bill is this?": ["100", "100 peso"],
+  "How many centavos make 1 peso?": [],
+};
+
 const SH = window.StudyHistory, SH_APP = 'block-bot', SH_TITLE = 'Block Bot';
 let historyLessonId = null, historyQuizId = null;
 const STORAGE_KEY = 'blockbot_progress_v2';
@@ -771,6 +807,11 @@ function shuffle(arr){
     [a[i],a[j]] = [a[j],a[i]];
   }
   return a;
+}
+// Recall decides whether this question pays, shows a typing box, and offers power-ups.
+function offerQuestion(pu){
+  if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+  else if (window.PowerUps) PowerUps.offer(pu);
 }
 function prepareQuestion(q){
   const order = shuffle(q.options.map((_,i)=>i));
@@ -919,13 +960,14 @@ function checkNumberline(){
   answered = true;
   const correct = val === correctAns;
   const nlMiss = correct ? null : { q: `${q.start} + ${q.jumps} = ?`, picked: isNaN(val) ? '(blank)' : String(val), why: numberlineWhy(q.start, q.jumps, val), answer: String(correctAns), explain: q.explain, tip: NUMBERLINE_TIP };
-  SH && SH.quizAnswered(historyQuizId, correct, `${q.start} + ${q.jumps} = ?`, isNaN(val) ? '(blank)' : String(val), String(correctAns));
+  SH && SH.quizAnswered(historyQuizId, correct, `${q.start} + ${q.jumps} = ?`, isNaN(val) ? '(blank)' : String(val), String(correctAns), window.Recall ? Recall.typed() : false);
   const helped = !!(window.PowerUps && PowerUps.answered());
   if(correct){
     quizScore++;
     if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+    const pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
@@ -965,7 +1007,7 @@ let currentQuizSet = [];
 let currentQuizMeta = null;
 let missedQuestions = [];
 let sessionPoints = 0, streak = 0, bestStreak = 0;
-const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+const POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 
 function updatePointsLive(){
   const el = document.getElementById('points-live');
@@ -1129,7 +1171,7 @@ function renderQuestion(){
     document.getElementById('q-options').classList.add('hidden');
     document.getElementById('q-numberline').classList.remove('hidden');
     renderNumberlineQuestion(q);
-    window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:document.getElementById('q-numberline'), options:[], tip:NUMBERLINE_TIP, q:`${q.start} + ${q.jumps} = ?`, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
+    offerQuestion({ art:q.art, quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:document.getElementById('q-numberline'), options:[], tip:NUMBERLINE_TIP, q:`${q.start} + ${q.jumps} = ?`, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
     return;
   }
 
@@ -1150,7 +1192,7 @@ function renderQuestion(){
     b.onclick = ()=>selectOption(idx);
     opts.appendChild(b);
   });
-  window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:opts, options:opts.children, correct:q.correct, tip:q.tip, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
+  offerQuestion({ art:q.art, quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:opts, options:opts.children, correct:q.correct, tip:q.tip, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
 }
 
 function selectOption(idx){
@@ -1168,13 +1210,14 @@ function selectOption(idx){
   showExploreHint('');
   const correct = idx === q.correct;
   const miss = correct ? null : { q: q.q, picked: q.options[idx], why: (q.why || [])[idx] || '', answer: q.options[q.correct], explain: q.explain, tip: q.tip || '' };
-  SH && SH.quizAnswered(historyQuizId, correct, historyQuestion(q), q.options[idx], q.options[q.correct]);
+  SH && SH.quizAnswered(historyQuizId, correct, historyQuestion(q), q.options[idx], q.options[q.correct], window.Recall ? Recall.typed() : false);
   const helped = !!(window.PowerUps && PowerUps.answered());
   if(correct){
     quizScore++;
     if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+    const pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
@@ -1238,7 +1281,7 @@ function renderResults(total){
   document.getElementById('results-score').textContent = `You scored ${quizScore} out of ${total} on ${currentQuizMeta.title}`;
   let ptsLine = `⭐ +${sessionPoints} points this round`;
   if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 best streak: ${bestStreak} in a row!`;
-  document.getElementById('points-earned').textContent = ptsLine;
+  document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
   const reviewEl = document.getElementById('missed-review');
   if(missedQuestions.length){

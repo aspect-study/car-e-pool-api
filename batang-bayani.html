@@ -429,6 +429,7 @@
 <script src="wallet-grade2.js" data-grade="grade2"></script>
 <script src="fx-grade2.js" data-grade="grade2"></script>
 <script src="powerups-grade2.js" data-grade="grade2"></script>
+<script src="recall-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -451,6 +452,11 @@
   function tf(q, answer, good, bad, more){
     more = more || {};
     return { type:'tf', q:q, answer:answer, good:good, bad:bad, why:more.why, tip:more.tip };
+  }
+  // Recall decides whether this question pays, shows a typing box, and offers power-ups.
+  function offerQuestion(pu){
+    if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+    else if (window.PowerUps) PowerUps.offer(pu);
   }
   function prepareQuestion(item){
     if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad, tip:item.tip };
@@ -893,6 +899,40 @@
     }
   ];
 
+  var TYPE_IT = {
+    "Ano ang tawag sa mga taong sama-samang naninirahan sa isang lugar?": [],
+    "Saan karaniwang makikita ang pinuno ng komunidad?": ["barangay"],
+    "Ano ang tinatawag na koneksyon o relasyon na nabubuo sa pagitan ng mga kasapi ng komunidad?": [],
+    "Ano ang tawag sa araw-araw na pagbabago sa ating himpapawid?": [],
+    "Sino ang tanggapan ng pamahalaan na nag-uulat ng pagtataya ng panahon?": [],
+    "Ano ang tawag sa pook, lugar, o puwesto kung saan matatagpuan ang isang bagay?": [],
+    "Saang uri ng pook mo makikita ang malawak na palayan at tahimik na paligid?": ["rural"],
+    "Ano ang tawag sa laki ng sakop ng isang lugar?": [],
+    "Karaniwang saan makikita ang makapal na densidad ng populasyon?": ["urban"],
+    "Anong anyong-lupa ang patag at malawak?": [],
+    "Anong anyong-lupa ang mas maliit kaysa bundok?": [],
+    "Anong anyong-lupa ang napapaligiran ng katubigan?": ["Pulo", "Isla"],
+    "Anong anyong-lupa ang dapat pag-ingatan lalo na kapag ito ay sumasabog?": [],
+    "Ano ang pinakamalawak na anyong-tubig?": [],
+    "Anong anyong-tubig ang napapalibutan ng lupa?": [],
+    "Ano ang tawag sa maliit na bahagi ng dagat na napapaligiran ng lupa?": [],
+    "Alin ang mahaba at makipot na anyong-tubig?": [],
+    "Ano ang tawag sa biswal at patag na representasyon ng isang lugar?": [],
+    "Saan karaniwang tumatakbo ang tren?": [],
+    "Ano ang tawag sa nagtuturo ng kinaroroonan ng isang bagay o lugar?": ["direksyon"],
+    "Ilan ang pangalawang direksiyon?": ["apat"],
+    "Anong pangkat ang may edad 15 hanggang 24 na taong gulang?": ["Kabataan"],
+    "Ano ang tawag sa mga taong nasa 60 taong gulang pataas?": [],
+    "Ilan ang pangkat ng mga taong naninirahan sa komunidad ayon sa edad?": ["apat"],
+    "Saan itinuturo ang pagbasa, pagsulat, at pagbilang?": [],
+    "Sino ang tumutulong mapanatili ang seguridad at kapayapaan ng komunidad?": [],
+    "Saan nabibili ang karamihan sa mga pangunahing pangangailangan ng mga tao?": ["palengke"],
+    "Sino ang umaapula ng sunog?": [],
+    "Sino ang nagtuturo sa mga mag-aaral sa paaralan?": [],
+    "Sino ang gumugupit ng buhok?": [],
+    "Saan sinusuri at ginagamot ng doktor ang mga may sakit?": [],
+  };
+
   /* ================= House SVG ================= */
   function houseMarkup(){
     return ''
@@ -1018,7 +1058,7 @@
   var currentQuizMeta = null;
   var missedQuestions = [];
   var sessionPoints = 0, streak = 0, bestStreak = 0;
-  var POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+  var POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 
   function updatePointsLive(){
     var el = document.getElementById('points-live');
@@ -1099,7 +1139,7 @@
         optWrap.appendChild(b);
       });
     }
-    window.PowerUps && PowerUps.offer({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
+    offerQuestion({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
       options: item.type === 'tf' ? [] : optWrap.querySelectorAll('.opt'), correct: item.type === 'tf' ? -1 : item.options.findIndex(function(o){ return o.correct; }),
       tip: item.tip, tipEn: item.tipEn, q: item.q, historyId: historyQuizId, streak: streak, index: qIdx, rerender: renderQuestion });
   }
@@ -1155,7 +1195,7 @@
 
   function showFeedback(isCorrect, picked, answer, pickedWhy){
     var item = currentQuizSet[qIdx];
-    SH && SH.quizAnswered(historyQuizId, isCorrect, item.q, picked, answer);
+    SH && SH.quizAnswered(historyQuizId, isCorrect, item.q, picked, answer, window.Recall ? Recall.typed() : false);
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     var miss = isCorrect ? null : { q: decode(item.q), picked: decode(picked), why: pickedWhy ? decode(pickedWhy) : '', answer: decode(answer), explain: decode(item.bad), tip: item.tip ? decode(item.tip) : '' };
@@ -1166,7 +1206,8 @@
       score++;
       if (!helped) streak++;
       if (streak > bestStreak) bestStreak = streak;
-      var pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+      var ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+      var pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
       sessionPoints += pts;
       totalPoints += pts;
       saveTotalPoints(totalPoints);
@@ -1230,7 +1271,7 @@
       ptsEn += ' · 🔥 best streak: ' + bestStreak + ' in a row!';
     }
     ptsLine += '\n' + ptsEn;
-    document.getElementById('points-earned').textContent = ptsLine;
+    document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
     var msg;
     if (starCount === 3) msg = 'Ikaw ay isang tunay na Bayani ng Komunidad! Kumpleto ang iyong bahay!';
     else if (starCount === 2) msg = 'Magaling! Halos tapos na ang bahay ng aralin — subukan muli para makumpleto ito!';

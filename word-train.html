@@ -427,6 +427,7 @@
 <script src="wallet-grade2.js" data-grade="grade2"></script>
 <script src="fx-grade2.js" data-grade="grade2"></script>
 <script src="powerups-grade2.js" data-grade="grade2"></script>
+<script src="recall-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -449,6 +450,11 @@
   function tf(q, answer, good, bad, more){
     more = more || {};
     return { type:'tf', q:q, answer:answer, good:good, bad:bad, why:more.why, tip:more.tip };
+  }
+  // Recall decides whether this question pays, shows a typing box, and offers power-ups.
+  function offerQuestion(pu){
+    if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+    else if (window.PowerUps) PowerUps.offer(pu);
   }
   function prepareQuestion(item){
     if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad, tip:item.tip };
@@ -856,6 +862,33 @@
     }
   ];
 
+  var TYPE_IT = {
+    "What do we call the set of letters we use to write and read words?": ["alphabet"],
+    "What letter comes right after D in the alphabet?": [],
+    "What letter comes right before H?": [],
+    "What do we call the beginning consonant sound of a word?": [],
+    "If you put the onset /b/ with the rime /at/, what word do you get?": [],
+    "If you put the onset /s/ with the rime /it/, what word do you get?": [],
+    "What math word describes the answer 5?\n8 &minus; 3 = 5": [],
+    "What math word describes the answer 8?\n5 + 3 = 8": [],
+    "What is the feminine word for \"king\"?": [],
+    "What is the masculine word for \"aunt\"?": [],
+    "What is the feminine word for \"actor\"?": [],
+    "What is the feminine word for \"prince\"?": [],
+    "What do we call words that tell about the action of people or animals?": ["action verb", "verbs", "verb"],
+    "What do we call words that describe people, places, animals, and things?": ["adjective", "describing words"],
+    "What do we call words that replace the names of people, things, or animals?": ["personal pronoun", "pronouns", "pronoun"],
+    "Which pronoun would you use to talk about yourself?": [],
+    "Which pronoun would you use to refer to a boy who was already mentioned?": [],
+    "Which pronoun fits?\n\"Ben and I are friends. ___ play together.\"": [],
+    "Which word do we use for ONE thing that is near you?": [],
+    "Which word do we use for MORE THAN ONE thing that is near you?": [],
+    "The dog is far away. Which word fits?\n\"___ dog is barking loudly.\"": [],
+    "What do we call a group of words that expresses a complete thought?": [],
+    "Who is Ou Ou?": ["porcupine", "a porcupine", "little porcupine"],
+    "What did the little mouse make for Ou Ou first?": ["shirt", "special shirt", "a shirt"],
+  };
+
   /* ================= Train SVG ================= */
   function trainMarkup(){
     return ''
@@ -1013,7 +1046,7 @@
   var currentQuizMeta = null;
   var missedQuestions = [];
   var sessionPoints = 0, streak = 0, bestStreak = 0;
-  var POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+  var POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 
   function updatePointsLive(){
     var el = document.getElementById('points-live');
@@ -1099,7 +1132,7 @@
         optWrap.appendChild(b);
       });
     }
-    window.PowerUps && PowerUps.offer({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
+    offerQuestion({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
       options: item.type === 'tf' ? [] : optWrap.querySelectorAll('.opt'), correct: item.type === 'tf' ? -1 : item.options.findIndex(function(o){ return o.correct; }),
       tip: item.tip, tipEn: item.tipEn, q: item.q, historyId: historyQuizId, streak: streak, index: qIdx, rerender: renderQuestion });
   }
@@ -1150,7 +1183,7 @@
 
   function showFeedback(isCorrect, picked, answer, pickedWhy){
     var item = currentQuizSet[qIdx];
-    SH && SH.quizAnswered(historyQuizId, isCorrect, item.q, picked, answer);
+    SH && SH.quizAnswered(historyQuizId, isCorrect, item.q, picked, answer, window.Recall ? Recall.typed() : false);
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     var miss = isCorrect ? null : { q: decode(item.q), picked: decode(picked), why: pickedWhy ? decode(pickedWhy) : '', answer: decode(answer), explain: decode(item.bad), tip: item.tip ? decode(item.tip) : '' };
@@ -1161,7 +1194,8 @@
       score++;
       if (!helped) streak++;
       if (streak > bestStreak) bestStreak = streak;
-      var pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+      var ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+      var pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
       sessionPoints += pts;
       totalPoints += pts;
       saveTotalPoints(totalPoints);
@@ -1220,7 +1254,7 @@
     document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
     var ptsLine = '⭐ +' + sessionPoints + ' points this round';
     if (bestStreak >= STREAK_BONUS_AT) ptsLine += ' · 🔥 best streak: ' + bestStreak + ' in a row!';
-    document.getElementById('points-earned').textContent = ptsLine;
+    document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
     var msg;
     if (starCount === 3) msg = 'Choo choo! Your train is complete — you’re a Word Train champion!';
     else if (starCount === 2) msg = 'Great job! Your train is almost finished — try again to add the last cars!';

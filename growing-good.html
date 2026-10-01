@@ -436,6 +436,7 @@
 <script src="wallet-grade2.js" data-grade="grade2"></script>
 <script src="fx-grade2.js" data-grade="grade2"></script>
 <script src="powerups-grade2.js" data-grade="grade2"></script>
+<script src="recall-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -458,6 +459,11 @@
   function tf(q, answer, good, bad, more){
     more = more || {};
     return { type:'tf', q:q, answer:answer, good:good, bad:bad, why:more.why, tip:more.tip };
+  }
+  // Recall decides whether this question pays, shows a typing box, and offers power-ups.
+  function offerQuestion(pu){
+    if (window.Recall) Recall.ask(pu, SH_APP, typeof TYPE_IT === 'undefined' ? null : TYPE_IT);
+    else if (window.PowerUps) PowerUps.offer(pu);
   }
   function prepareQuestion(item){
     if (item.type === 'mc') return { type:'mc', q:item.q, options: shuffle(item.options), good:item.good, bad:item.bad, tip:item.tip };
@@ -772,6 +778,21 @@
     }
   ];
 
+  var TYPE_IT = {
+    "What is another name for your family name?": [],
+    "What do we call the feelings we have inside that help us understand how we react to situations?": ["emotion"],
+    "Which emotion is often related to irritability and tension?": ["angry"],
+    "Which emotion is the opposite of happiness?": ["sad"],
+    "In the CATCH plan, what does the &ldquo;C&rdquo; stand for?": ["calm"],
+    "Where do people go to pray, worship God, and learn about His love?": [],
+    "What helps keep your body safe from germs and sickness by working together inside you?": [],
+    "What do we call taking care of yourself and your surroundings to stay clean?": [],
+    "Which thrifty way is Jo doing?\nJo gives her old books, which are still in good condition, to a friend in exchange for puzzles.": ["trading"],
+    "Learning, playing, and being treated with respect are examples of ___.": [],
+    "Obedience is doing what we ought to do as instructed by parents, people in charge, and ___.": ["law"],
+    "Who gave us our talents?": [],
+  };
+
   /* ================= Plant SVG ================= */
   function plantMarkup(){
     return ''
@@ -897,7 +918,7 @@
   var currentQuizMeta = null;
   var missedQuestions = [];
   var sessionPoints = 0, streak = 0, bestStreak = 0;
-  var POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
+  var POINTS_PER_CORRECT = 10, EXAM_POINTS_PER_CORRECT = 20, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 
   function updatePointsLive(){
     var el = document.getElementById('points-live');
@@ -983,7 +1004,7 @@
         optWrap.appendChild(b);
       });
     }
-    window.PowerUps && PowerUps.offer({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
+    offerQuestion({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
       options: item.type === 'tf' ? [] : optWrap.querySelectorAll('.opt'), correct: item.type === 'tf' ? -1 : item.options.findIndex(function(o){ return o.correct; }),
       tip: item.tip, tipEn: item.tipEn, q: item.q, historyId: historyQuizId, streak: streak, index: qIdx, rerender: renderQuestion });
   }
@@ -1034,7 +1055,7 @@
 
   function showFeedback(isCorrect, picked, answer, pickedWhy){
     var item = currentQuizSet[qIdx];
-    SH && SH.quizAnswered(historyQuizId, isCorrect, item.q, picked, answer);
+    SH && SH.quizAnswered(historyQuizId, isCorrect, item.q, picked, answer, window.Recall ? Recall.typed() : false);
     var fb = document.getElementById('q-feedback');
     fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
     var miss = isCorrect ? null : { q: decode(item.q), picked: decode(picked), why: pickedWhy ? decode(pickedWhy) : '', answer: decode(answer), explain: decode(item.bad), tip: item.tip ? decode(item.tip) : '' };
@@ -1045,7 +1066,8 @@
       score++;
       if (!helped) streak++;
       if (streak > bestStreak) bestStreak = streak;
-      var pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+      var ptsBase = currentQuizMeta.id === 'final' ? EXAM_POINTS_PER_CORRECT : POINTS_PER_CORRECT, ptsBonus = streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0;
+      var pts = window.Recall ? Recall.points(helped, ptsBase, ptsBonus) : helped ? ptsBase / 2 : ptsBase + ptsBonus;
       sessionPoints += pts;
       totalPoints += pts;
       saveTotalPoints(totalPoints);
@@ -1104,7 +1126,7 @@
     document.getElementById('result-score').textContent = 'You got ' + score + ' out of ' + total + ' questions right on ' + decode(currentQuizMeta.title) + '!';
     var ptsLine = '⭐ +' + sessionPoints + ' points this round';
     if (bestStreak >= STREAK_BONUS_AT) ptsLine += ' · 🔥 best streak: ' + bestStreak + ' in a row!';
-    document.getElementById('points-earned').textContent = ptsLine;
+    document.getElementById('points-earned').textContent = ptsLine + (window.Recall ? Recall.resultLine() : '');
     var msg;
     if (starCount === 3) msg = 'Amazing! Your plant is in full bloom — you’re growing beautifully!';
     else if (starCount === 2) msg = 'Great job! Your plant is almost in bloom — try again to help it flower!';
