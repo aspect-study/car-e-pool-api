@@ -159,6 +159,7 @@
   var GUIDE_TEXT = {
     grade5: {
       title: 'How Points, Coins & the Shop Work',
+      titleEn: '',
       have: function (n) { return '🪙 You have ' + n + coinWord(n); },
       goal: function (need) { return need > 0 ? need + ' more' + coinWord(need) + ' to 🎮 1 ML game' : 'You have enough coins for 🎮 1 ML game!'; },
       sections: function (ml) {
@@ -178,16 +179,23 @@
     },
     grade2: {
       title: 'Paano gumagana ang Points, Coins at Shop?',
+      titleEn: 'How do Points, Coins and the Shop work?',
       have: function (n) { return 'Meron kang 🪙 ' + n + coinWord(n); },
       goal: function (need) { return need > 0 ? need + coinWord(need) + ' pa para sa 🎮 1 ML game' : 'Kaya mo nang bumili ng 🎮 1 ML game!'; },
       sections: function (ml) {
         return [
-          ['⭐', 'Points', 'Bawat tamang sagot = 10 points. Kapag 3 o higit pang sunod-sunod na tama 🔥, 15 points bawat isa. Hindi nababawasan ang points kapag mali ang sagot.'],
-          ['🪙', 'Coins', 'Bawat 10 points = 1 coin. Kusa itong nagiging coin, wala kang pipindutin. Perfect sa 10 tanong = 140 points = 14 coins!'],
-          ['🛒', 'Shop', 'Sa lobby, pindutin ang 🛒 Shop at pumili ng reward. Tapos ipa-type kay Mommy o Tatay ang PIN. Coins lang ang nagagastos, hindi nababawasan ang ⭐ points mo.'],
-          ['🎮', 'ML game', 'Ang 1 ML game ay ' + ml + ' coins. Isa lang bawat araw, at pagkatapos lang mag-aral. Mga 3 perfect na lesson lang yan!'],
-          ['★', 'Stars', 'Ang stars ay para sa araw na ito lang. Kinabukasan, simula ulit para makuha mo ulit. Hindi nawawala ang points at coins.'],
-          ['🔒', 'Sa iyo lang', 'Sa iyo lang ang coins mo, at nandito lang sila sa tablet na ito.']
+          ['⭐', 'Points', 'Bawat tamang sagot = 10 points. Kapag 3 o higit pang sunod-sunod na tama 🔥, 15 points bawat isa. Hindi nababawasan ang points kapag mali ang sagot.',
+            'Every right answer = 10 points. When you get 3 or more right in a row 🔥, each one gives 15 points. A wrong answer never takes points away.'],
+          ['🪙', 'Coins', 'Bawat 10 points = 1 coin. Kusa itong nagiging coin, wala kang pipindutin. Perfect sa 10 tanong = 140 points = 14 coins!',
+            'Every 10 points = 1 coin. Points turn into coins by themselves, so you do not need to press anything. A perfect 10-question lesson = 140 points = 14 coins!'],
+          ['🛒', 'Shop', 'Sa lobby, pindutin ang 🛒 Shop at pumili ng reward. Tapos ipa-type kay Mommy o Tatay ang PIN. Coins lang ang nagagastos, hindi nababawasan ang ⭐ points mo.',
+            'In the lobby, tap 🛒 Shop and pick a reward. Then ask Mommy or Tatay to type the PIN. Buying uses only coins; your ⭐ points stay the same.'],
+          ['🎮', 'ML game', 'Ang 1 ML game ay ' + ml + ' coins. Isa lang bawat araw, at pagkatapos lang mag-aral. Mga 3 perfect na lesson lang yan!',
+            'One ML game costs ' + ml + ' coins. You can buy only 1 a day, and only after studying. That is just about 3 perfect lessons!'],
+          ['★', 'Stars', 'Ang stars ay para sa araw na ito lang. Kinabukasan, simula ulit para makuha mo ulit. Hindi nawawala ang points at coins.',
+            'Stars are for today only. Tomorrow they start fresh, so you can win them again. Your points and coins never disappear.'],
+          ['🔒', 'Sa iyo lang', 'Sa iyo lang ang coins mo, at nandito lang sila sa tablet na ito.',
+            'Your coins belong only to you, and they stay on this tablet.']
         ];
       },
       close: 'Gets ko na! 👍',
@@ -216,6 +224,9 @@
     '.cg-icon{flex:none;width:34px;font-size:1.6rem;line-height:1;text-align:center;}' +
     '.cg-item b{display:block;margin-bottom:2px;}' +
     '.cg-item p{margin:0;font-size:.95rem;}' +
+    '.cg-item p.cg-en,.cg-title-en{margin-top:6px;font-size:.88rem;color:#6B5E57;}' +
+    '.cg-title-en{margin:-2px 0 6px;font-weight:700;}' +
+    '.cg-item .cg-en b{display:inline;margin:0;}' +
     '.cg-close{display:block;width:100%;margin-top:14px;padding:12px;border:0;border-radius:999px;background:#2E9E5B;' +
       'color:#fff;font:inherit;font-size:1rem;font-weight:800;cursor:pointer;}';
 
@@ -263,6 +274,7 @@
       var h = el('h2', '', T.title);
       h.id = 'cg-title';
       box.appendChild(h);
+      if (T.titleEn) box.appendChild(el('p', 'cg-title-en', T.titleEn));
       box.appendChild(el('p', 'cg-have'));
       box.appendChild(el('p', 'cg-goal'));
       T.sections(findItem('ml').coins).forEach(function (s) {
@@ -271,6 +283,12 @@
         var body = el('div');
         body.appendChild(el('b', '', s[1]));
         body.appendChild(el('p', '', s[2]));
+        if (s[3]) {
+          var en = el('p', 'cg-en');
+          en.appendChild(el('b', '', 'Sa English: '));
+          en.appendChild(doc.createTextNode(s[3]));
+          body.appendChild(en);
+        }
         item.appendChild(body);
         box.appendChild(item);
       });
