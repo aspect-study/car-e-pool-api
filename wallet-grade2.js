@@ -201,8 +201,8 @@
     grade2: {
       title: 'Paano gumagana ang Points, Coins at Shop?',
       titleEn: 'How do Points, Coins and the Shop work?',
-      have: function (n) { return 'Meron kang 🪙 ' + n + coinWord(n); },
-      goal: function (need) { return need > 0 ? need + coinWord(need) + ' pa para sa 🎮 1 ML game' : 'Kaya mo nang bumili ng 🎮 1 ML game!'; },
+      have: function (n) { return '🪙 You have ' + n + coinWord(n); },
+      goal: function (need) { return need > 0 ? need + ' more' + coinWord(need) + ' to 🎮 1 ML game' : 'You have enough coins for 🎮 1 ML game!'; },
       sections: function (ml) {
         return [
           ['⭐', 'Points', 'Bawat tamang sagot = 10 points. Kapag 3 o higit pang sunod-sunod na tama 🔥, 15 points bawat isa. Hindi nababawasan ang points kapag mali ang sagot.',
@@ -217,7 +217,7 @@
             ' coins) para mawala ang ilang maling sagot. Pindutin nang 2 beses para magbayad. 2 lang bawat quiz, at wala sa Mock Exam. Kapag may tulong, kalahati lang ang points at hindi tataas ang 🔥 streak.',
             'Stuck on a question? Use 💡 Hint (' + POWER_UPS.hint + ' coins) to see a tip, or ✂️ 50/50 (' + POWER_UPS.fifty +
             ' coins) to take away some wrong answers. Tap twice to pay. Only 2 per quiz, and none in the Mock Exam. With help, you get half points and your 🔥 streak does not grow.'],
-          ['🛡️', 'Iba pang power-ups', '🔁 2nd Chance (' + POWER_UPS.second + ' coins): kapag mali, isa pang subok. Kalahati lang ang points kung kinailangan mo. ' +
+          ['🛡️', 'Iba pang power-ups · More power-ups', '🔁 2nd Chance (' + POWER_UPS.second + ' coins): kapag mali, isa pang subok. Kalahati lang ang points kung kinailangan mo. ' +
             '🛡️ Shield (' + POWER_UPS.shield + ' coins): kapag may 🔥 streak ka, hindi ito mawawala sa susunod na mali. ' +
             '⏭️ Mamaya na (' + POWER_UPS.later + ' coins): laktawan ang mahirap na tanong bago gumamit ng tulong; babalik ito sa dulo, buong points pa rin.',
             '🔁 2nd Chance (' + POWER_UPS.second + ' coins): if you miss, try once more. Half points only if you needed it. ' +
@@ -229,14 +229,14 @@
             'Once you pay, there is no going back, so check first that they are free.'],
           ['★', 'Stars', 'Ang stars ay para sa araw na ito lang. Kinabukasan, simula ulit para makuha mo ulit. Hindi nawawala ang points at coins.',
             'Stars are for today only. Tomorrow they start fresh, so you can win them again. Your points and coins never disappear.'],
-          ['🔒', 'Sa iyo lang', 'Sa iyo lang ang coins mo, at nandito lang sila sa tablet na ito.',
+          ['🔒', 'Sa iyo lang · Just yours', 'Sa iyo lang ang coins mo, at nandito lang sila sa tablet na ito.',
             'Your coins belong only to you, and they stay on this tablet.']
         ];
       },
-      close: 'Gets ko na! 👍',
+      close: 'Gets ko na! · Got it! 👍',
       badge: function (n) { return '🪙 ' + n + coinWord(n) + ' ❓'; },
-      badgeLabel: 'Paano gumagana ang points at coins',
-      haveNow: function (n) { return '🪙 Meron ka nang ' + n + coinWord(n); }
+      badgeLabel: 'How points and coins work',
+      haveNow: function (n) { return '🪙 You now have ' + n + coinWord(n); }
     }
   };
 

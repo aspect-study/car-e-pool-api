@@ -204,6 +204,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 .learn-tip{border-left-color:var(--gold);}
 .learn-row .fb-en{margin-top:4px;}
 .missed-item .learn{margin-top:6px; font-size:0.9rem;}
+#points-earned{white-space:pre-line;}
 </style>
 
 <div class="app">
@@ -800,7 +801,7 @@ const POINTS_PER_CORRECT = 10, STREAK_BONUS = 5, STREAK_BONUS_AT = 3;
 function updatePointsLive(){
   const el = document.getElementById('points-live');
   if (!el) return;
-  el.innerHTML = '⭐ ' + sessionPoints + ' puntos' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
+  el.innerHTML = '⭐ ' + sessionPoints + ' puntos (points)' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
 }
 
 const homeScreen = document.getElementById('screen-home');
@@ -822,7 +823,7 @@ function starsFor(pct){
 }
 
 function renderHome(){
-  document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' na puntos';
+  document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' na puntos (points)';
   renderBook(document.getElementById('hero-book-svg'), 8);
   const grid = document.getElementById('lesson-grid');
   grid.innerHTML = '';
@@ -1067,7 +1068,12 @@ function renderResults(){
     stars === 3 ? 'Handa ka na sa Pagsusulit!' : stars > 0 ? 'Malapit ka na!' : 'Balikan Natin!';
   document.getElementById('results-score').textContent = `Nakakuha ka ng ${quizScore} sa ${total} sa ${currentQuizMeta.title}`;
   let ptsLine = `⭐ +${sessionPoints} puntos sa pagsubok na ito`;
-  if(bestStreak >= STREAK_BONUS_AT) ptsLine += ` · 🔥 pinakamahabang sunod-sunod: ${bestStreak}!`;
+  let ptsEn = `⭐ +${sessionPoints} points this round`;
+  if(bestStreak >= STREAK_BONUS_AT){
+    ptsLine += ` · 🔥 pinakamahabang sunod-sunod: ${bestStreak}!`;
+    ptsEn += ` · 🔥 best streak: ${bestStreak} in a row!`;
+  }
+  ptsLine += '\n' + ptsEn;
   document.getElementById('points-earned').textContent = ptsLine;
   document.getElementById('results-stars').innerHTML = [1,2,3].map(s=>`<span class="${s<=stars?'star-on':'star-off'}">★</span>`).join('');
   const reviewEl = document.getElementById('missed-review');

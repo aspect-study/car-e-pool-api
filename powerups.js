@@ -125,21 +125,21 @@
       fifty: '✂️ 50/50',
       second: '🔁 2nd Chance',
       shield: '🛡️ Shield',
-      later: '⏭️ Mamaya na',
-      confirm: function (n) { return 'Pindutin ulit: ' + n + ' 🪙'; },
-      left: function (n) { return '⚡ Power-ups na natitira: ' + n; },
-      max: '⚡ Nagamit mo na ang 2 power-ups sa quiz na ito.',
-      poor: 'Kulang pa ang coins mo para diyan.',
-      exam: '🚫 Walang power-ups sa Mock Exam. Kaya mo yan!',
-      helped: '🤝 May tulong: kalahati lang ang points kapag tama, at hindi tataas ang 🔥 streak.',
-      secondOn: '🔁 2nd Chance: kapag mali, puwede kang sumubok ulit.',
-      tryAgain: '🔁 Hindi iyan. Subukan ulit!',
-      shieldOn: '🛡️ Shield: hindi mawawala ang 🔥 streak mo sa susunod na mali.',
-      shieldSaved: '🛡️ Niligtas ng shield ang 🔥 streak mo!',
-      saved: '⏭️ Mamaya na: babalik ito sa dulo.',
+      later: '⏭️ Later',
+      confirm: function (n) { return 'Tap again to pay ' + n + ' 🪙'; },
+      left: function (n) { return ['⚡ Power-ups na natitira: ' + n, 'Power-ups left in this quiz: ' + n]; },
+      max: ['⚡ Nagamit mo na ang 2 power-ups sa quiz na ito.', 'You used both power-ups for this quiz.'],
+      poor: ['Kulang pa ang coins mo para diyan.', 'Not enough coins for that one yet.'],
+      exam: ['🚫 Walang power-ups sa Mock Exam. Kaya mo yan!', 'No power-ups in the Mock Exam. You can do it!'],
+      helped: ['🤝 May tulong: kalahati lang ang points kapag tama, at hindi tataas ang 🔥 streak.', 'With help, a right answer gets half points and your streak does not grow.'],
+      secondOn: ['🔁 2nd Chance: kapag mali, puwede kang sumubok ulit.', 'If you miss, you can try again.'],
+      tryAgain: ['🔁 Hindi iyan. Subukan ulit!', 'Not that one. Try again!'],
+      shieldOn: ['🛡️ Shield: hindi mawawala ang 🔥 streak mo sa susunod na mali.', 'Your next miss keeps your streak.'],
+      shieldSaved: ['🛡️ Niligtas ng shield ang 🔥 streak mo!', 'Your shield saved your streak!'],
+      saved: ['⏭️ Mamaya na: babalik ito sa dulo.', 'Saved for later. It comes back at the end.'],
       family: '👨‍👩‍👧 Ask Family',
       helpers: ['ate', 'mommy', 'tatay'],
-      askTitle: function (name) { return '🙋 Tanungin si ' + name + '!'; },
+      askTitle: function (name) { return '🙋 Tanungin si ' + name + '! · Go ask ' + name + '!'; },
       askBody: function (name) { return 'Ipakita kay ' + name + ' ang tanong. Ipapaliwanag ni ' + name + ' ang aralin, pero hindi sasabihin ang sagot. Ikaw pa rin ang pipili.'; },
       askEn: function (name) { return 'Show ' + name + ' this question. ' + name + ' explains the lesson but does not say the answer. You still choose.'; }
     }
@@ -156,6 +156,7 @@
     '.pu-btn:focus-visible{outline:3px solid #6B4A00;outline-offset:2px;}' +
     '.pu-note{margin-top:6px;font-weight:700;}' +
     '.pu-note div+div{margin-top:3px;}' +
+    '.pu-note .pu-en{margin-top:1px;font-weight:600;font-size:.82rem;color:#6B5E57;}' +
     '.pu-tip{margin-top:8px;padding:8px 10px;border-left:5px solid #F2C94C;border-radius:8px;background:#fff;color:#2B2320;line-height:1.5;}' +
     '.pu-tip .pu-en{margin-top:4px;font-size:.85rem;color:#6B5E57;}' +
     '.pu-out{opacity:.35;text-decoration:line-through;}' +
@@ -212,11 +213,20 @@
       doc.addEventListener('click', secondChanceClick, true);
     }
 
+    // A note is a string, or [Filipino, English] for Grade 2: the English goes on its own smaller line.
+    function addLine(line) {
+      var note = bar.querySelector('.pu-note');
+      var div = el('div', '', Array.isArray(line) ? line[0] : line);
+      if (Array.isArray(line)) div.appendChild(el('div', 'pu-en', line[1]));
+      note.appendChild(div);
+    }
+
     function noteLines() {
       if (info.answered) return [info.helped ? T.helped : '', info.flash];
       var poor = KINDS.some(function (k) { return core.status(k) === 'poor'; });
       return [
-        (core.left() > 0 ? T.left(core.left()) : T.max) + (poor ? ' ' + T.poor : ''),
+        core.left() > 0 ? T.left(core.left()) : T.max,
+        poor ? T.poor : '',
         info.usedNow.second && !info.secondSpent ? T.secondOn : '',
         info.secondSpent ? T.tryAgain : '',
         core.shieldOn() ? T.shieldOn : '',
@@ -232,7 +242,7 @@
         row.hidden = true;
         pick.hidden = true;
         ask.hidden = true;
-        note.appendChild(el('div', '', T.exam));
+        addLine(T.exam);
         note.hidden = false;
         bar.hidden = false;
         return;
@@ -266,7 +276,7 @@
         shown = true;
       }
       var lines = noteLines().filter(Boolean);
-      lines.forEach(function (line) { note.appendChild(el('div', '', line)); });
+      lines.forEach(addLine);
       note.hidden = !lines.length;
       bar.hidden = info.answered ? !lines.length && bar.querySelector('.pu-tip').hidden : !shown;
     }

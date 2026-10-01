@@ -328,6 +328,7 @@
   .learn-right{border-left-color:var(--good);}
   .learn-tip{border-left-color:#E0A526;}
   .missed-item .learn{margin-top:6px; font-size:0.9rem;}
+  #points-earned{white-space:pre-line;}
 </style>
 
 <div class="app">
@@ -930,7 +931,7 @@
 
   /* ================= Home ================= */
   function renderHome(){
-    document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' na puntos';
+    document.getElementById('points-total-badge').textContent = '⭐ ' + totalPoints + ' na puntos (points)';
     var list = document.getElementById('home-list');
     var finalTotal = lessons.length * FINAL_EXAM_PER_LESSON;
     var finalBest = progress['final'] || 0;
@@ -1022,7 +1023,7 @@
   function updatePointsLive(){
     var el = document.getElementById('points-live');
     if (!el) return;
-    el.innerHTML = '⭐ ' + sessionPoints + ' puntos' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
+    el.innerHTML = '⭐ ' + sessionPoints + ' puntos (points)' + (streak >= 2 ? ' <span class="streak">🔥 x' + streak + '</span>' : '') + (window.Wallet && Wallet.liveHtml ? Wallet.liveHtml() : '');
   }
 
   function revealProgress(){
@@ -1223,7 +1224,12 @@
     document.getElementById('stars').innerHTML = starsMarkup(starCount, 3);
     document.getElementById('result-score').textContent = 'Nakuha mo ang ' + score + ' sa ' + total + ' na tanong sa ' + currentQuizMeta.title + '!';
     var ptsLine = '⭐ +' + sessionPoints + ' puntos sa pagsubok na ito';
-    if (bestStreak >= STREAK_BONUS_AT) ptsLine += ' · 🔥 pinakamahabang sunod-sunod: ' + bestStreak + '!';
+    var ptsEn = '⭐ +' + sessionPoints + ' points this round';
+    if (bestStreak >= STREAK_BONUS_AT){
+      ptsLine += ' · 🔥 pinakamahabang sunod-sunod: ' + bestStreak + '!';
+      ptsEn += ' · 🔥 best streak: ' + bestStreak + ' in a row!';
+    }
+    ptsLine += '\n' + ptsEn;
     document.getElementById('points-earned').textContent = ptsLine;
     var msg;
     if (starCount === 3) msg = 'Ikaw ay isang tunay na Bayani ng Komunidad! Kumpleto ang iyong bahay!';

@@ -18,7 +18,7 @@
 
   var SUBTITLE = {
     grade5: function (n) { return '🔥 ' + n + ' in a row!'; },
-    grade2: function (n) { return '🔥 ' + n + ' sunod-sunod na tama!'; }
+    grade2: function (n) { return '🔥 ' + n + ' sunod-sunod na tama! · ' + n + ' in a row!'; }
   };
 
   function tierFor(streak) {
