@@ -286,6 +286,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 <script src="study-history-grade2.js" data-grade="grade2"></script>
 <script src="wallet-grade2.js" data-grade="grade2"></script>
 <script src="fx-grade2.js" data-grade="grade2"></script>
+<script src="powerups-grade2.js" data-grade="grade2"></script>
 <script>
 const STORY_PASSAGE = `Isang mainit na araw, nakita ng masipag na langgam ang isang tipaklong na umaawit sa ilalim ng punong-kahoy. Habang naglalakad, patuloy na nagtitipon ang langgam ng pagkain para sa paparating na tag-ulan. Nang dumating ang tag-ulan, wala nang pagkain ang tipaklong ngunit marami pa rin ang naitipon ng langgam. Kusang-loob na ibinahagi ng langgam ang kaniyang pagkain sa tipaklong. Mula noon, natutong maging masipag ang tipaklong.`;
 
@@ -961,6 +962,7 @@ function renderQuestion(){
     b.onclick = ()=>selectOption(idx);
     opts.appendChild(b);
   });
+  window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:opts, options:opts.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
   document.getElementById('q-feedback').innerHTML = '';
   document.getElementById('q-explore').classList.add('hidden');
   document.getElementById('q-next-btn').classList.add('hidden');
@@ -997,17 +999,18 @@ function selectOption(idx){
   const correct = idx === q.correct;
   const miss = correct ? null : { q: q.q, picked: q.options[idx], why: (q.why || [])[idx] || '', whyEn: (q.whyEn || [])[idx] || '', answer: q.options[q.correct], explain: q.explain, en: q.en, tip: q.tip || '', tipEn: q.tipEn || '' };
   SH && SH.quizAnswered(historyQuizId, correct, q.q, q.options[idx], q.options[q.correct]);
+  const helped = !!(window.PowerUps && PowerUps.answered());
   if(correct){
     quizScore++;
-    streak++;
+    if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
-    window.Fx && Fx.correct(streak);
+    window.Fx && Fx.correct(helped ? 0 : streak);
   } else {
-    streak = 0;
+    if(!(window.PowerUps && PowerUps.shield())) streak = 0;
     window.Fx && Fx.wrong();
     missedQuestions.push(miss);
   }

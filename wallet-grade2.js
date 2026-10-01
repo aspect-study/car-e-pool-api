@@ -16,6 +16,9 @@
     { id: 'big', emoji: '🎡', name: 'Big goal: outing or a toy you\'ve wanted', goal: 'Big goal', coins: 1200 }
   ];
 
+  // Paid for inside a quiz (powerups.js), never in the shop.
+  var POWER_UPS = { hint: 3, fifty: 5, second: 5, shield: 4, later: 2, ate: 2, mommy: 4, tatay: 4 };
+
   function pad(n) { return n < 10 ? '0' + n : String(n); }
 
   function dateKey(ms) {
@@ -77,6 +80,16 @@
       return Math.max(0, WELCOME_GIFT + earned - state.spent);
     }
 
+    function storedBalanceOf(state) {
+      var points = {};
+      Object.keys(state.baselines).forEach(function (key) {
+        var raw = null;
+        try { raw = storage.getItem(key); } catch (e) {}
+        points[key] = parseInt(raw, 10) || 0;
+      });
+      return balanceOf(state, points);
+    }
+
     function boughtToday(state, id) {
       var today = dateKey(now());
       return state.purchases.filter(function (p) { return p.item === id && dateKey(p.t) === today; }).length;
@@ -93,6 +106,7 @@
     return {
       grade: grade,
       catalog: CATALOG,
+      powerUps: POWER_UPS,
 
       // The first track counts every point earned so far, once (parent's choice, 2026-10-01).
       // After that, a points key seen for the first time starts from its current value.
@@ -112,14 +126,14 @@
       balance: function (points) { return balanceOf(read(), points); },
 
       // For the games, which do not know the other subjects' keys: reads every tracked key.
-      balanceStored: function () {
-        var state = read(), points = {};
-        Object.keys(state.baselines).forEach(function (key) {
-          var raw = null;
-          try { raw = storage.getItem(key); } catch (e) {}
-          points[key] = parseInt(raw, 10) || 0;
-        });
-        return balanceOf(state, points);
+      balanceStored: function () { return storedBalanceOf(read()); },
+
+      // In-quiz power-ups: no PIN and no purchase record, just fewer coins.
+      spend: function (coins) {
+        var state = read();
+        if (!(coins > 0) || storedBalanceOf(state) < coins) return false;
+        state.spent += coins;
+        return write(state);
       },
 
       earned: function (points) {
@@ -168,6 +182,13 @@
           ['🪙', 'Coins', 'Every 10 points turns into 1 coin by itself. You do not need to press anything. A perfect 10-question lesson = 140 points = 14 coins.'],
           ['🛒', 'The Shop', 'In the lobby, tap 🛒 Shop and pick a reward. Then ask Mommy or Tatay to type the PIN. Buying uses up coins, but your ⭐ points stay the same.'],
           ['🎮', 'ML game', 'One ML game costs ' + ml + ' coins. You can buy 1 a day, and only after studying. That is about 3 perfect lessons!'],
+          ['💡', 'Power-ups', 'Stuck on a lesson quiz question? Use 💡 Hint (' + POWER_UPS.hint + ' coins) to see a tip, or ✂️ 50/50 (' + POWER_UPS.fifty +
+            ' coins) to cross out some wrong answers. Tap it twice to pay. You can use 2 per quiz, and none in the Mock Exam. A helped right answer gives half points and does not grow your 🔥 streak.'],
+          ['🛡️', 'More power-ups', '🔁 2nd Chance (' + POWER_UPS.second + ' coins): if you miss, try once more. Half points only if you needed it. ' +
+            '🛡️ Shield (' + POWER_UPS.shield + ' coins): when you have a 🔥 streak, your next miss will not break it. ' +
+            '⏭️ Later (' + POWER_UPS.later + ' coins): skip a hard question before using any help; it comes back at the end, for full points.'],
+          ['👨‍👩‍👧', 'Ask Family', 'Ask Mommy (' + POWER_UPS.mommy + ' coins) or Tatay (' + POWER_UPS.tatay + ' coins) to explain the idea. They will not tell you the answer; you still choose, for half points. ' +
+            'Once you pay, the coins are spent, so check first that they are free to help.'],
           ['★', 'Stars', 'Stars show your best score in each lesson today. They start fresh each new day, so you can win them again. Points and coins are never wiped.'],
           ['🔒', 'Just yours', 'Your coins belong to you only, and they stay on this tablet.']
         ];
@@ -192,6 +213,20 @@
             'In the lobby, tap 🛒 Shop and pick a reward. Then ask Mommy or Tatay to type the PIN. Buying uses only coins; your ⭐ points stay the same.'],
           ['🎮', 'ML game', 'Ang 1 ML game ay ' + ml + ' coins. Isa lang bawat araw, at pagkatapos lang mag-aral. Mga 3 perfect na lesson lang yan!',
             'One ML game costs ' + ml + ' coins. You can buy only 1 a day, and only after studying. That is just about 3 perfect lessons!'],
+          ['💡', 'Power-ups', 'Nahihirapan sa tanong? Gamitin ang 💡 Hint (' + POWER_UPS.hint + ' coins) para makita ang tip, o ✂️ 50/50 (' + POWER_UPS.fifty +
+            ' coins) para mawala ang ilang maling sagot. Pindutin nang 2 beses para magbayad. 2 lang bawat quiz, at wala sa Mock Exam. Kapag may tulong, kalahati lang ang points at hindi tataas ang 🔥 streak.',
+            'Stuck on a question? Use 💡 Hint (' + POWER_UPS.hint + ' coins) to see a tip, or ✂️ 50/50 (' + POWER_UPS.fifty +
+            ' coins) to take away some wrong answers. Tap twice to pay. Only 2 per quiz, and none in the Mock Exam. With help, you get half points and your 🔥 streak does not grow.'],
+          ['🛡️', 'Iba pang power-ups', '🔁 2nd Chance (' + POWER_UPS.second + ' coins): kapag mali, isa pang subok. Kalahati lang ang points kung kinailangan mo. ' +
+            '🛡️ Shield (' + POWER_UPS.shield + ' coins): kapag may 🔥 streak ka, hindi ito mawawala sa susunod na mali. ' +
+            '⏭️ Mamaya na (' + POWER_UPS.later + ' coins): laktawan ang mahirap na tanong bago gumamit ng tulong; babalik ito sa dulo, buong points pa rin.',
+            '🔁 2nd Chance (' + POWER_UPS.second + ' coins): if you miss, try once more. Half points only if you needed it. ' +
+            '🛡️ Shield (' + POWER_UPS.shield + ' coins): when you have a 🔥 streak, your next miss will not break it. ' +
+            '⏭️ Later (' + POWER_UPS.later + ' coins): skip a hard question before using any help; it comes back at the end, for full points.'],
+          ['👨‍👩‍👧', 'Ask Family', 'Tanungin si Ate (' + POWER_UPS.ate + ' coins), Mommy (' + POWER_UPS.mommy + ' coins) o Tatay (' + POWER_UPS.tatay + ' coins). Ipapaliwanag nila ang aralin, pero hindi nila sasabihin ang sagot. Ikaw pa rin ang pipili, kalahati ng points. ' +
+            'Kapag nagbayad ka na, wala nang balikan, kaya tingnan muna kung libre sila.',
+            'Ask Ate (' + POWER_UPS.ate + ' coins), Mommy (' + POWER_UPS.mommy + ' coins) or Tatay (' + POWER_UPS.tatay + ' coins). They explain the lesson but do not tell you the answer. You still choose, for half points. ' +
+            'Once you pay, there is no going back, so check first that they are free.'],
           ['★', 'Stars', 'Ang stars ay para sa araw na ito lang. Kinabukasan, simula ulit para makuha mo ulit. Hindi nawawala ang points at coins.',
             'Stars are for today only. Tomorrow they start fresh, so you can win them again. Your points and coins never disappear.'],
           ['🔒', 'Sa iyo lang', 'Sa iyo lang ang coins mo, at nandito lang sila sa tablet na ito.',
@@ -330,7 +365,7 @@
     wallet.liveHtml = function () { return ' <span class="coins-live">🪙 ' + wallet.balanceStored() + '</span>'; };
   }
 
-  var exported = { create: create, CATALOG: CATALOG, findItem: findItem, GUIDE_TEXT: GUIDE_TEXT };
+  var exported = { create: create, CATALOG: CATALOG, POWER_UPS: POWER_UPS, findItem: findItem, GUIDE_TEXT: GUIDE_TEXT };
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = exported;
     return;

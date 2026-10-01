@@ -434,6 +434,7 @@ button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-off
 <script src="study-history.js" data-grade="grade5"></script>
 <script src="wallet.js" data-grade="grade5"></script>
 <script src="fx.js" data-grade="grade5"></script>
+<script src="powerups.js" data-grade="grade5"></script>
 <script>
 /* ---- Helpers: randomness ---- */
 function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -2119,17 +2120,17 @@ function startRound(){
 /* One answer marked, wherever it was earned: a quiz question, a UPAC step or a
    case-study follow-up. They all pay the same, so a streak carries across the
    whole round rather than resetting at each kind of question. */
-function awardPoint(correct){
+function awardPoint(correct, helped, shielded){
   if(correct){
-    streak++;
+    if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
-    window.Fx && Fx.correct(streak);
+    window.Fx && Fx.correct(helped ? 0 : streak);
   } else {
-    streak = 0;
+    if(!shielded) streak = 0;
     window.Fx && Fx.wrong();
   }
   updatePointsLive();
@@ -2356,6 +2357,7 @@ function renderQuestion(){
     b.onclick = ()=>selectOption(idx);
     opts.appendChild(b);
   });
+  window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:opts, options:opts.children, correct:q.correct, tip:q.tip, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
 }
 
 function selectOption(idx){
@@ -2373,9 +2375,10 @@ function selectOption(idx){
   showExplore('q-explore', '');
   const correct = idx === q.correct;
   SH && SH.quizAnswered(historyQuizId, correct, q.q, q.options[idx], q.options[q.correct]);
+  const helped = !!(window.PowerUps && PowerUps.answered());
   if(correct) quizScore++;
   else missedQuestions.push({ q:q.q, picked:q.options[idx], why:(q.why||[])[idx] || '', answer:q.options[q.correct], explain:q.explain, tip:q.tip || '' });
-  awardPoint(correct);
+  awardPoint(correct, helped, !correct && !!(window.PowerUps && PowerUps.shield()));
   renderScene(document.getElementById('quiz-scene-svg'), Math.round((quizScore/total)*8));
   const fb = document.getElementById('q-feedback');
   fb.innerHTML = correct

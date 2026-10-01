@@ -32,6 +32,8 @@
       .trim();
   }
 
+  var POWER_UP_NAMES = { hint: 'Hint', fifty: '50/50', second: 'Second Chance', shield: 'Streak Shield', later: 'Save for Later', ate: 'Ask Ate', mommy: 'Ask Mommy', tatay: 'Ask Tatay' };
+
   function pad(n) { return n < 10 ? '0' + n : String(n); }
 
   function dateKey(ms) {
@@ -175,6 +177,13 @@
       });
     };
 
+    api.powerUpUsed = function (id, kind, coins, q) {
+      update(id, function (e) {
+        if (!Array.isArray(e.powerUps)) e.powerUps = [];
+        e.powerUps.push({ kind: String(kind), coins: coins, q: plain(q) });
+      });
+    };
+
     api.quizFinished = function (id, stars, points, bestStreak) {
       update(id, function (e) {
         e.finished = true;
@@ -287,12 +296,19 @@
 
     function numOr0(x) { return typeof x === 'number' ? x : 0; }
 
+    api.powerUpsText = function (e) {
+      var used = Array.isArray(e.powerUps) ? e.powerUps.filter(Boolean) : [];
+      if (!used.length) return '';
+      var coins = used.reduce(function (sum, p) { return sum + numOr0(p.coins); }, 0);
+      return used.map(function (p) { return POWER_UP_NAMES[p.kind] || p.kind; }).join(', ') + ' (' + coins + ' coins)';
+    };
+
     // "8 of 10" rather than "8/10": spreadsheets turn 8/10 into a date.
     function csvRow(e, nameOf) {
       var quiz = e.type === 'quiz';
       if (e.type === 'purchase') {
         return [dateKey(e.t), timeKey(e.t), nameOf ? nameOf(e.app, e.appTitle) : e.appTitle, 'Shop purchase',
-          e.itemName + ' (' + numOr0(e.coins) + ' coins)', '', '', '', '', '', '', '', ''];
+          e.itemName + ' (' + numOr0(e.coins) + ' coins)', '', '', '', '', '', '', '', '', ''];
       }
       var type = e.type === 'open' ? 'Opened app' : e.type === 'lesson' ? 'Lesson' :
         e.kind === 'walkthrough' ? 'UPAC walkthrough' : e.kind === 'case' ? 'Case study' : e.final ? 'Final exam' : 'Quiz';
@@ -310,13 +326,14 @@
         quiz ? (e.finished ? 'Yes' : 'No') : '',
         quiz ? wrong.map(function (w) {
           return w.q + ' \u2192 ' + w.picked + ' (correct: ' + w.answer + ')';
-        }).join(' | ') : ''
+        }).join(' | ') : '',
+        quiz ? api.powerUpsText(e) : ''
       ];
     }
 
     api.exportCsv = function (nameOf) {
       var rows = [['Date', 'Time', 'Subject', 'Type', 'Lesson', 'Score', 'Answered', 'Stars', 'Points',
-        'Minutes', 'Cards viewed', 'Finished', 'Wrong answers']];
+        'Minutes', 'Cards viewed', 'Finished', 'Wrong answers', 'Power-ups']];
       (read() || []).filter(validEntry).slice().sort(function (a, b) { return a.t - b.t || idCmp(a, b); }).forEach(function (e) {
         rows.push(csvRow(e, nameOf));
       });

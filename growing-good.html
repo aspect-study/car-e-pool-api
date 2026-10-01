@@ -435,6 +435,7 @@
 <script src="study-history-grade2.js" data-grade="grade2"></script>
 <script src="wallet-grade2.js" data-grade="grade2"></script>
 <script src="fx-grade2.js" data-grade="grade2"></script>
+<script src="powerups-grade2.js" data-grade="grade2"></script>
 <script>
 (function(){
   "use strict";
@@ -982,6 +983,9 @@
         optWrap.appendChild(b);
       });
     }
+    window.PowerUps && PowerUps.offer({ quiz: currentQuizSet, exam: currentQuizMeta.id === 'final', before: optWrap,
+      options: item.type === 'tf' ? [] : optWrap.querySelectorAll('.opt'), correct: item.type === 'tf' ? -1 : item.options.findIndex(function(o){ return o.correct; }),
+      tip: item.tip, tipEn: item.tipEn, q: item.q, historyId: historyQuizId, streak: streak, index: qIdx, rerender: renderQuestion });
   }
 
   function lockOptions(chosen){
@@ -1036,17 +1040,18 @@
     var miss = isCorrect ? null : { q: decode(item.q), picked: decode(picked), why: pickedWhy ? decode(pickedWhy) : '', answer: decode(answer), explain: decode(item.bad), tip: item.tip ? decode(item.tip) : '' };
     fb.innerHTML = isCorrect ? CHECK_ICON + '<span>' + decode(item.good) + '</span>' : X_ICON + learnHtml(miss);
     document.getElementById('next-wrap').classList.add('show');
+    var helped = !!(window.PowerUps && PowerUps.answered());
     if (isCorrect){
       score++;
-      streak++;
+      if (!helped) streak++;
       if (streak > bestStreak) bestStreak = streak;
-      var pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+      var pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
       sessionPoints += pts;
       totalPoints += pts;
       saveTotalPoints(totalPoints);
-      window.Fx && Fx.correct(streak);
+      window.Fx && Fx.correct(helped ? 0 : streak);
     } else {
-      streak = 0;
+      if (!(window.PowerUps && PowerUps.shield())) streak = 0;
       window.Fx && Fx.wrong();
       missedQuestions.push(miss);
     }

@@ -384,6 +384,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
 <script src="study-history.js" data-grade="grade5"></script>
 <script src="wallet.js" data-grade="grade5"></script>
 <script src="fx.js" data-grade="grade5"></script>
+<script src="powerups.js" data-grade="grade5"></script>
 <script>
 const LESSONS = [
   {
@@ -871,6 +872,7 @@ function renderQuestion(){
     btn.onclick = ()=>selectOption(i);
     box.appendChild(btn);
   });
+  window.PowerUps && PowerUps.offer({ quiz:currentQuizSet, exam:currentQuizMeta.id === 'final', before:box, options:box.children, correct:q.correct, tip:q.tip, tipEn:q.tipEn, q:q.q, historyId:historyQuizId, streak:streak, index:quizIdx, rerender:renderQuestion });
 }
 
 function selectOption(i){
@@ -884,17 +886,18 @@ function selectOption(i){
     b.classList.add('explorable');
     b.onclick = ()=>exploreOption(idx);
   });
+  const helped = !!(window.PowerUps && PowerUps.answered());
   if(i === q.correct){
     quizScore++;
-    streak++;
+    if(!helped) streak++;
     if(streak > bestStreak) bestStreak = streak;
-    const pts = POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
+    const pts = helped ? POINTS_PER_CORRECT / 2 : POINTS_PER_CORRECT + (streak >= STREAK_BONUS_AT ? STREAK_BONUS : 0);
     sessionPoints += pts;
     totalPoints += pts;
     saveTotalPoints(totalPoints);
-    window.Fx && Fx.correct(streak);
+    window.Fx && Fx.correct(helped ? 0 : streak);
   } else {
-    streak = 0;
+    if(!(window.PowerUps && PowerUps.shield())) streak = 0;
     window.Fx && Fx.wrong();
   }
   updatePointsLive();
